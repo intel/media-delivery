@@ -151,7 +151,7 @@ Not ready
 Further reading
 ---------------
 
-Not ready
+* `Solutions HowTo <doc/howto.rst>`_
 
 Links
 -----
