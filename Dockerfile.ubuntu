@@ -1,0 +1,132 @@
+FROM ubuntu:19.04 AS base
+
+# Helper scripts to build image
+COPY scripts /tmp/scripts
+
+# If you work under proxy - adjust this file to see outside world
+RUN /tmp/scripts/setup-apt-proxy.sh
+
+# Now let's setup Intel Graphics repository
+RUN apt-get update && apt-get install -y sudo ca-certificates && rm -rf /var/lib/apt/lists/*
+ARG ENABLE_INTEL_REPO=yes
+RUN { \
+    repo="deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu disco main"; \
+    if [ "$ENABLE_INTEL_REPO" = "yes" ]; then \
+      echo "$line" > /etc/apt/sources.list.d/intel-graphics.list; \
+    else \
+      echo "#$line" > /etc/apt/sources.list.d/intel-graphics.list; \
+    fi \
+  }
+
+# This script is a placeholder to further setup the base image.
+RUN /tmp/scripts/setup-base-image.sh
+
+# Let's create a user 'user'
+RUN groupadd -r user && useradd -lrm -s /bin/bash -g user -G sudo \
+    -p $(echo "user" | openssl passwd -stdin) user
+
+# Set 'sudo' to NOPASSWD for all container users
+RUN sed -i -e 's,%sudo.*,%sudo ALL=(ALL) NOPASSWD:ALL,g' /etc/sudoers
+
+FROM base AS build-prerequisites
+
+RUN apt-get update && apt-get install -y \
+    git \
+    libmfx-dev \
+    libva-dev \
+    libx264-dev \
+    libx265-dev \
+    pkg-config \
+    sudo \
+    yasm \
+  && rm -rf /var/lib/apt/lists/*
+
+FROM build-prerequisites AS build-all
+
+USER user
+
+# We will install self-build components at $PREFIX whenever possible
+ARG PREFIX=/opt/intel/solutions
+
+# As of now Netflix VMAF does not seem to provide a way to configure install locations.
+# So, it will go to /usr/local per default. We need 2 things from VMAF:
+# static library which we will link into ffmpeg and model *.pkl file(s) which
+# we will add to final image to use at runtime.
+# TODO: check VMAF install locations in future releases
+ARG VMAF_VERSION=v1.3.15
+RUN git clone --depth 1 --branch $VMAF_VERSION https://github.com/Netflix/vmaf.git /home/user/vmaf
+RUN cd /home/user/vmaf && make && sudo make install
+
+ARG FFMPEG_VERSION=master
+RUN git clone --depth 1 --branch $FFMPEG_VERSION https://github.com/ffmpeg/ffmpeg /home/user/ffmpeg
+RUN cd /home/user/ffmpeg && \
+  ./configure \
+  --prefix=$PREFIX \
+  --enable-vaapi \
+  --enable-libmfx \
+  --enable-gpl \
+  --enable-libx264 \
+  --enable-libx265 \
+  --enable-version3 \
+  --enable-libvmaf \
+  && make -j $(nproc --all) \
+  && sudo make install
+
+# Cleanin up...
+RUN rm -rf /home/user/vmaf && \
+    rm -rf /home/user/ffmpeg
+
+# Ok, here goes the final image end-user will actually see
+FROM base
+
+LABEL vendor="Intel Corporation"
+
+# Install runtime environment available in apt repositories
+RUN apt-get update && apt-get install -y \
+    intel-gpu-tools \
+    intel-media-va-driver-non-free \
+    libigfxcmrt7 \
+    libmfx1 \
+    libmfx-tools \
+    libnginx-mod-http-lua \
+    libnginx-mod-rtmp \
+    libva-drm2 \
+    libva-x11-2 \
+    nginx \
+    tmux \
+    vainfo \
+    $(apt-cache depends libx264-dev | grep Depends | grep libx264 | cut -d: -f2) \
+    $(apt-cache depends libx265-dev | grep Depends | grep libx265 | cut -d: -f2) \
+  && rm -rf /var/lib/apt/lists/*
+
+# This script is a placeholder to further setup the final runtime image.
+RUN /tmp/scripts/setup-runtime-image.sh
+
+# Cleaning up
+RUN rm -rf /etc/apt/apt.conf
+RUN rm -rf /tmp/scripts
+
+# Install runtime environment we manually built on 'build' stage
+ARG PREFIX=/opt/intel/solutions
+COPY --from=build-all /usr/local/share/model /usr/local/share/model
+COPY --from=build-all $PREFIX $PREFIX
+
+# Making solution sources available in the final container
+COPY . $PREFIX/src/intel-media-delivery
+
+# Setting up solution
+ARG SOLUTION=edge
+RUN cd $PREFIX/src/intel-media-delivery/solutions/$SOLUTION && ./setup.sh $PREFIX
+
+RUN sudo usermod -aG irc www-data   # FIXME
+RUN sudo usermod -aG irc user       # FIXME
+
+# Setting up 'user' environment common for all solutions
+USER user
+WORKDIR /home/user
+RUN { \
+  echo "export PATH=$PREFIX/bin:\$PATH"; \
+  echo "#export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH"; \
+} >> ~/.bashrc
+
+CMD /usr/bin/bash
