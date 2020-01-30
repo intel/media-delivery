@@ -3,6 +3,91 @@ Intel Media Deliver Solutions HowTo
 
 .. contents::
 
+Access GPU under container
+--------------------------
+
+Under Linux Intel GPU is represented by 2 devices:
+
+* ``/dev/dri/cardN`` (where ``N=0,1,2,...``) is a card node
+* ``/dev/dri/renderDN`` (where ``N=0,1,2,...``) is a render node
+
+Card nodes allow work with the display (modesetting), but come with more
+strict access control. Render nodes do not allow interactions with the
+display, limited to headless operations and come with relaxed access control.
+In this solutions we use render nodes.
+
+Ran by default docker does not allow access to any devices. To access
+all host devices run containter with ``--privileged``::
+
+  docker run --privileged <...rest-of-arguments...>
+
+To access only GPU, run::
+
+  docker run --device=/dev/dri <...rest-of-arguments...>
+
+Unfortunately that's only part of the story. Following the above ``root``
+will be able to access GPU, but general users might experience problems. To
+assure that user can access GPU he should be granted corresponding permissions
+to access the device, i.e. he should be added to the group owning the device.
+This can be done from inside the container with the following command (for the
+user ``user``)::
+
+  sudo usermod -aG $(ls -g /dev/dri/* | awk '{print $3}' | uniq | \
+    awk -vORS=, '{ print }' | sed 's/,$/\n/') user
+
+Basically, that's what Intel Media Delivery Solutions are doing when you run
+demo or enter the container with ``bash``.
+
+If you need to give permissions to the single user at the container launch
+time, use ``--group-add`` argument as follows::
+
+  docker run --device=/dev/dri \
+    $(ls -g /dev/dri/* | awk '{print $3}' | uniq | \
+      xargs getent group | awk -F: '{print $3}' | sed 's/^/--group-add /' \
+    <...rest-of-arguments...>
+
+At this point we need to comment complexity while you might be accustomed
+to just add user to the ``video`` or ``render`` group (depending on the node type and
+underlying OS)? Explanation is the following. In riality device is eventually owned
+by host OS which assigned some group to it, let's say ``video``. The point is that
+container OS inherits these permissions and group assignment, but ultimately group
+is identified by ``GID`` (Group ID) and group name (``video`` in our example) is just
+a name assigned by the OS for the user convenience. Let's say that our host OS has
+``GID=39`` for the ``video`` group. Now, different distributions have different map
+policies between ``GID`` and group names. As an outcome, container OS will see that
+device is owned by ``GID=39``, but it might assign different group name. For example,
+it might assign ``irc`` group name. You can check assignments in ``/etc/group`` files
+in host and container. As a nota bene trust ``GID`` instead of group name when you
+manage device access permissions between host and container OS.
+
+The above in-line example is a real example when you run host as CentOS and container
+OS as Ubuntu. Here is some log to illustrate what was just explained in
+the text::
+
+  #cat /etc/centos-release
+  CentOS Linux release 7.7.1908 (Core)
+
+  # ls -al /dev/dri/
+  total 0
+  drwxr-xr-x.  2 root root        80 Oct 17 02:33 .
+  drwxr-xr-x. 19 root root      3580 Oct 17 02:33 ..
+  crw-rw----+  1 root video 226,   0 Oct 17 02:33 card0
+  crw-rw----+  1 root video 226, 128 Oct 17 02:33 renderD128
+
+  # getent group video
+  video:x:39:
+
+  # docker run -it --privileged ubuntu:19.04 ls -al /dev/dri
+  total 0
+  drwxr-xr-x.  2 root root       80 Jan 30 18:11 .
+  drwxr-xr-x. 15 root root     3440 Jan 30 18:11 ..
+  crw-rw----.  1 root irc  226,   0 Jan 30 18:11 card0
+  crw-rw----.  1 root irc  226, 128 Jan 30 18:11 renderD128
+
+  # docker run -it --privileged ubuntu:19.04 getent group irc video
+  irc:x:39:
+  video:x:44:
+
 Working under proxy
 --------------------
 

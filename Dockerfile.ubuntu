@@ -121,15 +121,13 @@ COPY . $PREFIX/src/intel-media-delivery
 ARG SOLUTION=edge
 RUN cd $PREFIX/src/intel-media-delivery/solutions/$SOLUTION && ./setup.sh $PREFIX
 
-RUN sudo usermod -aG irc www-data   # FIXME
-RUN sudo usermod -aG irc user       # FIXME
-
 # Setting up 'user' environment common for all solutions
 USER user
 WORKDIR /home/user
 RUN { \
   echo "export PATH=$PREFIX/bin:\$PATH"; \
   echo "#export LD_LIBRARY_PATH=$PREFIX/lib:\$LD_LIBRARY_PATH"; \
+  echo "source /etc/demo.env"; \
 } >> ~/.bashrc
 
 CMD /usr/bin/bash
