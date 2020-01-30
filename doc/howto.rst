@@ -88,6 +88,28 @@ the text::
   irc:x:39:
   video:x:44:
 
+Run Intel GPU Top under container (or how to access GPU Linux perf data)
+------------------------------------------------------------------------
+
+Intel GPUs are managed by i915 kernel mode driver which exposes some performance
+monitoring data via Linux `perf <https://perf.wiki.kernel.org/index.php/Main_Page>`_
+kernel subsystem. There are few detail levels you can access and they are protected
+by access rights. i915 driver exposes so called global metrics which means that you
+get data describing the whole GPU rather than particular running task. Such global
+data is definitely protected by access rights management.
+
+To access Intel GPUs data exposed via Linux perf either run the container with
+``--privileged``::
+
+  docker run --privileged <...rest-of-arguments...>
+
+or if you need finer access rights control with ``--cap-add SYS_ADMIN``::
+
+  docker run --cap-add SYS_ADMIN <...rest-of-arguments...>
+
+Intel GPU Top (from Intel GPU Tools package) is one of the applications which get
+use of i915 Linux perf data. Follow the above BKM to run it.
+
 Working under proxy
 --------------------
 
