@@ -50,13 +50,14 @@ on_merge:
   stage: "build"
   script:
   - tagname="$MDS_REGISTRY/intel-media-delivery/$SAMPLE/"
-  - if [ -n "$CI_COMMIT_BRANCH" ]; then tagname+="$CI_COMMIT_BRANCH/stash/$CI_PIPELINE_ID:$FLAVOR"; fi
+  - if [ -n "$CI_COMMIT_BRANCH" ]; then tagname+="$ORIGIN/stash/$CI_PIPELINE_ID:$FLAVOR"; fi
   - if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then tagname+="$CI_MERGE_REQUEST_TARGET_BRANCH_NAME/"; fi
   - if [ -n "$CI_MERGE_REQUEST_IID" ]; then tagname+="mr/$CI_MERGE_REQUEST_IID:$FLAVOR"; fi
   - echo "Building $tagname docker image"
   - docker build
       $(env | grep -E '_proxy=' | sed 's/^/--build-arg /')
       --build-arg IMAGE=amr-registry.caas.intel.com/vtt-osgc/os/ubuntu:focal
+      --build-arg FLAVOR=$FLAVOR
       --build-arg SAMPLE=$SAMPLE
       --no-cache
       --force-rm
@@ -105,7 +106,6 @@ on_merge:
     expire_in: 1 day
   tags:
   - ubuntu # bats is available here in our CI deployments
-  - gen9
 
 .deploy_image:
   extends: .trigger_rule
@@ -135,20 +135,37 @@ on_merge:
   - builder
   - ubuntu
 
-build:cdn-agama:
+build:cdn-agama-public:
   extends: .build_image
   variables:
     DOCKERFILE: docker/ubuntu20.04/intel-gfx/Dockerfile
     SAMPLE: cdn
-    FLAVOR: agama
+    FLAVOR: public
+    ORIGIN: master
 
-#build:cdn-agama-devel:
+build:cdn-agama-master:
+  extends: .build_image
+  variables:
+    DOCKERFILE: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile
+    SAMPLE: cdn
+    FLAVOR: focal-untested
+    ORIGIN: embargo
+
+build:cdn-agama-devel:
+  extends: .build_image
+  variables:
+    DOCKERFILE: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile
+    SAMPLE: cdn
+    FLAVOR: focal-devel-untested
+    ORIGIN: embargo
+
+#build:cdn-agama-embargo:
 #  extends: .build_image
 #  variables:
-#    DOCKERFILE: docker/ubuntu20.04/intel-gfx-devel/Dockerfile
+#    DOCKERFILE: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile
 #    SAMPLE: cdn
-#    FLAVOR: agama-devel
-#    APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal-devel main"
+#    FLAVOR: focal-embargo-untested
+#    ORIGIN: embargo
 
 build:edge:
   extends: .build_image
@@ -157,43 +174,102 @@ build:edge:
     SAMPLE: edge
     FLAVOR: agama
     APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal main"
+    ORIGIN: master
 
-test:cdn-agama:
+test:cdn-agama-public-gen9:
   extends: .test_image
   variables:
     SAMPLE: cdn
   dependencies:
-  - build:cdn-agama
+  - build:cdn-agama-public
+  tags:
+  - gen9
 
-#test:cdn-agama-devel:
+test:cdn-agama-public-dg1:
+  extends: .test_image
+  variables:
+    SAMPLE: cdn
+  dependencies:
+  - build:cdn-agama-public
+  tags:
+  - dg1
+
+test:cdn-agama-master-gen9:
+  extends: .test_image
+  variables:
+    SAMPLE: cdn
+  dependencies:
+  - build:cdn-agama-master
+  tags:
+  - gen9
+
+test:cdn-agama-master-dg1:
+  extends: .test_image
+  variables:
+    SAMPLE: cdn
+  dependencies:
+  - build:cdn-agama-master
+  tags:
+  - dg1
+
+test:cdn-agama-devel-dg1:
+  extends: .test_image
+  variables:
+    SAMPLE: cdn
+  dependencies:
+  - build:cdn-agama-devel
+  tags:
+  - dg1
+
+#test:cdn-agama-embargo-dg1:
 #  extends: .test_image
 #  variables:
 #    SAMPLE: cdn
 #  dependencies:
-#  - build:cdn-agama-devel
+#  - build:cdn-agama-embargo
+#  tags:
+#  - dg1
 
-test:edge:
+test:edge-gen11:
   extends: .test_image
   variables:
     SAMPLE: edge
   dependencies:
   - build:edge
+  tags:
+  - gen11
 
-deploy:cdn-agama:
+deploy:cdn-agama-public:
   extends: .deploy_image
   variables:
     SAMPLE: cdn
     FLAVOR: agama
   dependencies:
-  - build:cdn-agama
+  - build:cdn-agama-public
 
-#deploy:cdn-agama-devel:
+deploy:cdn-agama-master:
+  extends: .deploy_image
+  variables:
+    SAMPLE: cdn
+    FLAVOR: agama-master
+  dependencies:
+  - build:cdn-agama-master
+
+deploy:cdn-agama-devel:
+  extends: .deploy_image
+  variables:
+    SAMPLE: cdn
+    FLAVOR: agama-devel
+  dependencies:
+  - build:cdn-agama-devel
+
+#deploy:cdn-agama-embargo:
 #  extends: .deploy_image
 #  variables:
 #    SAMPLE: cdn
-#    FLAVOR: agama-devel
+#    FLAVOR: agama
 #  dependencies:
-#  - build:cdn-agama-devel
+#  - build:cdn-agama-embargo
 
 deploy:edge:
   extends: .deploy_image
