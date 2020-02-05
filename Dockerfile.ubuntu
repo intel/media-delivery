@@ -1,4 +1,4 @@
-FROM ubuntu:19.04 AS base
+FROM ubuntu:19.10 AS base
 
 # Helper scripts to build image
 COPY scripts /tmp/scripts
@@ -10,7 +10,7 @@ RUN /tmp/scripts/setup-apt-proxy.sh
 RUN apt-get update && apt-get install -y sudo ca-certificates && rm -rf /var/lib/apt/lists/*
 ARG ENABLE_INTEL_REPO=yes
 RUN { \
-    repo="deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu disco main"; \
+    repo="deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu eoan main"; \
     echo "ENABLE_INTEL_REPO=$ENABLE_INTEL_REPO"; \
     cat /etc/apt/apt.conf; \
     if [ "$ENABLE_INTEL_REPO" = "yes" ]; then \
