@@ -148,7 +148,9 @@ into it anew. This can be done by passing proxy host envronment variables as fol
 If you are going to play around with the container and install additional packages,
 configure proxy for package manager. For that you can use the same
 `setup-apt-proxy.sh <../scripts/setup-apt-proxy.sh>`_ script which actually is included
-as one of the assets to the image (at ``$PREFIX/bin`` location, see PREFIX_).
+as one of the assets to the image (at ``$PREFIX/bin`` location, see PREFIX_)::
+
+  sudo -E `which setup-apt-proxy.sh`
 
 Container build time customizations
 -----------------------------------
