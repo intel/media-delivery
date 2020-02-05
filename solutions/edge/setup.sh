@@ -43,6 +43,7 @@ if_grps_changed=" \
 # Generating entrypoints
 {
   echo "export PATH=$PREFIX/bin:\$PATH"
+  echo "export LIBVA_DRIVER_NAME=iHD"
   echo "video_grps=\$(ls -g /dev/dri/renderD* | awk '{print \$3}' | uniq | \
     awk -vORS=, '{ print }' | sed 's/,$/\n/')"
   echo "sudo usermod -aG \$video_grps user"
