@@ -43,7 +43,7 @@ time, use ``--group-add`` argument as follows::
 
   docker run --device=/dev/dri \
     $(ls -g /dev/dri/* | awk '{print $3}' | uniq | \
-      xargs getent group | awk -F: '{print $3}' | sed 's/^/--group-add /' \
+      xargs getent group | awk -F: '{print $3}' | sed 's/^/--group-add /') \
     <...rest-of-arguments...>
 
 At this point we need to comment complexity while you might be accustomed
