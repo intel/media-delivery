@@ -122,7 +122,7 @@ RUN ldconfig
 COPY . $PREFIX/src/intel-media-delivery
 
 # Setting up solution
-ARG SOLUTION=edge
+ARG SOLUTION=cdn
 RUN cd $PREFIX/src/intel-media-delivery/solutions/$SOLUTION && ./setup.sh $PREFIX
 
 # Setting up 'user' environment common for all solutions

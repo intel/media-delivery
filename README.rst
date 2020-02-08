@@ -16,7 +16,7 @@ Please, refer to the below benchmark results to level set expectations.
 How to get?
 -----------
 
-Each solution is available in a form of Docker container. To build default solution (`Edge`_)
+Each solution is available in a form of Docker container. To build default solution (`CDN`_)
 run::
 
   docker build \
@@ -121,12 +121,14 @@ Available solutions and their architectures
 CDN
 ~~~
 
-Not ready
+This solution can be built with ``--build-arg SOLUTION=cdn`` which is the default.
+
+This solution is using ffmpeg generate HLS stream. TODO: describe more.
 
 Edge
 ~~~~
 
-This solution can be built with ``--build-arg SOLUTION=edge`` which is the default.
+This solution can be built with ``--build-arg SOLUTION=edge``.
 
 This solution is using Nginx RTMP module to generate HLS stream. TODO: describe more.
 

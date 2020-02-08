@@ -172,7 +172,7 @@ PREFIX
   assets.
 
 SOLUTION
-  Possible values: ``<path>``. Default value: ``edge``
+  Possible values: ``<path>``. Default value: ``cdn``
 
   Selects solution to build and install inside the container.
 
