@@ -33,7 +33,7 @@ if [ "$mode" = "streams" ]; then
   for stream in `ls -1 /content/*.mp4`; do
     name=$(basename -- "$stream")
     name="${name%.*}"
-    echo "$name | http://localhost:8080/live/$name"
+    echo "$name | http://localhost:8080/live/$name/index.m3u8"
   done
   exit 0
 fi
