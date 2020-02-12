@@ -152,6 +152,55 @@ as one of the assets to the image (at ``$PREFIX/bin`` location, see PREFIX_)::
 
   sudo -E `which setup-apt-proxy.sh`
 
+Container volumes (adding your content, access logs, etc.)
+----------------------------------------------------------
+
+Container exposes few volumes which you can use to mount host folders and customize
+solution behavior. See table below for the mount points inside a container and required
+access rights.
+
+=================== ============= ===========================================
+Volume              Rights needed Purpose
+=================== ============= ===========================================
+/opt/data/content   Read          Add your media content to the solution demo
+/opt/data/artifacts Read|Write    Access solution generated content and logs
+/var/www/hls        Read|Write    Access server side generated content
+=================== ============= ===========================================
+
+So, for example if you have some local content you wish to play via solution demo in
+a ``$HOME/media/`` folder you can add this folder to the container as follows::
+
+  docker run -it \
+    -v $HOME/media:/opt/data/content \
+    <...rest-of-arguments...>
+
+In case you want to access container output artifacts (streams, logs, etc.) you need
+to give write permissions to the container users. For example in this way::
+
+  mkdir $HOME/artifacts && chmod a+w $HOME/artifacts
+  docker run -it \
+    -v $HOME/artifacts:/opt/data/artifacts \
+    <...rest-of-arguments...>
+
+Media content requirements
+--------------------------
+
+Mounting a host folder to ``/opt/data/content`` inside a container allows you to
+access your own media content in solution demos::
+
+  docker run -it \
+    -v $HOME/media:/opt/data/content \
+    <...rest-of-arguments...>
+
+This section talks about requirements demos imply for the content.
+
+Bascially demos look for the media files with ``*.mp4`` extension right in the
+``/opt/data/content``. They don't look into subfolders.
+
+Video track should be encoded as H.264 video. Audio track can be encoded as any format
+which would recognize by ffmpeg version available in the container. AAC or MP3 are
+recommended.
+
 Container build time customizations
 -----------------------------------
 

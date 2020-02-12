@@ -16,19 +16,24 @@
 #   - For valid requests for HLS fragments which are of /live/<stream>/<path>.ts
 #
 
+LOGFILE=/tmp/lua-client-requests.log
+
 # Just simple logging to debug the script
 addlog() {
-  echo "[$(date)] $@" >>/tmp/trigger-streaming.log
+  echo "[$(date)] $@" >>$LOGFILE
 }
 
 log() {
-  addlog "$@" >>/tmp/trigger-streaming.log
+  addlog "$@" >>$LOGFILE
   $@
 }
 
 addlog "$0 $@: start"
 
 source /etc/demo.env
+
+ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-server
+mkdir -p $ARTIFACTS
 
 # Let's parse incoming URL request expected to be: "/live/<stream>/index.m3u8"
 live=$(echo "$1" | awk -F/ '{print $2}')
@@ -40,21 +45,38 @@ addlog "live=$live, stream=$stream, index=$index"
 if [ "$live" != "live" -o -z "$stream" -o "$index" != "index.m3u8" ]; then
   addlog "nothing to do for the stream: $1"
   addlog "$0 $@: end"
+  cp $LOGFILE $ARTIFACTS/
   exit 0
 fi
 
 if [ -d /var/www/hls/live/$stream ]; then
   addlog "already publishing: $1"
   addlog "$0 $@: end"
+  cp $LOGFILE $ARTIFACTS/
   exit 0
 fi
 
 mkdir -p /var/www/hls/live/$stream
 cd /var/www/hls/live/$stream
 
+to_play=""
+if [ -f /opt/data/content/$stream.mp4 ]; then
+  to_play="/opt/data/content/$stream.mp4"
+fi
+if [ "$to_play" = "" -a -f /opt/data/embedded/$stream.mp4 ]; then
+  to_play="/opt/data/embedded/$stream.mp4"
+fi
+
+if [ "$to_play" = "" ]; then
+  addlog "no such stream to play: $stream"
+  cp $LOGFILE $ARTIFACTS/
+  addlog "$0 $@: end"
+  exit 0
+fi
+
 cmd=(ffmpeg
   -hwaccel qsv -hwaccel_device /dev/dri/renderD128
-  -c:v h264_qsv -re -stream_loop 100 -i /content/$stream.mp4
+  -c:v h264_qsv -re -stream_loop 100 -i $to_play
   -filter_complex '[v:0]split=2[o1][s2];[s2]scale_qsv=w=640:h=-1[o2]'
   -map [o1] -c:v h264_qsv -b:v 5M
   -map [o2] -c:v h264_qsv -b:v 1M
@@ -66,7 +88,7 @@ cmd=(ffmpeg
   -var_stream_map 'v:0,a:0 v:1,a:1' stream_%v.m3u8)
 
 addlog "scheduling: ${cmd[@]}"
-"${cmd[@]}" >/tmp/trigger-streaming-ffmpeg.log 2>&1 &
+"${cmd[@]}" >$ARTIFACTS/$stream.log 2>&1 &
 pid=$!
 
 addlog "$0 $@: just scheduled PID=$pid"
@@ -75,7 +97,7 @@ addlog "$0 $@: waiting for some time for index file to appear"
 # Timeout should be selected longer than HLS fragment length since index
 # file is published by ffmpeg when first fragment becomes available.
 end=$(( $(date +%s) + 20 ))
-addlog "end=$end"
+addlog "end"
 while ps -p $pid > /dev/null &&
       [ $(date +%s) -lt $end ] &&
       [ ! -f /var/www/hls/live/$stream/index.m3u8 ]; do
@@ -94,3 +116,4 @@ else
 fi
 
 addlog "$0 $@: end"
+cp $LOGFILE $ARTIFACTS/

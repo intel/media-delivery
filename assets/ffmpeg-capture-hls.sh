@@ -13,6 +13,10 @@ source /etc/demo.env
 
 export no_proxy=localhost
 
+ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-client
+
+mkdir -p $ARTIFACTS
+
 for s in $@; do
   if echo $s | grep http; then
     stream=$s
@@ -22,7 +26,7 @@ for s in $@; do
     name=$s
   fi
 
-  ffmpeg -hide_banner -i $stream -c copy /tmp/$name.mkv >/tmp/ffmpeg-client-$name.log 2>&1 &
+  ffmpeg -hide_banner -i $stream -c copy -y $ARTIFACTS/$name.mkv >$ARTIFACTS/$name.log 2>&1 &
 done
 
 echo "Attempting to capture incoming HLS stream(s)..."
@@ -37,8 +41,8 @@ done
 
 watch -n 1 " \
   echo \"total requested streams: $#\"; \
-  echo \"total running streams: $(ls /tmp/ffmpeg-client-*.log | wc -l)\"; \
-  for log in \`ls /tmp/ffmpeg-client-*.log\`; do \
+  echo \"total running streams: $(ls $ARTIFACTS/*.log | wc -l)\"; \
+  for log in \`ls $ARTIFACTS/*.log\`; do \
     line=\`tail -1 \$log | grep frame=\`; \
     echo | awk -v myline=\"\$line\" -v mylog=\$log '{print mylog \": \" myline}'; \
   done"

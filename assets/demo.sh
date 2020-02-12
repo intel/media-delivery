@@ -30,10 +30,18 @@ if [ "$mode" = "help" ]; then
 fi
 
 if [ "$mode" = "streams" ]; then
-  for stream in `ls -1 /content/*.mp4`; do
+  echo "Your content (has preference over embedded content):"
+  for stream in `ls -1 /opt/data/content/*.mp4`; do
     name=$(basename -- "$stream")
     name="${name%.*}"
-    echo "$name | http://localhost:8080/live/$name/index.m3u8"
+    echo "  $name | http://localhost:8080/live/$name/index.m3u8"
+  done
+  echo
+  echo "Container embedded content:"
+  for stream in `ls -1 /opt/data/embedded/*.mp4`; do
+    name=$(basename -- "$stream")
+    name="${name%.*}"
+    echo "  $name | http://localhost:8080/live/$name/index.m3u8"
   done
   exit 0
 fi

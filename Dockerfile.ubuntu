@@ -31,6 +31,16 @@ RUN groupadd -r user && useradd -lrm -s /bin/bash -g user -G sudo \
 # Set 'sudo' to NOPASSWD for all container users
 RUN sed -i -e 's,%sudo.*,%sudo ALL=(ALL) NOPASSWD:ALL,g' /etc/sudoers
 
+FROM base AS content
+
+RUN apt-get update && apt-get install -y \
+  wget \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir /embedded
+RUN cd /embedded && \
+  wget --progress=bar:force http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4
+
 FROM base AS build-prerequisites
 
 RUN apt-get update && apt-get install -y \
@@ -121,6 +131,14 @@ RUN ldconfig
 # Making solution sources available in the final container
 COPY . $PREFIX/src/intel-media-delivery
 
+# Making content available in the container
+COPY --from=content /embedded /opt/data/embedded
+
+# Creating locations solution will need
+RUN mkdir -p /opt/data/content
+RUN mkdir -p /opt/data/artifacts && chmod a+w /opt/data/artifacts
+RUN mkdir -p /var/www/hls
+
 # Setting up solution
 ARG SOLUTION=cdn
 RUN cd $PREFIX/src/intel-media-delivery/solutions/$SOLUTION && ./setup.sh $PREFIX
@@ -132,5 +150,20 @@ RUN { \
   echo "export PATH=$PREFIX/bin:\$PATH"; \
   echo "source /etc/demo.env"; \
 } >> ~/.bashrc
+
+# Declaring volumes which you might wish to optionally mount
+#  * /opt/data/content is where you can put your own content to access from inside
+#    the solution demos
+#  * /opt/data/artifacts is a location where solution will produce some output
+#    artifacts like generated or captured stream and logs. You can wish to twick
+#    this location to get artifacts on your host system
+#  * /var/www/hls is a location where solution demos will generate HLS streams. You
+#    might wish to twick this location to get access to these streams. Mind that
+#    this is server side raw HLS stream. If you run some demo client to capture
+#    streaming video - look in the /opt/data/artifacts
+
+VOLUME /opt/data/content
+VOLUME /opt/data/artifacts
+VOLUME /var/www/hls
 
 CMD /usr/bin/bash

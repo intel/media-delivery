@@ -16,8 +16,6 @@ set -ex
 
 prefix=$1
 
-# Create location for HLS stream fragments
-mkdir /var/www/hls
 # nginx user should have permission to read/write in
 # the HLS streams location
 chown www-data /var/www/hls

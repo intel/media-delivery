@@ -16,19 +16,24 @@
 #   - For valid requests for HLS fragments which are of /live/<stream>/<path>.ts
 # 
 
+LOGFILE=/tmp/lua-client-requests.log
+
 # Just simple logging to debug the script
 addlog() {
-  echo "[$(date)] $@" >>/tmp/trigger-streaming.log
+  echo "[$(date)] $@" >>$LOGFILE
 }
 
 log() {
-  addlog "$@" >>/tmp/trigger-streaming.log
+  addlog "$@" >>$LOGFILE
   $@
 }
 
 addlog "$0 $@: start"
 
 source /etc/demo.env
+
+ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-server
+mkdir -p $ARTIFACTS
 
 # Let's parse incoming URL request expected to be: "/live/<stream>/index.m3u8"
 live=$(echo "$1" | awk -F/ '{print $2}')
@@ -40,25 +45,42 @@ addlog "live=$live, stream=$stream, index=$index"
 if [ "$live" != "live" -o -z "$stream" -o "$index" != "index.m3u8" ]; then
   addlog "nothing to do for the stream: $1"
   addlog "$0 $@: end"
+  cp $LOGFILE $ARTIFACTS/
   exit 0
 fi
 
 if [ -d /var/www/hls/live/$stream ]; then
   addlog "already publishing: $1"
   addlog "$0 $@: end"
+  cp $LOGFILE $ARTIFACTS/
   exit 0
 fi
 
-cmd="ffmpeg \
-  -hwaccel qsv -hwaccel_device /dev/dri/renderD128 \
-  -c:v h264_qsv -re -stream_loop 100 -i /content/$stream.mp4 \
-  -c:v h264_qsv -profile:v baseline \
-  -preset medium -g 50 -bf 1 -async_depth 1 \
-  -b:v 1000K -maxrate 6000K -minrate 6000K \
-  -c:a copy -f flv rtmp://localhost:1935/live/$stream"
+to_play=""
+if [ -f /opt/data/content/$stream.mp4 ]; then
+  to_play="/opt/data/content/$stream.mp4"
+fi
+if [ "$to_play" = "" -a -f /opt/data/embedded/$stream.mp4 ]; then
+  to_play="/opt/data/embedded/$stream.mp4"
+fi
 
-addlog "scheduling: $cmd"
-$cmd >/tmp/trigger-streaming-ffmpeg.log 2>&1 &
+if [ "$to_play" = "" ]; then
+  addlog "no such stream to play: $stream"
+  cp $LOGFILE $ARTIFACTS/
+  addlog "$0 $@: end"
+  exit 0
+fi
+
+cmd=(ffmpeg
+  -hwaccel qsv -hwaccel_device /dev/dri/renderD128
+  -c:v h264_qsv -re -stream_loop 100 -i $to_play
+  -c:v h264_qsv -profile:v baseline
+  -preset medium -g 50 -bf 1 -async_depth 1
+  -b:v 1000K -maxrate 6000K -minrate 6000K
+  -c:a copy -f flv rtmp://localhost:1935/live/$stream)
+
+addlog "scheduling: ${cmd[@]}"
+"${cmd[@]}" >$ARTIFACTS/$stream.log 2>&1 &
 pid=$!
 
 addlog "$0 $@: just scheduled PID=$pid"
@@ -86,3 +108,4 @@ else
 fi
 
 addlog "$0 $@: end"
+cp $LOGFILE $ARTIFACTS/
