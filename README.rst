@@ -1,5 +1,5 @@
-Intel Media Delivery Solutions
-==============================
+Media Delivery Solutions
+========================
 
 .. contents::
 
@@ -16,8 +16,9 @@ Please, refer to the below benchmark results to level set expectations.
 How to get?
 -----------
 
-Each solution is available in a form of Docker container. To build default solution (`CDN`_)
-run::
+Each solution is available in a form of `Docker <https://docker.com>`_ container. To install
+a docker refer to Docker install `instructions <https://docs.docker.com/install/>`_. To
+build default solution (`CDN`_) run::
 
   docker build \
     $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
@@ -158,4 +159,7 @@ Further reading
 Links
 -----
 
-TBD
+* `Docker <https://docker.com>`_
+* `FFmpeg <http://ffmpeg.org/>`_
+* `VLC player <https://www.videolan.org/vlc/index.html>`_
+* `NGinx <http://nginx.org>`_
