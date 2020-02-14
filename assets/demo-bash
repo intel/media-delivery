@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# These 2 files should be provided by particular solution
+#  - /etc/demo.env contains environment variables needed to run a solution
+#  - demo-setup contains container runtime setup steps
+source /etc/demo.env
+demo-setup
+
+# Typical action performed by demo-setup is adding user(s) to some
+# groups to be able to access some resources, for example GPU.
+function grps_changed {
+  test "$(groups $(whoami) | awk -F: '{print $2}' | awk '{$1=$1;print}')" != "$(groups)"
+  return $?
+}
+
+# We need to restart shell if user was added to the new group since
+# current shell won't reflect updated groups membership.
+if grps_changed; then
+  exec sudo -u user -- "$0" "$@";
+fi
+
+"$@"

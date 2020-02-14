@@ -92,7 +92,7 @@ RUN rm -rf /home/user/vmaf && \
     rm -rf /home/user/ffmpeg
 
 # Ok, here goes the final image end-user will actually see
-FROM base
+FROM base as runtime
 
 LABEL vendor="Intel Corporation"
 
@@ -128,6 +128,13 @@ COPY --from=build-all $PREFIX $PREFIX
 RUN echo "$PREFIX/lib" > /etc/ld.so.conf.d/intel-media-delivery.conf
 RUN ldconfig
 
+# Installing entrypoint helper scripts
+COPY assets/demo-bash /usr/bin/
+COPY assets/hello-bash /usr/bin/
+
+FROM runtime
+ARG PREFIX=/opt/intel/solutions
+
 # Making solution sources available in the final container
 COPY . $PREFIX/src/intel-media-delivery
 
@@ -140,16 +147,12 @@ RUN mkdir -p /opt/data/artifacts && chmod a+w /opt/data/artifacts
 RUN mkdir -p /var/www/hls
 
 # Setting up solution
-ARG SOLUTION=cdn
+ARG SOLUTION=edge
 RUN cd $PREFIX/src/intel-media-delivery/solutions/$SOLUTION && ./setup.sh $PREFIX
 
 # Setting up 'user' environment common for all solutions
 USER user
 WORKDIR /home/user
-RUN { \
-  echo "export PATH=$PREFIX/bin:\$PATH"; \
-  echo "source /etc/demo.env"; \
-} >> ~/.bashrc
 
 # Declaring volumes which you might wish to optionally mount
 #  * /opt/data/content is where you can put your own content to access from inside
@@ -166,4 +169,11 @@ VOLUME /opt/data/content
 VOLUME /opt/data/artifacts
 VOLUME /var/www/hls
 
-CMD /usr/bin/bash
+# hello-bash is a default command which will be executed by demo-bash if
+# user did not provide any arguments starting the container. Basically hello-bash
+# will print welcome message and enter regular bash with correct environment.
+CMD ["/usr/bin/hello-bash"]
+
+# demo-bash will execute whatever command is provided by the user making
+# sure that environment settings are correct.
+ENTRYPOINT ["/usr/bin/demo-bash"]

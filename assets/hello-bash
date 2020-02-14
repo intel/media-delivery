@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# This is solutions default entrypoint script which prints out welcome
+# message, mimimal usage instructions and enters into container.
+
+source /etc/demo.env
+
+echo "Welcome to Media Deliver $DEMO_NAME Demo!"
+echo
+echo "You've entered demo container with /bin/bash and can play around."
+echo "For example, try to run something via ffmpeg..."
+echo
+echo "If you want to start demo, exit the container (type exit or CTRL+D)"
+echo "and rerun passing 'demo help' as a docker run command to get"
+echo "further instructions:"
+echo "  docker <options> run demo help"
+echo
+echo "Have fun!"
+
+/bin/bash

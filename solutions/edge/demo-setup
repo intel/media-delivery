@@ -1,0 +1,7 @@
+#!/bin/bash
+
+video_grps=$(ls -g /dev/dri/renderD* | awk '{print $3}' | uniq | \
+  awk -vORS=, '{ print }' | sed 's/,$/\n/')
+
+sudo usermod -aG $video_grps user
+sudo usermod -aG $video_grps www-data
