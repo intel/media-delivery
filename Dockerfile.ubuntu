@@ -147,7 +147,7 @@ RUN mkdir -p /opt/data/artifacts && chmod a+w /opt/data/artifacts
 RUN mkdir -p /var/www/hls
 
 # Setting up solution
-ARG SOLUTION=edge
+ARG SOLUTION=cdn
 RUN cd $PREFIX/src/intel-media-delivery/solutions/$SOLUTION && ./setup.sh $PREFIX
 
 # Setting up 'user' environment common for all solutions
