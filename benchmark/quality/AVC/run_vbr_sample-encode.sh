@@ -26,4 +26,5 @@ fi
 sample_encode -hw \
   h264 -w $width -h $height -f $framerate -i $file \
   -u medium -b $bitrate -vbr -n $nframes  \
+  $options \
   -o ${prefix}_${bitrate_mbps}Mbps_VBR_SENC.h264

@@ -3,18 +3,21 @@
 if [[ "$1" =~ ^(help|-help|--help|-h)$ ]]; then
   echo "Usage:"
   echo "  run_quality.sh help|-help|--help|-h"
-  echo "  run_quality.sh <stream> <prefix> <width> <height> <nframes> <framerate> AVC|HEVC -4K|-HD|-SD default|best"
+  echo "  run_quality.sh <stream.yuv> <prefix> <width> <height> <nframes> <framerate> AVC|HEVC -4K|-HD|-SD default|best [--skip-metrics|--skip-encoding]"
+  echo "  run_quality.sh <stream.container> <prefix> <nframes> AVC|HEVC -4K|-HD|-SD default|best [--skip-metrics]"
   echo ""
   echo "Options:"
   echo "  help|-help|--help|-h - print this help"
-  echo "  <stream>          - fully qualified path to the input stream in I420 color format"
-  echo "  <prefix>          - prefix appended to the output file name(s) (TODO: delete me)"
-  echo "  <widht>, <height> - width and height of the input stream"
-  echo "  <nframes>         - number of frames to process"
-  echo "  <framerate>       - input stream framerate"
-  echo "  AVC|HEVC          - encoder to use"
-  echo "  -4K|-HD|-SD       - a set of bitrates to use"
-  echo "  default|best      - a set of encoding options to use"
+  echo "  <stream.yuv>         - fully qualified path to the input stream in I420 color format"
+  echo "  <stream.container>   - fully qualified path to the input stream in I420 color format"
+  echo "  <prefix>             - prefix appended to the output file name(s) (TODO: delete me)"
+  echo "  <widht>, <height>    - width and height of the input stream"
+  echo "  <nframes>            - number of frames to process"
+  echo "  <framerate>          - input stream framerate"
+  echo "  AVC|HEVC             - encoder to use"
+  echo "  -4K|-HD|-SD          - a set of bitrates to use"
+  echo "  default|best         - a set of encoding options to use"
+  echo "  --skip-metrics       - do not calculate metrics"
   echo ""
   echo "Description:"
   echo "Encodes input YUV I420 stream with specified codec and with different bitrates."
@@ -25,19 +28,32 @@ file=$1
 shift
 prefix=$1
 shift
-width=$1
-shift
-height=$1
-shift
-nframes=$1
-shift
-framerate=$1
-shift
+
+if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
+  is_container=0
+  width=$1
+  shift
+  height=$1
+  shift
+  nframes=$1
+  shift
+  framerate=$1
+  shift
+else
+  is_container=1
+  nframes=$1
+  shift
+  framerate=$(($(ffprobe -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 \
+    -show_entries stream=r_frame_rate $file)))
+fi
+
 codec=$1
 shift
 bitrates=$1
 shift
 options=$1
+shift
+skip_arg=$1
 shift
 
 if [ "$codec" = "AVC" ]; then
@@ -89,11 +105,57 @@ else
   exit -1
 fi
 
-path=$(dirname $(readlink -f $0))
+if [ "$skip_arg" != "--skip-encoding" ]; then
+  path=$(dirname $(readlink -f $0))
 
-for b in "${bitrates_list[@]}"; do
-  $path/$codec/run_cbr_ffmpeg-qsv.sh $file $prefix $width $height $nframes $framerate $b $options_qsv
-  $path/$codec/run_vbr_ffmpeg-qsv.sh $file $prefix $width $height $nframes $framerate $b $options_qsv
-  $path/$codec/run_cbr_sample-encode.sh $file $prefix $width $height $nframes $framerate $b $options_senc
-  $path/$codec/run_vbr_sample-encode.sh $file $prefix $width $height $nframes $framerate $b $options_senc
-done
+  for b in "${bitrates_list[@]}"; do
+    if [ $is_container -eq 1 ]; then
+      $path/$codec/run_cbr_ffmpeg-qsv.sh $file $prefix $nframes $framerate $b $options_qsv
+      $path/$codec/run_vbr_ffmpeg-qsv.sh $file $prefix $nframes $framerate $b $options_qsv
+    else
+      $path/$codec/run_cbr_ffmpeg-qsv.sh $file $prefix $width $height $nframes $framerate $b $options_qsv
+      $path/$codec/run_vbr_ffmpeg-qsv.sh $file $prefix $width $height $nframes $framerate $b $options_qsv
+      $path/$codec/run_cbr_sample-encode.sh $file $prefix $width $height $nframes $framerate $b $options_senc
+      $path/$codec/run_vbr_sample-encode.sh $file $prefix $width $height $nframes $framerate $b $options_senc
+    fi
+  done
+fi
+
+if [ "$skip_arg" != "--skip-metrics" ]; then
+  for out in `ls -1 $prefix* | grep -v \.metrics`; do
+    if [ $is_container -eq 0 ]; then
+      rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
+    fi
+
+    cmd=(ffmpeg -an
+      $rawvideo -i $file
+      -i $out
+      -lavfi " \
+        [0:v]trim=end_frame=$nframes[ref]; \
+        [1:v]trim=end_frame=$nframes[v]; \
+        [v][ref]libvmaf=psnr=1:ssim=1:ms_ssim=1:log_fmt=json:log_path=/tmp/out.json"
+      -f null -)
+
+    "${cmd[@]}"
+
+    # calculate bitrate in kbps
+    b=$(stat -c %s $out)   # filesize
+    b=$(($b * 8))          # filesize in bits
+    b=$(($b / $nframes))   # bits per frame
+    b=$(($b * $framerate)) # bps
+    b=$(($b / 1000))       # kbps
+
+    vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["VMAF score"])')
+    psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["PSNR score"])')
+    ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["SSIM score"])')
+    ms_ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["MS-SSIM score"])')
+    metrics="$out:$b:$vmaf:$psnr:$ssim:$ms_ssim"
+    
+    echo "$metrics" | grep CBR_QSV >> $prefix.cbr.ffmpeg-qsv.metrics
+    echo "$metrics" | grep VBR_QSV >> $prefix.vbr.ffmpeg-qsv.metrics
+    if [ $is_container -eq 0 ]; then
+      echo "$metrics" | grep CBR_SENC >> $prefix.cbr.sample-encode.metrics
+      echo "$metrics" | grep VBR_SENC >> $prefix.vbr.sample-encode.metrics
+    fi
+  done
+fi

@@ -38,7 +38,7 @@ done
 {
   echo "export DEMO_NAME=Edge"
   echo "export DEMO_PREFIX=$prefix"
-  echo "export PATH=\$DEMO_PREFIX/bin:\$PATH"
+  echo "export PATH=\$DEMO_PREFIX/bin:/usr/share/mfx/samples/:\$PATH"
   echo "export LIBVA_DRIVER_NAME=iHD"
 } > /etc/demo.env
 

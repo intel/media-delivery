@@ -108,6 +108,7 @@ RUN apt-get update && apt-get install -y \
     libva-drm2 \
     libva-x11-2 \
     nginx \
+    python3 \
     tmux \
     vainfo \
     $(apt-cache depends libx264-dev | grep Depends | grep libx264 | cut -d: -f2) \
