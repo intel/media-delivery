@@ -16,7 +16,7 @@ function grps_changed {
 # We need to restart shell if user was added to the new group since
 # current shell won't reflect updated groups membership.
 if grps_changed; then
-  exec sudo -u user -- "$0" "$@";
+  exec sudo -E -u user -- "$0" "$@";
 fi
 
 "$@"
