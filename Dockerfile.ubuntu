@@ -37,9 +37,10 @@ RUN apt-get update && apt-get install -y \
   wget \
   && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /embedded
-RUN cd /embedded && \
-  wget --progress=bar:force http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4
+# Refer to usage.txt for the content copyright notice(s)
+RUN mkdir /embedded && cd /embedded && \
+  wget --progress=bar:force https://repositories.intel.com/media/usage.txt && \
+  wget --progress=bar:force https://repositories.intel.com/media/WAR_2Mbps_perceptual_1080p.mp4
 
 FROM base AS build-prerequisites
 

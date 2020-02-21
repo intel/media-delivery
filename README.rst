@@ -75,14 +75,16 @@ To get list of streams you will be able to play, execute::
   docker run -it \
     $(env | grep -E '_proxy=' | sed 's/^/-e /') \
     --privileged --network=host \
-    -v /path/to/content:/content \
     intel-media-delivery demo streams
 
-``content`` folder mapped inside the container should contain AVC encoded video
-stream(s) in MP4 container format. On the output of the above command you should
-get list of stream in a format::
+On the output of the above command you should get list of streams in a format::
 
-  TearsOfSteel | http://localhost:8080/live/TearsOfSteel
+  WAR_2Mbps_perceptual_1080p | http://localhost:8080/live/WAR_2Mbps_perceptual_1080p/index.m3u8
+
+Above example just lists content embedded in the container on the build stage.
+See `Content Attribution`_ for the copyright info for the above video. See
+`Container volumes (adding your content, access logs, etc.) <doc/howto.rst#container-volumes-adding-your-content-access-logs-etc>`_
+for how to add your own content to the demo.
 
 ffmpeg demo mode
 ~~~~~~~~~~~~~~~~
@@ -95,7 +97,7 @@ To run it, execute::
     $(env | grep -E '_proxy=' | sed 's/^/-e /') \
     --privileged --network=host \
     -v /path/to/content:/content \
-    intel-media-delivery demo ffmpeg TearsOfSteel
+    intel-media-delivery demo ffmpeg WAR_2Mbps_perceptual_1080p
     
 Interactive demo mode (use vlc)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,9 +114,9 @@ awaits for the user interaction. To start demo in this mode, execute::
 After that you need to trigger streaming via some client running outside of the
 container. For example, from the host::
 
-  vlc http://localhost:8080/live/TearsOfSteel
+  vlc http://localhost:8080/live/WAR_2Mbps_perceptual_1080p/index.m3u8
   # or
-  ffmpeg -i http://localhost:8080/live/TearsOfSteel -c copy TearsOfSteel.mkv
+  ffmpeg -i http://localhost:8080/live/WAR_2Mbps_perceptual_1080p/index.m3u8 -c copy WAR_2Mbps_perceptual_1080p.mkv
   
 Available solutions and their architectures
 -------------------------------------------
@@ -155,6 +157,18 @@ Further reading
 ---------------
 
 * `Solutions HowTo <doc/howto.rst>`_
+
+Content Attribution
+-------------------
+
+Container image comes with some embedded content attributed as follows::
+
+  /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4:
+    Film: WAR - Courtesy & Copyright: Yash Raj Films Pvt. Ltd.
+
+Inside the container, please, refer to the following file::
+
+  cat /opt/data/embedded/usage.txt
 
 Links
 -----
