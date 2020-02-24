@@ -129,7 +129,7 @@ if [ "$skip_arg" != "--skip-metrics" ]; then
 
     cmd=(ffmpeg -an
       $rawvideo -i $file
-      -i $out
+      -r $framerate -i $out
       -lavfi " \
         [0:v]trim=end_frame=$nframes[ref]; \
         [1:v]trim=end_frame=$nframes[v]; \
