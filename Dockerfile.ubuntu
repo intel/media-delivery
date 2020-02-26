@@ -181,6 +181,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     man-db \
     nginx \
     python3 \
+    python3-matplotlib \
     tmux \
     vainfo \
     $(apt-cache depends libx264-dev | grep Depends | grep libx264 | cut -d: -f2) \
