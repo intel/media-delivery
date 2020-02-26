@@ -59,10 +59,13 @@ shift
 if [ "$codec" = "AVC" ]; then
   if [ "$bitrates" = "-4K" ]; then
     bitrates_list=(6 9 15 24 40)
+    vmaf_model_path=vmaf_4k_v0.6.1.pkl
   elif [ "$bitrates" = "-HD" ]; then
     bitrates_list=(2 3 6 12 24)
+    vmaf_model_path=vmaf_v0.6.1.pkl
   elif [ "$bitrates" = "-SD" ]; then
     bitrates_list=(1 1.5 3 6 12)
+    vmaf_model_path=vmaf_v0.6.1.pkl
   else
     echo "error: invalid bitrates list (-4K, -HD, -SD): $bitrates"
     exit -1
@@ -122,6 +125,17 @@ if [ "$skip_arg" != "--skip-encoding" ]; then
 fi
 
 if [ "$skip_arg" != "--skip-metrics" ]; then
+  if [ -f $DEMO_PREFIX/share/vmaf/$vmaf_model_path ]; then
+    # that's the location where media delivery demo installs vmaf models
+    vmaf_model_path=$DEMO_PREFIX/share/vmaf/$vmaf_model_path
+  elif [ -f /usr/local/share/model/$vmaf_model_path ]; then
+    # that's default installation path for vmaf models
+    vmaf_model_path=/usr/local/share/model/$vmaf_model_path
+  else
+    echo "error: can't find vmaf model: $vmaf_model_path"
+    exit -1
+  fi
+
   for out in `ls -1 $prefix* | grep -v \.metrics`; do
     if [ $is_container -eq 0 ]; then
       rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
@@ -133,7 +147,7 @@ if [ "$skip_arg" != "--skip-metrics" ]; then
       -lavfi " \
         [0:v]trim=end_frame=$nframes[ref]; \
         [1:v]trim=end_frame=$nframes[v]; \
-        [v][ref]libvmaf=psnr=1:ssim=1:ms_ssim=1:log_fmt=json:log_path=/tmp/out.json"
+        [v][ref]libvmaf=model_path=$vmaf_model_path:psnr=1:ssim=1:ms_ssim=1:log_fmt=json:log_path=/tmp/out.json"
       -f null -)
 
     "${cmd[@]}"

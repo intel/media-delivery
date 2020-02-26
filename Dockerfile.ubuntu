@@ -125,7 +125,7 @@ RUN rm -rf /tmp/scripts
 
 # Install runtime environment we manually built on 'build' stage
 ARG PREFIX=/opt/intel/solutions
-COPY --from=build-all /usr/local/share/model /usr/local/share/model
+COPY --from=build-all /usr/local/share/model $PREFIX/share/vmaf
 COPY --from=build-all $PREFIX $PREFIX
 RUN echo "$PREFIX/lib" > /etc/ld.so.conf.d/intel-media-delivery.conf
 RUN ldconfig
