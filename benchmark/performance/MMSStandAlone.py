@@ -1,5 +1,5 @@
-#!/bin/bash
-#
+#! /usr/bin/python3
+##################################################################################
 # Copyright (c) 2020 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,18 +19,27 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+##################################################################################
+########### James.Iwan@intel.com Bench Perf ######################################
+########### Scott.Rowe@intel.com Bench Perf ######################################
+import subprocess, sys, os, re, argparse, time, statistics, signal
 
-path=$(dirname $(readlink -f $0))
+shell_script_mms = "/tmp/perf/mms.sh"
+d = open(shell_script_mms, 'r')
+mediacmd_temp = []
 
-command=$1
-shift;
+for dispatch_cmdline in d:
+    print(dispatch_cmdline)
+    mediacmd_temp.append(dispatch_cmdline)
 
-if [ "$command" = "quality" ]; then
-  $path/quality/bench-quality $@
-  exit 0
-elif [ "$command" = "perf" ]; then
-  $path/performance/MMSBench.py $@
-else
-  echo "error: unknown command: '$command'"
-  exit -1
-fi
+d.close()
+
+processes = [subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE) for cmd in mediacmd_temp]
+
+for p in processes:
+    for line in p.stdout.readlines():
+        print(line)
+    p.wait()
+
+
+
