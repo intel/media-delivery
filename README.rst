@@ -157,6 +157,7 @@ Further reading
 ---------------
 
 * `Solutions HowTo <doc/howto.rst>`_
+* `Solutions Tests <tests/readme.rst>`_
 
 Content Attribution
 -------------------

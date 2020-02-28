@@ -1,41 +1,91 @@
 #!/bin/bash
 
-mode=$1
-if [ "$#" -gt 0 ]; then
-  shift;
-  streams=($@)
-fi
-
-if [ "$mode" = "help" ]; then
-  echo "Usage: demo"
-  echo "   or: demo streams"
-  echo "   or: demo ffmpeg <stream> [<stream>...]"
-  echo "   or: demo help"
+function print_help() {
+  echo "Usage: demo [<options>] [<command> [<args>]]"
   echo ""
-  echo "This is a helper script to try different demo modes."
+  echo "Options:"
+  echo "  --help      Print this help"
   echo ""
-  echo "With no arguments it starts nginx server and awaits external incoming client"
+  echo "Commands:"
+  echo "  ffmpeg      Toggle ffmpeg demo mode"
+  echo "  help        Print help on specified topic"
+  echo "  streams     Print available streams"
+  echo ""
+  echo "Description:"
+  echo "If command is not specified, it starts nginx server and awaits external incoming client"
   echo "requests. Issue the one requesting playback via vlc from the host or some other"
   echo "system on the network:"
   echo "   $ vlc http://localhost:8080/live/<stream>"
   echo "or capturing via ffmpeg:"
   echo "   $ ffmpeg -i http://localhost:8080/live/<stream> -c copy /tmp/output.mkv"
   echo ""
-  echo "With 'streams' as an argument script returns list of streams available"
-  echo "for playback and exits."
+  echo "'streams' command returns list of streams available for playback and exits."
   echo ""
-  echo "With 'ffmpeg' as an argument script triggers streaming via ffmpeg and captures"
-  echo "incoming HLS video stream"
+  echo "'ffmpeg' command toggles ffmpeg demo mode which runs ffmpeg client within the container."
+  echo "No interaction from host or other system is required. Example:"
+  echo "   $ demo ffmpeg <stream>"
+  echo ""
+  echo "See 'demo help <command>' to read about specific command."
+}
+
+function print_help__streams() {
+  echo "Usage: demo streams"
+}
+
+function print_help__ffmpeg() {
+  echo "Usage: demo ffmpeg <stream> [<stream>]"
+  echo ""
+  echo "Description:"
+  echo "Request streaming from within the container by ffmpeg. ffmpeg will catch"
+  echo "streaming video and dump it to the disk."
+}
+
+function print_command_help() {
+  if [ $# -eq 0 ]; then
+    print_help
+    exit 0
+  fi
+  topic=$1
+  if [ "$topic" = "streams" ]; then
+    print_help__streams
+  elif [ "$topic" = "ffmpeg" ]; then
+    print_help__ffmpeg
+  else
+    echo "error: unknown command: '$topic'"
+    print_help
+    exit -1
+  fi
+  exit 0
+}
+
+command=$1
+shift;
+
+if [ "$command" = "--help" ]; then
+  print_help
   exit 0
 fi
 
-if [ "$mode" = "streams" ]; then
+if [ "$command" = "help" ]; then
+  print_command_help $@
+  exit 0
+elif [ "$command" = "streams" ]; then
+  if [ $# -gt 0 ]; then
+    echo "error: too many arguments: $@"
+    print_help__streams
+    exit -1
+  fi
   echo "Your content (has preference over embedded content):"
-  for stream in `ls -1 /opt/data/content/*.mp4`; do
-    name=$(basename -- "$stream")
-    name="${name%.*}"
-    echo "  $name | http://localhost:8080/live/$name/index.m3u8"
-  done
+  your_content=`ls -1 /opt/data/content/*.mp4 2>/dev/null`
+  if [ "$your_content" = "" ]; then
+    echo "  none"
+  else
+    for stream in $your_content; do
+      name=$(basename -- "$stream")
+      name="${name%.*}"
+      echo "  $name | http://localhost:8080/live/$name/index.m3u8"
+    done
+  fi
   echo
   echo "Container embedded content:"
   for stream in `ls -1 /opt/data/embedded/*.mp4`; do
@@ -44,21 +94,28 @@ if [ "$mode" = "streams" ]; then
     echo "  $name | http://localhost:8080/live/$name/index.m3u8"
   done
   exit 0
-fi
-
-streams_required=no
-if [ "$mode" = "ffmpeg" ]; then
-  command="ffmpeg-capture-hls.sh $streams"
-  streams_required=yes
-fi
-
-if [ "$streams_required" = "yes" -a ${#streams[@]} -eq 0 ]; then
-  echo "error: '$mode' mode requires streams"
+elif [ "$command" = "ffmpeg" ]; then
+  if [ $# -eq 0 ]; then
+    echo "error: no streams specified"
+    print_help__ffmpeg
+    exit -1
+  fi
+  streams=($@)
+  for stream in ${streams[@]}; do
+    if [ ! -f /opt/data/content/$stream.mp4 -a ! -f /opt/data/embedded/$stream.mp4 ]; then
+      echo "error: no such file to play: '$stream'"
+      exit -1
+    fi
+  done
+  client="ffmpeg-capture-hls.sh $streams"
+elif [ "$command" != "" ]; then
+  echo "error: unknown command or option: '$command'"
+  print_help
   exit -1
 fi
 
 {
-  echo "new-session /usr/bin/bash -c \"$command\""
+  echo "new-session /usr/bin/bash -c \"$client\""
   echo "split-window -v sudo intel_gpu_top"
   echo "split-window -v top"
   echo "split-window -v" # TODO dump server and transcoding statistics
