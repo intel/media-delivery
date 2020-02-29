@@ -177,6 +177,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnginx-mod-rtmp \
     libva-drm2 \
     libva-x11-2 \
+    linux-tools-generic \
     man-db \
     nginx \
     python3 \
@@ -186,7 +187,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     $(apt-cache depends libx265-dev | grep Depends | grep libx265 | cut -d: -f2) \
   && rm -rf /var/lib/apt/lists/*
 
+# Adjusting environment to fix WAs and other limitations:
+# * man is excluded from the minimal ubuntu image
+# * perf is tight to particular kernel version as an old WA which will never
+# be fixed, we just need to use some version
 RUN rm -f /usr/bin/man && dpkg-divert --quiet --remove --rename /usr/bin/man
+RUN ln -fs `find /usr/lib/linux-tools -name perf` /usr/bin/perf;
 
 # This script is a placeholder to further setup the final runtime image.
 RUN /tmp/scripts/setup-runtime-image.sh
