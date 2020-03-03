@@ -1,15 +1,20 @@
 #!/bin/bash
 
+n_pretend_max=50
+
 function print_help() {
   echo "Usage: demo [<options>] [<command> [<args>]]"
   echo ""
   echo "Options:"
   echo "  --help      Print this help"
+  echo "  -<n>        Pretend to have <n> additional copies of each input stream (n <= $n_pretend_max)"
   echo ""
   echo "Commands:"
   echo "  ffmpeg      Toggle ffmpeg demo mode"
   echo "  help        Print help on specified topic"
   echo "  streams     Print available streams"
+  echo ""
+  echo "See 'demo help <command>' to read about specific command."
   echo ""
   echo "Description:"
   echo "If command is not specified, it starts nginx server and awaits external incoming client"
@@ -25,7 +30,8 @@ function print_help() {
   echo "No interaction from host or other system is required. Example:"
   echo "   $ demo ffmpeg <stream>"
   echo ""
-  echo "See 'demo help <command>' to read about specific command."
+  echo "'-<n>' option is useful for demo purposes. With it solution pretends to have <n> copies of"
+  echo "each input stream. Execute 'demo -4 streams' to explore the difference."
 }
 
 function print_help__streams() {
@@ -61,9 +67,42 @@ function print_command_help() {
 command=$1
 shift;
 
+n_pretend=0
+
 if [ "$command" = "--help" ]; then
   print_help
   exit 0
+elif [[ "$command" =~ ^-([0-9])+$ ]]; then
+  n_pretend=${BASH_REMATCH[1]}
+  if [ $n_pretend -gt $n_pretend_max ]; then
+    echo "error: '-n' option: too big value: $n_pretend"
+    exit -1
+  fi
+
+  command=$1
+  shift;
+fi
+
+if [ $n_pretend -gt 0 ]; then
+  sudo mkdir /opt/data/duplicates
+  for stream in `ls -1 /opt/data/content/*.mp4 2>/dev/null`; do
+    name=$(basename -- "$stream")
+    extension="${name##*.}"
+    name="${name%.*}"
+    for n in `seq 1 $n_pretend`; do
+      sudo ln -s $stream /opt/data/duplicates/$name-$n.$extension
+    done
+  done
+  for stream in `ls -1 /opt/data/embedded/*.mp4 2>/dev/null`; do
+    name=$(basename -- "$stream")
+    extension="${name##*.}"
+    name="${name%.*}"
+    for n in `seq 1 $n_pretend`; do
+      if [ ! -e $name-$n.$extension ]; then
+        sudo ln -s $stream /opt/data/duplicates/$name-$n.$extension
+      fi
+    done
+  done
 fi
 
 if [ "$command" = "help" ]; then
@@ -93,6 +132,13 @@ elif [ "$command" = "streams" ]; then
     name="${name%.*}"
     echo "  $name | http://localhost:8080/live/$name/index.m3u8"
   done
+  echo
+  echo "Stream duplicates:"
+  for stream in `ls -1 /opt/data/duplicates/*.mp4`; do
+    name=$(basename -- "$stream")
+    name="${name%.*}"
+    echo "  $name | http://localhost:8080/live/$name/index.m3u8"
+  done
   exit 0
 elif [ "$command" = "ffmpeg" ]; then
   if [ $# -eq 0 ]; then
@@ -102,7 +148,9 @@ elif [ "$command" = "ffmpeg" ]; then
   fi
   streams=($@)
   for stream in ${streams[@]}; do
-    if [ ! -f /opt/data/content/$stream.mp4 -a ! -f /opt/data/embedded/$stream.mp4 ]; then
+    if [ ! -f /opt/data/content/$stream.mp4 -a \
+         ! -f /opt/data/embedded/$stream.mp4 -a \
+         ! -f /opt/data/duplicates/$stream.mp4 ]; then
       echo "error: no such file to play: '$stream'"
       exit -1
     fi

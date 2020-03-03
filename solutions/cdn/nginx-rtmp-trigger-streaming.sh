@@ -66,6 +66,9 @@ fi
 if [ "$to_play" = "" -a -f /opt/data/embedded/$stream.mp4 ]; then
   to_play="/opt/data/embedded/$stream.mp4"
 fi
+if [ "$to_play" = "" -a -f /opt/data/duplicates/$stream.mp4 ]; then
+  to_play="/opt/data/duplicates/$stream.mp4"
+fi
 
 if [ "$to_play" = "" ]; then
   addlog "no such stream to play: $stream"
