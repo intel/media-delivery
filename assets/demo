@@ -133,12 +133,15 @@ elif [ "$command" = "streams" ]; then
     echo "  $name | http://localhost:8080/live/$name/index.m3u8"
   done
   echo
-  echo "Stream duplicates:"
-  for stream in `ls -1 /opt/data/duplicates/*.mp4`; do
-    name=$(basename -- "$stream")
-    name="${name%.*}"
-    echo "  $name | http://localhost:8080/live/$name/index.m3u8"
-  done
+  duplicates=`ls -1 /opt/data/duplicates/*.mp4 2>/dev/null`
+  if [ "$duplicates" != "" ]; then
+    echo "Stream duplicates:"
+    for stream in $duplicates; do
+      name=$(basename -- "$stream")
+      name="${name%.*}"
+      echo "  $name | http://localhost:8080/live/$name/index.m3u8"
+    done
+  fi
   exit 0
 elif [ "$command" = "ffmpeg" ]; then
   if [ $# -eq 0 ]; then
