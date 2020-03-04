@@ -13,8 +13,9 @@ source /etc/demo.env
 
 export no_proxy=localhost
 
-ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-client
+export ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-client
 
+rm -rf $ARTIFACTS
 mkdir -p $ARTIFACTS
 
 for s in $@; do
@@ -27,6 +28,7 @@ for s in $@; do
   fi
 
   ffmpeg -hide_banner -i $stream -c copy -y $ARTIFACTS/$name.mkv >$ARTIFACTS/$name.log 2>&1 &
+  pids+=( $!:$name:"$ARTIFACTS/$name.log" )
 done
 
 echo "Attempting to capture incoming HLS stream(s)..."
@@ -39,13 +41,47 @@ for i in `seq 5 -1 1`; do
   sleep 1;
 done
 
-watch -n 1 " \
-  echo \"total requested streams: $#\"; \
-  echo \"total running streams: $(ls $ARTIFACTS/*.log | wc -l)\"; \
-  for log in \`ls $ARTIFACTS/*.log\`; do \
-    line=\`tail -1 \$log | grep frame=\`; \
-    echo | awk -v myline=\"\$line\" -v mylog=\$log '{print mylog \": \" myline}'; \
-  done"
+function watch_pids() {
+  echo "ffmpeg streaming clients monitor"
+  echo "================================"
+  echo "Output and logs are here: $ARTIFACTS"
+  echo "Total clients: $#"
+  n=0
+  for arg in $@; do
+    pid=$(echo "$arg" | awk -F: '{print $1}')
+    if ps -p $pid > /dev/null; then
+      n=$((++n))
+    fi
+  done
+  if [ $n -eq $# ]; then
+    status="ALL ALIVE"
+  else
+    status="SOME ARE DEAD"
+  fi
+  echo "Currently running clients: $n ($status)"
+  for arg in $@; do
+    name=$(echo "$arg" | awk -F: '{print $2}')
+    log=$(echo "$arg" | awk -F: '{print $3}')
+
+    size=$(du -sh $ARTIFACTS/$name.mkv 2>/dev/null | awk '{print $1}')
+
+    line=$(tail -1 $log | grep frame=)
+    # frame= x fps= xx ...
+    frames=$(echo $line | awk '{print $2}')
+    fps=$(echo $line | awk '{print $4}')
+
+    echo | awk \
+      -v name=$name \
+      -v size=$size \
+      -v frames=$frames \
+      -v fps=$fps \
+      '{print name ": size=" size ", frames=" frames ", fps=" fps}';
+  done
+}
+
+export -f watch_pids
+
+watch -n 1 -x bash -c "watch_pids ${pids[*]}"
 
 # enter the shell for the user to be able to wander about
 /bin/bash
