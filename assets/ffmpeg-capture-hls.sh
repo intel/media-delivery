@@ -65,7 +65,7 @@ function watch_pids() {
 
     size=$(du -sh $ARTIFACTS/$name.mkv 2>/dev/null | awk '{print $1}')
 
-    line=$(tail -1 $log | grep frame=)
+    line=$(cat $log | grep frame= | tail -1)
     # frame= x fps= xx ...
     frames=$(echo $line | awk '{print $2}')
     fps=$(echo $line | awk '{print $4}')
@@ -77,11 +77,13 @@ function watch_pids() {
       -v fps=$fps \
       '{print name ": size=" size ", frames=" frames ", fps=" fps}';
   done
+
+  echo
+  echo "CTRL^C to exit monitor and enter shell"
 }
 
 export -f watch_pids
 
 watch -n 1 -x bash -c "watch_pids ${pids[*]}"
-
-# enter the shell for the user to be able to wander about
+# You can press CTRL^C to abort watch command and enter shell to wander about
 /bin/bash

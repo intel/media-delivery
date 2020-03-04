@@ -27,6 +27,7 @@ cp nginx.conf /etc/nginx/nginx.conf
 scripts=" \
   ../../assets/demo \
   ../../assets/ffmpeg-capture-hls.sh \
+  ../../assets/monitor-nginx-server.sh \
   ../../scripts/setup-apt-proxy.sh \
   nginx-rtmp-trigger-streaming.sh"
 

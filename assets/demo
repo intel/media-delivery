@@ -169,7 +169,7 @@ fi
   echo "new-session /usr/bin/bash -c \"$client\""
   echo "split-window -v sudo intel_gpu_top"
   echo "split-window -v top"
-  echo "split-window -v" # TODO dump server and transcoding statistics
+  echo "split-window -v monitor-nginx-server.sh"
   echo "select-layout tiled"
 } >> /home/user/.tmux.conf
 

@@ -77,6 +77,14 @@ if [ "$to_play" = "" ]; then
   exit 0
 fi
 
+function run() {
+  "$@" >$ARTIFACTS/$stream.log 2>&1 &
+  pid=$!
+  echo "$pid:$stream:$ARTIFACTS/$stream.log" >> $ARTIFACTS/scheduled
+  wait
+  echo "$pid:$stream:$ARTIFACTS/$stream.log:$?" >> $ARTIFACTS/done
+}
+
 cmd=(ffmpeg
   -hwaccel qsv -hwaccel_device /dev/dri/renderD128
   -c:v h264_qsv -re -stream_loop 100 -i $to_play
@@ -91,16 +99,15 @@ cmd=(ffmpeg
   -var_stream_map 'v:0,a:0 v:1,a:1' stream_%v.m3u8)
 
 addlog "scheduling: ${cmd[@]}"
-"${cmd[@]}" >$ARTIFACTS/$stream.log 2>&1 &
+run "${cmd[@]}" </dev/null >/dev/null 2>&1 &
 pid=$!
 
-addlog "$0 $@: just scheduled PID=$pid"
-addlog "$0 $@: waiting for some time for index file to appear"
+TIMEOUT=20
+addlog "$0 $@: waiting for $TIMEOUT seconds for index file to appear"
 
 # Timeout should be selected longer than HLS fragment length since index
 # file is published by ffmpeg when first fragment becomes available.
 end=$(( $(date +%s) + 20 ))
-addlog "end"
 while ps -p $pid > /dev/null &&
       [ $(date +%s) -lt $end ] &&
       [ ! -f /var/www/hls/live/$stream/index.m3u8 ]; do
