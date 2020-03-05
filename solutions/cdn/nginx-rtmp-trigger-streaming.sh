@@ -87,7 +87,7 @@ function run() {
 
 cmd=(ffmpeg
   -hwaccel qsv -hwaccel_device /dev/dri/renderD128
-  -c:v h264_qsv -re -stream_loop 100 -i $to_play
+  -c:v h264_qsv -re -i $to_play
   -filter_complex '[v:0]split=2[o1][s2];[s2]scale_qsv=w=640:h=-1[o2]'
   -map [o1] -c:v h264_qsv -b:v 5M
   -map [o2] -c:v h264_qsv -b:v 1M
