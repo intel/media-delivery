@@ -67,8 +67,8 @@ function watch_pids() {
 
     line=$(cat $log | grep frame= | tail -1)
     # frame= x fps= xx ...
-    frames=$(echo $line | awk '{print $2}')
-    fps=$(echo $line | awk '{print $4}')
+    frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
+    fps=$(echo $line | awk -F'[ |=]+' '{print $4}')
 
     echo | awk \
       -v name=$name \
