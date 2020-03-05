@@ -42,24 +42,10 @@ for i in `seq 5 -1 1`; do
 done
 
 function watch_pids() {
-  echo "ffmpeg streaming clients monitor"
-  echo "================================"
-  echo "Output and logs are here: $ARTIFACTS"
-  echo "Total clients: $#"
-  n=0
+  running=0
+  completed=0
   for arg in $@; do
     pid=$(echo "$arg" | awk -F: '{print $1}')
-    if ps -p $pid > /dev/null; then
-      n=$((++n))
-    fi
-  done
-  if [ $n -eq $# ]; then
-    status="ALL ALIVE"
-  else
-    status="SOME ARE DEAD"
-  fi
-  echo "Currently running clients: $n ($status)"
-  for arg in $@; do
     name=$(echo "$arg" | awk -F: '{print $2}')
     log=$(echo "$arg" | awk -F: '{print $3}')
 
@@ -70,13 +56,30 @@ function watch_pids() {
     frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
     fps=$(echo $line | awk -F'[ |=]+' '{print $4}')
 
-    echo | awk \
+    report_line=$(echo | awk \
       -v name=$name \
       -v size=$size \
       -v frames=$frames \
       -v fps=$fps \
-      '{print name ": size=" size ", frames=" frames ", fps=" fps}';
+      '{print "  " name ": size=" size ", frames=" frames ", fps=" fps}')
+
+    if ps -p $pid > /dev/null; then
+      running=$((++running))
+      running_reports+="${report_line}\n"
+    else
+      completed=$((++completed))
+      completed_reports+="${report_line}\n"
+    fi
   done
+
+  echo "ffmpeg streaming clients monitor"
+  echo "================================"
+  echo "Output and logs path: $ARTIFACTS"
+  echo "Total clients: $((running+completed))"
+  echo "Running clients: $running"
+  echo -ne "$running_reports"
+  echo "Completed clients: $completed"
+  echo -ne "$completed_reports"
 
   echo
   echo "CTRL^C to exit monitor and enter shell"
