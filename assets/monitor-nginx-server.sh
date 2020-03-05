@@ -21,7 +21,7 @@ function watch_server() {
         name=$(echo "$p" | awk -F: '{print $2}')
         log=$(echo "$p" | awk -F: '{print $3}')
 
-        line=$(cat $log | grep frame= | tail -1)
+        line=$(cat $log | sed 's/\r/\n/' | grep frame= | tail -1)
         # frame= x fps= xx ...
         frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
         fps=$(echo $line | awk -F'[ |=]+' '{print $4}')
@@ -43,7 +43,7 @@ function watch_server() {
       log=$(echo "$p" | awk -F: '{print $3}')
       status=$(echo "$p" | awk -F: '{print $4}')
 
-      line=$(cat $log | grep frame= | tail -1)
+      line=$(cat $log | sed 's/\r/\n/' | grep frame= | tail -1)
       # frame= x fps= xx ...
       frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
       fps=$(echo $line | awk -F'[ |=]+' '{print $4}')

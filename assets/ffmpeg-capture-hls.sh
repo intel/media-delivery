@@ -65,7 +65,7 @@ function watch_pids() {
 
     size=$(du -sh $ARTIFACTS/$name.mkv 2>/dev/null | awk '{print $1}')
 
-    line=$(cat $log | grep frame= | tail -1)
+    line=$(cat $log | sed 's/\r/\n/' | grep frame= | tail -1)
     # frame= x fps= xx ...
     frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
     fps=$(echo $line | awk -F'[ |=]+' '{print $4}')
