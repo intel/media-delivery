@@ -149,7 +149,7 @@ elif [ "$command" = "streams" ]; then
   fi
   exit 0
 elif [ "$command" = "ffmpeg" ]; then
-  if [ $1 = "--exit" ]; then
+  if [ "$1" = "--exit" ]; then
     shift
     _exit=1
     _opts="--exit"

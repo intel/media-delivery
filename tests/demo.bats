@@ -3,7 +3,7 @@ if [ -z "${MDS_IMAGE}" ]; then
   exit 1
 fi
 
-if ! which docker; then
+if ! which docker >/dev/null 2>&1; then
   echo "error: docker is not available in \${PATH}" >&2
   exit 1
 fi
@@ -12,11 +12,11 @@ fi
 # helper functions
 ##################
 function docker_run() {
-  docker run -it --privileged --network=host intel-media-delivery $@
+  docker run -it --privileged --network=host ${MDS_IMAGE} $@
 }
 
 function docker_run_opts() {
-  docker run -it --privileged --network=host $opts intel-media-delivery $@
+  docker run -it --privileged --network=host $opts ${MDS_IMAGE} $@
 }
 
 function print_output() {
@@ -92,6 +92,21 @@ function grep_for() {
   [ $status -eq 0 ]
 }
 
+@test "demo streams -n" {
+  N=5
+  run docker_run demo -$N streams
+  print_output
+  [ $status -eq 0 ]
+  streams_output=("${lines[@]}")
+
+  run grep_for "WAR_2Mbps_perceptual_1080p" ${streams_output[@]}
+  [ $status -eq 0 ]
+  for i in `seq 1 $N`; do
+    run grep_for "WAR_2Mbps_perceptual_1080p-$i" ${streams_output[@]}
+    [ $status -eq 0 ]
+  done
+}
+
 @test "demo streams w/ added content" {
   tmp=`mktemp -d -t demo-XXXX`
   chmod a+x $tmp
@@ -107,6 +122,33 @@ function grep_for() {
   [ $status -eq 0 ]
   run grep_for "WAR_2Mbps_perceptual_1080p" ${streams_output[@]}
   [ $status -eq 0 ]
+  rm -rf $tmp
+}
+
+@test "demo streams w/ added content -n" {
+  N=5
+  tmp=`mktemp -d -t demo-XXXX`
+  chmod a+x $tmp
+  chmod a+r $tmp
+  touch $tmp/fake.mp4
+  opts="-v $tmp:/opt/data/content"
+  run docker_run_opts demo -$N streams
+  print_output
+  [ $status -eq 0 ]
+  streams_output=("${lines[@]}")
+
+  run grep_for "fake" ${streams_output[@]}
+  [ $status -eq 0 ]
+  for i in `seq 1 $N`; do
+    run grep_for "fake-$i" ${streams_output[@]}
+    [ $status -eq 0 ]
+  done
+  run grep_for "WAR_2Mbps_perceptual_1080p" ${streams_output[@]}
+  [ $status -eq 0 ]
+  for i in `seq 1 $N`; do
+    run grep_for "WAR_2Mbps_perceptual_1080p-$i" ${streams_output[@]}
+    [ $status -eq 0 ]
+  done
   rm -rf $tmp
 }
 
