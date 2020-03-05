@@ -21,6 +21,8 @@ function watch_server() {
         name=$(echo "$p" | awk -F: '{print $2}')
         log=$(echo "$p" | awk -F: '{print $3}')
 
+        fragments=$(ls -1 /var/www/hls/live/$name/stream_0/ 2>/dev/null | wc -l)
+
         line=$(cat $log | sed 's/\r/\n/' | grep frame= | tail -1)
         # frame= x fps= xx ...
         frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
@@ -30,18 +32,21 @@ function watch_server() {
           -v name=$name \
           -v frames=$frames \
           -v fps=$fps \
-          '{print "  " name ": frames=" frames ", fps=" fps}';
+          -v fragments=$fragments \
+          '{print "  " name ": frames=" frames ", fps=" fps ", fragments=" fragments}'
       fi
     done <$_scheduled
   fi
 
-  echo "Completed: $d"
+  echo "Completed requests: $d"
   if [ -f $_done ]; then
     # printing info for each currently running process
     while read p; do
       name=$(echo "$p" | awk -F: '{print $2}')
       log=$(echo "$p" | awk -F: '{print $3}')
       status=$(echo "$p" | awk -F: '{print $4}')
+
+      fragments=$(ls -1 /var/www/hls/live/$name/stream_0/ 2>/dev/null | wc -l)
 
       line=$(cat $log | sed 's/\r/\n/' | grep frame= | tail -1)
       # frame= x fps= xx ...
@@ -52,8 +57,9 @@ function watch_server() {
         -v name=$name \
         -v frames=$frames \
         -v fps=$fps \
+        -v fragments=$fragments \
         -v status=$status \
-        '{print "  " name ": frames=" frames ", fps=" fps ", status=" status}';
+        '{print "  " name ": frames=" frames ", fps=" fps ", fragments=" fragments ", status=" status}'
     done <$_done
   fi
 
