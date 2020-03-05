@@ -39,7 +39,10 @@ function print_help__streams() {
 }
 
 function print_help__ffmpeg() {
-  echo "Usage: demo ffmpeg <stream> [<stream>]"
+  echo "Usage: demo ffmpeg [<options>] <stream> [<stream>]"
+  echo ""
+  echo "Options"
+  echo "  --exit Exit from the demo once all streams will be completed on client side"
   echo ""
   echo "Description:"
   echo "Request streaming from within the container by ffmpeg. ffmpeg will catch"
@@ -105,6 +108,8 @@ if [ $n_pretend -gt 0 ]; then
   done
 fi
 
+_exit=0
+
 if [ "$command" = "help" ]; then
   print_command_help $@
   exit 0
@@ -144,6 +149,11 @@ elif [ "$command" = "streams" ]; then
   fi
   exit 0
 elif [ "$command" = "ffmpeg" ]; then
+  if [ $1 = "--exit" ]; then
+    shift
+    _exit=1
+    _opts="--exit"
+  fi
   if [ $# -eq 0 ]; then
     echo "error: no streams specified"
     print_help__ffmpeg
@@ -158,7 +168,7 @@ elif [ "$command" = "ffmpeg" ]; then
       exit -1
     fi
   done
-  client="ffmpeg-capture-hls.sh ${streams[@]}"
+  client="ffmpeg-capture-hls.sh $_opts ${streams[@]}";
 elif [ "$command" != "" ]; then
   echo "error: unknown command or option: '$command'"
   print_help
@@ -166,7 +176,11 @@ elif [ "$command" != "" ]; then
 fi
 
 {
-  echo "new-session /usr/bin/bash -c \"$client\""
+  if [ $_exit -eq 1 ]; then
+    echo "new-session /usr/bin/bash -c \"$client; tmux kill-session\""
+  else
+    echo "new-session /usr/bin/bash -c \"$client\""
+  fi
   echo "split-window -v sudo intel_gpu_top"
   echo "split-window -v top"
   echo "split-window -v monitor-nginx-server.sh"

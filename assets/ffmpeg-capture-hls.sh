@@ -1,19 +1,33 @@
 #!/bin/bash
 
 # Usage:
-#    ffmpeg-capture-hls.sh <stream> [<stream>...]
+#   ffmpeg-capture-hls.sh [<options>] <stream> [<stream>...]
+#
+# Options:
+#   --exit Exit once all streams will be captured
 #
 # Helper script to trigger HLS streaming and capture it to the file.
 # Script recognizes the following stream specifications:
 #  - http://localhost:8080/live/<stream>/index.m3u8
 #  - <stream> aka http://localhost:8080/live/<stream>/index.m3u8
-# 
+#
+# By default script triggers capture (in the background process)
+# and enters monitoring loop. You can exit from it with CTRL^C. Upon
+# exit script will enter bash shell for you to wander about. If
+# --exit option will be specified, script will exit automatically
+# upon capturing all the streams.
 
 source /etc/demo.env
 
+# to be able to pass variables to watch we need to export them
+export _exit=0
 export no_proxy=localhost
-
 export ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-client
+
+if [ "$1" = "--exit" ]; then
+  shift
+  export _exit=1
+fi
 
 rm -rf $ARTIFACTS
 mkdir -p $ARTIFACTS
@@ -83,10 +97,24 @@ function watch_pids() {
 
   echo
   echo "CTRL^C to exit monitor and enter shell"
+  if [ $_exit -eq 1 -a $running -eq 0 ]; then
+    return 1
+  fi
+  return 0
 }
 
 export -f watch_pids
 
-watch -n 1 -x bash -c "watch_pids ${pids[*]}"
-# You can press CTRL^C to abort watch command and enter shell to wander about
-/bin/bash
+# we echo something to be able to exit from watch: this emulates key press
+watch -n 1 --errexit -x bash -c "watch_pids ${pids[*]}" <<< "1"
+
+if [ $_exit -eq 0 -o $? -eq 0 ]; then
+  # You can press CTRL^C to abort watch command and enter shell to wander about
+  /bin/bash
+else
+  echo "All clients completed."
+  for i in `seq 5 -1 1`; do
+    echo "Exiting demo in $i...";
+    sleep 1;
+  done
+fi
