@@ -12,10 +12,11 @@ function watch_server() {
     while read p; do
       name=$(echo "$p" | awk -F: '{print $2}')
       log=$(echo "$p" | awk -F: '{print $3}')
+
       if [ -f $_done ]; then
         done_line=$(fgrep $p $_done)
         if $!; then
-          status=$(echo "$done_line" | awk -F: '{print $4}')
+          status=${done_line##*:}
         fi
       fi
 
@@ -26,14 +27,9 @@ function watch_server() {
       frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
       fps=$(echo $line | awk -F'[ |=]+' '{print $4}')
 
-      report_line=$(echo | awk \
-        -v name=$name \
-        -v frames=$frames \
-        -v fps=$fps \
-        -v fragments=$fragments \
-        '{print "  " name ": frames=" frames ", fps=" fps ", fragments=" fragments}')
+      report_line="  ${name}: frames=${frames}, fps=${fps}, fragments=${fragments}"
       if [ -n "$status" ]; then
-        report_line+=$(echo | awk -v status=$status '{print ", status=" status}')
+        report_line+=", status=${status}"
         completed=$((++completed))
         completed_reports+="${report_line}\n"
       else
@@ -58,6 +54,6 @@ function watch_server() {
 
 export -f watch_server
 
-watch -n 1 -x bash -c "watch_server ${pids[*]}"
+watch -n 1 -x bash -c "watch_server"
 # You can press CTRL^C to abort watch command and enter shell to wander about
 /bin/bash

@@ -70,12 +70,7 @@ function watch_pids() {
     frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
     fps=$(echo $line | awk -F'[ |=]+' '{print $4}')
 
-    report_line=$(echo | awk \
-      -v name=$name \
-      -v size=$size \
-      -v frames=$frames \
-      -v fps=$fps \
-      '{print "  " name ": size=" size ", frames=" frames ", fps=" fps}')
+    report_line="  ${name}: size=${size}, frames=${frames}, fps=${fps}"
 
     if ps -p $pid > /dev/null; then
       running=$((++running))
