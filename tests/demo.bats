@@ -16,6 +16,8 @@ function docker_run() {
 }
 
 function docker_run_opts() {
+  opts=$1
+  shift
   docker run -it --privileged --network=host $opts ${MDS_IMAGE} $@
 }
 
@@ -112,8 +114,7 @@ function grep_for() {
   chmod a+x $tmp
   chmod a+r $tmp
   touch $tmp/fake.mp4
-  opts="-v $tmp:/opt/data/content"
-  run docker_run_opts demo streams
+  run docker_run_opts "-v $tmp:/opt/data/content" demo streams
   print_output
   [ $status -eq 0 ]
   streams_output=("${lines[@]}")
@@ -131,8 +132,7 @@ function grep_for() {
   chmod a+x $tmp
   chmod a+r $tmp
   touch $tmp/fake.mp4
-  opts="-v $tmp:/opt/data/content"
-  run docker_run_opts demo -$N streams
+  run docker_run_opts "-v $tmp:/opt/data/content" demo -$N streams
   print_output
   [ $status -eq 0 ]
   streams_output=("${lines[@]}")
