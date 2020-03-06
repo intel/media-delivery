@@ -8,6 +8,17 @@ if ! which docker >/dev/null 2>&1; then
   exit 1
 fi
 
+function setup() {
+  echo "setting up" >&3
+  rm -rf /tmp/mds_bats
+  mkdir /tmp/mds_bats
+}
+
+function teardown() {
+  echo "teardown" >&3
+  rm -rf /tmp/mds_bats
+}
+
 ##################
 # helper functions
 ##################
@@ -64,9 +75,9 @@ function grep_for() {
 }
 
 @test "demo-bash map all" {
-  tmp_content=`mktemp -d -t content-XXXX`
-  tmp_artifacts=`mktemp -d -t artifacts-XXXX`
-  tmp_hls=`mktemp -d -t hls-XXXX`
+  tmp_content=`mktemp -p /tmp/mds_bats -d -t content-XXXX`
+  tmp_artifacts=`mktemp -p /tmp/mds_bats -d -t artifacts-XXXX`
+  tmp_hls=`mktemp -p /tmp/mds_bats -d -t hls-XXXX`
   chmod 755 $tmp_content $tmp
   chmod 777 $tmp_artifacts $tmp_hls
   run docker_run_opts \
@@ -79,7 +90,7 @@ function grep_for() {
 }
 
 @test "demo-bash bad content map" {
-  tmp=`mktemp -d -t content-XXXX`
+  tmp=`mktemp -p /tmp/mds_bats -d -t content-XXXX`
   chmod a-r $tmp
   run docker_run_opts "-v $tmp:/opt/data/content" whoami
   print_output
@@ -88,7 +99,7 @@ function grep_for() {
 }
 
 @test "demo-bash bad artifacts map" {
-  tmp=`mktemp -d -t artifacts-XXXX`
+  tmp=`mktemp -p /tmp/mds_bats -d -t artifacts-XXXX`
   chmod a-r $tmp
   run docker_run_opts "-v $tmp:/opt/data/artifacts" whoami
   print_output
@@ -97,7 +108,7 @@ function grep_for() {
 }
 
 @test "demo-bash bad hls map" {
-  tmp=`mktemp -d -t hls-XXXX`
+  tmp=`mktemp -p /tmp/mds_bats -d -t hls-XXXX`
   chmod a-r $tmp
   run docker_run_opts "-v $tmp:/var/www/hls" whoami
   print_output
@@ -174,7 +185,7 @@ function grep_for() {
 }
 
 @test "demo streams w/ added content" {
-  tmp=`mktemp -d -t demo-XXXX`
+  tmp=`mktemp -p /tmp/mds_bats -d -t demo-XXXX`
   chmod a+x $tmp
   chmod a+r $tmp
   touch $tmp/fake.mp4
@@ -192,7 +203,7 @@ function grep_for() {
 
 @test "demo streams w/ added content -n" {
   N=5
-  tmp=`mktemp -d -t demo-XXXX`
+  tmp=`mktemp -p /tmp/mds_bats -d -t demo-XXXX`
   chmod a+x $tmp
   chmod a+r $tmp
   touch $tmp/fake.mp4
@@ -235,4 +246,52 @@ function grep_for() {
   run docker_run demo ffmpeg unknown
   print_output
   [ $status -eq 255 ]
+}
+
+
+function get_report_line_from_ffmpeg_log() {
+  cat $1 | sed 's/\r/\n/' | grep frame= | tail -1
+}
+
+function get_frames_from_ffmpeg_log() {
+  # frame= x fps= xx ...
+  echo $(get_report_line_from_ffmpeg_log $1) | awk -F'[ |=]+' '{print $2}'
+}
+
+function check_done_status() {
+  _done=$1
+  while read line; do
+    status=${line##*:}
+    [ "$status" -eq 0 ]
+  done <$_done
+}
+
+@test "demo ffmpeg capture" {
+  tmp=`mktemp -p /tmp/mds_bats -d -t demo-XXXX`
+  chmod 777 $tmp
+  run docker_run_opts "-v $tmp:/opt/data/artifacts" demo ffmpeg --exit WAR_2Mbps_perceptual_1080p
+  [ $status -eq 0 ]
+
+  # checking artifacts in an order of appearence
+  [ -f $tmp/ffmpeg-hls-client/scheduled ]
+  [ -f $tmp/ffmpeg-hls-client/WAR_2Mbps_perceptual_1080p.log ]
+  [ -f $tmp/ffmpeg-hls-server/lua-client-requests.log ]
+  [ -f $tmp/ffmpeg-hls-server/scheduled ]
+  [ -f $tmp/ffmpeg-hls-server/WAR_2Mbps_perceptual_1080p.log ]
+  [ -f $tmp/ffmpeg-hls-client/WAR_2Mbps_perceptual_1080p.mkv ]
+  [ -f $tmp/ffmpeg-hls-server/done ]
+  [ -f $tmp/ffmpeg-hls-client/done ]
+
+  check_done_status $tmp/ffmpeg-hls-server/done
+  check_done_status $tmp/ffmpeg-hls-client/done
+
+  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-server/WAR_2Mbps_perceptual_1080p.log)
+  echo "# server: frames=$frames" >&3
+  [ "$frames" -eq 3443 ]
+
+  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-client/WAR_2Mbps_perceptual_1080p.log)
+  echo "# client: frames=$frames" >&3
+  [ "$frames" -eq 3443 ]
+
+  sudo rm -rf $tmp
 }

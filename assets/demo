@@ -175,18 +175,45 @@ elif [ "$command" != "" ]; then
   exit -1
 fi
 
-{
-  if [ $_exit -eq 1 ]; then
-    echo "new-session /usr/bin/bash -c \"$client; tmux kill-session\""
-  else
-    echo "new-session /usr/bin/bash -c \"$client\""
+function start_nginx() {
+  if ! sudo nginx "$@"; then
+    echo "error: failed to start nginx (specified options: $@)" >&2
+    exit -1
   fi
-  echo "split-window -v sudo intel_gpu_top"
-  echo "split-window -v top"
-  echo "split-window -v monitor-nginx-server.sh"
-  echo "select-layout tiled"
-} >> /home/user/.tmux.conf
+}
 
-sudo nginx
+if tty -s; then
+  {
+    if [ $_exit -eq 1 ]; then
+      echo "new-session /usr/bin/bash -c \"$client; tmux kill-session\""
+    else
+      echo "new-session /usr/bin/bash -c \"$client\""
+    fi
+    echo "split-window -v sudo intel_gpu_top"
+    echo "split-window -v top"
+    echo "split-window -v monitor-nginx-server.sh"
+    echo "select-layout tiled"
+  } >> /home/user/.tmux.conf
 
-tmux attach
+  start_nginx
+  tmux attach
+else
+  echo "note: not running under tty"
+  goto_tty_note="note:   if you run under docker, consider restarting with '-it' option\n"
+  goto_tty_note+="note:   if you will need to terminate demo earlier, lookup for the\n"
+  goto_tty_note+="note:   running container with 'docker container ls' followed up by\n"
+  goto_tty_note+="note:   'docker container stop <container-id>'\n"
+
+  if [ -n "$client" ]; then
+    echo "note: starting up nginx server and specified client"
+    echo "note:   full-scale demo mode requires access to terminal"
+    echo -ne "$goto_tty_note"
+    start_nginx
+    $client
+  else
+    echo "note: starting up nginx server"
+    echo "note:   request streaming from host or other system in the network"
+    echo -ne "$goto_tty_note"
+    start_nginx -g "daemon off;"
+  fi
+fi

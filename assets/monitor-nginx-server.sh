@@ -15,7 +15,7 @@ function watch_server() {
 
       if [ -f $_done ]; then
         done_line=$(fgrep $p $_done)
-        if $!; then
+        if [ $? -eq 0 ]; then
           status=${done_line##*:}
         fi
       fi
@@ -28,13 +28,13 @@ function watch_server() {
       fps=$(echo $line | awk -F'[ |=]+' '{print $4}')
 
       report_line="  ${name}: frames=${frames}, fps=${fps}, fragments=${fragments}"
-      if [ -n "$status" ]; then
+      if [ -z "$status" ]; then
+        running=$((++running))
+        running_reports+="${report_line}\n"
+      else
         report_line+=", status=${status}"
         completed=$((++completed))
         completed_reports+="${report_line}\n"
-      else
-        running=$((++running))
-        running_reports+="${report_line}\n"
       fi
     done <$_scheduled
   fi

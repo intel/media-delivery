@@ -23,6 +23,11 @@ source /etc/demo.env
 export no_proxy=localhost
 export ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-client
 
+if tty -s; then
+  export _tty=1
+else
+  export _tty=0
+fi
 export _exit=0
 export _scheduled=$ARTIFACTS/scheduled
 export _done=$ARTIFACTS/done
@@ -72,6 +77,8 @@ done
 function watch_pids() {
   running=0
   completed=0
+  running_reports=""
+  completed_reports=""
   if [ -f $_scheduled ]; then
     while read p; do
       pid=$(echo "$p" | awk -F: '{print $1}')
@@ -80,7 +87,7 @@ function watch_pids() {
 
       if [ -f $_done ]; then
         done_line=$(fgrep $p $_done)
-        if $!; then
+        if [ $? -eq 0 ]; then
           status=${done_line##*:}
         fi
       fi
@@ -98,6 +105,7 @@ function watch_pids() {
         running=$((++running))
         running_reports+="${report_line}\n"
       else
+        report_line+=", status=${status}"
         completed=$((++completed))
         completed_reports+="${report_line}\n"
       fi
@@ -106,27 +114,36 @@ function watch_pids() {
 
   echo "ffmpeg streaming clients monitor"
   echo "================================"
+  if [ $_tty -ne 1 ]; then
+    echo "Date: $(date)"
+  fi
   echo "Output and logs path: $ARTIFACTS"
   echo "Total clients: $((running+completed))"
   echo "Running clients: $running"
   echo -ne "$running_reports"
   echo "Completed clients: $completed"
   echo -ne "$completed_reports"
-
   echo
-  echo "CTRL^C to exit monitor and enter shell"
+
+  if [ $_tty -eq 1 ]; then
+    echo "CTRL^C to exit monitor and enter shell"
+  fi
   if [ $_exit -eq 1 -a $running -eq 0 ]; then
     return 1
   fi
   return 0
 }
 
-export -f watch_pids
+if [ $_tty -eq 1 ]; then
+  export -f watch_pids
 
-# we echo something to be able to exit from watch: this emulates key press
-watch -n 1 --errexit -x bash -c "watch_pids" <<< "1"
+  # we echo something to be able to exit from watch: this emulates key press
+  watch -n 1 --errexit -x bash -c "watch_pids" <<< "1"
+else
+  while watch_pids; do sleep 1; done
+fi
 
-if [ $_exit -eq 0 -o $? -eq 0 ]; then
+if [[ $_tty == 1 && ( $_exit == 0 || $? == 0 ) ]]; then
   # You can press CTRL^C to abort watch command and enter shell to wander about
   /bin/bash
 else
