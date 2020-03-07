@@ -20,9 +20,12 @@
 source /etc/demo.env
 
 # to be able to pass variables to watch we need to export them
-export _exit=0
 export no_proxy=localhost
 export ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-client
+
+export _exit=0
+export _scheduled=$ARTIFACTS/scheduled
+export _done=$ARTIFACTS/done
 
 if [ "$1" = "--exit" ]; then
   shift
@@ -31,6 +34,17 @@ fi
 
 rm -rf $ARTIFACTS
 mkdir -p $ARTIFACTS
+
+function run() {
+  name=$1
+  shift
+
+  "$@" >$ARTIFACTS/$name.log 2>&1 &
+  pid=$!
+  echo "$pid:$name:$ARTIFACTS/$name.log" >> $ARTIFACTS/scheduled
+  wait
+  echo "$pid:$name:$ARTIFACTS/$name.log:$?" >> $ARTIFACTS/done
+}
 
 for s in $@; do
   if echo $s | grep http; then
@@ -41,8 +55,8 @@ for s in $@; do
     name=$s
   fi
 
-  ffmpeg -hide_banner -i $stream -c copy -y $ARTIFACTS/$name.mkv >$ARTIFACTS/$name.log 2>&1 &
-  pids+=( $!:$name:"$ARTIFACTS/$name.log" )
+  cmd=(ffmpeg -hide_banner -i $stream -c copy -y $ARTIFACTS/$name.mkv)
+  run $name "${cmd[@]}" </dev/null >/dev/null 2>&1 &
 done
 
 echo "Attempting to capture incoming HLS stream(s)..."
@@ -58,28 +72,37 @@ done
 function watch_pids() {
   running=0
   completed=0
-  for arg in $@; do
-    pid=$(echo "$arg" | awk -F: '{print $1}')
-    name=$(echo "$arg" | awk -F: '{print $2}')
-    log=$(echo "$arg" | awk -F: '{print $3}')
+  if [ -f $_scheduled ]; then
+    while read p; do
+      pid=$(echo "$p" | awk -F: '{print $1}')
+      name=$(echo "$p" | awk -F: '{print $2}')
+      log=$(echo "$p" | awk -F: '{print $3}')
 
-    size=$(du -sh $ARTIFACTS/$name.mkv 2>/dev/null | awk '{print $1}')
+      if [ -f $_done ]; then
+        done_line=$(fgrep $p $_done)
+        if $!; then
+          status=${done_line##*:}
+        fi
+      fi
 
-    line=$(cat $log | sed 's/\r/\n/' | grep frame= | tail -1)
-    # frame= x fps= xx ...
-    frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
-    fps=$(echo $line | awk -F'[ |=]+' '{print $4}')
+      size=$(du -sh $ARTIFACTS/$name.mkv 2>/dev/null | awk '{print $1}')
 
-    report_line="  ${name}: size=${size}, frames=${frames}, fps=${fps}"
+      line=$(cat $log | sed 's/\r/\n/' | grep frame= | tail -1)
+      # frame= x fps= xx ...
+      frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
+      fps=$(echo $line | awk -F'[ |=]+' '{print $4}')
 
-    if ps -p $pid > /dev/null; then
-      running=$((++running))
-      running_reports+="${report_line}\n"
-    else
-      completed=$((++completed))
-      completed_reports+="${report_line}\n"
-    fi
-  done
+      report_line="  ${name}: size=${size}, frames=${frames}, fps=${fps}"
+
+      if [ -z "$status" ]; then
+        running=$((++running))
+        running_reports+="${report_line}\n"
+      else
+        completed=$((++completed))
+        completed_reports+="${report_line}\n"
+      fi
+    done <$_scheduled
+  fi
 
   echo "ffmpeg streaming clients monitor"
   echo "================================"
@@ -101,7 +124,7 @@ function watch_pids() {
 export -f watch_pids
 
 # we echo something to be able to exit from watch: this emulates key press
-watch -n 1 --errexit -x bash -c "watch_pids ${pids[*]}" <<< "1"
+watch -n 1 --errexit -x bash -c "watch_pids" <<< "1"
 
 if [ $_exit -eq 0 -o $? -eq 0 ]; then
   # You can press CTRL^C to abort watch command and enter shell to wander about
