@@ -12,18 +12,18 @@ fi
 # helper functions
 ##################
 function docker_run() {
-  docker run -it --privileged --network=host ${MDS_IMAGE} $@
+  docker run --privileged --network=host ${MDS_IMAGE} $@
 }
 
 function docker_run_opts() {
   opts=$1
   shift
-  docker run -it --privileged --network=host $opts ${MDS_IMAGE} $@
+  docker run --privileged --network=host $opts ${MDS_IMAGE} $@
 }
 
 function print_output() {
-  for line in ${lines[@]}; do
-    echo "# $line" >&3
+  for i in $(seq 1 ${#lines[@]}); do
+    echo "# ${lines[$i]}" >&3
   done
 }
 
@@ -41,9 +41,67 @@ function grep_for() {
   return $res
 }
 
-#########################
-# demo (no command) tests
-#########################
+#################
+# demo-bash tests
+#################
+@test "demo-bash whoami" {
+  run docker_run whoami
+  print_output
+  [ "$status" -eq 0 ]
+  [ "$output" = "user" ]
+
+  run docker_run pwd
+  print_output
+  [ "$status" -eq 0 ]
+  [ "$output" = "/home/user" ]
+
+}
+
+@test "demo-bash map all" {
+  tmp_content=`mktemp -d -t content-XXXX`
+  tmp_artifacts=`mktemp -d -t artifacts-XXXX`
+  tmp_hls=`mktemp -d -t hls-XXXX`
+  chmod 755 $tmp_content $tmp
+  chmod 777 $tmp_artifacts $tmp_hls
+  run docker_run_opts \
+    "-v $tmp_content:/opt/data/content -v $tmp_artifacts:/opt/data/artifacts -v $tmp_hls:/var/www/hls" \
+    whoami
+  print_output
+  [ "$status" -eq 0 ]
+  [ "$output" = "user" ]
+  rm -rf $tmp_content $tmp_artifacts $tmp_hls
+}
+
+@test "demo-bash bad content map" {
+  tmp=`mktemp -d -t content-XXXX`
+  chmod a-r $tmp
+  run docker_run_opts "-v $tmp:/opt/data/content" whoami
+  print_output
+  [ "$status" -eq 255 ]
+  rm -rf $tmp
+}
+
+@test "demo-bash bad artifacts map" {
+  tmp=`mktemp -d -t artifacts-XXXX`
+  chmod a-r $tmp
+  run docker_run_opts "-v $tmp:/opt/data/artifacts" whoami
+  print_output
+  [ "$status" -eq 255 ]
+  rm -rf $tmp
+}
+
+@test "demo-bash bad hls map" {
+  tmp=`mktemp -d -t hls-XXXX`
+  chmod a-r $tmp
+  run docker_run_opts "-v $tmp:/var/www/hls" whoami
+  print_output
+  [ "$status" -eq 255 ]
+  rm -rf $tmp
+}
+
+####################
+# generic demo tests
+####################
 @test "demo unknown command" {
   run docker_run demo unknown
   print_output

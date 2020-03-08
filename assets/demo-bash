@@ -4,7 +4,11 @@
 #  - /etc/demo.env contains environment variables needed to run a solution
 #  - demo-setup contains container runtime setup steps
 source /etc/demo.env
-demo-setup
+
+if ! demo-setup; then
+  echo "error: failed to setup demo" >&2
+  exit -1
+fi
 
 # Typical action performed by demo-setup is adding user(s) to some
 # groups to be able to access some resources, for example GPU.
