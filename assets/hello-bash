@@ -5,7 +5,7 @@
 
 source /etc/demo.env
 
-echo "Welcome to Media Deliver $DEMO_NAME Demo!"
+echo "Welcome to Media Delivery $DEMO_NAME Demo!"
 echo
 echo "You've entered demo container with /bin/bash and can play around."
 echo "For example, try to run something via ffmpeg..."
