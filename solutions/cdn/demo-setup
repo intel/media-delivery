@@ -1,11 +1,43 @@
 #!/bin/bash
 
-video_grps=$(ls -g /dev/dri/renderD* | awk '{print $3}' | uniq | \
-  awk -vORS=, '{ print }' | sed 's/,$/\n/')
+video_grps=($(ls -g /dev/dri/renderD* | awk '{print $3}' | uniq))
 
-# granting required permissions to users
-sudo usermod -aG $video_grps user
-sudo usermod -aG $video_grps www-data
+if [ ${#video_grps[@]} -eq 0 ]; then
+  echo "error: no render node GPU devices exposed"
+  echo "error:   if you run under docker you might need to map devices"
+  echo "error:   with commands like --device=/dev/dri or --privileged"
+  exit -1
+fi
+
+function add_users_to_group()
+{
+  grp=$1
+  shift
+  for usr in $@; do
+    if ! sudo usermod -aG $grp $usr; then
+      echo "error: failed to add user to '$grp' group: $usr"
+      exit -1
+    fi
+  done
+}
+
+n=0
+for grp in ${video_grps[@]}; do
+  grpname=$grp
+  if ! grep "^$grp:" /etc/group >/dev/null; then
+    # Having no group in /etc/group means that we get GID instead
+    # of group name and group name is absent on this system (which
+    # is usual case runnning under docker). So, we just need to
+    # create the group.
+    grpname=mds_render$n
+    if ! sudo groupadd -g $grp $grpname; then
+      echo "error: failed to create '$grpname' corresponding to GID: $grp"
+      exit -1
+    fi
+    n=$((++n))
+  fi
+  add_users_to_group $grpname user www-data
+done
 
 content=/opt/data/content
 artifacts=/opt/data/artifacts

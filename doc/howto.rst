@@ -29,11 +29,20 @@ Unfortunately that's only part of the story. Following the above ``root``
 will be able to access GPU, but general users might experience problems. To
 assure that user can access GPU he should be granted corresponding permissions
 to access the device, i.e. he should be added to the group owning the device.
-This can be done from inside the container with the following command (for the
+This can be done from inside the container with the following commands (for the
 user ``user``)::
 
-  sudo usermod -aG $(ls -g /dev/dri/* | awk '{print $3}' | uniq | \
-    awk -vORS=, '{ print }' | sed 's/,$/\n/') user
+  video_grps=$(ls -g /dev/dri/* | awk '{print $3}' | uniq)
+  n=0
+  for grp in $video_grps; do
+    grpname=$grp
+    if ! grep "^$grp:" /etc/group >/dev/null; then
+      grpname=mds_render$n
+      grpname -g $grp $grpname
+      n=$((++n))
+    fi
+    sudo usermod -aG $grpname user  # adjust 'user' name here
+  done
 
 Basically, that's what Intel Media Delivery Solutions are doing when you run
 demo or enter the container with ``bash``.

@@ -57,6 +57,12 @@ function grep_for() {
 
 }
 
+@test "demo-bash no gpu" {
+  run docker run ${MDS_IMAGE} whoami
+  print_output
+  [ "$status" -eq 255 ]
+}
+
 @test "demo-bash map all" {
   tmp_content=`mktemp -d -t content-XXXX`
   tmp_artifacts=`mktemp -d -t artifacts-XXXX`
