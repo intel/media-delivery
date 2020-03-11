@@ -147,7 +147,9 @@ generated image might run under different network settings comparing to where it
 was generated.
 
 Thus, if you will run the container under proxy you will need to pass proxy configuration
-into it anew. This can be done by passing proxy host envronment variables as follows::
+into it anew (well, if you will have a need to communicate with the outside network which
+is not the case if you just run demo locally and don't play with the container). This
+can be done by passing proxy host envronment variables as follows::
 
   docker run -it \
     $(env | grep -E '_proxy=' | sed 's/^/-e /') \

@@ -94,11 +94,24 @@ to interact with the container in any other way rather than to start and stop it
 To run it, execute::
 
   docker run -it \
-    $(env | grep -E '_proxy=' | sed 's/^/-e /') \
     --privileged --network=host \
-    -v /path/to/content:/content \
     intel-media-delivery demo ffmpeg WAR_2Mbps_perceptual_1080p
-    
+
+Upon successful launch you will see output similar to the below one.
+
+.. image:: doc/pic/demo-ffmpeg.png
+   :width: 50%
+
+Few terminals will be opened in a tiled layout and provide the following information back:
+
+1. Client monitoring statistics (how many clients are running and/or stopped, their FPS, etc.)
+2. Server monitoring statistics (how many requests server received, running FPS, etc.)
+3. GPU monitoring data (GPU engines utilization)
+4. CPU and system monitroing data (CPU and memory utilization, tasks running, etc.)
+
+Tiled terminals are managed by `tmux <https://github.com/tmux/tmux>`_. Please, refer to
+its documentation if you wish to navigate and play around with the demo.
+
 Interactive demo mode (use vlc)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -106,9 +119,7 @@ In interactive demo mode container runs all the services required for streaming,
 awaits for the user interaction. To start demo in this mode, execute::
 
   docker run -it \
-    $(env | grep -E '_proxy=' | sed 's/^/-e /') \
     --privileged --network=host \
-    -v /path/to/content:/content \
     intel-media-delivery demo
 
 After that you need to trigger streaming via some client running outside of the
@@ -126,7 +137,32 @@ CDN
 
 This solution can be built with ``--build-arg SOLUTION=cdn`` which is the default.
 
-This solution is using ffmpeg generate HLS stream. TODO: describe more.
+This solution is using ffmpeg to generate HLS stream. Below image provides solution
+architecture diagram.
+
+.. image:: doc/pic/cdn-demo-architecture.png
+
+Solution focus on the very basics to configure HLS streaming thru nginx server.
+Client requests are server on the same system where nginx server is running thru
+trivial shell script scheduling of background processes. Increasing number of client
+requests for different streams would allow to exercise how system behaves under different
+loads. Mind that you can use ``-<n>`` demo option to emulate multiple streams
+available for streaming::
+
+  docker run -it \
+    --privileged --network=host \
+    intel-media-delivery demo -4 ffmpeg \
+      WAR_2Mbps_perceptual_1080p-1
+      WAR_2Mbps_perceptual_1080p-2
+      WAR_2Mbps_perceptual_1080p-3
+      WAR_2Mbps_perceptual_1080p-4
+
+This solution can be further scaled. For example, transcoding requests might not be served
+on the same system where nginx server is running. Instead they are served by dedicated
+systems managed by special service(s) (like kafka). This solution demo intentionally left
+scaling examples aside to focus on streaming configuration basics and key aspects of GPU
+accelerated offloads. For bigger scale CDN solution, please, take a look on
+`Open Visual Cloud Samples <https://01.org/openvisualcloud>`_.
 
 Edge
 ~~~~
