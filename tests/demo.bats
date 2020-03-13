@@ -191,16 +191,29 @@ function grep_for() {
 }
 
 @test "demo streams -n" {
-  N=5
-  run docker_run demo -$N streams
-  print_output
-  [ $status -eq 0 ]
-  streams_output=("${lines[@]}")
+  for N in 5 10 20 30 40 50; do
+    run docker_run demo -$N streams
+    print_output
+    [ $status -eq 0 ]
+    streams_output=("${lines[@]}")
 
-  run grep_for "WAR_2Mbps_perceptual_1080p" ${streams_output[@]}
-  [ $status -eq 0 ]
-  for i in `seq 1 $N`; do
-    run grep_for "WAR_2Mbps_perceptual_1080p-$i" ${streams_output[@]}
+    run grep_for "WAR_2Mbps_perceptual_1080p" ${streams_output[@]}
+    [ $status -eq 0 ]
+    for i in `seq 1 $N`; do
+      run grep_for "WAR_2Mbps_perceptual_1080p-$i" ${streams_output[@]}
+      [ $status -eq 0 ]
+    done
+  done
+}
+
+@test "demo streams wrong -n" {
+  for N in 51 60 100; do
+    run docker_run demo -$N streams
+    print_output
+    [ $status -eq 255 ]
+    streams_output=("${lines[@]}")
+
+    run grep_for "error:" ${streams_output[@]}
     [ $status -eq 0 ]
   done
 }

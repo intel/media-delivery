@@ -95,7 +95,7 @@ n_pretend=0
 if [ "$command" = "--help" ]; then
   print_help
   exit 0
-elif [[ "$command" =~ ^-([0-9])+$ ]]; then
+elif [[ "$command" =~ ^-([0-9]+)$ ]]; then
   n_pretend=${BASH_REMATCH[1]}
   if [ $n_pretend -gt $n_pretend_max ]; then
     echo "error: '-n' option: too big value: $n_pretend"
