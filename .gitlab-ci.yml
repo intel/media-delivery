@@ -1,0 +1,78 @@
+stages:
+- trigger
+- build
+- test
+
+variables:
+  MDS_PROJECT_PATH: "vtt/sws/osgc/solutions/intel-media-delivery"
+  http_proxy: "http://proxy-chain.intel.com:911"
+  https_proxy: "http://proxy-chain.intel.com:911"
+  no_proxy: ""
+
+on_mr:
+  stage: "trigger"
+  script:
+  - echo "Triggering MR-$CI_MERGE_REQUEST_IID build"
+  only:
+    refs:
+    - merge_requests
+    variables:
+    - $CI_PROJECT_PATH == $MDS_PROJECT_PATH
+    - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
+
+on_merge:
+  stage: "trigger"
+  script:
+    - echo "Triggering on-merge build"
+  only:
+    refs:
+    - master
+    variables:
+    - $CI_PROJECT_PATH == $MDS_PROJECT_PATH
+
+build_image:
+  stage: "build"
+  script:
+  - tagname="intel-media-delivery"
+  - if [ -n "$CI_COMMIT_BRANCH" ]; then tagname+="-$CI_COMMIT_BRANCH"; fi
+  - if [ -n "$CI_MERGE_REQUEST_IID" ]; then tagname+="-mr$CI_MERGE_REQUEST_IID"; fi
+  - echo "Building $tagname docker image"
+  - docker build
+      $(env | grep -E '_proxy=' | sed 's/^/--build-arg /')
+      --no-cache
+      --network=host
+      --file Dockerfile.ubuntu
+      -t $tagname
+      .
+  - docker save $tagname | gzip > $tagname.tar.gz
+  - echo $tagname > tagname
+  artifacts:
+    paths:
+    - tagname
+    - "*.tar.gz"
+    expire_in: 10 mins
+  tags:
+  - builder
+  - ubuntu
+  rules:
+  - when: on_success
+
+test_image:
+  stage: "test"
+  script:
+  - tagname=$(cat tagname)
+  - docker load < $tagname.tar.gz
+  - mkdir _logs
+  - export MDS_IMAGE=$tagname
+  - export MDS_LOGS=`pwd`/_logs
+  - bats tests/demo.bats
+  artifacts:
+    when: on_failure
+    paths:
+    - _logs/
+    expire_in: 1 day
+  tags:
+  - ubuntu # bats is available here in our CI deployments
+  - gen9
+  rules:
+  - when: on_success
