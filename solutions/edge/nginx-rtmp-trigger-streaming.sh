@@ -53,7 +53,7 @@ addlog "$0 $@: start"
 source /etc/demo.env
 
 ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-server
-mkdir -p $ARTIFACTS
+mkdir -p -m=777 $ARTIFACTS
 
 # Let's parse incoming URL request expected to be: "/live/<stream>/index.m3u8"
 live=$(echo "$1" | awk -F/ '{print $2}')

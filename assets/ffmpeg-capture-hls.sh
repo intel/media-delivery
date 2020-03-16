@@ -58,7 +58,7 @@ if [ "$1" = "--exit" ]; then
 fi
 
 rm -rf $ARTIFACTS
-mkdir -p $ARTIFACTS
+mkdir -p -m=777 $ARTIFACTS
 
 function run() {
   name=$1

@@ -330,6 +330,4 @@ function check_done_status() {
   frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-client/WAR_2Mbps_perceptual_1080p.log)
   echo "# client: frames=$frames" >&3
   [ "$frames" -eq 3443 ]
-
-  sudo rm -rf $tmp
 }
