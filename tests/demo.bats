@@ -30,13 +30,18 @@ if ! which docker >/dev/null 2>&1; then
 fi
 
 function setup() {
-  echo "setting up" >&3
   rm -rf /tmp/mds_bats
   mkdir /tmp/mds_bats
 }
 
 function teardown() {
-  echo "teardown" >&3
+  if [ "$BATS_ERROR_STATUS" -eq 1 -a -d "$MDS_LOGS" ]; then
+    if find /tmp/mds_bats -mindepth 1 | read; then
+      logs=$MDS_LOGS/$BATS_TEST_NUMBER
+      mkdir $logs
+      cp -rd /tmp/mds_bats/* $logs
+    fi
+  fi
   rm -rf /tmp/mds_bats
 }
 
@@ -86,7 +91,6 @@ function grep_for() {
   print_output
   [ "$status" -eq 0 ]
   [ "$output" = "/home/user" ]
-
 }
 
 @test "demo-bash no gpu" {
