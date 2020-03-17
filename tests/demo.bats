@@ -29,20 +29,22 @@ if ! which docker >/dev/null 2>&1; then
   exit 1
 fi
 
+_TMP=`pwd`/mds_bats
+
 function setup() {
-  rm -rf /tmp/mds_bats
-  mkdir /tmp/mds_bats
+  rm -rf $_TMP
+  mkdir $_TMP
 }
 
 function teardown() {
-  if [ "$BATS_ERROR_STATUS" -eq 1 -a -d "$MDS_LOGS" ]; then
-    if find /tmp/mds_bats -mindepth 1 | read; then
-      logs=$MDS_LOGS/$BATS_TEST_NUMBER
+  if [ -n "$BATS_ERROR_STATUS" -a "$BATS_ERROR_STATUS" -eq 1 -a -d "$MDS_LOGS" ]; then
+    if find $_TMP -mindepth 1 | read; then
+      logs=$_TMP/$BATS_TEST_NUMBER
       mkdir $logs
-      cp -rd /tmp/mds_bats/* $logs
+      cp -rd $_TMP/* $logs
     fi
   fi
-  rm -rf /tmp/mds_bats
+  rm -rf $_TMP
 }
 
 ##################
@@ -100,9 +102,9 @@ function grep_for() {
 }
 
 @test "demo-bash map all" {
-  tmp_content=`mktemp -p /tmp/mds_bats -d -t content-XXXX`
-  tmp_artifacts=`mktemp -p /tmp/mds_bats -d -t artifacts-XXXX`
-  tmp_hls=`mktemp -p /tmp/mds_bats -d -t hls-XXXX`
+  tmp_content=`mktemp -p $_TMP -d -t content-XXXX`
+  tmp_artifacts=`mktemp -p $_TMP -d -t artifacts-XXXX`
+  tmp_hls=`mktemp -p $_TMP -d -t hls-XXXX`
   chmod 755 $tmp_content $tmp
   chmod 777 $tmp_artifacts $tmp_hls
   run docker_run_opts \
@@ -115,7 +117,7 @@ function grep_for() {
 }
 
 @test "demo-bash bad content map" {
-  tmp=`mktemp -p /tmp/mds_bats -d -t content-XXXX`
+  tmp=`mktemp -p $_TMP -d -t content-XXXX`
   chmod a-r $tmp
   run docker_run_opts "-v $tmp:/opt/data/content" whoami
   print_output
@@ -124,7 +126,7 @@ function grep_for() {
 }
 
 @test "demo-bash bad artifacts map" {
-  tmp=`mktemp -p /tmp/mds_bats -d -t artifacts-XXXX`
+  tmp=`mktemp -p $_TMP -d -t artifacts-XXXX`
   chmod a-r $tmp
   run docker_run_opts "-v $tmp:/opt/data/artifacts" whoami
   print_output
@@ -133,7 +135,7 @@ function grep_for() {
 }
 
 @test "demo-bash bad hls map" {
-  tmp=`mktemp -p /tmp/mds_bats -d -t hls-XXXX`
+  tmp=`mktemp -p $_TMP -d -t hls-XXXX`
   chmod a-r $tmp
   run docker_run_opts "-v $tmp:/var/www/hls" whoami
   print_output
@@ -223,7 +225,7 @@ function grep_for() {
 }
 
 @test "demo streams w/ added content" {
-  tmp=`mktemp -p /tmp/mds_bats -d -t demo-XXXX`
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod a+x $tmp
   chmod a+r $tmp
   touch $tmp/fake.mp4
@@ -241,7 +243,7 @@ function grep_for() {
 
 @test "demo streams w/ added content -n" {
   N=5
-  tmp=`mktemp -p /tmp/mds_bats -d -t demo-XXXX`
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod a+x $tmp
   chmod a+r $tmp
   touch $tmp/fake.mp4
@@ -305,7 +307,7 @@ function check_done_status() {
 }
 
 @test "demo ffmpeg capture" {
-  tmp=`mktemp -p /tmp/mds_bats -d -t demo-XXXX`
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod 777 $tmp
   run docker_run_opts "-v $tmp:/opt/data/artifacts" demo ffmpeg --exit WAR_2Mbps_perceptual_1080p
   [ $status -eq 0 ]
