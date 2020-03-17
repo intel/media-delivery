@@ -1,11 +1,12 @@
-Intel Media Delivery Solutions - Video Quality
-==============================================
+Media Delivery Solutions - Video Quality
+========================================
 
 .. contents::
 
 
 Video Quality Metrics
 ---------------------
+
 Peak signal-to-noise ratio (PSNR) is the most widely used objective image quality metric. 
 We use arithmetic average PSNR of the luminance frames (PSNR-Y) as the basic quality assessment 
 metric. Since PSNR fails to capture certain perceptual quality traits, we also make use of the 
@@ -63,60 +64,82 @@ Coding bitrates for H.265/HEVC video quality assessment:
 Command Lines
 -------------
 
-The command lines for high quality H.264/AVC and h.265/HEVC video coding with Intel® Media SDK Sample Encode and Intel® Open source Quick Sync Video (QSV) are given below.
+In the following sections you can find command lines used for high quality H.264/AVC and H.265/HEVC video coding
+with Intel® Media SDK `Sample Encode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-encode_linux.md>`_
+and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration
+into FFmpeg).
 
-Intel QSV H.264/AVC VBR:
-*****************************
+H.264/AVC Command Lines
+-----------------------
+
+ffmpeg-qsv VBR
+**************
+
 ::
 
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y -c:v h264_qsv -preset medium -profile:v high -b:v $bitrate -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y \
+    -c:v h264_qsv -preset medium -profile:v high -b:v $bitrate \
+    -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
 
+ffmpeg-qsv CBR
+**************
 
-Intel QSV H.264/AVC CBR:
-*****************************
 ::
 
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y -c:v h264_qsv -preset medium -profile:v high -b:v $bitrate -maxrate $bitrate -minrate $bitrate -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y \
+    -c:v h264_qsv -preset medium -profile:v high -b:v $bitrate -maxrate $bitrate -minrate $bitrate \
+    -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
 
-
-Intel Media SDK Sample Encode H.264/AVC VBR:
-************************************************
+Intel Media SDK sample-encode VBR
+*********************************
 ::
 
-  sample_encode h264 -u medium -b $bitrate -vbr -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 -i $input -hw -o $output -w $width -h $height -n $numframes -f $framerate
+  sample_encode h264 -hw -i $input -w $width -h $height -n $numframes -f $framerate -o $output -u medium -vbr -b $bitrate \
+    -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5
 
-
-Intel Media SDK Sample Encode H.264/AVC CBR:
-************************************************
+Intel Media SDK sample-encode CBR
+*********************************
 ::
 
-  sample_encode h264 -u medium -b $bitrate -cbr -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 -i $input -hw -o $output -w $width -h $height -n $numframes -f $framerate
+  sample_encode h264 -hw -i $input -w $width -h $height -n $numframes -f $framerate -o $output -u medium -cbr -b $bitrate \
+    -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5
 
+H.265/HEVC Command Lines
+------------------------
 
-Intel QSV H.265/HEVC VBR:
-*****************************
+ffmpeg-qsv VBR
+**************
+
 ::
 
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y -c:v hevc_qsv -preset medium -profile:v main -b:v $bitrate -extbrc 1 -qmin 1 -qmax 51 -refs 5 -vsync 0 $output
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y \
+    -c:v hevc_qsv -preset medium -profile:v main -b:v $bitrate -extbrc 1 -qmin 1 -qmax 51 -refs 5 -vsync 0 $output
 
+ffmpeg-qsv CBR
+**************
 
-Intel QSV H.265/HEVC CBR:
-*****************************
 ::
 
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y -c:v hevc_qsv -preset medium -profile:v main -b:v $bitrate -maxrate $bitrate -minrate $bitrate -extbrc 1 -qmin 1 -qmax 51 -refs 5 -vsync 0 $output
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y \
+    -c:v hevc_qsv -preset medium -profile:v main -b:v $bitrate -maxrate $bitrate -minrate $bitrate \
+    -extbrc 1 -qmin 1 -qmax 51 -refs 5 -vsync 0 $output
 
+Intel Media SDK sample-encode VBR
+*********************************
 
-Intel Media SDK Sample Encode H.265/HEVC VBR:
-************************************************
 ::
 
-  sample_encode h265 -u medium -b $bitrate -vbr -extbrc:on -x 5 -i $input -hw -o $output -w $width -h $height -n $numframes -f $framerate
+  sample_encode h265 -hw -i $input -w $width -h $height -n $numframes -f $framerate -o $output -u medium -vbr -b $bitrate -extbrc:on -x 5
 
+Intel Media SDK sample-encode CBR
+*********************************
 
-Intel Media SDK Sample Encode H.265/HEVC CBR:
-************************************************
 ::
 
-  sample_encode h265 -u medium -b $bitrate -cbr -extbrc:on -x 5 -i $input -hw -o $output -w $width -h $height -n $numframes -f $framerate
+  sample_encode h265 -hw -i $input -w $width -h $height -n $numframes -f $framerate -o $output -u medium -cbr -b $bitrate -extbrc:on -x 5
 
+Links
+-----
+
+* `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
+* `Intel Media SDK sample-encode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-encode_linux.md>`_
