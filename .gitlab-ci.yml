@@ -30,7 +30,21 @@ on_merge:
     variables:
     - $CI_PROJECT_PATH == $MDS_PROJECT_PATH
 
+on_trigger:
+  stage: "trigger"
+  script:
+  - echo "Building on external trigger event"
+  - export # TODO delete me, that's debug print to check how we are getting triggerred
+  only:
+  - triggers
+
+.trigger_rule:
+  rules:
+  - if: $CI_PROJECT_PATH == $MDS_PROJECT_PATH && $CI_COMMIT_BRANCH == "master"
+  - if: $CI_PROJECT_PATH == $MDS_PROJECT_PATH && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
+
 build_image:
+  extends: .trigger_rule
   stage: "build"
   script:
   - tagname="intel-media-delivery"
@@ -54,10 +68,9 @@ build_image:
   tags:
   - builder
   - ubuntu
-  rules:
-  - when: on_success
 
 test_image:
+  extends: .trigger_rule
   stage: "test"
   script:
   - tagname=$(cat tagname)
@@ -74,5 +87,3 @@ test_image:
   tags:
   - ubuntu # bats is available here in our CI deployments
   - gen9
-  rules:
-  - when: on_success
