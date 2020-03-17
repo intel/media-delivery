@@ -102,6 +102,10 @@ check_access $content "r" user www-data
 # to display monitoring statistics
 check_access $artifacts "r" user www-data
 check_access $artifacts "w" user www-data
+
+# cleaning up any prev. artifacts
+sudo rm -rf $artifacts/*
+
 # demo writes streaming video to $hls folder (and we need write permissions
 # for www-data)
 check_access $hls "r" user www-data
