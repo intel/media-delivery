@@ -117,8 +117,8 @@ elif [ "$codec" = "HEVC" ]; then
     options_qsv=""
     options_senc=""
   elif [ "$options" = "best" ]; then
-    options_qsv="-extbrc 1 -qmin 1 -qmax 51"
-    options_senc="-extbrc:on"
+    options_qsv="-extbrc 1 -qmin 1 -qmax 51 -refs 5"
+    options_senc="-extbrc:on -x 5"
   else
     echo "error: invalid encoding options preset (default, best): $options"
     exit -1
