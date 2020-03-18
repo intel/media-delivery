@@ -28,8 +28,8 @@
 #
 # Helper script to trigger HLS streaming and capture it to the file.
 # Script recognizes the following stream specifications:
-#  - http://localhost:8080/live/<stream>/index.m3u8
-#  - <stream> aka http://localhost:8080/live/<stream>/index.m3u8
+#  - http://localhost:8080/<stream>/index.m3u8
+#  - <stream> aka http://localhost:8080/<stream>/index.m3u8
 #
 # By default script triggers capture (in the background process)
 # and enters monitoring loop. You can exit from it with CTRL^C. Upon
@@ -58,7 +58,7 @@ if [ "$1" = "--exit" ]; then
 fi
 
 rm -rf $ARTIFACTS
-mkdir -p -m=777 $ARTIFACTS
+mkdir -p $ARTIFACTS && chmod -R 777 $ARTIFACTS
 
 function run() {
   name=$1
@@ -67,18 +67,26 @@ function run() {
   "$@" >$ARTIFACTS/$name.log 2>&1 &
   pid=$!
   echo "$pid:$name:$ARTIFACTS/$name.log" >> $ARTIFACTS/scheduled
-  wait
+  wait $pid
   echo "$pid:$name:$ARTIFACTS/$name.log:$?" >> $ARTIFACTS/done
 }
 
 for s in $@; do
   if echo $s | grep http; then
     stream=$s
-    name=stream=$(echo "$stream" | awk -F/ '{print $3}')
+    # dealing with "http://localhost:8080/$stream/index.m3u8" beast
+    # and we need to get $stream from it
+    stream=${stream%/*}        # remove "/index.m3u8"
+    stream=${stream#http://*/} # remove "http://<ip>:<port>/"
+    name=$stream
   else
-    stream=http://localhost:8080/live/$s/index.m3u8
+    stream="http://localhost:8080/$s/index.m3u8"
     name=$s
   fi
+
+  # $name could actually be: <type>/<name>
+  # So, we need to create <type> folder(s) to be able to place outputs and logs
+  mkdir -p $(dirname $ARTIFACTS/$name) && chmod -R 777 $ARTIFACTS
 
   cmd=(ffmpeg -hide_banner -i $stream -c copy -y $ARTIFACTS/$name.mkv)
   run $name "${cmd[@]}" </dev/null >/dev/null 2>&1 &

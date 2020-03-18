@@ -40,9 +40,9 @@ function print_help() {
   echo "If command is not specified, it starts nginx server and awaits external incoming client"
   echo "requests. Issue the one requesting playback via vlc from the host or some other"
   echo "system on the network:"
-  echo "   $ vlc http://localhost:8080/live/<stream>"
+  echo "   $ vlc http://localhost:8080/<stream>/index.m3u8"
   echo "or capturing via ffmpeg:"
-  echo "   $ ffmpeg -i http://localhost:8080/live/<stream> -c copy /tmp/output.mkv"
+  echo "   $ ffmpeg -i http://localhost:8080/<stream>/index.m3u8 -c copy /tmp/output.mkv"
   echo ""
   echo "'streams' command returns list of streams available for playback and exits."
   echo ""
@@ -139,6 +139,15 @@ elif [ "$command" = "streams" ]; then
     print_help__streams
     exit -1
   fi
+
+  function print_streams() {
+    name=$1
+    types=$(echo $DEMO_STREAM_TYPES | sed 's/:/ /')
+    for type in $types; do
+      echo "$type/$name | http://localhost:8080/$type/$name/index.m3u8"
+    done
+  }
+
   echo "Your content (has preference over embedded content):"
   your_content=`ls -1 /opt/data/content/*.mp4 2>/dev/null`
   if [ "$your_content" = "" ]; then
@@ -147,7 +156,7 @@ elif [ "$command" = "streams" ]; then
     for stream in $your_content; do
       name=$(basename -- "$stream")
       name="${name%.*}"
-      echo "  $name | http://localhost:8080/live/$name/index.m3u8"
+      print_streams $name
     done
   fi
   echo
@@ -155,7 +164,7 @@ elif [ "$command" = "streams" ]; then
   for stream in `ls -1 /opt/data/embedded/*.mp4`; do
     name=$(basename -- "$stream")
     name="${name%.*}"
-    echo "  $name | http://localhost:8080/live/$name/index.m3u8"
+    print_streams $name
   done
   echo
   duplicates=`ls -1 /opt/data/duplicates/*.mp4 2>/dev/null`
@@ -164,7 +173,7 @@ elif [ "$command" = "streams" ]; then
     for stream in $duplicates; do
       name=$(basename -- "$stream")
       name="${name%.*}"
-      echo "  $name | http://localhost:8080/live/$name/index.m3u8"
+      print_streams $name
     done
   fi
   exit 0
@@ -180,11 +189,26 @@ elif [ "$command" = "ffmpeg" ]; then
     exit -1
   fi
   streams=($@)
+
+  function get_stream_name() {
+    local stream=$1
+    if echo $stream | grep http; then
+      # dealing with "http://localhost:8080/$stream/index.m3u8" beast
+      # and we need to get $stream from it
+      stream=${stream%/*}        # remove "/index.m3u8"
+      stream=${stream#http://*/} # remove "http://<ip>:<port>/"
+    fi
+    echo $stream
+  }
+
   for stream in ${streams[@]}; do
-    if [ ! -f /opt/data/content/$stream.mp4 -a \
-         ! -f /opt/data/embedded/$stream.mp4 -a \
-         ! -f /opt/data/duplicates/$stream.mp4 ]; then
-      echo "error: no such file to play: '$stream'"
+    # we have streams specified in a from <type>/<name>
+    name=$(get_stream_name $stream)
+    name=${name##*/}
+    if [ ! -f /opt/data/content/$name.mp4 -a \
+         ! -f /opt/data/embedded/$name.mp4 -a \
+         ! -f /opt/data/duplicates/$name.mp4 ]; then
+      echo "error: no such file to play: '$name'"
       exit -1
     fi
   done

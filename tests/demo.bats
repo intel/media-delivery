@@ -39,7 +39,7 @@ function setup() {
 function teardown() {
   if [ -n "$BATS_ERROR_STATUS" -a "$BATS_ERROR_STATUS" -eq 1 -a -d "$MDS_LOGS" ]; then
     if find $_TMP -mindepth 1 | read; then
-      logs=$_TMP/$BATS_TEST_NUMBER
+      logs=$MDS_LOGS/$BATS_TEST_NUMBER
       mkdir $logs
       cp -rd $_TMP/* $logs
     fi
@@ -306,30 +306,41 @@ function check_done_status() {
   done <$_done
 }
 
-@test "demo ffmpeg capture" {
+function test_ffmpeg_capture() {
+  type=$1
+  echo "# type=$type" >&3
+
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/data/artifacts" demo ffmpeg --exit WAR_2Mbps_perceptual_1080p
+  run docker_run_opts "-v $tmp:/opt/data/artifacts" demo ffmpeg --exit $type/WAR_2Mbps_perceptual_1080p
   [ $status -eq 0 ]
 
   # checking artifacts in an order of appearence
   [ -f $tmp/ffmpeg-hls-client/scheduled ]
-  [ -f $tmp/ffmpeg-hls-client/WAR_2Mbps_perceptual_1080p.log ]
+  [ -f $tmp/ffmpeg-hls-client/$type/WAR_2Mbps_perceptual_1080p.log ]
   [ -f $tmp/ffmpeg-hls-server/lua-client-requests.log ]
   [ -f $tmp/ffmpeg-hls-server/scheduled ]
-  [ -f $tmp/ffmpeg-hls-server/WAR_2Mbps_perceptual_1080p.log ]
-  [ -f $tmp/ffmpeg-hls-client/WAR_2Mbps_perceptual_1080p.mkv ]
+  [ -f $tmp/ffmpeg-hls-server/$type/WAR_2Mbps_perceptual_1080p.log ]
+  [ -f $tmp/ffmpeg-hls-client/$type/WAR_2Mbps_perceptual_1080p.mkv ]
   [ -f $tmp/ffmpeg-hls-server/done ]
   [ -f $tmp/ffmpeg-hls-client/done ]
 
   check_done_status $tmp/ffmpeg-hls-server/done
   check_done_status $tmp/ffmpeg-hls-client/done
 
-  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-server/WAR_2Mbps_perceptual_1080p.log)
+  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-server/$type/WAR_2Mbps_perceptual_1080p.log)
   echo "# server: frames=$frames" >&3
-  [ "$frames" -eq 3443 ]
 
-  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-client/WAR_2Mbps_perceptual_1080p.log)
+  [ "$frames" -eq 3443 ]
+  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-client/$type/WAR_2Mbps_perceptual_1080p.log)
   echo "# client: frames=$frames" >&3
   [ "$frames" -eq 3443 ]
+}
+
+@test "demo ffmpeg vod/avc capture" {
+  test_ffmpeg_capture "vod/avc"
+}
+
+@test "demo ffmpeg vod/abr capture" {
+  test_ffmpeg_capture "vod/abr"
 }
