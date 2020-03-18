@@ -13,6 +13,7 @@ on_mr:
   stage: "trigger"
   script:
   - echo "Triggering MR-$CI_MERGE_REQUEST_IID build"
+  - export # TODO delete me, that's debug print to check how we are getting triggerred
   only:
     refs:
     - merge_requests
@@ -23,7 +24,8 @@ on_mr:
 on_merge:
   stage: "trigger"
   script:
-    - echo "Triggering on-merge build"
+  - echo "Triggering on-merge build"
+  - export # TODO delete me, that's debug print to check how we are getting triggerred
   only:
     refs:
     - master
@@ -40,7 +42,7 @@ on_trigger:
 
 .trigger_rule:
   rules:
-  - if: $CI_PROJECT_PATH == $MDS_PROJECT_PATH && $CI_COMMIT_BRANCH == "master"
+  - if: $CI_PROJECT_PATH == $MDS_PROJECT_PATH && $CI_COMMIT_REF_NAME == "master"
   - if: $CI_PROJECT_PATH == $MDS_PROJECT_PATH && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
 
 build_image:
