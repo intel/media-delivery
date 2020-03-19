@@ -45,16 +45,17 @@ on_trigger:
   - if: $CI_PROJECT_PATH == $MDS_PROJECT_PATH && $CI_COMMIT_REF_NAME == "master"
   - if: $CI_PROJECT_PATH == $MDS_PROJECT_PATH && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
 
-build_image:
+.build_image:
   extends: .trigger_rule
   stage: "build"
   script:
-  - tagname="intel-media-delivery"
+  - tagname="intel-media-delivery-$SOLUTION"
   - if [ -n "$CI_COMMIT_BRANCH" ]; then tagname+="-$CI_COMMIT_BRANCH"; fi
   - if [ -n "$CI_MERGE_REQUEST_IID" ]; then tagname+="-mr$CI_MERGE_REQUEST_IID"; fi
   - echo "Building $tagname docker image"
   - docker build
       $(env | grep -E '_proxy=' | sed 's/^/--build-arg /')
+      --build-arg SOLUTION=$SOLUTION
       --no-cache
       --network=host
       --file Dockerfile.ubuntu
@@ -71,15 +72,17 @@ build_image:
   - builder
   - ubuntu
 
-test_image:
+.test_image:
   extends: .trigger_rule
   stage: "test"
   script:
   - tagname=$(cat tagname)
+  - echo "Testing $tagname docker image"
   - docker load < $tagname.tar.gz
   - mkdir _logs
   - export MDS_IMAGE=$tagname
   - export MDS_LOGS=`pwd`/_logs
+  - export MDS_DEMO=$SOLUTION
   - bats tests/demo.bats
   artifacts:
     when: on_failure
@@ -89,3 +92,27 @@ test_image:
   tags:
   - ubuntu # bats is available here in our CI deployments
   - gen9
+
+build:cdn:
+  extends: .build_image
+  variables:
+    SOLUTION: cdn
+
+build:edge:
+  extends: .build_image
+  variables:
+    SOLUTION: edge
+
+test:cdn:
+  extends: .test_image
+  variables:
+    SOLUTION: cdn
+  dependencies:
+  - build:cdn
+
+test:edge:
+  extends: .test_image
+  variables:
+    SOLUTION: edge
+  dependencies:
+  - build:edge
