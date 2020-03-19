@@ -42,7 +42,7 @@ function watch_server() {
 
       fragments=$(ls -1 /var/www/hls/$name/stream_0/ 2>/dev/null | wc -l)
 
-      line=$(cat $log | sed 's/\r/\n/' | grep frame= | tail -1)
+      line=$(cat $log | sed 's/\r/\n/g' | grep frame= | tail -1)
       # frame= x fps= xx ...
       frames=$(echo $line | awk -F'[ |=]+' '{print $2}')
       fps=$(echo $line | awk -F'[ |=]+' '{print $4}')

@@ -23,7 +23,7 @@
 # Usage:
 #    trigger-streaming.sh <stream>
 #
-# Script looks for incoming <stream> to match "/live/<stream>/index.m3u8".
+# Script looks for incoming <stream> to match "/<type>/<stream>/index.m3u8".
 # If match found, script either schedules ffmpeg transcode command line
 # which will start HLS streaming or skips scheduling if it was already done
 # for the specified stream. Right after scheduling scripts waits for some time
@@ -33,7 +33,7 @@
 # the above specification. This is ok and such requests will be simply
 # ignored ny the script. They can happen in this cases:
 #   - For malformed HTTP requests issued by the clients
-#   - For valid requests for HLS fragments which are of /live/<stream>/<path>.ts
+#   - For valid requests for HLS fragments which are of /<type>/<stream>/<path>.ts
 # 
 
 LOGFILE=/tmp/lua-client-requests.log
@@ -53,23 +53,36 @@ addlog "$0 $@: start"
 source /etc/demo.env
 
 ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-server
-mkdir -p -m=777 $ARTIFACTS
+mkdir -p $ARTIFACTS && chmod -R 777 $ARTIFACTS
 
-# Let's parse incoming URL request expected to be: "/live/<stream>/index.m3u8"
-live=$(echo "$1" | awk -F/ '{print $2}')
-stream=$(echo "$1" | awk -F/ '{print $3}')
-index=$(echo "$1" | awk -F/ '{print $4}')
+# Let's parse incoming URL request which is expected to be: "/<type>/<stream>/index.m3u8"
+tmp=$1
+index=${tmp##*/}
+tmp=${tmp%/*}
+stream=${tmp##*/}
+tmp=${tmp%/*}
+type=${tmp##/}
 
-addlog "live=$live, stream=$stream, index=$index"
+addlog "type=$type, stream=$stream, index=$index"
 
-if [ "$live" != "live" -o -z "$stream" -o "$index" != "index.m3u8" ]; then
+function request_valid() {
+  if [[ ! "$type" =~ ^(vod/avc|vod/abr)$ ]]; then
+    return 1
+  fi
+  if [ -z "$stream" -o "$index" != "index.m3u8" ]; then
+    return 1
+  fi
+  return 0
+}
+
+if ! request_valid; then
   addlog "nothing to do for the stream: $1"
   addlog "$0 $@: end"
   cp $LOGFILE $ARTIFACTS/
   exit 0
 fi
 
-if [ -d /var/www/hls/live/$stream ]; then
+if [ -d /var/www/hls/$type/$stream ]; then
   addlog "already publishing: $1"
   addlog "$0 $@: end"
   cp $LOGFILE $ARTIFACTS/
@@ -83,6 +96,9 @@ fi
 if [ "$to_play" = "" -a -f /opt/data/embedded/$stream.mp4 ]; then
   to_play="/opt/data/embedded/$stream.mp4"
 fi
+if [ "$to_play" = "" -a -f /opt/data/duplicates/$stream.mp4 ]; then
+  to_play="/opt/data/duplicates/$stream.mp4"
+fi
 
 if [ "$to_play" = "" ]; then
   addlog "no such stream to play: $stream"
@@ -91,36 +107,49 @@ if [ "$to_play" = "" ]; then
   exit 0
 fi
 
-cmd=(ffmpeg
-  -hwaccel qsv -hwaccel_device /dev/dri/renderD128
-  -c:v h264_qsv -re -stream_loop 100 -i $to_play
-  -c:v h264_qsv -profile:v baseline
-  -preset medium -g 50 -bf 1 -async_depth 1
-  -b:v 1000K -maxrate 6000K -minrate 6000K
-  -c:a copy -f flv rtmp://localhost:1935/live/$stream)
+function run() {
+  mkdir -p $ARTIFACTS/$type && chmod -R 777 $ARTIFACTS
+  echo "$@" >$ARTIFACTS/$type/$stream.log
+  "$@" >>$ARTIFACTS/$type/$stream.log 2>&1 &
+  pid=$!
+  echo "$pid:$type/$stream:$ARTIFACTS/$type/$stream.log" >> $ARTIFACTS/scheduled
+  wait $pid
+  echo "$pid:$type/$stream:$ARTIFACTS/$type/$stream.log:$?" >> $ARTIFACTS/done
+}
+
+if [ "$type" = "vod/avc" ]; then
+  cmd=(ffmpeg
+    -hwaccel qsv -hwaccel_device /dev/dri/renderD128
+    -c:v h264_qsv -re -i $to_play
+    -c:v h264_qsv -preset medium -profile:v high -b:v 3000000 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0
+    -c:a copy -f flv rtmp://localhost:1935/$type/$stream)
+else
+  cmd=(bash -c 'echo "bug: unsupported streaming type: $type"; exit 1;')
+fi
 
 addlog "scheduling: ${cmd[@]}"
-"${cmd[@]}" >$ARTIFACTS/$stream.log 2>&1 &
+run "${cmd[@]}" </dev/null >/dev/null 2>&1 &
 pid=$!
 
-addlog "$0 $@: just scheduled PID=$pid"
-addlog "$0 $@: waiting for some time for index file to appear"
+TIMEOUT=20
+addlog "$0 $@: waiting for $TIMEOUT seconds for index file to appear"
+
+indexfile="/var/www/hls/$type/$stream/index.m3u8"
 
 # Timeout should be selected longer than HLS fragment length since index
 # file is published by RTMP HLS server when first fragment becomes available.
 end=$(( $(date +%s) + 20 ))
-addlog "end=$end"
 while ps -p $pid > /dev/null &&
       [ $(date +%s) -lt $end ] &&
-      [ ! -f /var/www/hls/live/$stream/index.m3u8 ]; do
+      [ ! -f $indexfile ]; do
   sleep 1;
 done
 
 if ! ps -p $pid > /dev/null; then
   addlog "$0 $@: failed to schedule: scheduled process died"
 else
-  if [ ! -f /var/www/hls/live/$stream/index.m3u8 ]; then
-    addlog "$0 $@: failed to schedule: timeout waiting for index file: /var/www/hls/live/$stream/index.m3u8"
+  if [ ! -f $indexfile ]; then
+    addlog "$0 $@: failed to schedule: timeout waiting for index file: $indexfile"
     kill -9 $pid
   else
     addlog "$0 $@: scheduled successfully"

@@ -29,6 +29,10 @@ if ! which docker >/dev/null 2>&1; then
   exit 1
 fi
 
+if [ -z "${MDS_DEMO}" ]; then
+  MDS_DEMO="cdn"
+fi
+
 _TMP=`pwd`/mds_bats
 
 function setup() {
@@ -290,7 +294,7 @@ function grep_for() {
 
 
 function get_report_line_from_ffmpeg_log() {
-  cat $1 | sed 's/\r/\n/' | grep frame= | tail -1
+  cat $1 | sed 's/\r/\n/g' | grep frame= | tail -1
 }
 
 function get_frames_from_ffmpeg_log() {
@@ -342,5 +346,8 @@ function test_ffmpeg_capture() {
 }
 
 @test "demo ffmpeg vod/abr capture" {
+  if [ $MDS_DEMO != "cdn" ]; then
+    skip "note: mode not supported for '$MDS_DEMO' demo"
+  fi
   test_ffmpeg_capture "vod/abr"
 }

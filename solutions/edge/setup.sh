@@ -38,7 +38,8 @@ prefix=$1
 
 # nginx user should have permission to read/write in
 # the HLS streams location
-chown www-data /var/www/hls
+mkdir -p /var/www/hls/vod
+chown -R www-data /var/www/hls
 
 # Installing nginx configuration
 cp nginx.conf /etc/nginx/nginx.conf
@@ -47,8 +48,9 @@ cp nginx.conf /etc/nginx/nginx.conf
 scripts=" \
   ../../assets/demo \
   ../../assets/ffmpeg-capture-hls.sh \
+  ../../assets/monitor-nginx-server.sh \
   ../../scripts/setup-apt-proxy.sh \
-  nginx-rtmp-trigger-streaming.sh"
+  nginx-trigger-streaming.sh"
 
 for s in $scripts; do
   cp $s $prefix/bin
@@ -58,6 +60,9 @@ done
 {
   echo "export DEMO_NAME=Edge"
   echo "export DEMO_PREFIX=$prefix"
+  # these are streaming types supported by the demo, i.e. <type> in the following address:
+  #   http://localhost:8080/vod/<type>/<stream>.index.m3u8
+  echo "export DEMO_STREAM_TYPES=vod/avc"
   echo "export PATH=\$DEMO_PREFIX/bin:/usr/share/mfx/samples/:\$PATH"
   echo "export LIBVA_DRIVER_NAME=iHD"
 } > /etc/demo.env

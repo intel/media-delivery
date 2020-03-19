@@ -59,7 +59,7 @@ done
 {
   echo "export DEMO_NAME=CDN"
   echo "export DEMO_PREFIX=$prefix"
-  # these are straming types supported by the demo, i.e. <type> in the following address:
+  # these are streaming types supported by the demo, i.e. <type> in the following address:
   #   http://localhost:8080/vod/<type>/<stream>.index.m3u8
   echo "export DEMO_STREAM_TYPES=vod/avc:vod/abr"
   echo "export PATH=\$DEMO_PREFIX/bin:/usr/share/mfx/samples/:\$PATH"
