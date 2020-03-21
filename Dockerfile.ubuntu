@@ -30,6 +30,7 @@ RUN /tmp/scripts/setup-apt-proxy.sh
 RUN apt-get update && \
    apt-get install --no-install-recommends -y sudo ca-certificates \
    && rm -rf /var/lib/apt/lists/*
+
 ARG ENABLE_INTEL_REPO=yes
 RUN { \
     repo="deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu eoan main"; \
@@ -67,6 +68,8 @@ RUN mkdir /embedded && cd /embedded && \
 FROM base AS build-prerequisites
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
+    asciidoc-base \
+    docbook-xsl \
     gcc \
     g++ \
     git \
@@ -76,6 +79,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libx265-dev \
     pkg-config \
     sudo \
+    xsltproc \
     yasm \
   && rm -rf /var/lib/apt/lists/*
 
@@ -117,6 +121,16 @@ RUN cd /home/user/ffmpeg && \
 RUN rm -rf /home/user/vmaf && \
     rm -rf /home/user/ffmpeg
 
+FROM build-prerequisites AS build-man
+
+USER user
+
+# Building some manual pages for the solution
+ARG PREFIX=/opt/intel/solutions
+COPY --chown=user doc/man /home/user/mdsman
+RUN cd /home/user/mdsman && make -j $(nproc --all) && sudo make prefix=$PREFIX install
+RUN rm -rf /home/user/mdsman
+
 # Ok, here goes the final image end-user will actually see
 FROM base as runtime
 
@@ -133,6 +147,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnginx-mod-rtmp \
     libva-drm2 \
     libva-x11-2 \
+    man-db \
     nginx \
     python3 \
     tmux \
@@ -140,6 +155,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     $(apt-cache depends libx264-dev | grep Depends | grep libx264 | cut -d: -f2) \
     $(apt-cache depends libx265-dev | grep Depends | grep libx265 | cut -d: -f2) \
   && rm -rf /var/lib/apt/lists/*
+
+RUN rm -f /usr/bin/man && dpkg-divert --quiet --remove --rename /usr/bin/man
 
 # This script is a placeholder to further setup the final runtime image.
 RUN /tmp/scripts/setup-runtime-image.sh
@@ -150,6 +167,7 @@ RUN rm -rf /tmp/scripts
 
 # Install runtime environment we manually built on 'build' stage
 ARG PREFIX=/opt/intel/solutions
+COPY --from=build-man $PREFIX $PREFIX
 COPY --from=build-all /usr/local/share/model $PREFIX/share/vmaf
 COPY --from=build-all $PREFIX $PREFIX
 RUN echo "$PREFIX/lib" > /etc/ld.so.conf.d/intel-media-delivery.conf

@@ -1,0 +1,54 @@
+monitor-nginx-server(1)
+=======================
+
+NAME
+----
+monitor-nginx-server - monitor running nginx server for media transcoding
+
+SYNOPSIS
+--------
+[verse]
+'monitor-ngingx-server.sh'
+
+DESCRIPTION
+-----------
+Helper script to minitor HLS streaming from server side. You can exit from
+the script with CTRL^C. You should see the following output:
+
+------------
+nginx server monitor
+====================
+Logs path: /opt/data/artifacts/ffmpeg-hls-server
+Total requests: 1
+Running requests: 1
+  vod/avc/WAR_2Mbps_perceptual_1080p: frames=250, fps=24, fragments=1
+Completed requests: 0
+------------
+
+It says that there is a single request being processed (`Total requests`).
+It is currently running (`Running requests`) and its running status is as
+follows: stream being produced is `vod/avc/WAR_2Mbps_perceptual_1080p`,
+250 frames transcoded and average transcoding speed is 24 fps, number of
+produce HLS fragments is 1.
+
+Upon completion you will see something similar to the following:
+------------
+nginx server monitor
+====================
+Logs path: /opt/data/artifacts/ffmpeg-hls-server
+Total requests: 1
+Running requests: 0
+Completed requests: 1
+  vod/avc/WAR_2Mbps_perceptual_1080p: frames=3443, fps=24, fragments=14, status=0
+------------
+Pay attention that monitoring loop reports status of the completed ffmpeg
+transcoding.
+
+Mind that monitoring loop relies on ffmpeg output reporting number of
+transcoded frames and speed (in fps). ffmpeg reports this data with some
+delay, so be patient. As of now there is no way to control ffmpeg reporting
+frequency.
+
+SEE ALSO
+--------
+link:demo.asciidoc[demo]

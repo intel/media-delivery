@@ -1,0 +1,26 @@
+demo-ffmpeg(1)
+==============
+
+NAME
+----
+demo-ffmpeg - run demo w/ ffmpeg client
+
+SYNOPSIS
+--------
+[verse]
+'demo ffmpeg' [<options>] <stream> [<stream>]
+
+DESCRIPTION
+-----------
+Run demo w/ ffmpeg client(s). ffmpeg will catch streaming video
+and dump it to the disk.
+
+OPTIONS
+-------
+--exit::
+	Exit from the demo once all streams will be completed on client side.
+
+SEE ALSO
+--------
+link:demo.asciidoc[demo]
+link:ffmpeg-capture-hls.asciidoc[ffmpeg-capture-hls]

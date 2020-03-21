@@ -147,6 +147,38 @@ function grep_for() {
   rm -rf $tmp
 }
 
+###########
+# man tests
+###########
+@test "manuals" {
+  skip "note: for unknown reason test dosn't work under gitlab ci"
+
+  MAN=" \
+    demo \
+    demo-bash \
+    demo.env \
+    demo-ffmpeg \
+    demo-help \
+    demo-setup \
+    demo-streams \
+    ffmpeg-capture-hls \
+    hello-bash \
+    monitor-nginx-server"
+
+  for m in $MAN; do
+    run docker_run man --pager=cat $m
+    print_output
+    [ "$status" -eq 0 ]
+    manout=("${lines[@]}")
+    run grep_for "NAME" ${manout[@]}
+    [ $status -eq 0 ]
+    run grep_for "SYNOPSIS" ${manout[@]}
+    [ $status -eq 0 ]
+    run grep_for "DESCRIPTION" ${manout[@]}
+    [ $status -eq 0 ]
+  done
+}
+
 ####################
 # generic demo tests
 ####################

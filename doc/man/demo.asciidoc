@@ -1,0 +1,64 @@
+demo(1)
+=======
+
+NAME
+----
+demo - run media delivery demo
+
+SYNOPSIS
+--------
+[verse]
+'demo' [<options>] [<command> [<args>]]
+
+DESCRIPTION
+-----------
+`demo` is a helper script to operate media delivery demo.
+
+If <command> is not specified, it starts nginx server and awaits external incoming
+client requests. Issue the one requesting playback via vlc from the host or some other
+system on the network:
+
+------------
+   vlc http://localhost:8080/<stream>/index.m3u8
+------------
+or capturing via ffmpeg:
+------------
+   ffmpeg -i http://localhost:8080/<stream>/index.m3u8 -c copy /tmp/output.mkv
+------------
+
+'streams' command returns list of streams available for playback and exits.
+
+'ffmpeg' command toggles ffmpeg demo mode which runs ffmpeg client within the container.
+No interaction from host or other system is required. Example:
+------------
+   $ demo ffmpeg <stream>
+------------
+
+`-<n>` option is useful for demo purposes. With it solution pretends to have <n> copies of
+each input stream. Execute 'demo -4 streams' to explore the difference.
+
+
+OPTIONS
+-------
+--help::
+	Print help
+
+-<n>::
+	Pretend to have <n> additional copies of each input stream (n <= 50)
+
+COMMANDS
+-------
+ffmpeg::
+	Toggle ffmpeg demo mode
+
+help::
+	Print help on specified topic. Try 'demo help <command>'.
+
+streams::
+	Print available streams
+
+SEE ALSO
+--------
+link:demo-ffmpeg.asciidoc[demo-ffmpeg]
+link:demo-help.asciidoc[demo-help]
+link:demo-streams.asciidoc[demo-streams]
