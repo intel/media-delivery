@@ -57,12 +57,14 @@ on_trigger:
       $(env | grep -E '_proxy=' | sed 's/^/--build-arg /')
       --build-arg SOLUTION=$SOLUTION
       --no-cache
+      --force-rm
       --network=host
       --file Dockerfile.ubuntu
       -t $tagname
       .
   - docker save $tagname | gzip > $tagname.tar.gz
   - echo $tagname > tagname
+  - docker rmi --force $(docker images -q $tagname | uniq)
   artifacts:
     paths:
     - tagname
@@ -83,7 +85,10 @@ on_trigger:
   - export MDS_IMAGE=$tagname
   - export MDS_LOGS=`pwd`/_logs
   - export MDS_DEMO=$SOLUTION
-  - bats tests/demo.bats
+  - test_status=0
+  - bats tests/demo.bats || test_status=$?
+  - docker rmi --force $(docker images -q $tagname | uniq)
+  - if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
   artifacts:
     when: on_failure
     paths:
