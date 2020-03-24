@@ -101,6 +101,7 @@ RUN cd /home/user/ffmpeg && \
   ./configure \
   --prefix=$PREFIX \
   --disable-static \
+  --disable-doc \
   --enable-shared \
   --enable-vaapi \
   --enable-libmfx \
