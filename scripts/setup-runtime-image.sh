@@ -20,6 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-apt-get update && apt-get install -y \
+apt-get update && apt-get install -y --no-install-recommends \
     curl joe less vim wget \
   && rm -rf /var/lib/apt/lists/*

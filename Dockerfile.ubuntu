@@ -27,7 +27,9 @@ COPY scripts /tmp/scripts
 RUN /tmp/scripts/setup-apt-proxy.sh
 
 # Now let's setup Intel Graphics repository
-RUN apt-get update && apt-get install -y sudo ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+   apt-get install --no-install-recommends -y sudo ca-certificates \
+   && rm -rf /var/lib/apt/lists/*
 ARG ENABLE_INTEL_REPO=yes
 RUN { \
     repo="deb [trusted=yes arch=amd64] https://repositories.intel.com/graphics/ubuntu eoan main"; \
@@ -53,7 +55,7 @@ RUN sed -i -e 's,%sudo.*,%sudo ALL=(ALL) NOPASSWD:ALL,g' /etc/sudoers
 
 FROM base AS content
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install --no-install-recommends -y \
   wget \
   && rm -rf /var/lib/apt/lists/*
 
@@ -64,7 +66,9 @@ RUN mkdir /embedded && cd /embedded && \
 
 FROM base AS build-prerequisites
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    gcc \
+    g++ \
     git \
     libmfx-dev \
     libva-dev \
@@ -118,7 +122,7 @@ FROM base as runtime
 LABEL vendor="Intel Corporation"
 
 # Install runtime environment available in apt repositories
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     intel-gpu-tools \
     intel-media-va-driver-non-free \
     libigfxcmrt7 \
