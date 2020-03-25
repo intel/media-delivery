@@ -48,11 +48,12 @@ scripts=" \
   ../../assets/demo \
   ../../assets/ffmpeg-capture-hls.sh \
   ../../assets/monitor-nginx-server.sh \
+  ../../benchmark/* \
   ../../scripts/setup-apt-proxy.sh \
   nginx-trigger-streaming.sh"
 
 for s in $scripts; do
-  cp $s $prefix/bin
+  cp -rd $s $prefix/bin
 done
 
 # Generating entrypoints

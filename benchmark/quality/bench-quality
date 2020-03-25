@@ -1,0 +1,516 @@
+#!/bin/bash
+#
+# Copyright (c) 2020 Intel Corporation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+bench_quality=$0
+
+OPTIONS="w:h:f:"
+LONGOPTIONS="codec:,preset:,bitrates:"
+LONGOPTIONS+=",width:,height:,fourcc:,framerate:,progressive,interlaced"
+LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-mssim,skip-vmaf,skip-encoding"
+LONGOPTIONS+=",run-ffmpeg,run-smt"
+LONGOPTIONS+=",nframes:,dry-run,outprefix:"
+
+! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  exit -1
+fi
+
+eval set -- "$PARSED"
+
+width=0
+height=0
+fourcc=I420
+framerate=0
+progressive=yes
+
+codec=AVC
+preset=best
+bitrates=""
+
+nframes=0
+dry_run=no
+outprefix=""
+
+skip_metrics=no
+skip_psnr=no
+skip_ssim=no
+skip_mssim=no
+skip_vmaf=no
+skip_encoding=no
+run_ffmpeg=yes
+run_smt=yes
+
+while true; do
+    case "$1" in
+        -w|--width)
+            width=$2
+            shift 2
+            ;;
+        -h|--height)
+            height=$2
+            shift 2
+            ;;
+        -f|--framerate)
+            framerate=$2
+            shift 2
+            ;;
+        --fourcc)
+            fourcc="$2"
+            shift 2
+            ;;
+        --progressive)
+            progressive=yes
+            shift
+            ;;
+        --interlaced)
+            progressive=no
+            shift
+            ;;
+        --codec)
+            codec=$2
+            shift 2
+            ;;
+        --preset)
+            preset=$2
+            shift 2
+            ;;
+        --bitrates)
+            bitrates=$2
+            shift 2
+            ;;
+        --nframes)
+            nframes=$2
+            shift 2
+            ;;
+        --dry-run)
+            dry_run=yes
+            shift
+            ;;
+        --outprefix)
+            outprefix=yes
+            shift
+            ;;
+        --skip-metrics)
+            skip_metrics=yes
+            shift
+            ;;
+        --skip-psnr)
+            skip_psnr=yes
+            shift
+            ;;
+        --skip-ssim)
+            skip_ssim=yes
+            shift
+            ;;
+        --skip-mssim)
+            skip_mssim=yes
+            shift
+            ;;
+        --skip-vmaf)
+            skip_vmaf=yes
+            shift
+            ;;
+        --skip-encoding)
+            skip_encoding=yes
+            shift
+            ;;
+        --run-ffmpeg)
+            run_ffmpeg=$2
+            shift 2
+            ;;
+        --run-smt)
+            run_smt=$2
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "bug: missed option handler: $1" >&2
+            exit -1
+            ;;
+    esac
+done
+
+if [[ $# -ne 1 ]]; then
+  echo "error: too few/many arguments" >&2
+  exit -1
+fi
+
+function check_for() {
+  if ! which $1 >/dev/null 2>&1; then
+    echo "error: missing $1" >&2
+    exit -1
+  fi
+}
+
+check_for ffmpeg
+check_for ffprobe
+check_for python3
+check_for sample_encode
+
+function get_param() {
+  local file=$1
+  local param=$2
+  ffprobe -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 \
+    -show_entries stream=$param $file
+}
+
+function count_frames() {
+  local file=$1
+  ffprobe -v error -count_frames -select_streams v -of default=noprint_wrappers=1:nokey=1 \
+    -show_entries stream=nb_read_frames $file
+}
+
+function get_bitrates() {
+  local user_bitrates=$1
+  local width=$2
+  local height=$3
+  if [ -n "$user_bitrates" ]; then
+    echo $user_bitrates
+  elif [ $width -gt 1920 -a $height -gt 1088 ]; then
+    echo "4K"
+  elif [ $width -gt 1280 -a $height -gt 720 ]; then
+    echo "HD"
+  else
+    echo "SD"
+  fi
+}
+
+function find_stream() {
+  local vidpath=$1
+  local stream=$2
+  local path=( $(find $vidpath -name "$stream") )
+
+  if [ "${#path[@]}" -eq 0 ]; then
+    # error: stream not found
+    #   We will just return non-existing path to fail in the application(s)
+    echo "$vidpath/$stream"
+  elif [ ${#path[@]} -gt 1 ]; then
+    echo "warning: multiple streams with the same name: $stream" >&2
+    for s in ${path[@]}; do echo "warning:  $s" >&2; done
+  fi
+  echo ${path[0]}
+}
+
+function if_yes() {
+  local val=$1
+  local opt=$2
+  if [ "$val" = "yes" ]; then
+    echo "$opt"
+  fi
+}
+
+function if_no() {
+  local val=$1
+  local opt=$2
+  if [ "$val" = "no" ]; then
+    echo "$opt"
+  fi
+}
+
+function set_err() {
+  local sts=$1
+  if [[ "$err" -eq 0 ]]; then
+    err=$sts
+  fi
+}
+
+function run() {
+  local stream=$1
+  local prefix=$2
+  local width=$3
+  local height=$4
+  local nframes=$5
+  local framerate=$6
+
+  local _exit=no
+  if [ -d $file ]; then
+    stream=$(find_stream $file $stream)
+  elif [ "${file##*/}" = "$stream" ]; then
+    stream=$file
+    _exit=yes
+  else
+    return 0 # no match, just return
+  fi
+
+  if [[ ! -f "$stream" ]]; then
+    echo "error: no such file: $stream" >&2
+    set_err -1
+  else
+    $bench_quality \
+      --codec=$codec --preset=$preset --bitrates=$bitrates \
+      --nframes=$nframes \
+      --width=$width --height=$height --fourcc=$fourcc --framerate=$framerate \
+      $(if_no $progressive "--interlaced") \
+      $(if_yes $progressive "--progressive") \
+      $(if_yes $dry_run "--dry-run") \
+      $(if_yes $skip_metrics "--skip-metrics") \
+      $(if_yes $skip_psnr "--skip-psnr") \
+      $(if_yes $skip_ssim "--skip-ssim") \
+      $(if_yes $skip_ssim "--skip-ssim") \
+      $(if_yes $skip_mssim "--skip-mssim") \
+      $(if_yes $skip_vmaf "--skip-vmaf") \
+      $(if_yes $skip_encoding "--skip-encoding") \
+      $(if_yes $run_ffmpeg "--run-ffmpeg") \
+      $(if_yes $run_smt "--run-smt") \
+      -- \
+      $stream
+    set_err $?
+  fi
+  if [ "$_exit" = "yes" ]; then
+    exit $err
+  fi
+}
+
+function can_process_yuv() {
+  if [[ $width -eq 0 || $height -eq 0 || $framerate -eq 0 ]]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+file=$1
+err=0
+
+is_yuv=no
+if [[ ! -d "$file" ]]; then
+  if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
+    is_yuv=yes
+  else
+    framerate=$(($(get_param $file "r_frame_rate")))
+    width=$(get_param $file "width")
+    height=$(get_param $file "height")
+  fi
+fi
+
+if [[ -d "$file" || "$is_yuv" = "yes" && ! can_process_yuv ]]; then
+  # 720p SD streams...
+  run "BoatNF_1280x720_60.yuv" Boat_720p 1280 720 300 60
+  run "crowd_run_1280x720_50.yuv" "CrowdRun_720p" 1280 720 500 50
+  run "Kimono1_1280x720_24.yuv" "Kimono_720p" 1280 720 240 24
+  run "FoodMarket2NF_1280x720_60.yuv" "FoodMarket2_720p" 1280 720 300 60
+  run "PierSeasideNF_1280x720_60.yuv" "PierSeaside_720p" 1280 720 600 60
+  run "TangoNF_1280x720_60.yuv" "Tango_720p" 1280 720 294 60
+  run "park_joy_1280x720_50.yuv" "ParkJoy_720p" 1280 720 500 50
+  run "ParkScene_1280x720_24.yuv" "ParkScene_720p" 1280 720 240 24
+  run "touchdown_pass_1280x720_30.yuv" "TouchdownPass_720p" 1280 720 570 30
+
+  # 1080p HD streams...
+  run "BasketballDrive_1920x1080_50.yuv" "BasketballDrive_1080p" 1920 1080 500 50
+  run "bq_terrace_1920x1080p_600_60.yuv" "BQTerrace_1080p" 1920 1080 600 60
+  run "Cactus_1920x1080_50.yuv" "Cactus_1080p" 1920 1080 500 50
+  run "crowd_run_1920x1080p_500_50.yuv" "CrowdRun_1080p" 1920 1080 600 60
+  run "DinnerScene_1920x1080_60.yuv" "DinnerScene_1080p" 1920 1080 600 60
+  run "park_joy_1920x1080_500_50.yuv" "ParkJoy_1080p" 1920 1080 500 50
+  run "Kimono1_1920x1080_24.yuv" "Kimono_1080p" 1920 1080 240 24
+  run "RedKayak_1920x1080_30.yuv" "RedKayak_1080p" 1920 1080 570 30
+  run "RushFieldCuts_1920x1080_30.yuv" "RushFieldCuts_1080p" 1920 1080 570 30
+  run "Bunny_1920x1080_24_600.yuv" "Bunny_1080p" 1920 1080 600 24
+  run "CSGO_1920x1080_60.yuv" "CSGO_1080p" 1920 1080 600 60
+  run "DOTA2_1920x1080_60_600.yuv" "DOTA2_1080p" 1920 1080 600 60
+  run "GTAV_1920x1080_60_600.yuv" "GTAV_1080p" 1920 1080 600 60
+  run "Hearthstone_1920x1080_60.yuv" "Hearthstone_1080p" 1920 1080 600 60
+  run "MINECRAFT_1920x1080_60_600.yuv" "MINECRAFT_1080p" 1920 1080 600 60
+  run "MrFox_BlueBird_1920x1080_30.yuv" "MrFox_BlueBird_1080p" 1920 1080 300 30
+  run "Sintel_trailer_o537n480_1920x1080_24.yuv" "Sintel_trailer_1080p" 1920 1080 480 24
+  run "WITCHER3_1920x1080_60.yuv" "WITCHER3_1080p" 1920 1080 600 60
+fi
+
+if [[ -d "$file" ]]; then
+  exit $err
+fi
+
+if [[ ! -f "$file" ]]; then
+  echo "error: no such file: $file" >&2
+  exit -1
+fi
+
+if [[ "$is_yuv" = "yes" && ! can_process_yuv ]]; then
+  echo "error: yuv description is incomplete (missing -w, -h or -f)" >&2
+  exit -1
+fi
+
+if [ -z "$outprefix" ]; then
+  outprefix=$(basename $file)
+elif echo "$outprefix" | grep "/"; then
+  echo "error: wrong --outprefix (should be bare folder name, not a path): $outprefix" >&2
+  exit -1
+fi
+
+bitrates=$(get_bitrates "$bitrates" "$width" "$height")
+
+if [ "$codec" = "AVC" ]; then
+  if [ "$bitrates" = "4K" ]; then
+    bitrates_list=(6 9 15 24 40)
+    vmaf_model_path=vmaf_4k_v0.6.1.pkl
+  elif [ "$bitrates" = "HD" ]; then
+    bitrates_list=(2 3 6 12 24)
+    vmaf_model_path=vmaf_v0.6.1.pkl
+  elif [ "$bitrates" = "SD" ]; then
+    bitrates_list=(1 1.5 3 6 12)
+    vmaf_model_path=vmaf_v0.6.1.pkl
+  else
+    echo "error: invalid bitrates list (4K|HD|SD): $bitrates" >&2
+    exit -1
+  fi
+
+  if [ "$preset" = "default" ]; then
+    options_qsv=""
+    options_senc=""
+  elif [ "$preset" = "best" ]; then
+    options_qsv="-extbrc 1 -b_strategy 1 -bf 7 -refs 5"
+    options_senc="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5"
+  else
+    echo "error: invalid encoding options preset (default, best): $preset"
+    exit -1
+  fi
+elif [ "$codec" = "HEVC" ]; then
+  if [ "$bitrates" = "4K" ]; then
+    bitrates_list=(6 9 15 24 40)
+    vmaf_model_path=vmaf_4k_v0.6.1.pkl
+  elif [ "$bitrates" = "HD" ]; then
+    bitrates_list=(2 3 6 9 15)
+    vmaf_model_path=vmaf_v0.6.1.pkl
+  elif [ "$bitrates" = "SD" ]; then
+    bitrates_list=(1 1.5 3 4.5 7.5)
+    vmaf_model_path=vmaf_v0.6.1.pkl
+  else
+    echo "error: invalid bitrates list (4K|HD|SD): $bitrates"
+    exit -1
+  fi
+
+  if [ "$preset" = "default" ]; then
+    options_qsv=""
+    options_senc=""
+  elif [ "$preset" = "best" ]; then
+    options_qsv="-extbrc 1 -qmin 1 -qmax 51 -refs 5"
+    options_senc="-extbrc:on -x 5"
+  else
+    echo "error: invalid encoding options preset (default, best): $preset"
+    exit -1
+  fi
+else
+  echo "error: invalid codec (AVC|HEVC): $codec"
+  exit -1
+fi
+
+if [ "$skip_encoding" = "no" ]; then
+  path=$(dirname $(readlink -f $0))
+  for b in "${bitrates_list[@]}"; do
+    if [ "$is_yuv" = "no" ]; then
+      $path/$codec/run_cbr_ffmpeg-qsv.sh $file $outprefix $nframes $framerate $b $options_qsv
+      $path/$codec/run_vbr_ffmpeg-qsv.sh $file $outprefix $nframes $framerate $b $options_qsv
+    else
+      $path/$codec/run_cbr_ffmpeg-qsv.sh $file $outprefix $width $height $nframes $framerate $b $options_qsv
+      $path/$codec/run_vbr_ffmpeg-qsv.sh $file $outprefix $width $height $nframes $framerate $b $options_qsv
+      $path/$codec/run_cbr_sample-encode.sh $file $outprefix $width $height $nframes $framerate $b $options_senc
+      $path/$codec/run_vbr_sample-encode.sh $file $outprefix $width $height $nframes $framerate $b $options_senc
+    fi
+  done
+fi
+
+if [ "$skip_metrics" = "no" ]; then
+  if [ -f $DEMO_PREFIX/share/vmaf/$vmaf_model_path ]; then
+    # that's the location where media delivery demo installs vmaf models
+    vmaf_model_path=$DEMO_PREFIX/share/vmaf/$vmaf_model_path
+  elif [ -f /usr/local/share/model/$vmaf_model_path ]; then
+    # that's default installation path for vmaf models
+    vmaf_model_path=/usr/local/share/model/$vmaf_model_path
+  else
+    echo "error: can't find vmaf model: $vmaf_model_path"
+    exit -1
+  fi
+
+  for out in $(ls -1 $outprefix* | grep -v \.metrics); do
+    if [ "$is_yuv" = "yes" ]; then
+      rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
+    fi
+
+    metrics=""
+    if [ "$skip_psnr" = "no" ]; then
+      metrics+=":psnr=1"
+    fi
+    if [ "$skip_ssim" = "no" ]; then
+      metrics+=":ssim=1"
+    fi
+    if [ "$skip_mssim" = "no" ]; then
+      metrics+=":ms_ssim=1"
+    fi
+
+    # get number of really encoded frames from the stream rather than relying on the user input
+    nframes=$(count_frames $out)
+    if [[ -z "$nframes" || "$nframes" = "N/A" || "$nframes" -eq 0 ]]; then
+      echo "error: no frames in the stream: $out" >&2
+      continue
+    fi
+
+    cmd=(ffmpeg -an
+      $rawvideo -i $file
+      -r $framerate -i $out
+      -lavfi " \
+        [0:v]trim=end_frame=$nframes[ref]; \
+        [1:v]trim=end_frame=$nframes[v]; \
+        [v][ref]libvmaf=model_path=${vmaf_model_path}${metrics}:log_fmt=json:log_path=/tmp/out.json"
+      -f null -)
+
+    if [ "$dry_run" = "no" ]; then
+      "${cmd[@]}"
+    else
+      echo "${cmd[@]}"
+    fi
+
+    # calculate bitrate in kbps
+    b=$(stat -c %s $out)   # filesize
+    b=$(($b * 8))          # filesize in bits
+    b=$(($b / $nframes))   # bits per frame
+    b=$(($b * $framerate)) # bps
+    b=$(($b / 1000))       # kbps
+
+    metrics="$out:$b"
+    vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["VMAF score"])')
+    metrics+=":$vmaf"
+    if [ "$skip_psnr" = "no" ]; then
+      psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["PSNR score"])')
+      metrics+=":$psnr"
+    fi
+    if [ "$skip_ssim" = "no" ]; then
+      ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["SSIM score"])')
+      metrics+=":$ssim"
+    fi
+    if [ "$skip_mssim" = "no" ]; then
+      ms_ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["MS-SSIM score"])')
+      metrics+=":$ms_ssim"
+    fi
+    
+    echo "$metrics" | grep CBR_QSV >> $outprefix.cbr.ffmpeg-qsv.metrics
+    echo "$metrics" | grep VBR_QSV >> $outprefix.vbr.ffmpeg-qsv.metrics
+    if [ "$is_yuv" = "yes" ]; then
+      echo "$metrics" | grep CBR_SENC >> $outprefix.cbr.sample-encode.metrics
+      echo "$metrics" | grep VBR_SENC >> $outprefix.vbr.sample-encode.metrics
+    fi
+  done
+fi
+
+exit $err

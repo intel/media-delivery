@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Copyright (c) 2020 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,39 +20,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# This is simple Makefile to build and install demo manual pages. It is supposed
-# to be run under docker build, so we skip comprehensive configure stage for now.
+path=$(dirname $(readlink -f $0))
 
-INSTALL=install
+command=$1
+shift;
 
-prefix?=$(HOME)
-mandir?=$(prefix)/share/man
-man1dir=$(mandir)/man1
-
-MAN:=
-MAN+=bench.asciidoc
-MAN+=bench-quality.asciidoc
-MAN+=demo.asciidoc
-MAN+=demo-bash.asciidoc
-MAN+=demo.env.asciidoc
-MAN+=demo-ffmpeg.asciidoc
-MAN+=demo-help.asciidoc
-MAN+=demo-setup.asciidoc
-MAN+=demo-streams.asciidoc
-MAN+=ffmpeg-capture-hls.asciidoc
-MAN+=hello-bash.asciidoc
-MAN+=monitor-nginx-server.asciidoc
-
-DOC_MAN1=$(patsubst %.asciidoc,%.1,$(MAN))
-
-all: $(DOC_MAN1)
-
-%.1: %.asciidoc
-	a2x --format manpage --no-xmllint $<
-
-clean:
-	$(RM) *.1
-
-install: all
-	$(INSTALL) -d -m 755 $(DESTDIR)$(man1dir)
-	$(INSTALL) -m 644 $(DOC_MAN1) $(DESTDIR)$(man1dir)
+if [ "$command" = "quality" ]; then
+  $path/quality/bench-quality $@
+  exit 0
+elif [ "$command" = "perf" ]; then
+  bench-perf $@
+else
+  echo "error: unknown command: '$command'"
+  exit -1
+fi

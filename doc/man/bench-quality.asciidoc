@@ -1,0 +1,200 @@
+bench-quality(1)
+================
+
+NAME
+----
+bench-quality - run media delivery quality benchmark
+
+SYNOPSIS
+--------
+[verse]
+'bench quality' [<options>] [--] <folder>|<stream>
+
+DESCRIPTION
+-----------
+Run quality benchmark via ffmpeg-qsv and/or Intel Media SDK Sample Encode.
+There are 3 modes of operation to highlight.
+
+1. Run benchmark on the pre-defined set of workloads
++
+------------
+     bench quality <folder>
+------------
++
+In this case `<folder>` sets the root folder to search for the pre-defined set of streams.
+Search is done in the root `<folder>` and all subfolders.
+
+2. Run benchmark for the specified stream
++
+------------
+    bench quality <stream>
+------------
++
+I this case benchmark is run only for the specified stream. If stream is YUV you need to
+specify its characteristics via command line optins (`-w`, `-h`, `-f`,
+`--fourcc`, etc.). Mind that YUV stream will be benchmarked both via ffmpeg-qsv and
+Sample Encode, but streams in containers (MP4, TS, etc.) will be benchmarked only via
+ffmpeg-qsv (since Sample Encode does not support container streams).
+
+3. Run benchmark for the pre-defined stream
++
+------------
+    bench quality <stream>
+------------
++
+That's simplified variant of the previous mode. If stream name matches one of the
+pre-defined streams (which are YUV streams) you may skip specifying its characteristics.
+
+Script checks whether the input stream is YUV by the following file
+extensions: '.yuv', '.YUV'. Any other file is considered to be in a container
+format.
+
+Script checks input stream resolution to identify range of bitrates to use
+for encoding. There are the following bitrate groups:
+
+4K::
+	Streams with resolutions: `width > 1920 && height > 1088`
+
+HD::
+	Streams with resolutions: `width > 1280 && height > 720`
+
+SD::
+	Streams with other resolution
+
+OUTPUT ARTIFACTS
+----------------
+Script outputs data in the current folder. Artifacts are encoded (transcoded)
+streams and text files with the calculated metrics. Consider example below
+(`--nframes=10` is given just for the simplicity).
+
+------------
+# bench quality --nframes=10 /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4
+<...>
+
+# ls -1
+WAR_2Mbps_perceptual_1080p.mp4.cbr.ffmpeg-qsv.metrics
+WAR_2Mbps_perceptual_1080p.mp4.cbr.sample-encode.metrics
+WAR_2Mbps_perceptual_1080p.mp4.vbr.ffmpeg-qsv.metrics
+WAR_2Mbps_perceptual_1080p.mp4.vbr.sample-encode.metrics
+WAR_2Mbps_perceptual_1080p.mp4_12Mbps_CBR_QSV.h264
+WAR_2Mbps_perceptual_1080p.mp4_12Mbps_VBR_QSV.h264
+WAR_2Mbps_perceptual_1080p.mp4_24Mbps_CBR_QSV.h264
+WAR_2Mbps_perceptual_1080p.mp4_24Mbps_VBR_QSV.h264
+WAR_2Mbps_perceptual_1080p.mp4_2Mbps_CBR_QSV.h264
+WAR_2Mbps_perceptual_1080p.mp4_2Mbps_VBR_QSV.h264
+WAR_2Mbps_perceptual_1080p.mp4_3Mbps_CBR_QSV.h264
+WAR_2Mbps_perceptual_1080p.mp4_3Mbps_VBR_QSV.h264
+WAR_2Mbps_perceptual_1080p.mp4_6Mbps_CBR_QSV.h264
+WAR_2Mbps_perceptual_1080p.mp4_6Mbps_VBR_QSV.h264
+
+# cat WAR_2Mbps_perceptual_1080p.mp4.cbr.ffmpeg-qsv.metrics
+WAR_2Mbps_perceptual_1080p.mp4_12Mbps_CBR_QSV.h264:33712:99.73896508146471:56.57106818620179:0.9998045802116394:0.9996079494435991
+WAR_2Mbps_perceptual_1080p.mp4_24Mbps_CBR_QSV.h264:28605:99.73896508146471:55.73372554473565:0.9997134983539582:0.9994766423998278
+WAR_2Mbps_perceptual_1080p.mp4_2Mbps_CBR_QSV.h264:4681:98.18199953840941:49.40211511795687:0.9973068058490753:0.9969961779084621
+WAR_2Mbps_perceptual_1080p.mp4_3Mbps_CBR_QSV.h264:6927:99.14454456499617:50.71396113566765:0.9983673691749573:0.9979530665346188
+WAR_2Mbps_perceptual_1080p.mp4_6Mbps_CBR_QSV.h264:14923:99.68411421582299:53.147407625088:0.9992096841335296:0.9988773328701932
+------------
+
+`*.metrics` files contain calculated metrics. File names contain 3 parts:
+`<outprefix>.<config>.<application>.metrics`. `<outprefix>` is `--outprefix`
+specified on the command line (running pre-defined set of streams default
+one is always used). `<config>` is a benchmarked scenario like `cbr` or
+`vbr`. `application` is application being benchmarked, ffmpeg or Intel Media
+SDK sample encode. Metrics data is in CSV format with colon ':' separator.
+First field is stream name, second - bitrate followed by the metrics.
+Metrics are published in the following order: vmaf, psnr, ssim, mssim. If
+you specified any of the `--skip-*` metrics options, then corresponding
+metric is just dropped from the report preserving overall order.
+
+
+ENCODING OPTIONS
+----------------
+--codec AVC|HEVC::
+	Sets encoder to use (default: `AVC`)
+
+--preset default|best::
+	Sets quality preset options (default: `best`)
+
+--bitrates 4K|HD|SD::
+	Sets range of bitrates to use (default depends on the input stream)
+
+WORKING MODE OPTIONS
+--------------------
+--skip-metrics::
+	Do not calculate any metrics.
+
+--skip-psnr::
+	Do not calculate psnr.
+
+--skip-ssim::
+	Do not calculate ssim.
+
+--skip-msssim::
+	Do not calculate msssim.
+
+--skip-vmaf::
+	Do not calculate vmaf.
+
+--skip-encoding::
+	Do not encode anything.
+
+--run-ffmpeg yes|no::
+	Run ffmpeg benchmark (this is default).
+
+--run-smt yes|no::
+	Run smt benchmark (this is default).
+
+PROCESSING OPTIONS
+------------------
+--nframes|-n <uint>::
+	Process (encode, calculate metrics) this number of frames and stop.
+
+--dry-run::
+	Do not execute any commands, but dump them to `stdout`.
+
+--outprefix::
+	File prefix to append to output artifacts (default: `$(basename $inputfile)`).
+	Not applicable in `<folder>` mode.
+
+
+INPUT STREAM OPTIONS
+--------------------
+Only valid for YUV input stream.
+
+--width|-w <uint>::
+	Stream width
+
+--height|-h <uint>::
+	Stream height
+
+--framerate|-f <uint>::
+	Stream framerate
+
+--fourcc I420::
+	Stream color format (default: `I420`)
+
+--progressive::
+	Stream is progressive (this is default)
+
+--interlaced::
+	Stream is interlaced
+
+PREREQUISITES
+-------------
+ffmpeg::
+	Used to benchmark ffmpeg-qsv path (`--enable-libmfx`) and calculate quality metrics
+	(`--enable-libvmaf`).
+
+ffprobe::
+	Used to get some information on the input/output stream(s).
+
+sample_encode::
+	Used for direct benchmark of Intel Media SDK library (YUV input
+	streams).
+
+python3::
+	For generic script purposes.
+
+SEE ALSO
+--------
+link:bench.asciidoc[demo-ffmpeg]
