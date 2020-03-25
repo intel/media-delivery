@@ -1,0 +1,60 @@
+From a1a9837dd209d7fc40dca4910bcded0f98df4cb7 Mon Sep 17 00:00:00 2001
+From: Zhi Li <zli@netflix.com>
+Date: Wed, 8 Apr 2020 22:25:48 -0700
+Subject: [PATCH] Fix ImportError msg.
+
+---
+ python/src/vmaf/__init__.py | 24 +++++++++++++++++-------
+ python/src/vmaf/config.py   |  1 +
+ 2 files changed, 18 insertions(+), 7 deletions(-)
+
+diff --git a/python/src/vmaf/__init__.py b/python/src/vmaf/__init__.py
+index 796a5d4..07f1cf4 100644
+--- a/python/src/vmaf/__init__.py
++++ b/python/src/vmaf/__init__.py
+@@ -54,13 +54,23 @@ class ExternalProgram(object):
+     These external programs should be compiled before vmaf is ran, as per instructions in README
+     """
+ 
+-    external_psnr = config.VmafExternalConfig.psnr_path()
+-    external_moment = config.VmafExternalConfig.moment_path()
+-    external_ssim = config.VmafExternalConfig.ssim_path()
+-    external_ms_ssim = config.VmafExternalConfig.ms_ssim_path()
+-    external_vmaf = config.VmafExternalConfig.vmaf_path()
+-    external_vmafossexec = config.VmafExternalConfig.vmafossexec_path()
+-    external_vmafrc = config.VmafExternalConfig.vmafrc_path()
++    try:
++        from . import externals
++        external_psnr = config.VmafExternalConfig.psnr_path()
++        external_moment = config.VmafExternalConfig.moment_path()
++        external_ssim = config.VmafExternalConfig.ssim_path()
++        external_ms_ssim = config.VmafExternalConfig.ms_ssim_path()
++        external_vmaf = config.VmafExternalConfig.vmaf_path()
++        external_vmafossexec = config.VmafExternalConfig.vmafossexec_path()
++        external_vmafrc = config.VmafExternalConfig.vmafrc_path()
++    except ImportError:
++        external_psnr = None
++        external_moment = None
++        external_ssim = None
++        external_ms_ssim = None
++        external_vmaf = None
++        external_vmafossexec = None
++        external_vmafrc = None
+ 
+     psnr = project_path(os.path.join("libvmaf", "build", "tools", "psnr")) if external_psnr is None else external_psnr
+     moment = project_path(os.path.join("libvmaf", "build", "tools", "moment")) if external_moment is None else external_moment
+diff --git a/python/src/vmaf/config.py b/python/src/vmaf/config.py
+index 0bbc60a..1feb12a 100644
+--- a/python/src/vmaf/config.py
++++ b/python/src/vmaf/config.py
+@@ -181,6 +181,7 @@ class VmafConfig(object):
+     def encode_path(cls, *components):
+         return cls.root_path('workspace', 'encode', *components)
+ 
++
+ class DisplayConfig(object):
+ 
+     @staticmethod
+-- 
+1.8.3.1
+

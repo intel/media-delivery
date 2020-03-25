@@ -145,9 +145,9 @@ if [ "$skip_arg" != "--skip-encoding" ]; then
 fi
 
 if [ "$skip_arg" != "--skip-metrics" ]; then
-  if [ -f $DEMO_PREFIX/share/vmaf/$vmaf_model_path ]; then
+  if [ -f $DEMO_PREFIX/share/model/$vmaf_model_path ]; then
     # that's the location where media delivery demo installs vmaf models
-    vmaf_model_path=$DEMO_PREFIX/share/vmaf/$vmaf_model_path
+    vmaf_model_path=$DEMO_PREFIX/share/model/$vmaf_model_path
   elif [ -f /usr/local/share/model/$vmaf_model_path ]; then
     # that's default installation path for vmaf models
     vmaf_model_path=/usr/local/share/model/$vmaf_model_path

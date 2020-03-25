@@ -76,6 +76,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-instal
     libva-dev \
     libx264-dev \
     libx265-dev \
+    meson \
     pkg-config \
     python3 \
     python3-h5py \
@@ -100,18 +101,30 @@ FROM build-prerequisites AS build-all
 
 # We will install self-build components at $PREFIX whenever possible
 ARG PREFIX=/opt/intel/solutions
+ARG LIBDIR=$PREFIX/lib
+ARG PKG_CONFIG_PATH=$LIBDIR/pkgconfig
 COPY patches $PREFIX/patches
 
 USER user
 
-# As of now Netflix VMAF does not seem to provide a way to configure install locations.
-# So, it will go to /usr/local per default. We need 2 things from VMAF:
-# static library which we will link into ffmpeg and model *.pkl file(s) which
-# we will add to final image to use at runtime.
-# TODO: check VMAF install locations in future releases
-ARG VMAF_VERSION=v1.3.15
+# As of now we need 2 things from VMAF: libvmaf library against which we will link
+# ffmpeg and model *.pkl file(s) to be able to calculate VMAF.
+ARG VMAF_VERSION=v1.5.1
 RUN git clone --depth 1 --branch $VMAF_VERSION https://github.com/Netflix/vmaf.git /home/user/vmaf
-RUN cd /home/user/vmaf && make && sudo make install
+RUN { \
+  set -ex; \
+  cd /home/user/vmaf; \
+  while read p; do \
+    patch -p1 < $PREFIX/patches/vmaf/$p; \
+  done <$PREFIX/patches/vmaf/series; \
+}
+RUN cd /home/user/vmaf/libvmaf \
+  && meson build \
+  --buildtype=release \
+  --prefix=$PREFIX \
+  --libdir=$LIBDIR \
+  && ninja -j $(nproc --all) -C build \
+  && sudo ninja -C build install
 
 # Here we install VMAF python module. It fetches some dependencies during
 # installation and in total footprint is around 300MB. We are trying to
@@ -219,7 +232,6 @@ RUN rm -rf /tmp/scripts
 # Install runtime environment we manually built on 'build' stage
 ARG PREFIX=/opt/intel/solutions
 COPY --from=build-man $PREFIX $PREFIX
-COPY --from=build-all /usr/local/share/model $PREFIX/share/vmaf
 COPY --from=build-all $PREFIX $PREFIX
 RUN echo "$PREFIX/lib" > /etc/ld.so.conf.d/intel-media-delivery.conf
 RUN ldconfig
