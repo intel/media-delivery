@@ -41,7 +41,6 @@ else
   framerate=$1
   shift
 fi
-shift
 bitrate_mbps=$1
 shift
 options=$@
