@@ -30,6 +30,7 @@ Your content (has preference over embedded content):
 
 Container embedded content:
 vod/avc/WAR_2Mbps_perceptual_1080p | http://localhost:8080/vod/avc/WAR_2Mbps_perceptual_1080p/index.m3u8
+vod/hevc/WAR_2Mbps_perceptual_1080p | http://localhost:8080/vod/hevc/WAR_2Mbps_perceptual_1080p/index.m3u8
 vod/abr/WAR_2Mbps_perceptual_1080p | http://localhost:8080/vod/abr/WAR_2Mbps_perceptual_1080p/index.m3u8
 ------------
 
@@ -40,10 +41,12 @@ host# docker run -it --rm --privileged --network=host -v /opt/streams:/opt/data/
 conainer$ demo streams
 Your content (has preference over embedded content):
 vod/avc/file | http://localhost:8080/vod/avc/file/index.m3u8
+vod/hevc/file | http://localhost:8080/vod/hevc/file/index.m3u8
 vod/abr/file | http://localhost:8080/vod/abr/file/index.m3u8
 
 Container embedded content:
 vod/avc/WAR_2Mbps_perceptual_1080p | http://localhost:8080/vod/avc/WAR_2Mbps_perceptual_1080p/index.m3u8
+vod/hevc/WAR_2Mbps_perceptual_1080p | http://localhost:8080/vod/hevc/WAR_2Mbps_perceptual_1080p/index.m3u8
 vod/abr/WAR_2Mbps_perceptual_1080p | http://localhost:8080/vod/abr/WAR_2Mbps_perceptual_1080p/index.m3u8
 ------------
 
@@ -57,10 +60,12 @@ Your content (has preference over embedded content):
 
 Container embedded content:
 vod/avc/WAR_2Mbps_perceptual_1080p | http://localhost:8080/vod/avc/WAR_2Mbps_perceptual_1080p/index.m3u8
+vod/hevc/WAR_2Mbps_perceptual_1080p | http://localhost:8080/vod/hevc/WAR_2Mbps_perceptual_1080p/index.m3u8
 vod/abr/WAR_2Mbps_perceptual_1080p | http://localhost:8080/vod/abr/WAR_2Mbps_perceptual_1080p/index.m3u8
 
 Stream duplicates:
 vod/avc/WAR_2Mbps_perceptual_1080p-1 | http://localhost:8080/vod/avc/WAR_2Mbps_perceptual_1080p-1/index.m3u8
+vod/hevc/WAR_2Mbps_perceptual_1080p-1 | http://localhost:8080/vod/hevc/WAR_2Mbps_perceptual_1080p-1/index.m3u8
 vod/abr/WAR_2Mbps_perceptual_1080p-1 | http://localhost:8080/vod/abr/WAR_2Mbps_perceptual_1080p-1/index.m3u8
 ------------
 

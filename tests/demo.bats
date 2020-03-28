@@ -377,6 +377,13 @@ function test_ffmpeg_capture() {
   test_ffmpeg_capture "vod/avc"
 }
 
+@test "demo ffmpeg vod/hevc capture" {
+  if [ $MDS_DEMO != "cdn" ]; then
+    skip "note: mode not supported for '$MDS_DEMO' demo"
+  fi
+  test_ffmpeg_capture "vod/hevc"
+}
+
 @test "demo ffmpeg vod/abr capture" {
   if [ $MDS_DEMO != "cdn" ]; then
     skip "note: mode not supported for '$MDS_DEMO' demo"

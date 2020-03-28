@@ -66,7 +66,7 @@ type=${tmp##/}
 addlog "type=$type, stream=$stream, index=$index"
 
 function request_valid() {
-  if [[ ! "$type" =~ ^(vod/avc|vod/abr)$ ]]; then
+  if [[ ! "$type" =~ ^(vod/avc|vod/hevc|vod/abr)$ ]]; then
     return 1
   fi
   if [ -z "$stream" -o "$index" != "index.m3u8" ]; then
@@ -130,7 +130,16 @@ if [ "$type" = "vod/avc" ]; then
     -hls_segment_filename stream_%v/data%06d.ts
     -use_localtime_mkdir 1
     -var_stream_map 'v:0,a:0' stream_%v.m3u8)
-
+elif [ "$type" = "vod/hevc" ]; then
+  cmd=(ffmpeg
+    -hwaccel qsv -hwaccel_device /dev/dri/renderD128
+    -c:v h264_qsv -re -i $to_play -c:a copy
+    -c:v hevc_qsv -preset medium -profile:v main -b:v 3000000 -extbrc 1 -refs 5 -vsync 0
+    -f hls -hls_time 10 -hls_playlist_type event
+    -master_pl_name index.m3u8
+    -hls_segment_filename stream_%v/data%06d.ts
+    -use_localtime_mkdir 1
+    -var_stream_map 'v:0,a:0' stream_%v.m3u8)
 elif [ "$type" = "vod/abr" ]; then
   # This is not tuned placeholder for ABR transcoding
   cmd=(ffmpeg
