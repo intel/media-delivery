@@ -41,19 +41,15 @@ else
   framerate=$1
   shift
 fi
-bitrate_mbps=$1
+bitrate_Mbps=$1
 shift
 options=$@
 shift
 
-if [ $bitrate_mbps = 1.5 ]; then
-  bitrate=1500000
-else
-  bitrate=$(($bitrate_mbps * 1000000))
-fi
+bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000000))')
 
 ffmpeg -an \
   $rawvideo -i $file -vframes $nframes \
   -c:v h264_qsv -preset medium -profile:v high -b:v $bitrate \
   $options \
-  -vsync 0 -y ${prefix}_${bitrate_mbps}Mbps_VBR_QSV.h264
+  -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_VBR_QSV.h264

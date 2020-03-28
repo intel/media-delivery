@@ -32,19 +32,15 @@ nframes=$1
 shift
 framerate=$1
 shift
-bitrate_mbps=$1
+bitrate_Mbps=$1
 shift
 options=$@
 shift
 
-if [ $bitrate_mbps = 1.5 ]; then
-  bitrate=1500
-else
-  bitrate=$(($bitrate_mbps * 1000))
-fi
+bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000))')
 
 sample_encode -hw \
   h264 -w $width -h $height -f $framerate -i $file \
   -u medium -b $bitrate -vbr -n $nframes  \
   $options \
-  -o ${prefix}_${bitrate_mbps}Mbps_VBR_SENC.h264
+  -o ${prefix}_${bitrate_Mbps}Mbps_VBR_SENC.h264
