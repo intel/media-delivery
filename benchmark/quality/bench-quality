@@ -307,7 +307,7 @@ fi
 
 if [[ -d "$file" || "$is_yuv" = "yes" && ! can_process_yuv ]]; then
   # 720p SD streams...
-  run "BoatNF_1280x720_60.yuv" Boat_720p 1280 720 300 60
+  run "BoatNF_1280x720_60.yuv" "Boat_720p" 1280 720 300 60
   run "crowd_run_1280x720_50.yuv" "CrowdRun_720p" 1280 720 500 50
   run "Kimono1_1280x720_24.yuv" "Kimono_720p" 1280 720 240 24
   run "FoodMarket2NF_1280x720_60.yuv" "FoodMarket2_720p" 1280 720 300 60
@@ -354,6 +354,7 @@ fi
 
 if [ -z "$outprefix" ]; then
   outprefix=$(basename $file)
+  outprefix="${outprefix%.*}"
 elif echo "$outprefix" | grep "/"; then
   echo "error: wrong --outprefix (should be bare folder name, not a path): $outprefix" >&2
   exit -1
@@ -443,7 +444,7 @@ if [ "$skip_metrics" = "no" ]; then
     exit -1
   fi
 
-  for out in $(ls -1 $outprefix* | grep -v \.metrics); do
+  for out in $(ls -1t $outprefix* | grep -v \.metrics); do
     if [ "$is_yuv" = "yes" ]; then
       rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
     fi
@@ -482,11 +483,11 @@ if [ "$skip_metrics" = "no" ]; then
     fi
 
     # calculate bitrate in kbps
-    b=$(stat -c %s $out)   # filesize
-    b=$(($b * 8))          # filesize in bits
-    b=$(($b / $nframes))   # bits per frame
-    b=$(($b * $framerate)) # bps
-    b=$(($b / 1000))       # kbps
+    b=$(stat -c %s $out)                         # filesize
+    b=$(python3 -c 'print('$b' * 8)')            # filesize in bits
+    b=$(python3 -c 'print('$b' / '$nframes')')   # bits per frame
+    b=$(python3 -c 'print('$b' * '$framerate')') # bps
+    b=$(python3 -c 'print('$b' / 1000)')         # kbps
 
     metrics="$out:$b"
     vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["VMAF score"])')
