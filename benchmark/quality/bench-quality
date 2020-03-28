@@ -202,21 +202,6 @@ function count_frames() {
     -show_entries stream=nb_read_frames $file
 }
 
-function get_bitrates() {
-  local user_bitrates=$1
-  local width=$2
-  local height=$3
-  if [ -n "$user_bitrates" ]; then
-    echo $user_bitrates
-  elif [ $width -gt 1920 -a $height -gt 1088 ]; then
-    echo "4K"
-  elif [ $width -gt 1280 -a $height -gt 720 ]; then
-    echo "HD"
-  else
-    echo "SD"
-  fi
-}
-
 function find_stream() {
   local vidpath=$1
   local stream=$2
@@ -313,6 +298,93 @@ function can_process_yuv() {
   fi
 }
 
+function get_resolution() {
+  local width=$1
+  local height=$2
+  if [ $width -gt 1920 -a $height -gt 1088 ]; then
+    echo "4K"
+  elif [ $width -gt 1280 -a $height -gt 720 ]; then
+    echo "HD"
+  else
+    echo "SD"
+  fi
+}
+
+function get_bitrates() {
+  local codec=$1
+  local resolution=$2
+  if [ "$codec" = "AVC" ]; then
+    if [ "$resolution" = "4K" ]; then
+      echo "6 9 15 24 40"
+    elif [ "$resolution" = "HD" ]; then
+      echo "2 3 6 12 24"
+    elif [ "$resolution" = "SD" ]; then
+      echo "1 1.5 3 6 12"
+    else
+      echo "bug: invalid resolution: $res" >&2
+      exit -1
+    fi
+  elif [ "$codec" = "HEVC" ]; then
+    if [ "$res" = "4K" ]; then
+      echo "6 9 15 24 40"
+    elif [ "$res" = "HD" ]; then
+      echo "2 3 6 9 15"
+    elif [ "$res" = "SD" ]; then
+      echo "1 1.5 3 4.5 7.5"
+    else
+      echo "bug: invalid resolution: $res" >&2
+      exit -1
+    fi
+  else
+    echo "bug: invalid codec (AVC|HEVC): $codec" >&2
+    exit -1
+  fi
+}
+
+function get_coding_commandline_options() {
+  local codec=$1
+  local preset=$2
+  local app=$3
+  local options_qsv=""
+  local options_senc=""
+  if [ "$codec" = "AVC" ]; then
+    if [ "$preset" = "best" ]; then
+      options_qsv="-extbrc 1 -b_strategy 1 -bf 7 -refs 5"
+      options_senc="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5"
+    elif [[ ! $preset =~ default ]]; then
+      echo "error: invalid encoding options preset (default, best): $preset" >&2
+      exit -1
+    fi
+  elif [ "$codec" = "HEVC" ]; then
+    if [ "$preset" = "best" ]; then
+      options_qsv="-extbrc 1 -qmin 1 -qmax 51 -refs 5"
+      options_senc="-extbrc:on -x 5"
+    elif [[ ! $preset =~ default ]]; then
+      echo "error: invalid encoding options preset (default, best): $preset" >&2
+      exit -1
+    fi
+  else
+    echo "error: invalid codec (AVC|HEVC): $codec" >&2
+    exit -1
+  fi
+  if [ $app = "qsv" ]; then
+    echo "$options_qsv"
+  elif [ $app = "senc" ]; then
+    echo "$options_senc"
+  else
+    echo "bug: invalid app: $app" >&2
+  fi
+}
+
+function get_vmaf_model() {
+  local resolution=$1
+  if [ "$resolution" = "4K" ]; then
+    echo "vmaf_4k_v0.6.1.pkl"
+  else
+    echo "vmaf_v0.6.1.pkl"
+  fi
+}
+
 file=$1
 err=0
 
@@ -382,62 +454,28 @@ elif echo "$outprefix" | grep "/"; then
   exit -1
 fi
 
-bitrates=$(get_bitrates "$bitrates" "$width" "$height")
+resolution=$(get_resolution $width $height)
+if [ ${#bitrates} -ne 0 ]; then # sort and reformat user-defined bitrates
+  if ! [[ $bitrates =~ ^$|^([0-9]+(\.[0-9]+)?)(:[0-9]+(\.[0-9]+)?)*$ ]]; then
+    echo "error: invalid bitrates input (use --bitrates b1:b2:...:bN, bi is <float>): $bitrates" >&2
+    exit -1
+  fi
+  bitrates=$(python3 <<END
+import decimal;
+arr="$bitrates".split(':');
+arr=[float(i) for i in arr];
+arr.sort();
+arr=" ".join(map("{0:g}".format, arr));
+print(arr);
+END
+  )
 
-if [ "$codec" = "AVC" ]; then
-  if [ "$bitrates" = "4K" ]; then
-    bitrates_list=(6 9 15 24 40)
-    vmaf_model_path=vmaf_4k_v0.6.1.pkl
-  elif [ "$bitrates" = "HD" ]; then
-    bitrates_list=(2 3 6 12 24)
-    vmaf_model_path=vmaf_v0.6.1.pkl
-  elif [ "$bitrates" = "SD" ]; then
-    bitrates_list=(1 1.5 3 6 12)
-    vmaf_model_path=vmaf_v0.6.1.pkl
-  else
-    echo "error: invalid bitrates list (4K|HD|SD): $bitrates" >&2
-    exit -1
-  fi
-
-  if [ "$preset" = "default" ]; then
-    options_qsv=""
-    options_senc=""
-  elif [ "$preset" = "best" ]; then
-    options_qsv="-extbrc 1 -b_strategy 1 -bf 7 -refs 5"
-    options_senc="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5"
-  else
-    echo "error: invalid encoding options preset (default, best): $preset" >&2
-    exit -1
-  fi
-elif [ "$codec" = "HEVC" ]; then
-  if [ "$bitrates" = "4K" ]; then
-    bitrates_list=(6 9 15 24 40)
-    vmaf_model_path=vmaf_4k_v0.6.1.pkl
-  elif [ "$bitrates" = "HD" ]; then
-    bitrates_list=(2 3 6 9 15)
-    vmaf_model_path=vmaf_v0.6.1.pkl
-  elif [ "$bitrates" = "SD" ]; then
-    bitrates_list=(1 1.5 3 4.5 7.5)
-    vmaf_model_path=vmaf_v0.6.1.pkl
-  else
-    echo "error: invalid bitrates list (4K|HD|SD): $bitrates"
-    exit -1
-  fi
-
-  if [ "$preset" = "default" ]; then
-    options_qsv=""
-    options_senc=""
-  elif [ "$preset" = "best" ]; then
-    options_qsv="-extbrc 1 -qmin 1 -qmax 51 -refs 5"
-    options_senc="-extbrc:on -x 5"
-  else
-    echo "error: invalid encoding options preset (default, best): $preset" >&2
-    exit -1
-  fi
-else
-  echo "error: invalid codec (AVC|HEVC): $codec" >&2
-  exit -1
+else # use predefined bitrates
+  bitrates=$(get_bitrates $codec $resolution)
 fi
+options_qsv=$(get_coding_commandline_options $codec $preset "qsv")
+options_senc=$(get_coding_commandline_options $codec $preset "senc")
+vmaf_model_path=$(get_vmaf_model $resolution)
 
 mkdir -p $outdir && cd $outdir
 if [[ $? -ne 0 ]]; then
@@ -447,7 +485,7 @@ fi
 
 if [ "$skip_encoding" = "no" ]; then
   path=$(dirname $(readlink -f $0))
-  for b in "${bitrates_list[@]}"; do
+  for b in ${bitrates[@]}; do
     if [ "$is_yuv" = "no" ]; then
       if [ "$skip_ffmpeg" = "no" ]; then
         if [ "$skip_cbr" = "no" ]; then

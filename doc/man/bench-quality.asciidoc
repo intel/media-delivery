@@ -49,17 +49,30 @@ Script checks whether the input stream is YUV by the following file
 extensions: '.yuv', '.YUV'. Any other file is considered to be in a container
 format.
 
-Script checks input stream resolution to identify range of bitrates to use
-for encoding. There are the following bitrate groups:
+Script checks input stream resolution to identify list of bitrates to use
+for encoding. This behaviour can be overwritten with `--bitrate` option which
+permits to specify a list of desired bitrates. Script default bitrates are
+given in the following tables:
 
-4K::
-	Streams with resolutions: `width > 1920 && height > 1088`
+* AVC encoding bitrates
++
+|===
+| Resolution | Bitrates (Mbps)
 
-HD::
-	Streams with resolutions: `width > 1280 && height > 720`
+| `width > 1920 && height > 1088` | 6, 9, 15, 24, 40
+| `width > 1280 && height > 720` | 2, 3, 6, 12, 24
+| other | 1, 1.5, 3, 6, 12
+|===
 
-SD::
-	Streams with other resolution
+* HEVC encoding bitrates
++
+|===
+| Resolution | Bitrates (Mbps)
+
+| `width > 1920 && height > 1088` | 6, 9, 15, 24, 40
+| `width > 1280 && height > 720` | 2, 3, 6, 9, 15
+| other | 1, 1.5, 3, 4.5, 7.5
+|===
 
 OUTPUT ARTIFACTS
 ----------------
@@ -115,8 +128,9 @@ ENCODING OPTIONS
 --preset default|best::
 	Sets quality preset options (default: `best`)
 
---bitrates 4K|HD|SD::
-	Sets range of bitrates to use (default depends on the input stream)
+--bitrates <float>[:<float>...]::
+	Sets list of bitrates in Mbps to use (default: use hardcoded bitrates which
+	depend on stream resolution and codec)
 
 WORKING MODE OPTIONS
 --------------------
