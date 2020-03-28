@@ -129,7 +129,7 @@ WORKING MODE OPTIONS
 --skip-ssim::
 	Do not calculate ssim.
 
---skip-msssim::
+--skip-ms-ssim::
 	Do not calculate msssim.
 
 --skip-vmaf::
@@ -138,11 +138,17 @@ WORKING MODE OPTIONS
 --skip-encoding::
 	Do not encode anything.
 
---run-ffmpeg yes|no::
-	Run ffmpeg benchmark (this is default).
+--skip-ffmpeg::
+	Do not run ffmpeg-qsv benchmark.
 
---run-smt yes|no::
-	Run smt benchmark (this is default).
+--skip-msdk::
+	Do not run Intel Media SDK samples benchmark.
+
+--skip-cbr::
+	Do not execute Constant Bitrate (CBR) encoding cases.
+
+--skip-cbr::
+	Do not execute Variable Bitrate (VBR) encoding cases.
 
 PROCESSING OPTIONS
 ------------------

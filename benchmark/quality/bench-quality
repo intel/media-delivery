@@ -25,8 +25,8 @@ bench_quality=$0
 OPTIONS="w:h:f:o:"
 LONGOPTIONS="codec:,preset:,bitrates:"
 LONGOPTIONS+=",width:,height:,fourcc:,framerate:,progressive,interlaced"
-LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-mssim,skip-vmaf,skip-encoding"
-LONGOPTIONS+=",run-ffmpeg,run-smt"
+LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-ms-ssim,skip-vmaf,skip-encoding"
+LONGOPTIONS+=",skip-ffmpeg,skip-msdk,skip-cbr,skip-vbr"
 LONGOPTIONS+=",nframes:,dry-run,outdir:,outprefix:"
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
@@ -59,11 +59,13 @@ outprefix=""
 skip_metrics=no
 skip_psnr=no
 skip_ssim=no
-skip_mssim=no
+skip_ms_ssim=no
 skip_vmaf=no
 skip_encoding=no
-run_ffmpeg=yes
-run_smt=yes
+skip_ffmpeg=no
+skip_msdk=no
+skip_cbr=no
+skip_vbr=no
 
 while true; do
     case "$1" in
@@ -131,8 +133,8 @@ while true; do
             skip_ssim=yes
             shift
             ;;
-        --skip-mssim)
-            skip_mssim=yes
+        --skip-ms-ssim)
+            skip_ms_ssim=yes
             shift
             ;;
         --skip-vmaf)
@@ -143,13 +145,21 @@ while true; do
             skip_encoding=yes
             shift
             ;;
-        --run-ffmpeg)
-            run_ffmpeg=$2
-            shift 2
+        --skip-ffmpeg)
+            skip_ffmpeg=yes
+            shift
             ;;
-        --run-smt)
-            run_smt=$2
-            shift 2
+        --skip-msdk)
+            skip_msdk=yes
+            shift
+            ;;
+        --skip-cbr)
+            skip_cbr=yes
+            shift
+            ;;
+        --skip-vbr)
+            skip_vbr=yes
+            shift
             ;;
         --)
             shift
@@ -279,11 +289,13 @@ function run() {
       $(if_yes $skip_psnr "--skip-psnr") \
       $(if_yes $skip_ssim "--skip-ssim") \
       $(if_yes $skip_ssim "--skip-ssim") \
-      $(if_yes $skip_mssim "--skip-mssim") \
+      $(if_yes $skip_ms_ssim "--skip-ms-ssim") \
       $(if_yes $skip_vmaf "--skip-vmaf") \
       $(if_yes $skip_encoding "--skip-encoding") \
-      $(if_yes $run_ffmpeg "--run-ffmpeg") \
-      $(if_yes $run_smt "--run-smt") \
+      $(if_yes $skip_ffmpeg "--skip-ffmpeg") \
+      $(if_yes $skip_msdk "--skip-msdk") \
+      $(if_yes $skip_cbr "--skip-cbr") \
+      $(if_yes $skip_vbr "--skip-vbr") \
       -- \
       $stream
     set_err $?
@@ -437,13 +449,31 @@ if [ "$skip_encoding" = "no" ]; then
   path=$(dirname $(readlink -f $0))
   for b in "${bitrates_list[@]}"; do
     if [ "$is_yuv" = "no" ]; then
-      $path/$codec/run_cbr_ffmpeg-qsv.sh $file $outprefix $nframes $framerate $b $options_qsv
-      $path/$codec/run_vbr_ffmpeg-qsv.sh $file $outprefix $nframes $framerate $b $options_qsv
+      if [ "$skip_ffmpeg" = "no" ]; then
+        if [ "$skip_cbr" = "no" ]; then
+          $path/$codec/run_cbr_ffmpeg-qsv.sh $file $outprefix $nframes $framerate $b $options_qsv
+        fi
+        if [ "$skip_vbr" = "no" ]; then
+          $path/$codec/run_vbr_ffmpeg-qsv.sh $file $outprefix $nframes $framerate $b $options_qsv
+        fi
+      fi
     else
-      $path/$codec/run_cbr_ffmpeg-qsv.sh $file $outprefix $width $height $nframes $framerate $b $options_qsv
-      $path/$codec/run_vbr_ffmpeg-qsv.sh $file $outprefix $width $height $nframes $framerate $b $options_qsv
-      $path/$codec/run_cbr_sample-encode.sh $file $outprefix $width $height $nframes $framerate $b $options_senc
-      $path/$codec/run_vbr_sample-encode.sh $file $outprefix $width $height $nframes $framerate $b $options_senc
+      if [ "$skip_ffmpeg" = "no" ]; then
+        if [ "$skip_cbr" = "no" ]; then
+          $path/$codec/run_cbr_ffmpeg-qsv.sh $file $outprefix $width $height $nframes $framerate $b $options_qsv
+        fi
+        if [ "$skip_vbr" = "no" ]; then
+          $path/$codec/run_vbr_ffmpeg-qsv.sh $file $outprefix $width $height $nframes $framerate $b $options_qsv
+        fi
+      fi
+      if [ "$skip_msdk" = "no" ]; then
+        if [ "$skip_cbr" = "no" ]; then
+          $path/$codec/run_cbr_sample-encode.sh $file $outprefix $width $height $nframes $framerate $b $options_senc
+        fi
+        if [ "$skip_vbr" = "no" ]; then
+          $path/$codec/run_vbr_sample-encode.sh $file $outprefix $width $height $nframes $framerate $b $options_senc
+        fi
+      fi
     fi
   done
 fi
@@ -472,7 +502,7 @@ if [ "$skip_metrics" = "no" ]; then
     if [ "$skip_ssim" = "no" ]; then
       metrics+=":ssim=1"
     fi
-    if [ "$skip_mssim" = "no" ]; then
+    if [ "$skip_ms_ssim" = "no" ]; then
       metrics+=":ms_ssim=1"
     fi
 
@@ -508,24 +538,22 @@ if [ "$skip_metrics" = "no" ]; then
     metrics="$out:$b"
     vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["VMAF score"])')
     metrics+=":$vmaf"
-    if [ "$skip_psnr" = "no" ]; then
-      psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["PSNR score"])')
-      metrics+=":$psnr"
-    fi
-    if [ "$skip_ssim" = "no" ]; then
-      ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["SSIM score"])')
-      metrics+=":$ssim"
-    fi
-    if [ "$skip_mssim" = "no" ]; then
-      ms_ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["MS-SSIM score"])')
-      metrics+=":$ms_ssim"
-    fi
-    
-    echo "$metrics" | grep CBR_QSV >> $outprefix.cbr.ffmpeg-qsv.metrics
-    echo "$metrics" | grep VBR_QSV >> $outprefix.vbr.ffmpeg-qsv.metrics
+    psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["PSNR score"])')
+    metrics+=":$psnr"
+    ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["SSIM score"])')
+    metrics+=":$ssim"
+    ms_ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["MS-SSIM score"])')
+    metrics+=":$ms_ssim"
+
+    out=$(echo "$metrics" | grep CBR_QSV)
+    [ ${#out} -ne 0 ] && echo $out >> $outprefix.cbr.ffmpeg-qsv.metrics
+    out=$(echo "$metrics" | grep VBR_QSV)
+    [ ${#out} -ne 0 ] && echo $out >> $outprefix.vbr.ffmpeg-qsv.metrics
     if [ "$is_yuv" = "yes" ]; then
-      echo "$metrics" | grep CBR_SENC >> $outprefix.cbr.sample-encode.metrics
-      echo "$metrics" | grep VBR_SENC >> $outprefix.vbr.sample-encode.metrics
+      out=$(echo "$metrics" | grep CBR_SENC)
+      [ ${#out} -ne 0 ] && echo $out >> $outprefix.cbr.sample-encode.metrics
+      out=$(echo "$metrics" | grep VBR_SENC)
+      [ ${#out} -ne 0 ] && echo $out >> $outprefix.vbr.sample-encode.metrics
     fi
   done
 fi
