@@ -30,7 +30,7 @@ Search is done in the root `<folder>` and all subfolders.
     bench quality <stream>
 ------------
 +
-I this case benchmark is run only for the specified stream. If stream is YUV you need to
+In this case benchmark is run only for the specified stream. If stream is YUV you need to
 specify its characteristics via command line optins (`-w`, `-h`, `-f`,
 `--fourcc`, etc.). Mind that YUV stream will be benchmarked both via ffmpeg-qsv and
 Sample Encode, but streams in containers (MP4, TS, etc.) will be benchmarked only via
@@ -63,7 +63,7 @@ SD::
 
 OUTPUT ARTIFACTS
 ----------------
-Script outputs data in the current folder. Artifacts are encoded (transcoded)
+Script outputs data in the `--outdir` folder. Artifacts are encoded (transcoded)
 streams and text files with the calculated metrics. Consider example below
 (`--nframes=10` is given just for the simplicity).
 
@@ -151,6 +151,11 @@ PROCESSING OPTIONS
 
 --dry-run::
 	Do not execute any commands, but dump them to `stdout`.
+
+--outdir|-o /path/to/artifacts::
+	Produce output in the specified folder (default:
+	`/opt/data/artifacts/benchmark/quality` if ran under docker,
+	`$HOME/benchmark/quality` otherwise)
 
 --outprefix::
 	File prefix to append to output artifacts (default: `$(basename $inputfile)`).

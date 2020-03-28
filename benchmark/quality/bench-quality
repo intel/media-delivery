@@ -22,12 +22,12 @@
 
 bench_quality=$0
 
-OPTIONS="w:h:f:"
+OPTIONS="w:h:f:o:"
 LONGOPTIONS="codec:,preset:,bitrates:"
 LONGOPTIONS+=",width:,height:,fourcc:,framerate:,progressive,interlaced"
 LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-mssim,skip-vmaf,skip-encoding"
 LONGOPTIONS+=",run-ffmpeg,run-smt"
-LONGOPTIONS+=",nframes:,dry-run,outprefix:"
+LONGOPTIONS+=",nframes:,dry-run,outdir:,outprefix:"
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -48,6 +48,12 @@ bitrates=""
 
 nframes=0
 dry_run=no
+if grep docker /proc/1/cgroup -qa; then
+  outdir="/opt/data/artifacts"
+else
+  outdir="$HOME"
+fi
+outdir+="/benchmark/quality"
 outprefix=""
 
 skip_metrics=no
@@ -104,6 +110,10 @@ while true; do
         --dry-run)
             dry_run=yes
             shift
+            ;;
+        -o|--outdir)
+            outdir=$2
+            shift 2
             ;;
         --outprefix)
             outprefix=yes
@@ -384,7 +394,7 @@ if [ "$codec" = "AVC" ]; then
     options_qsv="-extbrc 1 -b_strategy 1 -bf 7 -refs 5"
     options_senc="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5"
   else
-    echo "error: invalid encoding options preset (default, best): $preset"
+    echo "error: invalid encoding options preset (default, best): $preset" >&2
     exit -1
   fi
 elif [ "$codec" = "HEVC" ]; then
@@ -409,11 +419,17 @@ elif [ "$codec" = "HEVC" ]; then
     options_qsv="-extbrc 1 -qmin 1 -qmax 51 -refs 5"
     options_senc="-extbrc:on -x 5"
   else
-    echo "error: invalid encoding options preset (default, best): $preset"
+    echo "error: invalid encoding options preset (default, best): $preset" >&2
     exit -1
   fi
 else
-  echo "error: invalid codec (AVC|HEVC): $codec"
+  echo "error: invalid codec (AVC|HEVC): $codec" >&2
+  exit -1
+fi
+
+mkdir -p $outdir && cd $outdir
+if [[ $? -ne 0 ]]; then
+  echo "fatal: can't create output directory: $outdir" >&2
   exit -1
 fi
 
