@@ -27,6 +27,5 @@ export https_proxy=http://proxy-chain.intel.com:911
 
 docker run \
   -it --privileged --network=host \
-  -v /home/dvrogozh/git/gitlab/intel-media-delivery/tmp:/opt/data/artifacts \
   $(env | grep -E '_proxy=' | sed 's/^/-e /') \
   intel-media-delivery $@
