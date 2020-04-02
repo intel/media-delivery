@@ -192,6 +192,7 @@ Not ready
 Further reading
 ---------------
 
+* `Media Delivery Solutions Manual Pages <doc/man/readme.rst>`_
 * `Solutions HowTo <doc/howto.rst>`_
 * `Solutions Tests <tests/readme.rst>`_
 
