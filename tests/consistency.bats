@@ -1,4 +1,3 @@
-#!/bin/bash
 #
 # Copyright (c) 2020 Intel Corporation
 #
@@ -20,12 +19,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-export http_proxy=http://proxy-chain.intel.com:911
-export https_proxy=http://proxy-chain.intel.com:911
-#export no_proxy=localhost
-#unset no_proxy
+load utils
 
-docker run \
-  -it --privileged --network=host \
-  $(env | grep -E '_proxy=' | sed 's/^/-e /') \
-  intel-media-delivery "$@"
+# These are image consistency tests, i.e. tests which assure that
+# self-built apps included into the image can actually be run (dependencies
+# are satisfied).
+
+@test "ffmpeg is ready" {
+  run docker_run ffmpeg --help
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "ffprobe is ready" {
+  run docker_run ffprobe --help
+  print_output
+  [ $status -eq 0 ]
+}
+
+# this test is indirect check that ffmpeg patches were actually applied
+# and user did not forget to rebuild image with --no-cache
+@test "ffmpeg patches were applied" {
+  run docker_run diff \
+    /opt/intel/solutions/patches \
+    /opt/intel/solutions/src/intel-media-delivery/patches
+  print_output
+  [ $status -eq 0 ]
+}

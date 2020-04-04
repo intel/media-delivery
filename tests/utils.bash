@@ -55,13 +55,13 @@ function teardown() {
 # helper functions
 ##################
 function docker_run() {
-  docker run --rm --privileged --network=host ${MDS_IMAGE} $@
+  docker run --rm --privileged --network=host ${MDS_IMAGE} "$@"
 }
 
 function docker_run_opts() {
   opts=$1
   shift
-  docker run --rm --privileged --network=host $opts ${MDS_IMAGE} $@
+  docker run --rm --privileged --network=host $opts ${MDS_IMAGE} "$@"
 }
 
 function print_output() {
