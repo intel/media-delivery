@@ -46,3 +46,22 @@ load utils
   print_output
   [ $status -eq 0 ]
 }
+
+@test "vmaf python tools are importable" {
+  run docker_run python3 -c "import vmaf; help(vmaf)"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "vmaf bdrate calculator works" {
+  run docker_run python3 -c "$(cat << END
+from vmaf.tools.bd_rate_calculator import BDrateCalculator;
+setA = [(35, 21),(37, 25),(39, 28),(42, 30)];
+setB = [(49, 28),(52, 32),(55, 35),(58, 37)];
+print(int(BDrateCalculator.CalcBDRate(setA,setB)*100));
+END
+  )"
+  print_output
+  [ $status -eq 0 ]
+  [ $output -eq 23 ]
+}
