@@ -108,16 +108,18 @@ WAR_2Mbps_perceptual_1080p.mp4_3Mbps_CBR_QSV.h264:6927:99.14454456499617:50.7139
 WAR_2Mbps_perceptual_1080p.mp4_6Mbps_CBR_QSV.h264:14923:99.68411421582299:53.147407625088:0.9992096841335296:0.9988773328701932
 ------------
 
-`*.metrics` files contain calculated metrics. File names contain 3 parts:
-`<outprefix>.<config>.<application>.metrics`. `<outprefix>` is `--outprefix`
-specified on the command line (running pre-defined set of streams default
-one is always used). `<config>` is a benchmarked scenario like `cbr` or
-`vbr`. `application` is application being benchmarked, ffmpeg or Intel Media
-SDK sample encode. Metrics data is in CSV format with colon ':' separator.
-First field is stream name, second - bitrate followed by the metrics.
-Metrics are published in the following order: vmaf, psnr, ssim, mssim. If
-you specified any of the `--skip-*` metrics options, then corresponding
-metric is just dropped from the report preserving overall order.
+`*.metrics` files contain calculated metrics. File names contain 4 parts:
+`<outprefix>.<codec>.<mode>.<application>.metrics`. `<outprefix>` is
+`--outprefix` specified on the command line (running pre-defined set of streams
+default one is always used). `<codec>` is the video compression standard used
+in benchmarking (AVC or HEVC), which can be specified on the command line with
+`--codec` option. `<mode>` is a bitrate mode like `cbr` (constant bitrate) or
+`vbr` (variable bitrate). `application` is application being benchmarked, ffmpeg
+or Intel Media SDK sample encode. Metrics data is in CSV format with colon ':'
+separator. First field is stream name, second - bitrate followed by the metrics.
+Metrics are published in the following order: vmaf, psnr, ssim, ms-ssim. If
+you specified any of the `--skip-*` metrics options, then the corresponding
+metric is represented with an empty string between the separators in the report.
 
 
 ENCODING OPTIONS
@@ -163,6 +165,9 @@ WORKING MODE OPTIONS
 
 --skip-cbr::
 	Do not execute Variable Bitrate (VBR) encoding cases.
+
+--skip-reference::
+	Do not run reference codec used for BD-rate calculation.
 
 PROCESSING OPTIONS
 ------------------
