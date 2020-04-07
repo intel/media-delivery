@@ -85,10 +85,11 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 
 FROM build-prerequisites AS build-all
 
-USER user
-
 # We will install self-build components at $PREFIX whenever possible
 ARG PREFIX=/opt/intel/solutions
+COPY patches $PREFIX/patches
+
+USER user
 
 # As of now Netflix VMAF does not seem to provide a way to configure install locations.
 # So, it will go to /usr/local per default. We need 2 things from VMAF:
@@ -101,6 +102,13 @@ RUN cd /home/user/vmaf && make && sudo make install
 
 ARG FFMPEG_VERSION=master
 RUN git clone --depth 1 --branch $FFMPEG_VERSION https://github.com/ffmpeg/ffmpeg /home/user/ffmpeg
+RUN { \
+  set -ex; \
+  cd /home/user/ffmpeg; \
+  while read p; do \
+    patch -p1 < $PREFIX/patches/ffmpeg/$p; \
+  done <$PREFIX/patches/ffmpeg/series; \
+}
 RUN cd /home/user/ffmpeg && \
   ./configure \
   --prefix=$PREFIX \
@@ -118,8 +126,9 @@ RUN cd /home/user/ffmpeg && \
   && sudo make install
 
 # Cleanin up...
-RUN rm -rf /home/user/vmaf && \
-    rm -rf /home/user/ffmpeg
+RUN rm -rf /home/user/ffmpeg && \
+    rm -rf /home/user/patches && \
+    rm -rf /home/user/vmaf
 
 FROM build-prerequisites AS build-man
 
