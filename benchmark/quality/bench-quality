@@ -25,8 +25,9 @@ bench_quality=$0
 OPTIONS="w:h:f:o:"
 LONGOPTIONS="codec:,preset:,bitrates:"
 LONGOPTIONS+=",width:,height:,fourcc:,framerate:,progressive,interlaced"
-LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-ms-ssim,skip-vmaf,skip-encoding"
-LONGOPTIONS+=",skip-ffmpeg,skip-msdk,skip-cbr,skip-vbr,skip-reference"
+LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-ms-ssim,skip-vmaf"
+LONGOPTIONS+=",skip-encoding,skip-ffmpeg,skip-msdk,skip-cbr,skip-vbr"
+LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate"
 LONGOPTIONS+=",nframes:,dry-run,outdir:,outprefix:"
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
@@ -59,7 +60,7 @@ outprefix=""
 skip_metrics=no
 skip_psnr=no
 skip_ssim=no
-skip_ms_ssim=no
+skip_msim=no
 skip_vmaf=no
 skip_encoding=no
 skip_ffmpeg=no
@@ -67,6 +68,8 @@ skip_msdk=no
 skip_cbr=no
 skip_vbr=no
 skip_reference=no
+skip_bdrate=no
+single_bdrate=no
 
 while true; do
     case "$1" in
@@ -135,7 +138,7 @@ while true; do
             shift
             ;;
         --skip-ms-ssim)
-            skip_ms_ssim=yes
+            skip_msim=yes
             shift
             ;;
         --skip-vmaf)
@@ -164,6 +167,14 @@ while true; do
             ;;
         --skip-reference)
             skip_reference=yes
+            shift
+            ;;
+        --skip-bdrate)
+            skip_bdrate=yes
+            shift
+            ;;
+        --single-bdrate)
+            single_bdrate=yes
             shift
             ;;
         --)
@@ -279,7 +290,7 @@ function run() {
       $(if_yes $skip_psnr "--skip-psnr") \
       $(if_yes $skip_ssim "--skip-ssim") \
       $(if_yes $skip_ssim "--skip-ssim") \
-      $(if_yes $skip_ms_ssim "--skip-ms-ssim") \
+      $(if_yes $skip_msim "--skip-ms-ssim") \
       $(if_yes $skip_vmaf "--skip-vmaf") \
       $(if_yes $skip_encoding "--skip-encoding") \
       $(if_yes $skip_ffmpeg "--skip-ffmpeg") \
@@ -287,6 +298,8 @@ function run() {
       $(if_yes $skip_cbr "--skip-cbr") \
       $(if_yes $skip_vbr "--skip-vbr") \
       $(if_yes $skip_reference "--skip-reference") \
+      $(if_yes $skip_bdrate "--skip-bdrate") \
+      $(if_yes $single_bdrate "--single-bdrate") \
       -- \
       $stream
     set_err $?
@@ -394,6 +407,105 @@ function get_vmaf_model() {
   else
     echo "vmaf_v0.6.1.pkl"
   fi
+}
+
+function get_bdrate_points() {
+  local file=$1
+  local coin=$2
+  local npts=$3
+  local metrics_ind=$4
+  local pts=""
+  for i in $(seq 1 $npts); do
+    [[ $i = 1 ]] && pts="[(" || pts+="("
+    pts+=$($coin -$npts $file | sed $i'q;d' | awk -F: '{print $2","}')
+    pts+=$($coin -$npts $file | sed $i'q;d' | awk -F: '{print $'$metrics_ind'}')
+    [[ $i = $npts ]] && pts+=")]" || pts+="),"
+  done
+  echo $pts
+}
+
+function get_bdrate() {
+  local ref_file=$1
+  local test_file=$2
+  local coin=$3
+  local npts=$4
+  local metrics_ind=$5
+  local ref_pts=$(get_bdrate_points $ref_file $coin $npts $metrics_ind)
+  local test_pts=$(get_bdrate_points $test_file $coin $npts $metrics_ind)
+  if [[ $test_pts == *",)"* || $test_pts == *"(,"* || $ref_pts == *",)"* || $ref_pts == *"(,"* ]]; then return; fi
+  local bdrate=$(python3 <<END
+from vmaf.tools.bd_rate_calculator import BDrateCalculator;
+bdr=BDrateCalculator();
+A=$ref_pts; B=$test_pts;
+print(bdr.CalcBDRate(A,B)*100);
+END
+  )
+  echo $bdrate
+}
+
+function process_bdrates() {
+  local ref_file=$1
+  local test_file=$2
+  local prefix=$3
+  local ext=$4
+  local coin=$5
+  local npts=$6
+
+  local vmaf_metrics_ind=3
+  local psnr_metrics_ind=4
+  local ssim_metrics_ind=5
+  local msim_metrics_ind=6
+
+  ofile=${test_file%.*}.$ext
+  bdr="$prefix:"
+  if [ "$skip_vmaf" = "no" ]; then
+    bdrate=$(get_bdrate $ref_file $test_file $coin $npts $vmaf_metrics_ind)
+    if ! [ -z "$bdrate" ]; then
+      bdr+="$bdrate"
+      printf -v b '%.4f' $bdrate
+      echo -n $ofile": "
+      echo "VMAF BD-Rate = $b%"
+    else 
+      echo "warning: VMAF BD-rate metric not found: skipping VMAF BD-rate calculation for '$test_file'" >&2
+    fi
+  fi
+  bdr+=":"
+  if [ "$skip_psnr" = "no" ]; then
+    bdrate=$(get_bdrate $ref_file $test_file $coin $npts $psnr_metrics_ind)
+    if ! [ -z "$bdrate" ]; then
+      bdr+="$bdrate"
+      printf -v b '%.4f' $bdrate
+      echo -n $ofile": "
+      echo "PSNR-Y BD-Rate = $b%"
+    else 
+      echo "warning: PSNR BD-rate metric not found: skipping PSNR-Y BD-rate calculation for '$test_file'" >&2
+    fi
+  fi
+  bdr+=":"
+  if [ "$skip_ssim" = "no" ]; then
+    bdrate=$(get_bdrate $ref_file $test_file $coin $npts $ssim_metrics_ind);
+    if ! [ -z "$bdrate" ]; then
+      bdr+="$bdrate"
+      printf -v b '%.4f' $bdrate
+      echo -n $ofile": "
+      echo "SSIM BD-Rate = $b%"
+    else 
+      echo "warning: SSIM BD-rate metric not found: skipping SSIM BD-rate calculation for '$test_file'" >&2
+    fi
+  fi
+  bdr+=":"
+  if [ "$skip_msim" = "no" ]; then
+    bdrate=$(get_bdrate $ref_file $test_file $coin $npts $msim_metrics_ind);
+    if ! [ -z "$bdrate" ]; then
+      bdr+="$bdrate"
+      printf -v b '%.4f' $bdrate
+      echo -n $ofile": "
+      echo "MS-SSIM BD-Rate = $b%"
+    else 
+      echo "warning: MS-SSIM BD-rate metric not found: skipping MS-SIM BD-rate calculation for '$test_file'" >&2
+    fi
+  fi
+  echo $bdr >> $ofile
 }
 
 err=0
@@ -547,7 +659,7 @@ if [ "$skip_metrics" = "no" ]; then
     if [ "$skip_ssim" = "no" ]; then
       metrics+=":ssim=1"
     fi
-    if [ "$skip_ms_ssim" = "no" ]; then
+    if [ "$skip_msim" = "no" ]; then
       metrics+=":ms_ssim=1"
     fi
 
@@ -587,24 +699,55 @@ if [ "$skip_metrics" = "no" ]; then
     metrics+=":$psnr"
     [[ "$skip_ssim" = "no" ]] && ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["SSIM score"])')
     metrics+=":$ssim"
-    [[ "$skip_ms_ssim" = "no" ]] && ms_ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["MS-SSIM score"])')
-    metrics+=":$ms_ssim"
+    [[ "$skip_msim" = "no" ]] && msim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["MS-SSIM score"])')
+    metrics+=":$msim"
 
-    out=$(echo "$metrics" | grep CBR_QSV)
-    [ ${#out} -ne 0 ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-qsv.metrics
-    out=$(echo "$metrics" | grep VBR_QSV)
-    [ ${#out} -ne 0 ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-qsv.metrics
+    out=$(echo "$metrics" | grep CBR_QSV); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-qsv.metrics
+    out=$(echo "$metrics" | grep VBR_QSV); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-qsv.metrics
     if [ "$is_yuv" = "yes" ]; then
-      out=$(echo "$metrics" | grep CBR_SENC)
-      [ ${#out} -ne 0 ] && echo $out >> $outprefix.$codec.cbr.sample-encode.metrics
-      out=$(echo "$metrics" | grep VBR_SENC)
-      [ ${#out} -ne 0 ] && echo $out >> $outprefix.$codec.vbr.sample-encode.metrics
+      out=$(echo "$metrics" | grep CBR_SENC); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.sample-encode.metrics
+      out=$(echo "$metrics" | grep VBR_SENC); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.sample-encode.metrics
     fi
     if [ "$skip_reference" = "no" ]; then
-      out=$(echo "$metrics" | grep CBR_REF)
-      [ ${#out} -ne 0 ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-ref.metrics
-      out=$(echo "$metrics" | grep VBR_REF)
-      [ ${#out} -ne 0 ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-ref.metrics
+      out=$(echo "$metrics" | grep CBR_REF); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-ref.metrics
+      out=$(echo "$metrics" | grep VBR_REF); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-ref.metrics
+    fi
+  done
+fi
+
+# bd-rate calculation
+if [[ "$skip_bdrate" = "no" ]]; then
+
+  for test_file in $(ls -1t $outprefix.$codec.* | grep \.metrics | grep -v ref\.metrics); do
+    if echo "$test_file" | grep -q "\.cbr\."; then
+      ref_file=$outprefix.$codec.cbr.ffmpeg-ref.metrics
+    else
+      ref_file=$outprefix.$codec.vbr.ffmpeg-ref.metrics
+    fi
+
+    # check requirements for bd-rate calculation
+    if [[ ! -f "$ref_file" ]]; then
+      echo "warning: reference metrics file not found: skipping BD-rate calculation for '$test_file'" >&2
+      continue
+    elif [[ $(cat $ref_file | wc -l) != $(cat $test_file | wc -l) ]]; then
+      echo "warning: reference and test metrics mismatch: skipping BD-rate calculation for '$test_file'" >&2
+      continue
+    fi
+    npts=$(cat $ref_file | wc -l)
+    if [[ $npts -lt 4 ]]; then
+      echo "warning: minimum 4 points required for BD-rate: skipping BD-rate calculation for '$test_file'" >&2
+      continue
+    fi
+
+    if [[ "$single_bdrate" = "no" ]]; then
+      # calculate BD-rate for 4 high bitrate points
+      process_bdrates $ref_file $test_file $outprefix "hi-bdrate" head 4
+
+      # calculate BD-rate for 4 low bitrate points
+      process_bdrates $ref_file $test_file $outprefix "lo-bdrate" tail 4
+    else
+      # calculate single BD-rate for n points, n >= 4
+      process_bdrates $ref_file $test_file $outprefix "bdrate" head $npts
     fi
   done
 fi

@@ -76,8 +76,8 @@ given in the following tables:
 
 OUTPUT ARTIFACTS
 ----------------
-Script outputs data in the `--outdir` folder. Artifacts are encoded (transcoded)
-streams and text files with the calculated metrics. Consider example below
+The script outputs data in the `--outdir` folder. Artifacts are encoded (transcoded)
+streams and text files with the calculated metrics. Consider an example below
 (`--nframes=10` is given just for the simplicity).
 
 ------------
@@ -115,11 +115,44 @@ default one is always used). `<codec>` is the video compression standard used
 in benchmarking (AVC or HEVC), which can be specified on the command line with
 `--codec` option. `<mode>` is a bitrate mode like `cbr` (constant bitrate) or
 `vbr` (variable bitrate). `application` is application being benchmarked, ffmpeg
-or Intel Media SDK sample encode. Metrics data is in CSV format with colon ':'
-separator. First field is stream name, second - bitrate followed by the metrics.
-Metrics are published in the following order: vmaf, psnr, ssim, ms-ssim. If
-you specified any of the `--skip-*` metrics options, then the corresponding
-metric is represented with an empty string between the separators in the report.
+or Intel Media SDK sample encode. In addition, when BD-rate calculation is enabled,
+`application` is set to 'ref' indicating metrics files obtained from a reference
+application (e.g. x264 or x265) used for BD-rate calculation. Metrics data is in
+CSV format with colon `:` separator. The first field is a stream name, the second
+is the bitrate, and the remaining fields are the metrics. Metrics are published in
+the following order: VMAF, PSNR-Y, SSIM, MS-SSIM. If any of the `--skip-*` metrics
+options are specified, then the corresponding metrics are represented with an empty
+string between the separators in the report.
+
+`*bdrate` files contain calculated BD-rates. Bjøntegaard-Delta bitrate (BD-rate)
+compares video quality between test and reference codec by taking into account
+bitrates and corresponding quality metrics (e.g. PSNR, VMAF, etc.). At least 4
+(bitrate, metric) pairs (vector points) are needed for BD-rate calculation. The
+BD-rate is a percentage indicating how much the bitrate is reduced (negative
+percent values) or how much the bitrate is increased (positive percent values)
+for the *same* value of a quality metric. The script supports 2 different BD-rate modes:
+
+ . _Single BD-rate per sequence mode_ where a single BD-rate is computed from
+all available (bitrate, metric) vector points, for all enabled metrics.
+ . _Dual BD-rate per sequence mode_ where 2 BD-rates are computed per sequence:
+one from 4 points corresponding to the 4 highest bitrates (High Bitrates BD-rate),
+and one from 4 points corresponding to the 4 lowest bitrates (Low Bitrates
+BD-rate).
+
+`*bdrate` file names contain 5 parts:
+`<outprefix>.<codec>.<mode>.<application>.<extension>`. The first 4 parts are
+the same as in `*.metrics` files. `<extension>` can be one of the following:
+
+ . `bdrate` for Single BD-rate per sequence mode output
+ . `hi-bdrate` for High Bitrates BD-rate mode output
+ . `lo-bdrate` for Low Bitrates BD-rate mode output
+
+In each `*bdrate` file, the data is in CSV format with colon `:` separator. The
+first field is a stream name, followed by the BD-rate values for available metrics
+published in the following order: VMAF BD-rate, PSNR-Y BD-rate, SSIM BD-rate,
+MS-SSIM BD-rate. If any of the `--skip-*` metrics options are specified, then the
+BD-rates corresponding these metrics are represented with an empty string between
+the separators in the report.
 
 
 ENCODING OPTIONS
@@ -168,6 +201,12 @@ WORKING MODE OPTIONS
 
 --skip-reference::
 	Do not run reference codec used for BD-rate calculation.
+
+--skip-bdrate::
+	Do not calculate BD-rate.
+
+--single-bdrate::
+	Force Single BD-rate per sequence mode (default is Dual).
 
 PROCESSING OPTIONS
 ------------------
