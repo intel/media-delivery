@@ -465,7 +465,7 @@ function process_bdrates() {
       printf -v b '%.4f' $bdrate
       echo -n $ofile": "
       echo "VMAF BD-Rate = $b%"
-    else 
+    else
       echo "warning: VMAF BD-rate metric not found: skipping VMAF BD-rate calculation for '$test_file'" >&2
     fi
   fi
@@ -477,7 +477,7 @@ function process_bdrates() {
       printf -v b '%.4f' $bdrate
       echo -n $ofile": "
       echo "PSNR-Y BD-Rate = $b%"
-    else 
+    else
       echo "warning: PSNR BD-rate metric not found: skipping PSNR-Y BD-rate calculation for '$test_file'" >&2
     fi
   fi
@@ -489,7 +489,7 @@ function process_bdrates() {
       printf -v b '%.4f' $bdrate
       echo -n $ofile": "
       echo "SSIM BD-Rate = $b%"
-    else 
+    else
       echo "warning: SSIM BD-rate metric not found: skipping SSIM BD-rate calculation for '$test_file'" >&2
     fi
   fi
@@ -501,11 +501,127 @@ function process_bdrates() {
       printf -v b '%.4f' $bdrate
       echo -n $ofile": "
       echo "MS-SSIM BD-Rate = $b%"
-    else 
+    else
       echo "warning: MS-SSIM BD-rate metric not found: skipping MS-SIM BD-rate calculation for '$test_file'" >&2
     fi
   fi
   echo $bdr >> $ofile
+}
+
+# BD-rate averages
+declare -a avg_bdrate=( 0 0 0 0 )
+declare -a tot_avg_bdrate=( 0 0 0 0 )
+
+function write_avg_bdrate() {
+  local fname=$1; shift
+  local avg_bdr=("$@")
+  local out=$fname
+  out+=":"; [[ "$skip_vmaf" = "no" ]] && out+=${avg_bdr[0]}
+  out+=":"; [[ "$skip_psnr" = "no" ]] && out+=${avg_bdr[1]}
+  out+=":"; [[ "$skip_ssim" = "no" ]] && out+=${avg_bdr[2]}
+  out+=":"; [[ "$skip_msim" = "no" ]] && out+=${avg_bdr[3]}
+  echo $out >> $fname
+}
+
+function stdout_avg_bdrate() {
+  local desc=$1; shift
+  local avg_bdr=("$@")
+  local out=""
+  local out_flags=""
+  local out_bdrates=""
+  if [[ "$skip_vmaf" = "no" ]]; then
+    out_flags+="VMAF "
+    printf -v out '%.4f%%' ${avg_bdr[0]}
+    out_bdrates+=$out" "
+  fi
+  if [[ "$skip_psnr" = "no" ]]; then
+    out_flags+="PSNR-Y "
+    printf -v out '%.4f%%' ${avg_bdr[1]}
+    out_bdrates+=$out" "
+    fi
+  if [[ "$skip_ssim" = "no" ]]; then
+    out_flags+="SSIM "
+    printf -v out '%.4f%%' ${avg_bdr[2]}
+    out_bdrates+=$out" "
+  fi
+  if [[ "$skip_msim" = "no" ]]; then
+    out_flags+="MS-SSIM "
+    printf -v out '%.4f%%' ${avg_bdr[3]}
+    out_bdrates+=$out" "
+  fi
+  echo "$desc [ $out_flags] = $out_bdrates"
+}
+
+function get_avg_bdrate() {
+  local codec=$1
+  local mode=$2
+  local app=$3
+  local ext=$4
+  local count=0
+  for i in {0..3}; do avg_bdrate[$i]=0; done
+  for file in $(ls -1t *.$codec.$mode.$app.$ext | grep -v ^Average); do
+    for i in {0..3}; do
+      bdrate=$(head -1 $file | sed '1q;d' | awk -F: '{print $'$(($i + 2))'}')
+      [[ -z "$bdrate" ]] && bdrate=0
+      avg_bdrate[$i]=$(python3 -c 'print('${avg_bdrate[$i]}' + '$bdrate')')
+    done
+    count=$(($count + 1))
+  done
+  for i in {0..3}; do
+    avg_bdrate[$i]=$(python3 -c 'print('${avg_bdrate[$i]}' / '$count')')
+    tot_avg_bdrate[$i]=$(python3 -c 'print('${tot_avg_bdrate[$i]}' + '${avg_bdrate[$i]}')')
+  done
+  write_avg_bdrate "Average."$codec"."$mode"."$app"."$ext ${avg_bdrate[@]}
+}
+
+function process_avg_bdrates() {
+  local codec=$1
+  local app=$2
+  local count=0
+  for i in {0..3}; do tot_avg_bdrate[$i]=0; done
+  if [[ "$single_bdrate" = "no" ]]; then
+    if [[ "$skip_cbr" = "no" ]]; then
+      get_avg_bdrate $codec cbr $app hi-bdrate
+      stdout_avg_bdrate "Average $codec CBR $app hi bitrates BD-rates" ${avg_bdrate[@]}
+      get_avg_bdrate $codec cbr $app lo-bdrate
+      stdout_avg_bdrate "Average $codec CBR $app lo bitrates BD-rates" ${avg_bdrate[@]}
+      count=$(($count + 2))
+    fi
+    if [[ "$skip_vbr" = "no" ]]; then
+      get_avg_bdrate $codec vbr $app hi-bdrate
+      stdout_avg_bdrate "Average $codec VBR $app hi bitrates BD-rates" ${avg_bdrate[@]}
+      get_avg_bdrate $codec vbr $app lo-bdrate
+      stdout_avg_bdrate "Average $codec VBR $app lo bitrates BD-rates" ${avg_bdrate[@]}
+      count=$(($count + 2))
+    fi
+  else
+    if [[ "$skip_cbr" = "no" ]]; then
+      get_avg_bdrate $codec cbr $app bdrate
+      stdout_avg_bdrate "Average $codec CBR $app BD-rates" ${avg_bdrate[@]}
+      count=$(($count + 1))
+    fi
+    if [[ "$skip_vbr" = "no" ]]; then
+      get_avg_bdrate $codec vbr $app bdrate
+      stdout_avg_bdrate "Average $codec VBR $app BD-rates" ${avg_bdrate[@]}
+      count=$(($count + 1))
+    fi
+  fi
+  for i in {0..3}; do
+    tot_avg_bdrate[$i]=$(python3 -c 'print('${tot_avg_bdrate[$i]}' / '$count')')
+  done
+  write_avg_bdrate "Average."$codec"."$app".bdrate" ${tot_avg_bdrate[@]}
+  stdout_avg_bdrate "Average $codec $app BD-rates" ${tot_avg_bdrate[@]}
+}
+
+function compute_bdrate_averages() {
+  local prefix=''
+  cd $outdir
+  if [[ "$skip_ffmpeg" = "no" ]]; then
+    process_avg_bdrates $codec ffmpeg-qsv
+  fi
+  if [[ "$skip_msdk" = "no" ]]; then
+    process_avg_bdrates $codec sample-encode
+  fi
 }
 
 err=0
@@ -552,6 +668,10 @@ if [[ -d "$file" || "$is_yuv" = "yes" && ! can_process_yuv ]]; then
   run "MrFox_BlueBird_1920x1080_30.yuv" "MrFox_BlueBird_1080p" 1920 1080 300 30
   run "Sintel_trailer_o537n480_1920x1080_24.yuv" "Sintel_trailer_1080p" 1920 1080 480 24
   run "WITCHER3_1920x1080_60.yuv" "WITCHER3_1080p" 1920 1080 600 60
+
+  # Average BD-rates...
+  [[ "$skip_bdrate" = "no" ]] && compute_bdrate_averages
+  exit $err
 fi
 
 if [[ -d "$file" ]]; then

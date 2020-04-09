@@ -116,7 +116,7 @@ in benchmarking (AVC or HEVC), which can be specified on the command line with
 `--codec` option. `<mode>` is a bitrate mode like `cbr` (constant bitrate) or
 `vbr` (variable bitrate). `application` is application being benchmarked, ffmpeg
 or Intel Media SDK sample encode. In addition, when BD-rate calculation is enabled,
-`application` is set to 'ref' indicating metrics files obtained from a reference
+`application` is set to `ref` indicating metrics files obtained from a reference
 application (e.g. x264 or x265) used for BD-rate calculation. Metrics data is in
 CSV format with colon `:` separator. The first field is a stream name, the second
 is the bitrate, and the remaining fields are the metrics. Metrics are published in
@@ -146,6 +146,12 @@ the same as in `*.metrics` files. `<extension>` can be one of the following:
  . `bdrate` for Single BD-rate per sequence mode output
  . `hi-bdrate` for High Bitrates BD-rate mode output
  . `lo-bdrate` for Low Bitrates BD-rate mode output
+
+After `*bdrate` output files per sequence are generated, the script generates an
+additional set of output files containing BD-rate averages. This set of output
+files has the filename structure `Average.<codec>.<mode>.<application>.<extension>`.
+Additionally, the grand total average output file is generated for each enabled
+`application` and has the filename structure `Average.<codec>.<application>.bdrate`.
 
 In each `*bdrate` file, the data is in CSV format with colon `:` separator. The
 first field is a stream name, followed by the BD-rate values for available metrics
