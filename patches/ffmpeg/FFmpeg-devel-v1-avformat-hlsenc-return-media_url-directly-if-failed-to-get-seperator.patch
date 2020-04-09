@@ -1,0 +1,98 @@
+From patchwork Thu Apr  9 01:50:46 2020
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Patchwork-Submitter: Limin Wang <lance.lmwang@gmail.com>
+X-Patchwork-Id: 18788
+Return-Path: <ffmpeg-devel-bounces@ffmpeg.org>
+X-Original-To: patchwork@ffaux-bg.ffmpeg.org
+Delivered-To: patchwork@ffaux-bg.ffmpeg.org
+Received: from ffbox0-bg.mplayerhq.hu (ffbox0-bg.ffmpeg.org [79.124.17.100])
+	by ffaux.localdomain (Postfix) with ESMTP id E1DA544B416
+	for <patchwork@ffaux-bg.ffmpeg.org>; Thu,  9 Apr 2020 04:51:01 +0300 (EEST)
+Received: from [127.0.1.1] (localhost [127.0.0.1])
+	by ffbox0-bg.mplayerhq.hu (Postfix) with ESMTP id C2C4E68B832;
+	Thu,  9 Apr 2020 04:51:01 +0300 (EEST)
+X-Original-To: ffmpeg-devel@ffmpeg.org
+Delivered-To: ffmpeg-devel@ffmpeg.org
+Received: from mail-pj1-f68.google.com (mail-pj1-f68.google.com
+ [209.85.216.68])
+ by ffbox0-bg.mplayerhq.hu (Postfix) with ESMTPS id D956968B81E
+ for <ffmpeg-devel@ffmpeg.org>; Thu,  9 Apr 2020 04:50:54 +0300 (EEST)
+Received: by mail-pj1-f68.google.com with SMTP id nu11so623630pjb.1
+ for <ffmpeg-devel@ffmpeg.org>; Wed, 08 Apr 2020 18:50:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
+ h=from:to:cc:subject:date:message-id;
+ bh=K0beaN1HUc+DXt7FgUuD58ikZV5VAHyNt7+bTSOXw2c=;
+ b=jHOPtCt2BptzS0sDaU9+Mtkk+4qDdTE+8C4YPVV8sXHHl4/mo4aANKFdjmj1IvzA0M
+ LDqV6YFmiFjZvU23hgzISZ2SWi1iYS1/aiTOeWNE5rxX5aa+Wj/9+1XgPbceVzer/fuG
+ ahAd8b8z8ajNGXR8PQvLgoG15fvLJ8A0VK9R2OrkbXFBWo2xF7dNk+dXho6Hh340gy49
+ d2G2Iho6mD9xjYVsOoTXCKEfYSeJV6BkhV25JDIrZaDXB63IxjqHNrtS90wB/eXjWP08
+ rQRi2RCg/3Yp0HNAOpUsCQm465Sq7qpBQh3c3c3EahDAk47W1LjKpElKjGPSjHAMGJ9U
+ 4oBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=1e100.net; s=20161025;
+ h=x-gm-message-state:from:to:cc:subject:date:message-id;
+ bh=K0beaN1HUc+DXt7FgUuD58ikZV5VAHyNt7+bTSOXw2c=;
+ b=TBngw6k/c0BlCMAH0tYcG00nfyOQB9dIcEQfm1FbdwbEjXVrfCf2Snp74UVVFyX1C7
+ Qslj5arBwwAEEA9nmEnxBd6z8XKdtnbFAjs1iQg81VhwrNanmKk/LtURwo02E7VoxWVB
+ 10b+d85gSe2VJKf/f65Lx9WbN5sVFOOHDBoZUFEvGzZLwjlU3FCyBZdOIP9otuNPvwfc
+ M8fSoXMRPGgPRfAOR4TXOMCcFd31aaUl7YCInDuX7zPL5J5flD31D90KfSfnYy6fjqXI
+ 93iREFjZFZ2QfLrNEUo8P6i6sfLyXsm+ZFN3ZOiyd+RFXMePx0I54UyAayt03SAtFNOM
+ dobQ==
+X-Gm-Message-State: AGi0Pua2Z7MVxPa2pyxBoaM1xwEUUSEHR2YRPHgPeTVFtS/kEVv5IqTp
+ fKjTrGuY1Z8BMdw0T4mOKqKe/2vQ
+X-Google-Smtp-Source: 
+ APiQypJ2RuffNWhsxLVBjzA3cIMq1/Pbr7PAG02yMV+9pBO82Ud/uFJkx+fo2WF0JIpS2zJ1q4rQdQ==
+X-Received: by 2002:a17:90b:2391:: with SMTP id
+ mr17mr3803233pjb.29.1586397052851;
+ Wed, 08 Apr 2020 18:50:52 -0700 (PDT)
+Received: from vpn.localdomain ([47.90.99.151])
+ by smtp.gmail.com with ESMTPSA id v38sm741678pjb.1.2020.04.08.18.50.51
+ (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+ Wed, 08 Apr 2020 18:50:52 -0700 (PDT)
+From: lance.lmwang@gmail.com
+To: ffmpeg-devel@ffmpeg.org
+Date: Thu,  9 Apr 2020 09:50:46 +0800
+Message-Id: <20200409015046.831-1-lance.lmwang@gmail.com>
+X-Mailer: git-send-email 2.9.5
+Subject: [FFmpeg-devel] [PATCH v1] avformat/hlsenc: return media_url
+	directly if failed to get seperator
+X-BeenThere: ffmpeg-devel@ffmpeg.org
+X-Mailman-Version: 2.1.20
+Precedence: list
+List-Id: FFmpeg development discussions and patches <ffmpeg-devel.ffmpeg.org>
+List-Unsubscribe: <https://ffmpeg.org/mailman/options/ffmpeg-devel>,
+ <mailto:ffmpeg-devel-request@ffmpeg.org?subject=unsubscribe>
+List-Archive: <https://ffmpeg.org/pipermail/ffmpeg-devel>
+List-Post: <mailto:ffmpeg-devel@ffmpeg.org>
+List-Help: <mailto:ffmpeg-devel-request@ffmpeg.org?subject=help>
+List-Subscribe: <https://ffmpeg.org/mailman/listinfo/ffmpeg-devel>,
+ <mailto:ffmpeg-devel-request@ffmpeg.org?subject=subscribe>
+Reply-To: FFmpeg development discussions and patches <ffmpeg-devel@ffmpeg.org>
+Cc: Limin Wang <lance.lmwang@gmail.com>
+MIME-Version: 1.0
+Errors-To: ffmpeg-devel-bounces@ffmpeg.org
+Sender: "ffmpeg-devel" <ffmpeg-devel-bounces@ffmpeg.org>
+
+From: Limin Wang <lance.lmwang@gmail.com>
+
+Fix ticket: 8606
+Signed-off-by: Limin Wang <lance.lmwang@gmail.com>
+---
+ libavformat/hlsenc.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/libavformat/hlsenc.c b/libavformat/hlsenc.c
+index a29b2625e4..e34833fd89 100644
+--- a/libavformat/hlsenc.c
++++ b/libavformat/hlsenc.c
+@@ -1251,6 +1251,8 @@ static const char* get_relative_url(const char *master_url, const char *media_ur
+             av_log(NULL, AV_LOG_WARNING, "Unable to find relative url\n");
+             return NULL;
+         }
++    } else {
++        return media_url;
+     }
+ 
+     return media_url + base_len + 1;
