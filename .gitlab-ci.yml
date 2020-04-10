@@ -2,8 +2,10 @@ stages:
 - trigger
 - build
 - test
+- deploy
 
 variables:
+  MDS_REGISTRY: "dockerv2-gsae-fm.gfx-assets.fm.intel.com/solutions"
   MDS_PROJECT_PATH: "vtt/sws/osgc/solutions/intel-media-delivery"
   http_proxy: "http://proxy-chain.intel.com:911"
   https_proxy: "http://proxy-chain.intel.com:911"
@@ -49,9 +51,10 @@ on_trigger:
   extends: .trigger_rule
   stage: "build"
   script:
-  - tagname="intel-media-delivery-$SOLUTION"
-  - if [ -n "$CI_COMMIT_BRANCH" ]; then tagname+="-$CI_COMMIT_BRANCH"; fi
-  - if [ -n "$CI_MERGE_REQUEST_IID" ]; then tagname+="-mr$CI_MERGE_REQUEST_IID"; fi
+  - tagname="$MDS_REGISTRY/intel-media-delivery/$SOLUTION/"
+  - if [ -n "$CI_COMMIT_BRANCH" ]; then tagname+="$CI_COMMIT_BRANCH/stash:$CI_PIPELINE_ID"; fi
+  - if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then tagname+="$CI_MERGE_REQUEST_TARGET_BRANCH_NAME/"; fi
+  - if [ -n "$CI_MERGE_REQUEST_IID" ]; then tagname+="mr:$CI_MERGE_REQUEST_IID"; fi
   - echo "Building $tagname docker image"
   - docker build
       $(env | grep -E '_proxy=' | sed 's/^/--build-arg /')
@@ -62,14 +65,12 @@ on_trigger:
       --file Dockerfile.ubuntu
       -t $tagname
       .
-  - docker save $tagname | gzip > $tagname.tar.gz
+  - docker push $tagname
   - echo $tagname > tagname
   - docker rmi --force $(docker images -q $tagname | uniq)
   artifacts:
     paths:
     - tagname
-    - "*.tar.gz"
-    expire_in: 10 mins
   tags:
   - builder
   - ubuntu
@@ -80,7 +81,7 @@ on_trigger:
   script:
   - tagname=$(cat tagname)
   - echo "Testing $tagname docker image"
-  - docker load < $tagname.tar.gz
+  - docker pull $tagname
   - mkdir _logs
   - export MDS_IMAGE=$tagname
   - export MDS_LOGS=`pwd`/_logs
@@ -97,6 +98,27 @@ on_trigger:
   tags:
   - ubuntu # bats is available here in our CI deployments
   - gen9
+
+.deploy_image:
+  extends: .trigger_rule
+  stage: "deploy"
+  script:
+  - tagname=$(cat tagname)
+  - if [[ $tagname =~ /stash:[0-9]*$ ]]; then
+      deploytag="${tagname%stash*}/agama:latest";
+      echo "Deploying $tagname as $deploytag";
+      docker pull $tagname;
+      docker tag $tagname $deploytag;
+      docker push $deploytag;
+      docker rmi --force
+        $(docker images -q $tagname | uniq)
+        $(docker images -q $deploytag | uniq);
+    else
+      echo "Already deployed on the build stage";
+    fi
+  tags:
+  - builder
+  - ubuntu
 
 build:cdn:
   extends: .build_image
@@ -117,6 +139,20 @@ test:cdn:
 
 test:edge:
   extends: .test_image
+  variables:
+    SOLUTION: edge
+  dependencies:
+  - build:edge
+
+deploy:cdn:
+  extends: .deploy_image
+  variables:
+    SOLUTION: cdn
+  dependencies:
+  - build:cdn
+
+deploy:edge:
+  extends: .deploy_image
   variables:
     SOLUTION: edge
   dependencies:
