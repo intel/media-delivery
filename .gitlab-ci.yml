@@ -105,7 +105,7 @@ on_trigger:
   script:
   - tagname=$(cat tagname)
   - if [[ $tagname =~ /stash:[0-9]*$ ]]; then
-      deploytag="${tagname%stash*}/agama:latest";
+      deploytag="${tagname%/stash*}/agama:latest";
       echo "Deploying $tagname as $deploytag";
       docker pull $tagname;
       docker tag $tagname $deploytag;
