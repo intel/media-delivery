@@ -1,0 +1,99 @@
+bench-perf(1)
+=============
+
+NAME
+----
+bench-perf - run media delivery performance benchmark
+
+SYNOPSIS
+--------
+[verse]
+'bench perf' list
+'bench perf' [<options>] [--] <folder>|<stream>
+
+DESCRIPTION
+-----------
+'bench perf list' gives a list of use cases which can be used. The default
+use case is 1:1 transcoding.
+
+If `<folder>` is specified, script takes all the streams it can found in this
+folder. Child folders are not analyzed.
+
+OUTPUT ARTIFACTS
+----------------
+TBD
+
+WORKING MODE OPTIONS
+--------------------
+--scenario|-s <name>::
+	Use case scenario to run. By default script runs 1:1 transcoding use case
+evaluating density (how many transcoding sessions can be run in parallel at
+real time). This option permits to specify more complex 1:N scenario to
+run. Each scenario is assigned with specific name which could be obtainer
+with `bench perf list`.
+
+--skip-ffmpeg::
+	Do not run ffmpeg-qsv benchmark.
+
+--skip-msdk::
+	Do not run Intel Media SDK samples benchmark.
+
+--skip-cbr::
+	Do not execute Constant Bitrate (CBR) encoding cases.
+
+--skip-vbr::
+	Do not execute Variable Bitrate (VBR) encoding cases.
+
+--skip-perf::
+	Do not use Linux perf to collect some performance metrics.
+Effectively this will disable GPU engines utilization collection. Script
+will still be able to run and evaluate density, collect FPS, but detailed
+data will be missed.
+
+1:1 TRANSCODING USE CASE OPTIONS
+--------------------------------
+
+--codec AVC|HEVC::
+	Sets encoder to use (default: `AVC`)
+
+--preset default|best::
+	Sets quality preset options (default: `best`)
+
+--bitrates <float>[:<float>...]::
+	Sets list of bitrates in Mbps to use (default: use hardcoded bitrates which
+	depend on stream resolution and codec)
+
+PROCESSING OPTIONS
+------------------
+--nframes|-n <uint>::
+	Process this number of frames and stop.
+
+--no-fps-limit::
+	Run each workload as fast as possible (by default workloads run
+contstrained to encoding fps)
+
+--dry-run::
+	Do not execute any commands, but dump them to `stdout`.
+
+--outdir|-o /path/to/artifacts::
+	Produce output in the specified folder (default:
+	`/opt/data/artifacts/benchmark/perf` if ran under docker,
+	`$HOME/benchmark/perf` otherwise)
+
+PREREQUISITES
+-------------
+ffmpeg::
+	Used to benchmark ffmpeg-qsv path (`--enable-libmfx`).
+
+ffprobe::
+	Used to get some information on the input/output stream(s).
+
+sample_multi_transcode::
+	Used for direct benchmark of Intel Media SDK library.
+
+python3::
+	For generic script purposes.
+
+SEE ALSO
+--------
+link:bench.asciidoc[bench]
