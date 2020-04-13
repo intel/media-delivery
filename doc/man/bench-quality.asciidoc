@@ -202,7 +202,7 @@ WORKING MODE OPTIONS
 --skip-cbr::
 	Do not execute Constant Bitrate (CBR) encoding cases.
 
---skip-cbr::
+--skip-vbr::
 	Do not execute Variable Bitrate (VBR) encoding cases.
 
 --skip-reference::
@@ -272,4 +272,4 @@ python3::
 
 SEE ALSO
 --------
-link:bench.asciidoc[demo-ffmpeg]
+link:bench.asciidoc[bench]
