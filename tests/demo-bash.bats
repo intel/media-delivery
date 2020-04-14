@@ -37,6 +37,11 @@ load utils
   run docker run ${MDS_IMAGE} whoami
   print_output
   [ "$status" -eq 255 ]
+
+  run docker run -e MDS_IGNORE_ERRORS=yes ${MDS_IMAGE} whoami
+  print_output
+  [ "$status" -eq 0 ]
+  grep_for "user" ${lines[@]}
 }
 
 @test "demo-bash map all" {

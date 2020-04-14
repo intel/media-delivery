@@ -25,9 +25,16 @@
 #  - demo-setup contains container runtime setup steps
 source /etc/demo.env
 
+MDS_IGNORE_ERRORS=${MDS_IGNORE_ERRORS:-no}
+
 if ! demo-setup; then
-  echo "error: failed to setup demo" >&2
-  exit -1
+  if [[ "${MDS_IGNORE_ERRORS}" = "no" ]]; then
+    echo "error: failed to setup demo" >&2
+    exit -1
+  else
+    echo "warning: demo setup failed which means that demo won't run properly" >&2
+    echo "warning: however you can look inside the container, check package versions" >&2
+  fi
 fi
 
 # Typical action performed by demo-setup is adding user(s) to some

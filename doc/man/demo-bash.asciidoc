@@ -18,7 +18,8 @@ environment is setup and acts as follows. First it `source /etc/demo.env` to
 get solution environment variables. Then it executes `demo-setup` script which
 should setup solution environment and return non-zero exit status in case of
 any errors. If 'demo-bash' sees an error form `demo-setup` it exits
-immediately dumping error message to `stderr`.
+immediately dumping error message to `stderr`. This behavior can be
+overwritten with `MDS_IGNORE_ERRORS=yes` enviroment variable.
 
 Assuming that `demo-setup` succeeded 'demo-bash' verifies whether any groups
 were adjusted and reenters shell if needed.
@@ -31,6 +32,14 @@ messages. This is done by 'hello-bash' script which gets passed to
 'demo-bash' as a command. This is done by container configuration rather
 than 'demo-bash' itself, so 'hello-bash' existence is actually transparent
 to 'demo-bash'.
+
+ENVIRONMENT VARIABLES
+---------------------
+
+MDS_IGNORE_ERRORS=yes|no::
+	Ignore any errors during demo setup and enter the container. This
+can be useful if you want to check container structure or component versions
+without really running the demo on a system without GPU. (default: `no`)
 
 SEE ALSO
 --------
