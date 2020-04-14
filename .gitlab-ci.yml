@@ -65,11 +65,15 @@ on_trigger:
       --file Dockerfile.ubuntu
       -t $tagname
       .
+  - docker run -e MDS_IGNORE_ERRORS=yes --rm $tagname dpkg -l >packages 2>/dev/null
+  - docker run -e MDS_IGNORE_ERRORS=yes --rm $tagname ffmpeg -version >ffmpeg.version 2>/dev/null
   - docker push $tagname
   - echo $tagname > tagname
   - docker rmi --force $(docker images -q $tagname | uniq)
   artifacts:
     paths:
+    - ffmpeg.version
+    - packages
     - tagname
   tags:
   - builder
