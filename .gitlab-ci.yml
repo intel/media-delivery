@@ -34,14 +34,6 @@ on_merge:
     variables:
     - $CI_PROJECT_PATH == $MDS_PROJECT_PATH
 
-on_trigger:
-  stage: "trigger"
-  script:
-  - echo "Building on external trigger event"
-  - export # TODO delete me, that's debug print to check how we are getting triggerred
-  only:
-  - triggers
-
 .trigger_rule:
   rules:
   - if: $CI_PROJECT_PATH == $MDS_PROJECT_PATH && $CI_COMMIT_REF_NAME == "master"
