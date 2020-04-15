@@ -109,14 +109,18 @@ on_trigger:
   script:
   - tagname=$(cat tagname)
   - if [[ $tagname =~ /stash:[0-9]*$ ]]; then
-      deploytag="${tagname%/stash*}/agama:latest";
-      echo "Deploying $tagname as $deploytag";
+      deploytag1="${tagname%/stash*}/agama:$CI_PIPELINE_ID";
+      deploytag2="${tagname%/stash*}/agama:latest";
+      echo "Deploying $tagname as $deploytag1 and $deploytag2";
       docker pull $tagname;
-      docker tag $tagname $deploytag;
-      docker push $deploytag;
+      docker tag $tagname $deploytag1;
+      docker tag $tagname $deploytag2;
+      docker push $deploytag1;
+      docker push $deploytag2;
       docker rmi --force
         $(docker images -q $tagname | uniq)
-        $(docker images -q $deploytag | uniq);
+        $(docker images -q $deploytag1 | uniq)
+        $(docker images -q $deploytag2 | uniq);
     else
       echo "Already deployed on the build stage";
     fi
