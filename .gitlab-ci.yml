@@ -113,8 +113,8 @@ on_trigger:
       version=$(docker run -e MDS_IGNORE_ERRORS=yes --rm $tagname apt-cache show libmfx1 2>/dev/null | grep Version);
       version=${version#Version:};
       version=$(echo $version | sed 's/ //g' | sed 's/[^a-z|A-Z|0-9|.|-]/./g');
-      deploytag1="${tagname%/stash*}/agamatmp:$CI_PIPELINE_ID-$version";
-      deploytag2="${tagname%/stash*}/agamatmp:latest";
+      deploytag1="${tagname%/stash*}/agama:$CI_PIPELINE_ID-$version";
+      deploytag2="${tagname%/stash*}/agama:latest";
       echo "Deploying $tagname as $deploytag1 and $deploytag2";
       docker tag $tagname $deploytag1;
       docker tag $tagname $deploytag2;
