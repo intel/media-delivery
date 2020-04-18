@@ -34,4 +34,6 @@ fi
 
 echo "http_proxy=$http_proxy"
 echo "https_proxy=$https_proxy"
-cat /etc/apt/apt.conf
+if [ -f /etc/apt/apt.conf ]; then
+  cat /etc/apt/apt.conf
+fi
