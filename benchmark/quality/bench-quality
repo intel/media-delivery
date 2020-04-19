@@ -310,10 +310,13 @@ function run() {
 }
 
 function can_process_yuv() {
-  if [[ $width -eq 0 || $height -eq 0 || $framerate -eq 0 ]]; then
-    return 1
+  local width=$1
+  local height=$2
+  local framerate=$3
+  if [ $width -eq 0 -o $height -eq 0 -o $framerate -eq 0 ]; then
+    echo "no"
   else
-    return 0
+    echo "yes"
   fi
 }
 
@@ -637,7 +640,7 @@ if [[ ! -d "$file" ]]; then
   fi
 fi
 
-if [[ -d "$file" || "$is_yuv" = "yes" && ! can_process_yuv ]]; then
+if [[ -d "$file" || "$is_yuv" = "yes" && "$(can_process_yuv $width $height $framerate)" = "no" ]]; then
   # 720p SD streams...
   run "BoatNF_1280x720_60.yuv" "Boat_720p" 1280 720 300 60
   run "crowd_run_1280x720_50.yuv" "CrowdRun_720p" 1280 720 500 50
@@ -683,7 +686,7 @@ if [[ ! -f "$file" ]]; then
   exit -1
 fi
 
-if [[ "$is_yuv" = "yes" && ! can_process_yuv ]]; then
+if [[ "$is_yuv" = "yes" && "$(can_process_yuv $width $height $framerate)" = "no" ]]; then
   echo "error: yuv description is incomplete (missing -w, -h or -f)" >&2
   exit -1
 fi
