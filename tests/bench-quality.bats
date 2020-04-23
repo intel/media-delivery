@@ -29,26 +29,32 @@ subs="ffmpeg -i \
   /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4 \
   -s 480x270 -sws_flags lanczos -vframes 100 WAR.mp4"
 
+##########################################################
+# P0 bench quality test: bench quality transcode 65 frames
+##########################################################
+@test "bench quality transcode 65 frames and check artifacts" {
+  run docker_run /bin/bash -c "set -ex; $subs; \
+    bench quality --nframes 65 WAR.mp4; \
+    cat /opt/data/artifacts/benchmark/quality/*{.metrics,bdrate} | wc -l"
+  print_output
+  [ $status -eq 0 ]
+  [ "${lines[$((${#lines[@]}-1))]}" = "24" ]
+}
+
 ###################
 # convert to yuv420
 ###################
 cyuv="ffmpeg -i WAR.mp4 \
   -c:v rawvideo -pix_fmt yuv420p -vsync passthrough WAR.yuv"
 
-#############################
-# bench quality P0 test
-#############################
-@test "bench quality transcode 100 frames" {
-  run docker_run /bin/bash -c "$subs; bench quality --nframes 100 WAR.mp4"
-  print_output
-  [ $status -eq 0 ]
-}
-
-#######################
-# bench quality P1 test
-#######################
-@test "bench quality encode 100 frames" {
-  run docker_run /bin/bash -c "$subs; $cyuv; bench quality -w 480 -h 270 -f 24 --nframes 100 WAR.yuv"
+#########################################
+# P1 bench quality test: encode 5 frames
+#########################################
+@test "bench quality encode 5 frames" {
+  run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
+    bench quality -w 480 -h 270 -f 24 \
+    --nframes 5 --skip-metrics --skip-bdrate \
+    WAR.yuv"
   print_output
   [ $status -eq 0 ]
 }
@@ -66,11 +72,13 @@ subs2="ffmpeg -i \
 cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   -vsync passthrough ParkScene_1280x720_24.yuv"
 
-#######################
-# bench quality P2 test
-#######################
-@test "bench quality encode 100 frames" {
-  run docker_run /bin/bash -c "$subs2; $cyuv2; bench quality ParkScene_1280x720_24.yuv"
+################################################################
+# P2 bench quality test: encode 5 frames of a predefined stream
+################################################################
+@test "bench quality encode 5 frames of a predefined stream" {
+  run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
+    bench quality --nframes 5 --skip-metrics --skip-bdrate \
+    ParkScene_1280x720_24.yuv"
   print_output
   [ $status -eq 0 ]
 }
