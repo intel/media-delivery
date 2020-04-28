@@ -655,21 +655,23 @@ function get_preset_stream() {
   elif [[ $ind = 25 ]]; then echo "MrFox_BlueBird_1920x1080_30.yuv" "MrFox_BlueBird_1080p" 1920 1080 30 300
   elif [[ $ind = 26 ]]; then echo "Sintel_trailer_o537n480_1920x1080_24.yuv" "Sintel_trailer_1080p" 1920 1080 24 480
   elif [[ $ind = 27 ]]; then echo "WITCHER3_1920x1080_60.yuv" "WITCHER3_1080p" 1920 1080 60 600
-  else
-    echo "error: invalid preset stream index: $ind" >&2
-    exit -1
+  else echo ""
   fi
 }
 
 function is_preset_stream() {
   local file=$1
   local stream=""
-  for i in {1..27}; do
+  local i=1
+  while :
+  do
     stream=$(get_preset_stream $i | cut -d " " -f1)
+    [ -z "$stream" ] && break
     if [[ $stream = $file ]]; then
       echo "yes"
       return
     fi
+    ((i++))
   done
   echo "no"
 }
@@ -692,10 +694,14 @@ if [[ -d "$file" ||
   "$(can_process_yuv $width $height $framerate)" = "no" &&
   "$(is_preset_stream ${file##*/})" = "yes" ]]; then
   # run all preset streams
-  for i in {1..27}; do
+  i=1
+  while :
+  do
     stream=$(get_preset_stream $i)
+    [ -z "$stream" ] && break
     [ "$nframes" -gt "0" ] && stream=$(echo $stream | sed s/'\w*$'/$nframes/)
     run $stream
+    ((i++))
   done
   # average BD-rates...
   [[ "$skip_bdrate" = "no" ]] && compute_bdrate_averages
