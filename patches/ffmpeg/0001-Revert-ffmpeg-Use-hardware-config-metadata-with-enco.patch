@@ -1,0 +1,138 @@
+From b0ef7103469e020070e7f1e909d58a4b145247b0 Mon Sep 17 00:00:00 2001
+From: Dmitry Rogozhkin <dmitry.v.rogozhkin@intel.com>
+Date: Tue, 28 Apr 2020 09:58:19 -0700
+Subject: [PATCH] Revert "ffmpeg: Use hardware config metadata with encoders"
+
+This reverts commit 8abd3b202821e9c491f44d097686402aafdda7c5.
+---
+ fftools/ffmpeg.c    | 19 +++++++++++++------
+ fftools/ffmpeg_hw.c | 48 ++++++++----------------------------------------
+ 2 files changed, 21 insertions(+), 46 deletions(-)
+
+diff --git a/fftools/ffmpeg.c b/fftools/ffmpeg.c
+index cf64837..b752d59 100644
+--- a/fftools/ffmpeg.c
++++ b/fftools/ffmpeg.c
+@@ -3476,14 +3476,21 @@ static int init_output_stream(OutputStream *ost, char *error, int error_len)
+             !av_dict_get(ost->encoder_opts, "ab", NULL, 0))
+             av_dict_set(&ost->encoder_opts, "b", "128000", 0);
+ 
+-        ret = hw_device_setup_for_encode(ost);
+-        if (ret < 0) {
+-            snprintf(error, error_len, "Device setup failed for "
+-                     "encoder on output stream #%d:%d : %s",
++        if (ost->filter && av_buffersink_get_hw_frames_ctx(ost->filter->filter) &&
++            ((AVHWFramesContext*)av_buffersink_get_hw_frames_ctx(ost->filter->filter)->data)->format ==
++            av_buffersink_get_format(ost->filter->filter)) {
++            ost->enc_ctx->hw_frames_ctx = av_buffer_ref(av_buffersink_get_hw_frames_ctx(ost->filter->filter));
++            if (!ost->enc_ctx->hw_frames_ctx)
++                return AVERROR(ENOMEM);
++        } else {
++            ret = hw_device_setup_for_encode(ost);
++            if (ret < 0) {
++                snprintf(error, error_len, "Device setup failed for "
++                         "encoder on output stream #%d:%d : %s",
+                      ost->file_index, ost->index, av_err2str(ret));
+-            return ret;
++                return ret;
++            }
+         }
+-
+         if (ist && ist->dec->type == AVMEDIA_TYPE_SUBTITLE && ost->enc->type == AVMEDIA_TYPE_SUBTITLE) {
+             int input_props = 0, output_props = 0;
+             AVCodecDescriptor const *input_descriptor =
+diff --git a/fftools/ffmpeg_hw.c b/fftools/ffmpeg_hw.c
+index c5c8aa9..40739fc 100644
+--- a/fftools/ffmpeg_hw.c
++++ b/fftools/ffmpeg_hw.c
+@@ -19,7 +19,6 @@
+ #include <string.h>
+ 
+ #include "libavutil/avstring.h"
+-#include "libavfilter/buffersink.h"
+ 
+ #include "ffmpeg.h"
+ 
+@@ -282,10 +281,7 @@ void hw_device_free_all(void)
+     nb_hw_devices = 0;
+ }
+ 
+-static HWDevice *hw_device_match_by_codec(const AVCodec *codec,
+-                                          enum AVPixelFormat format,
+-                                          int possible_methods,
+-                                          int *matched_methods)
++static HWDevice *hw_device_match_by_codec(const AVCodec *codec)
+ {
+     const AVCodecHWConfig *config;
+     HWDevice *dev;
+@@ -294,18 +290,11 @@ static HWDevice *hw_device_match_by_codec(const AVCodec *codec,
+         config = avcodec_get_hw_config(codec, i);
+         if (!config)
+             return NULL;
+-        if (format != AV_PIX_FMT_NONE &&
+-            config->pix_fmt != AV_PIX_FMT_NONE &&
+-            config->pix_fmt != format)
+-            continue;
+-        if (!(config->methods & possible_methods))
++        if (!(config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX))
+             continue;
+         dev = hw_device_get_by_type(config->device_type);
+-        if (dev) {
+-            if (matched_methods)
+-                *matched_methods = config->methods & possible_methods;
++        if (dev)
+             return dev;
+-        }
+     }
+ }
+ 
+@@ -351,9 +340,7 @@ int hw_device_setup_for_decode(InputStream *ist)
+             if (!dev)
+                 err = hw_device_init_from_type(type, NULL, &dev);
+         } else {
+-            dev = hw_device_match_by_codec(ist->dec, AV_PIX_FMT_NONE,
+-                                           AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX,
+-                                           NULL);
++            dev = hw_device_match_by_codec(ist->dec);
+             if (!dev) {
+                 // No device for this codec, but not using generic hwaccel
+                 // and therefore may well not need one - ignore.
+@@ -430,31 +417,12 @@ int hw_device_setup_for_decode(InputStream *ist)
+ int hw_device_setup_for_encode(OutputStream *ost)
+ {
+     HWDevice *dev;
+-    AVBufferRef *frames_ref;
+-    int methods = AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX;
+-    int matched_methods;
+-
+-    if (ost->filter) {
+-        frames_ref = av_buffersink_get_hw_frames_ctx(ost->filter->filter);
+-        if (frames_ref &&
+-            ((AVHWFramesContext*)frames_ref->data)->format ==
+-            ost->enc_ctx->pix_fmt)
+-            methods |= AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX;
+-    }
+ 
+-    dev = hw_device_match_by_codec(ost->enc, ost->enc_ctx->pix_fmt,
+-                                   methods, &matched_methods);
++    dev = hw_device_match_by_codec(ost->enc);
+     if (dev) {
+-        if (matched_methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX) {
+-            ost->enc_ctx->hw_device_ctx = av_buffer_ref(dev->device_ref);
+-            if (!ost->enc_ctx->hw_device_ctx)
+-                return AVERROR(ENOMEM);
+-        }
+-        if (matched_methods & AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX) {
+-            ost->enc_ctx->hw_frames_ctx = av_buffer_ref(frames_ref);
+-            if (!ost->enc_ctx->hw_frames_ctx)
+-                return AVERROR(ENOMEM);
+-        }
++        ost->enc_ctx->hw_device_ctx = av_buffer_ref(dev->device_ref);
++        if (!ost->enc_ctx->hw_device_ctx)
++            return AVERROR(ENOMEM);
+         return 0;
+     } else {
+         // No device required, or no device available.
+-- 
+1.8.3.1
+
