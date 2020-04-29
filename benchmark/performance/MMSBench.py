@@ -313,6 +313,9 @@ def main():
                         if (re.search(r"^720p_hevc-hevc:\s", str(workloadline))): benchmark_cmdline_720p_hevc2hevc = workloadline.replace("720p_hevc-hevc: ", "")
                         if (re.search(r"^1080p_hevc-hevc:\s", str(workloadline))): benchmark_cmdline_1080p_hevc2hevc = workloadline.replace("1080p_hevc-hevc: ", "")
                         if (re.search(r"^2160p_hevc-hevc:\s", str(workloadline))): benchmark_cmdline_2160p_hevc2hevc = workloadline.replace("2160p_hevc-hevc: ", "")
+                        if (re.search(r"^720p_avc-hevc:\s", str(workloadline))): benchmark_cmdline_720p_avc2hevc = workloadline.replace("720p_avc-hevc: ", "")
+                        if (re.search(r"^1080p_avc-hevc:\s", str(workloadline))): benchmark_cmdline_1080p_avc2hevc = workloadline.replace("1080p_avc-hevc: ", "")
+                        if (re.search(r"^2160p_avc-hevc:\s", str(workloadline))): benchmark_cmdline_2160p_avc2hevc = workloadline.replace("2160p_avc-hevc: ", "")
         except:
             message_block(output_log_handle,'red', 'Unable to locate required file: ' + benchmarkargs.required_information_file)
             raise
@@ -323,10 +326,11 @@ def main():
         # 1st HEVC-AVC
         # 2nd AVC-AVC
         # 3rd HEVC-HEVC
-        # 4th TBD/continue..
+        # 4th AVC-HEVC
+        # 5th TBD/continue..
         ##################################################################################
         startTime_sequence = time.time()
-        for benchmark_sequence in range(3):
+        for benchmark_sequence in range(4):
             ##################################################################################
             # Initiate outputfile benchmark result as per last best stream# and fps#
             # Initiate outputfile benchmark table sweep as per last best stream# and fps#
@@ -343,6 +347,10 @@ def main():
                 output_log_file_benchmark_media = re.sub(r'.txt', "_" + benchmark_app_tag + "_hevc2hevc_benchmark.csv",output_log_file)
                 output_log_file_benchmark_sweep = re.sub(r'.txt',"_" + benchmark_app_tag + "_hevc2hevc_benchmark_table_sweep.csv",output_log_file)
                 benchmark_tag = "HEVC-HEVC"
+            elif benchmark_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc"):
+                output_log_file_benchmark_media = re.sub(r'.txt', "_" + benchmark_app_tag + "_avc2hevc_benchmark.csv",output_log_file)
+                output_log_file_benchmark_sweep = re.sub(r'.txt',"_" + benchmark_app_tag + "_avc2hevc_benchmark_table_sweep.csv",output_log_file)
+                benchmark_tag = "AVC-HEVC"
             else:
                 continue
 
@@ -382,6 +390,9 @@ def main():
                         continue
                 elif (benchmark_sequence == 2) and (encode_codec == "all" or encode_codec == "hevc"):  # HEVC-HEVC benchmark sequence
                     if benchmark_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
+                        continue
+                elif (benchmark_sequence == 3) and (encode_codec == "all" or encode_codec == "hevc"):  # AVC-HEVC benchmark sequence
+                    if benchmark_object_list[curContent].codec != "h264":  # skip if its not HEVC input clip
                         continue
                 else:
                     continue
@@ -454,6 +465,14 @@ def main():
                                 dispatch_cmdline = benchmark_cmdline_1080p_hevc2hevc
                             elif benchmark_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
                                 dispatch_cmdline = benchmark_cmdline_2160p_hevc2hevc
+                        elif benchmark_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc"): # AVC-HEVC benchmark sequence
+                            if benchmark_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                                dispatch_cmdline = benchmark_cmdline_720p_avc2hevc
+                            elif benchmark_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                                dispatch_cmdline = benchmark_cmdline_1080p_avc2hevc
+                            elif benchmark_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                                dispatch_cmdline = benchmark_cmdline_2160p_avc2hevc
+
 
                         if (ffmpeg_mode):
                             transcode_input_clip = "-i " + content_path + key
