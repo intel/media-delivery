@@ -382,10 +382,10 @@ def main():
                 curContent = key.rstrip()
 
                 #printLog(output_log_handle, "CLEANUP:", benchmark_object_list[curContent], key)
-                if benchmark_sequence == 0 and (encode_codec == "all" or encode_codec == "avc"):  # HEVC-AVC benchmark sequence
+                if (benchmark_sequence == 0) and (encode_codec == "all" or encode_codec == "avc"):  # HEVC-AVC benchmark sequence
                     if benchmark_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
                         continue
-                elif benchmark_sequence == 1 and (encode_codec == "all" or encode_codec == "avc"):  # AVC-AVC benchmark sequence
+                elif (benchmark_sequence == 1) and (encode_codec == "all" or encode_codec == "avc"):  # AVC-AVC benchmark sequence
                     if benchmark_object_list[curContent].codec != "h264":  # skip if its not h264 input clip
                         continue
                 elif (benchmark_sequence == 2) and (encode_codec == "all" or encode_codec == "hevc"):  # HEVC-HEVC benchmark sequence
@@ -396,6 +396,16 @@ def main():
                         continue
                 else:
                     continue
+                ##################################################################################
+                # UNSUPPORTED checks and skips
+                ##################################################################################
+                if  (benchmark_object_list[curContent].height != 720 and
+                    benchmark_object_list[curContent].height != 1080 and
+                    benchmark_object_list[curContent].height != 2160):
+
+                    printLog(output_log_handle, "Content height is not supported: ", benchmark_object_list[curContent].name, ":", benchmark_object_list[curContent].height)
+                    continue
+
                 ##################################################################################
                 # Create initialize streamnumber for each resolution
                 ##################################################################################
