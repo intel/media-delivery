@@ -381,7 +381,8 @@ def main():
             for key in content_fps_list:
                 curContent = key.rstrip()
 
-                #printLog(output_log_handle, "CLEANUP:", benchmark_object_list[curContent], key)
+                benchmark_sweeping_table[curContent] = []
+
                 if (benchmark_sequence == 0) and (encode_codec == "all" or encode_codec == "avc"):  # HEVC-AVC benchmark sequence
                     if benchmark_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
                         continue
