@@ -110,3 +110,10 @@ sudo rm -rf $artifacts/*
 # for www-data)
 check_access $hls "r" user www-data
 check_access $hls "w" www-data
+
+# Enable perf events for all users, we need access to global events
+# to dump GPU utilization stats. Actually this can be done by different ways
+# and you see below one of them. Another one would be to grant CAP_SYS_ADMIN
+# capability to user and/or application(s) which need access to global
+# events.
+echo -1 | sudo tee /proc/sys/kernel/perf_event_paranoid >/dev/null

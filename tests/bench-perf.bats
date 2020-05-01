@@ -59,6 +59,80 @@ function get_test_body() {
       sudo chmod -R 777 /opt/tmp/*"
 }
 
+@test "bench perf raw h264" {
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  chmod 777 $tmp
+  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
+    $(get_test_body "$rawh264" "bench perf WAR.h264")"
+  print_output
+  if ! kernel_ge_4_16; then
+    # TODO: this should be status check, not artifacts check
+    #[ $status -ne 0 ]
+    ptmp=$tmp/benchmark/perf
+    nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
+    [ "$nout" -eq 0 ]
+  else
+    [ $status -eq 0 ]
+
+    ptmp=$tmp/benchmark/perf
+    nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_SMT -name "*.h265" | wc -l)
+    [ "$nout" -gt 0 ]
+    nout=$(find $ptmp/output_FFMPEG -name "*.h264" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_FFMPEG -name "*.h265" | wc -l)
+    [ "$nout" -gt 0 ]
+    nlines=$(cat $ptmp/benchperf_FFMPEG_AVC-AVC_benchmark.csv | wc -l)
+    [ "$nlines" -eq 2 ] # we expect header and result lines
+    nlines=$(cat $ptmp/benchperf_FFMPEG_AVC-HEVC_benchmark.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    nlines=$(cat $ptmp/benchperf_SMT_AVC-AVC_benchmark.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    nlines=$(cat $ptmp/benchperf_SMT_AVC-HEVC_benchmark.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    npng=$(find $ptmp -name "*.png" | wc -l)
+    [ "$npng" -ge 4 ] # we should have at least one picture for each benchmark
+  fi
+}
+
+@test "bench perf raw h265" {
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  chmod 777 $tmp
+  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
+    $(get_test_body "$rawh265" "bench perf WAR.hevc")"
+  print_output
+  if ! kernel_ge_4_16; then
+    # TODO: this should be status check, not artifacts check
+    #[ $status -ne 0 ]
+    ptmp=$tmp/benchmark/perf
+    nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
+    [ "$nout" -eq 0 ]
+  else
+    [ $status -eq 0 ]
+
+    ptmp=$tmp/benchmark/perf
+    nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_SMT -name "*.h265" | wc -l)
+    [ "$nout" -gt 0 ]
+    nout=$(find $ptmp/output_FFMPEG -name "*.h264" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_FFMPEG -name "*.h265" | wc -l)
+    [ "$nout" -gt 0 ]
+    nlines=$(cat $ptmp/benchperf_FFMPEG_HEVC-AVC_benchmark.csv | wc -l)
+    [ "$nlines" -eq 2 ] # we expect header and result lines
+    nlines=$(cat $ptmp/benchperf_FFMPEG_HEVC-HEVC_benchmark.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    nlines=$(cat $ptmp/benchperf_SMT_HEVC-AVC_benchmark.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    nlines=$(cat $ptmp/benchperf_SMT_HEVC-HEVC_benchmark.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    npng=$(find $ptmp -name "*.png" | wc -l)
+    [ "$npng" -ge 4 ] # we should have at least one picture for each benchmark
+  fi
+}
+
 @test "bench perf --skip-perf raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod 777 $tmp
@@ -84,7 +158,7 @@ function get_test_body() {
   [ "$nlines" -eq 2 ]
   nlines=$(cat $ptmp/benchperf_SMT_AVC-HEVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ]
-  npng=$(find $ptmp -name *.png | wc -l)
+  npng=$(find $ptmp -name "*.png" | wc -l)
   [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
 }
 
@@ -113,10 +187,9 @@ function get_test_body() {
   [ "$nlines" -eq 2 ]
   nlines=$(cat $ptmp/benchperf_SMT_HEVC-HEVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ]
-  npng=$(find $ptmp -name *.png | wc -l)
+  npng=$(find $ptmp -name "*.png" | wc -l)
   [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
 }
-
 
 @test "bench perf --skip-perf --skip-msdk raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
