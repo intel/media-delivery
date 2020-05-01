@@ -47,6 +47,7 @@ cp nginx.conf /etc/nginx/nginx.conf
 # Installing solution scripts
 scripts=" \
   ../../assets/demo \
+  ../../assets/demo-setup \
   ../../assets/ffmpeg-capture-hls.sh \
   ../../assets/monitor-nginx-server.sh \
   ../../benchmark/* \
@@ -69,5 +70,3 @@ done
   echo "export MANPATH=\$DEMO_PREFIX/share/man:\$MANPATH"
   echo "export LIBVA_DRIVER_NAME=iHD"
 } > /etc/demo.env
-
-cp demo-setup /usr/bin/
