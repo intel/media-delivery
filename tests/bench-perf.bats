@@ -28,19 +28,19 @@ load utils
   [ $status -ne 0 ]
 }
 
-# prepare raw 2160p h264 file, high resolution is needed to reduce
-# test time
+# prepare raw 2160p h264 file, high resolution and fps=60 is needed to
+# reduce test time
 rawh264="ffmpeg -an -hwaccel qsv \
   -c:v h264_qsv -i /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4 \
-  -vf scale_qsv=w=-1:h=2160 \
+  -vf vpp_qsv=framerate=60,scale_qsv=w=-1:h=2160 \
   -c:v h264_qsv -preset medium -profile:v high -b:v 1000000 -vframes 20 \
   -y WAR.h264"
 
-# prepare raw 2160p h265 file, high resolution is needed to reduce
-# test time
+# prepare raw 2160p h264 file, high resolution and fps=60 is needed to
+# reduce test time
 rawh265="ffmpeg -an -hwaccel qsv \
   -c:v h264_qsv -i /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4 \
-  -vf scale_qsv=w=-1:h=2160 \
+  -vf vpp_qsv=framerate=60,scale_qsv=w=-1:h=2160 \
   -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 20 \
   -y WAR.hevc"
 
