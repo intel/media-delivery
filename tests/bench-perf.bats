@@ -44,14 +44,26 @@ rawh265="ffmpeg -an -hwaccel qsv \
   -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 20 \
   -y WAR.hevc"
 
+# Container creates artifacts under container user and host user (if not
+# 'root'), can't delete them. We change permissions to the artifacts to
+# allow full access to anyone.
+function get_test_body() {
+    ffcmd=$1
+    bcmd=$2
+    echo " \
+      set -ex; \
+      $ffcmd; \
+      $bcmd; \
+      set +e; \
+      cp -rd /opt/data/artifacts/* /opt/tmp/; \
+      sudo chmod -R 777 /opt/tmp/*"
+}
+
 @test "bench perf --skip-perf raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/data/artifacts" /bin/bash -c " \
-    set -ex; \
-    $rawh264; \
-    bench perf --skip-perf WAR.h264; \
-    chmod -R a+w /opt/data/artifacts/*;"
+  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
+    $(get_test_body "$rawh264" "bench perf --skip-perf WAR.h264")"
   print_output
   [ $status -eq 0 ]
 
@@ -76,11 +88,8 @@ rawh265="ffmpeg -an -hwaccel qsv \
 @test "bench perf --skip-perf raw h265" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/data/artifacts" /bin/bash -c " \
-    set -ex; \
-    $rawh265; \
-    bench perf --skip-perf WAR.hevc; \
-    chmod -R a+w /opt/data/artifacts/*;"
+  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
+    $(get_test_body "$rawh265" "bench perf --skip-perf WAR.hevc")"
   print_output
   [ $status -eq 0 ]
 
@@ -106,11 +115,8 @@ rawh265="ffmpeg -an -hwaccel qsv \
 @test "bench perf --skip-perf --skip-msdk raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/data/artifacts" /bin/bash -c " \
-    set -ex; \
-    $rawh264; \
-    bench perf --skip-perf --skip-msdk WAR.h264; \
-    chmod -R a+w /opt/data/artifacts/*;"
+  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
+    $(get_test_body "$rawh264" "bench perf --skip-perf --skip-msdk WAR.h264")"
   print_output
   [ $status -eq 0 ]
 
@@ -133,11 +139,8 @@ rawh265="ffmpeg -an -hwaccel qsv \
 @test "bench perf --skip-perf --skip-ffmpeg raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/data/artifacts" /bin/bash -c " \
-    set -ex; \
-    $rawh264; \
-    bench perf --skip-perf --skip-ffmpeg WAR.h264; \
-    chmod -R a+w /opt/data/artifacts/*;"
+  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
+    $(get_test_body "$rawh264" "bench perf --skip-perf --skip-ffmpeg WAR.h264")"
   print_output
   [ $status -eq 0 ]
 
