@@ -47,16 +47,18 @@ subs="ffmpeg -i \
 cyuv="ffmpeg -i WAR.mp4 \
   -c:v rawvideo -pix_fmt yuv420p -vsync passthrough WAR.yuv"
 
-#########################################
+########################################
 # P1 bench quality test: encode 5 frames
-#########################################
+########################################
 @test "bench quality encode 5 frames" {
   run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
     bench quality -w 480 -h 270 -f 24 \
     --nframes 5 --skip-metrics --skip-bdrate \
-    WAR.yuv"
+    WAR.yuv; \
+    ls /opt/data/artifacts/benchmark/quality/ | wc -l"
   print_output
   [ $status -eq 0 ]
+  [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
 }
 
 ###################################
@@ -72,13 +74,28 @@ subs2="ffmpeg -i \
 cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   -vsync passthrough ParkScene_1280x720_24.yuv"
 
-################################################################
+###############################################################
 # P2 bench quality test: encode 5 frames of a predefined stream
-################################################################
+###############################################################
 @test "bench quality encode 5 frames of a predefined stream" {
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     bench quality --nframes 5 --skip-metrics --skip-bdrate \
-    ParkScene_1280x720_24.yuv"
+    ParkScene_1280x720_24.yuv; \
+    ls /opt/data/artifacts/benchmark/quality/ | wc -l"
   print_output
   [ $status -eq 0 ]
+  [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
+}
+
+#########################################################################
+# P2 bench quality test: encode 5 frames of a predefined stream with HEVC
+#########################################################################
+@test "bench quality encode 5 frames of a predefined stream" {
+  run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
+    bench quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
+    ParkScene_1280x720_24.yuv; \
+    ls /opt/data/artifacts/benchmark/quality/ | wc -l"
+  print_output
+  [ $status -eq 0 ]
+  [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
 }
