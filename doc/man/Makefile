@@ -39,6 +39,7 @@ MAN+=demo-setup.asciidoc
 MAN+=demo-streams.asciidoc
 MAN+=ffmpeg-capture-hls.asciidoc
 MAN+=hello-bash.asciidoc
+MAN+=info.asciidoc
 MAN+=monitor-nginx-server.asciidoc
 
 DOC_MAN1=$(patsubst %.asciidoc,%.1,$(MAN))

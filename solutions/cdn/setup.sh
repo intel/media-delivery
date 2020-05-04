@@ -48,6 +48,7 @@ scripts=" \
   ../../assets/demo \
   ../../assets/demo-setup \
   ../../assets/ffmpeg-capture-hls.sh \
+  ../../assets/info \
   ../../assets/monitor-nginx-server.sh \
   ../../benchmark/* \
   ../../scripts/setup-apt-proxy.sh \

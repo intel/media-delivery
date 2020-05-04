@@ -25,6 +25,12 @@ load utils
 # self-built apps included into the image can actually be run (dependencies
 # are satisfied).
 
+@test "info is ready" {
+  run docker_run info
+  print_output
+  [ $status -eq 0 ]
+}
+
 @test "ffmpeg is ready" {
   run docker_run ffmpeg --help
   print_output

@@ -75,6 +75,7 @@ on_merge:
   extends: .trigger_rule
   stage: "test"
   script:
+  - assets/info
   - tagname=$(cat tagname)
   - echo "Testing $tagname docker image"
   - docker pull $tagname
