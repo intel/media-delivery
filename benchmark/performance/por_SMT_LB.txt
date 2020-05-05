@@ -1,16 +1,16 @@
 #HEVC-AVC
-720p_hevc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 7 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 2000 -hrd 1000 -InitialDelayInKB 500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
-1080p_hevc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 7 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
-2160p_hevc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 7 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 10000 -hrd 5000 -InitialDelayInKB 2500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
+720p_hevc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 2000 -hrd 1000 -InitialDelayInKB 500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
+1080p_hevc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
+2160p_hevc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 10000 -hrd 5000 -InitialDelayInKB 2500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
 #AVC-AVC
-720p_avc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 7 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 2000 -hrd 1000 -InitialDelayInKB 500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
-1080p_avc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 7 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
-2160p_avc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 7 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 10000 -hrd 5000 -InitialDelayInKB 2500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
+720p_avc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 2000 -hrd 1000 -InitialDelayInKB 500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
+1080p_avc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
+2160p_avc-avc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 10000 -hrd 5000 -InitialDelayInKB 2500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
 #HEVC-HEVC
-720p_hevc-hevc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 7 -gop_size 256 -num_ref 5 -vbr -b 1500 -hrd 750 -InitialDelayInKB 325 -extbrc::on -o::h265 <>.h265 -p <>
-1080p_hevc-hevc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 7 -gop_size 256 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::on -o::h265 <>.h265 -p <>
+720p_hevc-hevc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -num_ref 5 -vbr -b 1500 -hrd 750 -InitialDelayInKB 325 -extbrc::on -o::h265 <>.h265 -p <>
+1080p_hevc-hevc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::on -o::h265 <>.h265 -p <>
 2160p_hevc-hevc: /usr/share/mfx/samples/sample_multi_transcode -i::h265 <> -hw -async 1 -u 7 -gop_size 256 -num_ref 5 -vbr -b 9000 -hrd 4500 -InitialDelayInKB 2250 -extbrc::on -o::h265 <>.h265 -p <>
 #AVC-HEVC
-720p_avc-hevc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 7 -gop_size 256 -num_ref 5 -vbr -b 1500 -hrd 750 -InitialDelayInKB 325 -extbrc::on -o::h265 <>.h265 -p <>
-1080p_avc-hevc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 7 -gop_size 256 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::on -o::h265 <>.h265 -p <>
+720p_avc-hevc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 4 -gop_size 256 -num_ref 5 -vbr -b 1500 -hrd 750 -InitialDelayInKB 325 -extbrc::on -o::h265 <>.h265 -p <>
+1080p_avc-hevc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 4 -gop_size 256 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::on -o::h265 <>.h265 -p <>
 2160p_avc-hevc: /usr/share/mfx/samples/sample_multi_transcode -i::h264 <> -hw -async 1 -u 7 -gop_size 256 -num_ref 5 -vbr -b 9000 -hrd 4500 -InitialDelayInKB 2250 -extbrc::on -o::h265 <>.h265 -p <>

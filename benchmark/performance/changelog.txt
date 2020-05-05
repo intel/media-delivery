@@ -1,5 +1,11 @@
-MEDIA MULTISTREAM BENCHMARKING v0.20.04.28
+MEDIA MULTISTREAM BENCHMARKING v0.20.04.29
 change-log:
+29-Apr-2020 fix for benchmark_table_sweep to reset during switching modes.
+29-Apr-2020 add unsupported warning based on content height.
+29-Apr-2020 Adding AVC-HEVC Transcode support. por command lines updated for SMT and FFMPEG.
+29-Apr-2020 fix content height base switching. Now selecting content_object instead of file.
+29-Apr-2020 Adding SMT and FFMPEG command lines files that are neccessary for Benchmark Performance.
+29-Apr-2020 Media Benchmark Performance Script. Initial Cleaned Version.
 29-Apr-2020 add dedicated artifact path for seperating Docker/Container/Baremetal. more codes cleaned up.
 28-Apr-2020	add default workload-path args, --skip-ffmpeg, --skip-msdk, -codec, backup-traces, --skip-perf, --skip-perf-trace
 27-Apr-2020	SMT HEVC-AVC, AVC-AVC, HEVC-HEVC benchmark now run in a single kick-off
@@ -29,5 +35,4 @@ change-log:
 20-Dec-2019	support and initial run on DG1
 18-Dec-2019	automated concurrent multistreams and collected raw fps output
 11-Dec-2019	initialized support for sample_application benchmark transcode HEVC-AVC on SKL
-
-
+-initiated-

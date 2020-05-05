@@ -22,24 +22,46 @@
 ##################################################################################
 ########### James.Iwan@intel.com Bench Perf ######################################
 ########### Scott.Rowe@intel.com Bench Perf ######################################
-import subprocess, sys, os, re, argparse, time, statistics, signal
+import subprocess, sys, os, re, argparse, time, statistics, signal, getpass
 
-shell_script_mms = "/tmp/perf/mms.sh"
+temp_path = "/tmp/perf/"
+
+###################################################################
+# This shell script is currently not being Run/Execute on this automation.
+# Creating the file only for debug purposes.
+###################################################################
+shell_script_mms = temp_path + "mms.sh"
+
 d = open(shell_script_mms, 'r')
-mediacmd_temp = []
+mediacmd_temp           = []
+clip_session_iter_tag   = ""
+user_id                 = getpass.getuser()
+#print ("USERID:", user_id)
 
 for dispatch_cmdline in d:
-    print(dispatch_cmdline)
-    mediacmd_temp.append(dispatch_cmdline)
+    if re.search("echo ", dispatch_cmdline):
+        clip_session_iter_tag = re.sub(r'echo ', "", dispatch_cmdline.rstrip())
+        continue
+    else:
+        mediacmd_temp.append(dispatch_cmdline)
 
 d.close()
 
-processes = [subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE) for cmd in mediacmd_temp]
+cpu_mem_monitor_cmd = "top -b -d 0.01 -n 2000 -i > " + temp_path + clip_session_iter_tag + "_TopSummary.txt &"
+top_cpu_mem_process = subprocess.Popen(cpu_mem_monitor_cmd, shell=True, stderr=subprocess.PIPE)
 
+processes = [subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE) for cmd in mediacmd_temp]
 for p in processes:
-    for line in p.stdout.readlines():
-        print(line)
+#    print("ConcurrentSessionPID:", p.pid)
     p.wait()
+
+top_cpu_mem_process.wait()
+top_mem_trace_grep_cmd      = "grep -e '" +  user_id + ".*sample' " + " -e '" +  user_id + ".*ffmpeg' " + temp_path + clip_session_iter_tag + "_TopSummary.txt > " + temp_path + clip_session_iter_tag + "_cpumem_trace.txt"
+top_cpu_mem_grep_process    = subprocess.Popen(top_mem_trace_grep_cmd, shell=True, stderr=subprocess.PIPE)
+top_cpu_mem_grep_process.wait()
+
+
+
 
 
 
