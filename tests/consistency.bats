@@ -71,3 +71,31 @@ END
   [ $status -eq 0 ]
   [ $output -eq 23 ]
 }
+
+@test "i915 pmu is ready" {
+  run docker_run perf list
+  print_output
+  [ $status -eq 0 ]
+  events=(${lines[@]})
+
+  # i915 pmu is available from vanilla kernel 4.16
+  if [[ $(uname -r)  =~ ^([0-9]+)\.([0-9]+) ]]; then
+    if [[ ${BASH_REMATCH[1]} -le 3 || ${BASH_REMATCH[1]} -eq 4 && ${BASH_REMATCH[2]} -lt 16 ]]; then
+      skip
+    fi
+  else
+    echo "# bug: something is very wrong" >&3
+    skip
+  fi
+  run grep_for "i915" ${events[@]}
+  [ $status -eq 0 ]
+  for e in ${events[@]};
+  do
+    if echo $e | grep i915; then
+      ee=$(echo $e | sed 's/  */ /g' | sed 's/^ //g' | cut -d' ' -f1)
+      run docker_run perf stat -a -e $ee whoami
+      [ $status -eq 0 ]
+      break # single working event is enough for us
+    fi
+  done
+}
