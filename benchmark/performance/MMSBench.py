@@ -289,12 +289,13 @@ def main():
     benchmark_starttime = time.time()
     benchmark_datetime  = str(time.ctime()) # to be used for archiving purposes.
     for benchmark_applications in range (2):
+        required_information_file = os.path.dirname(os.path.realpath(__file__))
         if (benchmark_applications == 0) and not skip_msdk:
-            required_information_file = "./por_SMT_LB.txt"
+            required_information_file += "/por_SMT_LB.txt"
             ffmpeg_mode = False
             benchmark_app_tag = "SMT"
         elif (benchmark_applications == 1) and not skip_ffmpeg:
-            required_information_file = "./por_FFMPEG_LB.txt"
+            required_information_file += "/por_FFMPEG_LB.txt"
             ffmpeg_mode = True
             benchmark_app_tag = "FFMPEG"
         else:
@@ -394,7 +395,7 @@ def main():
                 if not directory_check: os.system("mkdir " + iteration_path_cmd)
 
             bm_output_handle = open(output_log_file_benchmark_media, 'w')
-            benchmark = "clipname, benchmark_session, fps, runtime(s), GPU_Vid0(%), GPU_Vid1(%), GPU_Render(%), CPU_IPC, RC6(%), GPU_Freq_Avg(MHz), MEM_VM_Avg(KiB/Session), MEM_SHR_Avg(KiB/Session), MEM_RES_Avg(KiB/Session), MEM_RES_Total(KiB), AVG_MEM(%), PHYSICAL_MEM(KiB), AVG_CPU(%), MAX_CPU(%)\n"
+            benchmark = "clipname, benchmark_session, fps, runtime(s), GPU_Vid0(%), GPU_Vid1(%), GPU_Render(%), CPU_IPC, RC6(%), GPU_Freq_Avg(MHz), MEM_VM_Avg(KiB/Session), MEM_SHR_Avg(KiB/Session), MEM_RES_Avg(KiB/Session), MEM_RES_Total(KiB), AVG_MEM(%), PHYSICAL_MEM(KiB), AVG_CPU(%), TOTAL_CPU(%)\n"
             bm_output_handle.write(benchmark)
             benchmark_table_sweep = output_log_file_benchmark_sweep
             bt_output_handle = open(benchmark_table_sweep, 'w')
@@ -827,7 +828,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
     rc6_utilization = avg_frequency = cpu_task_clock = \
     total_vm_mem_value = total_res_mem_value = total_shr_mem_value = \
     avg_vm_mem_value = avg_res_mem_value = avg_shr_mem_value = \
-    total_CPU_percents_sessions = total_MEM_percents_sessions = max_cpu_percentage = max_physical_mem = 0
+    avg_cpu_percentage = avg_mem_utilization = total_CPU_percents_sessions = total_MEM_percents_sessions = max_cpu_percentage = max_physical_mem = 0
 
     ##################################################################################
     # Example of Free info dump file
@@ -1231,11 +1232,11 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
 
         max_physical_mem    = free_list["Mem_Total"]
         max_cpu_percentage  = lscpu_list["CPUs"]
-        avg_cpu_percentage  = dump_top_list["AVG_CPU_Util:"]
+        avg_cpu_percentage  = round(float(float(dump_top_list["AVG_CPU_Util:"]) / float(lscpu_list["CPUs"]) * 100),2)
         avg_mem_utilization = dump_top_list["AVG_MEM_Util:"]
         printLog(output_log_handle, " CPU analysis: ")
-        printLog(output_log_handle, "\tMax_CPU%\t:", lscpu_list["CPUs"], " % (", lscpu_list["Sockets"], "sockets", lscpu_list["CoresPerSocket"], "cores", lscpu_list["ThreadsPerCore"], "threads )",
-                     "\n\tAVG_CPU%\t:", dump_top_list["AVG_CPU_Util:"], " %"
+        printLog(output_log_handle, "\tTotal_CPU%\t:", dump_top_list["AVG_CPU_Util:"], "% out of ", lscpu_list["CPUs"], "% (", lscpu_list["Sockets"], "sockets", lscpu_list["CoresPerSocket"], "cores", lscpu_list["ThreadsPerCore"], "threads )",
+                     "\n\tAVG_CPU%\t:",  avg_cpu_percentage, " %"
                      )
 
         printLog(output_log_handle, " MEM analysis: ")

@@ -68,18 +68,21 @@ function get_test_body() {
   [ $status -eq 0 ]
 
   ptmp=$tmp/benchmark/perf
-  [ -d $ptmp/output ]
-  nout=$(find $ptmp/output -name "*.h264" | wc -l)
+  nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
   [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
-  nout=$(find $ptmp/output -name "*.h265" | wc -l)
+  nout=$(find $ptmp/output_SMT -name "*.h265" | wc -l)
   [ "$nout" -gt 0 ]
-  nlines=$(cat $ptmp/benchperf_FFMPEG_avc2avc_benchmark.csv | wc -l)
+  nout=$(find $ptmp/output_FFMPEG -name "*.h264" | wc -l)
+  [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+  nout=$(find $ptmp/output_FFMPEG -name "*.h265" | wc -l)
+  [ "$nout" -gt 0 ]
+  nlines=$(cat $ptmp/benchperf_FFMPEG_AVC-AVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ] # we expect header and result lines
-  nlines=$(cat $ptmp/benchperf_FFMPEG_avc2hevc_benchmark.csv | wc -l)
+  nlines=$(cat $ptmp/benchperf_FFMPEG_AVC-HEVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ]
-  nlines=$(cat $ptmp/benchperf_SMT_avc2avc_benchmark.csv | wc -l)
+  nlines=$(cat $ptmp/benchperf_SMT_AVC-AVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ]
-  nlines=$(cat $ptmp/benchperf_SMT_avc2hevc_benchmark.csv | wc -l)
+  nlines=$(cat $ptmp/benchperf_SMT_AVC-HEVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ]
   npng=$(find $ptmp -name *.png | wc -l)
   [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
@@ -94,18 +97,21 @@ function get_test_body() {
   [ $status -eq 0 ]
 
   ptmp=$tmp/benchmark/perf
-  [ -d $ptmp/output ]
-  nout=$(find $ptmp/output -name "*.h264" | wc -l)
+  nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
   [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
-  nout=$(find $ptmp/output -name "*.h265" | wc -l)
+  nout=$(find $ptmp/output_SMT -name "*.h265" | wc -l)
   [ "$nout" -gt 0 ]
-  nlines=$(cat $ptmp/benchperf_FFMPEG_hevc2avc_benchmark.csv | wc -l)
+  nout=$(find $ptmp/output_FFMPEG -name "*.h264" | wc -l)
+  [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+  nout=$(find $ptmp/output_FFMPEG -name "*.h265" | wc -l)
+  [ "$nout" -gt 0 ]
+  nlines=$(cat $ptmp/benchperf_FFMPEG_HEVC-AVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ] # we expect header and result lines
-  nlines=$(cat $ptmp/benchperf_FFMPEG_hevc2hevc_benchmark.csv | wc -l)
+  nlines=$(cat $ptmp/benchperf_FFMPEG_HEVC-HEVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ]
-  nlines=$(cat $ptmp/benchperf_SMT_hevc2avc_benchmark.csv | wc -l)
+  nlines=$(cat $ptmp/benchperf_SMT_HEVC-AVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ]
-  nlines=$(cat $ptmp/benchperf_SMT_hevc2hevc_benchmark.csv | wc -l)
+  nlines=$(cat $ptmp/benchperf_SMT_HEVC-HEVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ]
   npng=$(find $ptmp -name *.png | wc -l)
   [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
@@ -121,14 +127,14 @@ function get_test_body() {
   [ $status -eq 0 ]
 
   ptmp=$tmp/benchmark/perf
-  [ -d $ptmp/output ]
-  nout=$(find $ptmp/output -name "*.h264" | wc -l)
+  [ ! -e $ptmp/output_SMT ]
+  nout=$(find $ptmp/output_FFMPEG -name "*.h264" | wc -l)
   [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
-  nout=$(find $ptmp/output -name "*.h265" | wc -l)
+  nout=$(find $ptmp/output_FFMPEG -name "*.h265" | wc -l)
   [ "$nout" -gt 0 ]
-  nlines=$(cat $ptmp/benchperf_FFMPEG_avc2avc_benchmark.csv | wc -l)
+  nlines=$(cat $ptmp/benchperf_FFMPEG_AVC-AVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ] # we expect header and result lines
-  nlines=$(cat $ptmp/benchperf_FFMPEG_avc2hevc_benchmark.csv | wc -l)
+  nlines=$(cat $ptmp/benchperf_FFMPEG_AVC-HEVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ]
   nout=$(find $ptmp -name "benchperf_SMT*" | wc -l)
   [ "$nout" -eq 0 ]
@@ -145,16 +151,16 @@ function get_test_body() {
   [ $status -eq 0 ]
 
   ptmp=$tmp/benchmark/perf
-  [ -d $ptmp/output ]
-  nout=$(find $ptmp/output -name "*.h264" | wc -l)
+  [ ! -e $ptmp/output_FFMPEG ]
+  nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
   [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
-  nout=$(find $ptmp/output -name "*.h265" | wc -l)
+  nout=$(find $ptmp/output_SMT -name "*.h265" | wc -l)
   [ "$nout" -gt 0 ]
   nout=$(find $ptmp -name "benchperf_FFMPEG*" | wc -l)
   [ "$nout" -eq 0 ]
-  nlines=$(cat $ptmp/benchperf_SMT_avc2avc_benchmark.csv | wc -l)
+  nlines=$(cat $ptmp/benchperf_SMT_AVC-AVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ] # we expect header and result lines # only header lines
-  nlines=$(cat $ptmp/benchperf_SMT_avc2hevc_benchmark.csv | wc -l)
+  nlines=$(cat $ptmp/benchperf_SMT_AVC-HEVC_benchmark.csv | wc -l)
   [ "$nlines" -eq 2 ]
   npng=$(find $ptmp -name *.png | wc -l)
   [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
