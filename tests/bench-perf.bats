@@ -66,11 +66,7 @@ function get_test_body() {
     $(get_test_body "$rawh264" "bench perf WAR.h264")"
   print_output
   if ! kernel_ge_4_16; then
-    # TODO: this should be status check, not artifacts check
-    #[ $status -ne 0 ]
-    ptmp=$tmp/benchmark/perf
-    nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
-    [ "$nout" -eq 0 ]
+    [ $status -ne 0 ]
   else
     [ $status -eq 0 ]
 
@@ -103,11 +99,7 @@ function get_test_body() {
     $(get_test_body "$rawh265" "bench perf WAR.hevc")"
   print_output
   if ! kernel_ge_4_16; then
-    # TODO: this should be status check, not artifacts check
-    #[ $status -ne 0 ]
-    ptmp=$tmp/benchmark/perf
-    nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
-    [ "$nout" -eq 0 ]
+    [ $status -ne 0 ]
   else
     [ $status -eq 0 ]
 

@@ -143,7 +143,7 @@ def main():
         output_log_handle               = open(output_log_file, 'w')
     except:
         message_block(output_log_handle,'red', 'Unable to create artifact path ' + artifact_path)
-        raise
+        raise sys.exit(1)
     ######################################################################################################
     if debug_verbose:
         printLog(output_log_handle, '#' * 69)
@@ -158,7 +158,7 @@ def main():
             matplotlib.use('Agg')
     except:
         message_block(output_log_handle,'red', 'Unable to import matplotlib: ')
-        raise
+        raise sys.exit(1)
     ######################################################################################################
     # output path and header creation
     ######################################################################################################
@@ -201,7 +201,7 @@ def main():
                     return()
     except:
         message_block(output_log_handle,'red', 'Unable to create directory or inaccessible: ' + local_output_path)
-        raise
+        raise sys.exit(1)
 
     ######################################################################################################
     # Setup for Workloads directory or a  single Workload benchmarking
@@ -272,13 +272,13 @@ def main():
 
         else:
             message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + benchmarkargs.workloads_path)
-            raise
+            raise sys.exit(1)
 
 
     except:
         message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + benchmarkargs.workloads_path + " OR ")
         message_block(output_log_handle,'white', "Install FFMPEG/FFPROBE OR Rename content to the following format <clipname>_<width>x<height>p_<bitrate>_<content_fps>_<total_frames>.<codec>")
-        raise
+        raise sys.exit(1)
 
     ##################################################################################
     # Iterating benchmark applications
@@ -321,7 +321,7 @@ def main():
                         if (re.search(r"^2160p_avc-hevc:\s", str(workloadline))): benchmark_cmdline_2160p_avc2hevc = workloadline.replace("2160p_avc-hevc: ", "")
         except:
             message_block(output_log_handle,'red', 'Unable to locate required file: ' + benchmarkargs.required_information_file)
-            raise
+            raise sys.exit(1)
 
 
         ##################################################################################
@@ -361,8 +361,10 @@ def main():
                 archived_filepath       = "archived_" + benchmark_datetime
                 archived_filepath       = re.sub(r'\:', "", archived_filepath)
                 archived_filepath       = re.sub(r'\s', "_", archived_filepath)
-                archived_command        = "mkdir "  + artifact_path + archived_filepath
-                os.system(archived_command)
+                isDirectory             = os.path.isdir(artifact_path + archived_filepath)
+                if not isDirectory:
+                    archived_command    = "mkdir "  + artifact_path + archived_filepath
+                    os.system(archived_command)
                 move_command = "mv " + artifact_path + "*" + benchmark_app_tag + "*" + benchmark_tag + "* " + artifact_path + archived_filepath + "/."
                 os.system(move_command)
 
@@ -408,7 +410,7 @@ def main():
 
                 if curContent == "":
                     printLog(output_log_handle, "SCRIPT ERROR: empty content") # exit.
-                    exit()
+                    exit(1)
                 elif (re.search(r'.*.mp4$', curContent)) and (benchmark_app_tag == "SMT"):
                     printLog(output_log_handle, "MSDK SKIP: .mp4 file unsupported by msdk currently: ", curContent) # skip
                     continue
@@ -634,8 +636,8 @@ def main():
                         p.wait()
                         ########### James.Iwan@intel.com Linux Perf ################################################
                         if (p.returncode != 0):
-                                printLog(output_log_handle, " Exit early, due to not found Linux Perf Tool: ", str(p.returncode), linux_perf_cmdlines )
-                                exit()
+                                printLog(output_log_handle, " Exit early, due to not found Linux Perf Tool: ", str(p.returncode))
+                                sys.exit(1)
                         ############################################################################################
                         # rename file with iteration# and put into the content object information
                         ############################################################################################
@@ -784,7 +786,7 @@ def main():
         execution_time(output_log_handle, end_message, benchmark_starttime, time.time())
 
         ##################################################################################
-        # Rename output/ path into <application>_output/
+        # Rename output/ path into output_<Application>/
         ##################################################################################
         archived_local_output_path  = re.sub(r'output', "output_" + benchmark_app_tag, local_output_path)
         isDirectory                 = os.path.isdir(archived_local_output_path)
