@@ -83,3 +83,16 @@ function grep_for() {
   done
   return $res
 }
+
+function kernel_ge_4_16() {
+  # i915 pmu is available from vanilla kernel 4.16
+  if [[ $(uname -r)  =~ ^([0-9]+)\.([0-9]+) ]]; then
+    if [[ ${BASH_REMATCH[1]} -le 3 || ${BASH_REMATCH[1]} -eq 4 && ${BASH_REMATCH[2]} -lt 16 ]]; then
+      return 1
+    fi
+  else
+    echo "# bug: something is very wrong" >&3
+    return 1
+  fi
+  return 0
+}

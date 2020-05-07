@@ -72,21 +72,22 @@ END
   [ $output -eq 23 ]
 }
 
+@test "linux perf is ready" {
+  run docker_run perf list
+  print_output
+  [ $status -eq 0 ]
+}
+
 @test "i915 pmu is ready" {
+  if ! kernel_ge_4_16; then
+    skip
+  fi
+
   run docker_run perf list
   print_output
   [ $status -eq 0 ]
   events=(${lines[@]})
 
-  # i915 pmu is available from vanilla kernel 4.16
-  if [[ $(uname -r)  =~ ^([0-9]+)\.([0-9]+) ]]; then
-    if [[ ${BASH_REMATCH[1]} -le 3 || ${BASH_REMATCH[1]} -eq 4 && ${BASH_REMATCH[2]} -lt 16 ]]; then
-      skip
-    fi
-  else
-    echo "# bug: something is very wrong" >&3
-    skip
-  fi
   run grep_for "i915" ${events[@]}
   [ $status -eq 0 ]
   for e in ${events[@]};
