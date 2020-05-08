@@ -22,16 +22,11 @@
 
 load utils
 
-################
 # subsample by 4
-################
 subs="ffmpeg -i \
   /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4 \
   -s 480x270 -sws_flags lanczos -vframes 100 WAR.mp4"
 
-##########################################################
-# P0 bench quality test: bench quality transcode 65 frames
-##########################################################
 @test "bench quality transcode 65 frames and check artifacts" {
   run docker_run /bin/bash -c "set -ex; $subs; \
     bench quality --nframes 65 WAR.mp4; \
@@ -41,15 +36,10 @@ subs="ffmpeg -i \
   [ "${lines[$((${#lines[@]}-1))]}" = "24" ]
 }
 
-###################
 # convert to yuv420
-###################
 cyuv="ffmpeg -i WAR.mp4 \
   -c:v rawvideo -pix_fmt yuv420p -vsync passthrough WAR.yuv"
 
-########################################
-# P1 bench quality test: encode 5 frames
-########################################
 @test "bench quality encode 5 frames" {
   run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
     bench quality -w 480 -h 270 -f 24 \
@@ -61,23 +51,16 @@ cyuv="ffmpeg -i WAR.mp4 \
   [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
 }
 
-###################################
 # mock ParkScene: subsample to 720p
-###################################
 subs2="ffmpeg -i \
   /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4 \
   -s 1280x720 -sws_flags lanczos -vframes 240 ParkScene.mp4"
 
-################################
 # mock ParkScene: convert to yuv
-################################
 cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   -vsync passthrough ParkScene_1280x720_24.yuv"
 
-###############################################################
-# P2 bench quality test: encode 5 frames of a predefined stream
-###############################################################
-@test "bench quality encode 5 frames of a predefined stream" {
+@test "bench quality --codec AVC encode 5 frames of a predefined stream" {
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     bench quality --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
@@ -87,10 +70,7 @@ cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
 }
 
-#########################################################################
-# P2 bench quality test: encode 5 frames of a predefined stream with HEVC
-#########################################################################
-@test "bench quality encode 5 frames of a predefined stream" {
+@test "bench quality --codec HEVC encode 5 frames of a predefined stream" {
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     bench quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
@@ -99,3 +79,4 @@ cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   [ $status -eq 0 ]
   [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
 }
+
