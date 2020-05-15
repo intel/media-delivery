@@ -54,6 +54,12 @@ class MediaContent:
     def ffmpeg_mode (self, ffmpeg_mode):
         self.ffmpeg_mode = ffmpeg_mode
 
+# GemObject Tools
+    def filename_gpumem_trace(self, filename_gpumem_trace):
+        self.filename_gpumem_trace = filename_gpumem_trace
+    def gemobject_gpumem_trace_dump(self, gemobject_gpumem_trace_dump):
+        self.gemobject_gpumem_trace_dump = gemobject_gpumem_trace_dump
+
 # Top Tools
     def filename_cpumem_trace (self, filename_cpumem_trace):
         self.filename_cpumem_trace = filename_cpumem_trace
@@ -86,6 +92,7 @@ def main():
     parser.add_argument('--skip-msdk', '--skip_msdk', action='store_true', help='skipping benchmark that use MSDK/Sample app')
     parser.add_argument('--skip-perf', '--skip_perf', action='store_true', help='skipping linux perf stat Utilization, such as VD0/VD1/RCS/etc')
     parser.add_argument('--skip-perf-trace', '--skip_perf_trace', action='store_true', help='skipping linux perf stat additional Traces, such as GT-Freq/BW-Rd/BW-Wr/etc')
+    parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
     parser.add_argument('-codec', '--encode_codec', help='Default both AVC/HEVC, AVC only, or HEVC only')
     parser.add_argument('-initStreams', '--initialized_multiStream', help='Custom initialized concurrent of multi stream e.g. -s 720p:8,1080p:5,2160p:2')
     parser.add_argument('-maxStreams', '--maximum_multiStream', help='Set Maximum number of MultiStream session')
@@ -121,6 +128,7 @@ def main():
     debug_verbose                   = True if benchmarkargs.verbose else False
     tool_linux_perf                 = False if benchmarkargs.skip_perf else True
     tool_linux_perf_trace           = False if benchmarkargs.skip_perf_trace else True
+    enable_debugfs                  = True if benchmarkargs.enable_debugfs else False
     fps_constraint_enable           = True if benchmarkargs.constraint else False
     skip_ffmpeg                     = True if benchmarkargs.skip_ffmpeg else False
     skip_msdk                       = True if benchmarkargs.skip_msdk else False
@@ -153,6 +161,12 @@ def main():
     # Linux Perf pre-req
     ######################################################################################################
     try:
+        if enable_debugfs and (sudo_password_request() != 0):
+            print("REJECTED !!! and continue without [utilization/metric/statistic] profiles")
+            exit(1)
+        else:
+            print("ACCEPTED !!! to continue with [utilization/metric/statistic] profiles")
+
         if tool_linux_perf and tool_linux_perf_trace:
             import matplotlib
             matplotlib.use('Agg')
@@ -250,6 +264,10 @@ def main():
                             printLog(output_log_handle, " PASS: via File-Naming-Format")
                             printLog(output_log_handle, " content_fps =", benchmark_object_list[content_filename].fps_limit,", content_height =", benchmark_object_list[content_filename].height, ", content_codec =",benchmark_object_list[content_filename].codec, ", initialized_benchmark =",benchmark_sweeping_table[content_filename], "\n")
 
+                    if (float(overwrite_content_fps) > 0):
+                        content_fps_list[content_filename] = float(overwrite_content_fps)
+                        benchmark_object_list[content_filename].fps_limit = float(overwrite_content_fps)
+
             content_list_temp_fh.close()
 
         elif (isFile):
@@ -269,6 +287,7 @@ def main():
 
             if (float(overwrite_content_fps) > 0):
                 content_fps_list[content_filename] = float(overwrite_content_fps)
+                benchmark_object_list[content_filename].fps_limit = float(overwrite_content_fps)
 
         else:
             message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + benchmarkargs.workloads_path)
@@ -397,7 +416,7 @@ def main():
                 if not directory_check: os.system("mkdir " + iteration_path_cmd)
 
             bm_output_handle = open(output_log_file_benchmark_media, 'w')
-            benchmark = "clipname, benchmark_session, fps, runtime(s), GPU_Vid0(%), GPU_Vid1(%), GPU_Render(%), CPU_IPC, RC6(%), GPU_Freq_Avg(MHz), MEM_VM_Avg(KiB/Session), MEM_SHR_Avg(KiB/Session), MEM_RES_Avg(KiB/Session), MEM_RES_Total(KiB), AVG_MEM(%), PHYSICAL_MEM(KiB), AVG_CPU(%), TOTAL_CPU(%)\n"
+            benchmark = "clipname, benchmark_session, fps, runtime(s), GPU_Vid0(%), GPU_Vid1(%), GPU_Render(%), AVG_CPU(%), RC6(%), GPU_Freq_Avg(MHz), MEM_RES_Avg(MB/Session), MEM_RES_Total(MB), AVG_MEM(%), PHYSICAL_MEM(MB), CPU_IPC, TOTAL_CPU(%), GPU_MEM_RES_Avg(MB/Session), GPU_MEM_RES_Total(MB)\n"
             bm_output_handle.write(benchmark)
             benchmark_table_sweep = output_log_file_benchmark_sweep
             bt_output_handle = open(benchmark_table_sweep, 'w')
@@ -475,6 +494,9 @@ def main():
                 benchmark_total_res_mem = 0
                 benchmark_max_cpu_percentage = 0
                 benchmark_max_physical_mem = 0
+                benchmark_avg_res_gpumem = 0
+                benchmark_total_res_gpumem = 0
+
                 while nextStreamNumber and (streamnumber <= maximum_multiStream):
                     shell_script_mms = temp_path + "mms.sh" # Move this to /tmp/perf/
                     shell_script_handle = open(shell_script_mms, 'w')
@@ -633,13 +655,29 @@ def main():
 
                         benchmark_object_list[curContent].linux_perf_cmdlines = linux_perf_cmdlines
                         p = subprocess.Popen(linux_perf_cmdlines, shell=True, stderr=subprocess.PIPE)
+                        #p.send_signal(signal.SIGINT)
                         p.wait()
                         ########### James.Iwan@intel.com Linux Perf ################################################
                         if (p.returncode != 0):
-                                printLog(output_log_handle, " Exit early, due to not found Linux Perf Tool: ", str(p.returncode))
-                                sys.exit(1)
-                        
+                            if debug_verbose:
+                                printLog(output_log_handle, " [VERBOSE][CMD]", benchmark_object_list[curContent].dispatch_cmdline)
+                                printLog(output_log_handle, " [VERBOSE][LINUX_PERF_TOOLS]", benchmark_object_list[curContent].linux_perf_cmdlines, "\n")
+                                printLog(output_log_handle, " Exit early, error in submitted commands:", str(p.returncode))
+                            else:
+                                printLog(output_log_handle, " Exit early, error in submitted commands:", str(p.returncode), "(please use -v to debug further)")
+
+                            sys.exit(1)
+
                         os.system('stty sane')
+                        ############################################################################################
+                        # rename file with iteration# and put into the content object information
+                        ############################################################################################
+                        filename_gpumem_trace = clip_session_iter_tag + "_" + str(j) + "_gpumem_trace"
+                        gemobject_gpumem_trace_dump = temp_path + filename_gpumem_trace + ".txt"
+                        benchmark_object_list[curContent].filename_gpumem_trace = filename_gpumem_trace
+                        benchmark_object_list[curContent].gemobject_gpumem_trace_dump = gemobject_gpumem_trace_dump
+                        os.system("mv " + temp_path + clip_session_iter_tag + "_gpumem_trace.txt " + gemobject_gpumem_trace_dump)
+
                         ############################################################################################
                         # rename file with iteration# and put into the content object information
                         ############################################################################################
@@ -652,7 +690,7 @@ def main():
                         ############################################################################################
 
                         nextStreamNumber0, avg_fps, exetime, vid0_u, vid1_u, render_u, cpu_ipc, rc6_u, avg_freq , avg_vm_mem, avg_shr_mem, avg_res_mem, total_res_mem, \
-                        avg_mem_utilization, max_physical_mem, avg_cpu_percentage, max_cpu_percentage  = \
+                        avg_mem_utilization, max_physical_mem, avg_cpu_percentage, max_cpu_percentage, avg_res_gpumem, total_res_gpumem  = \
                         postprocess_multistream(output_log_handle, streamnumber, j, debug_verbose, filepath_free_info, filepath_lscpu_info, benchmark_object_list[curContent])
 
                         if j == 0:
@@ -695,6 +733,8 @@ def main():
                         benchmark_max_physical_mem =  max_physical_mem
                         benchmark_avg_cpu_percentage =  avg_cpu_percentage
                         benchmark_max_cpu_percentage =  max_cpu_percentage
+                        benchmark_avg_res_gpumem = avg_res_gpumem
+                        benchmark_total_res_gpumem = total_res_gpumem
                         #printLog(output_log_handle, "benchmark_stream: ",benchmark_stream, "average_fps: ", benchmark_fps)
                         benchmark_sweeping_table[key].append(benchmark_fps)
                         nextStreamNumber = True
@@ -724,6 +764,8 @@ def main():
                         benchmark_max_physical_mem =  max_physical_mem
                         benchmark_avg_cpu_percentage =  avg_cpu_percentage
                         benchmark_max_cpu_percentage =  max_cpu_percentage
+                        benchmark_avg_res_gpumem = avg_res_gpumem
+                        benchmark_total_res_gpumem = total_res_gpumem
                         printLog(output_log_handle, " average current TPT: ",benchmark_stream, "average_fps: ", benchmark_fps)
                         benchmark_sweeping_table[key].append(benchmark_fps)
                         nextStreamNumber = False
@@ -744,12 +786,12 @@ def main():
                 benchmark = key + "," + str(benchmark_stream) + "," \
                             + str(benchmark_fps)  + "," + str(benchmark_exetime) + "," \
                             + str(benchmark_vid0_u) + "," + str(benchmark_vid1_u) + "," \
-                            + str(benchmark_render_u) + "," + str(benchmark_cpu_ipc) + "," \
+                            + str(benchmark_render_u) + "," + str(benchmark_avg_cpu_percentage) + "," \
                             + str(benchmark_rc6_u) + "," + str(benchmark_avg_freq) + "," \
-                            + str(benchmark_avg_vm_mem) + "," + str(benchmark_avg_shr_mem) + "," \
                             + str(benchmark_avg_res_mem) + "," + str(benchmark_total_res_mem) + "," \
-                            + str(benchmark_avg_mem_percentage) + "," + str(benchmark_max_physical_mem) + ","\
-                            + str(benchmark_avg_cpu_percentage) + "," + str(benchmark_max_cpu_percentage) + "\n"
+                            + str(benchmark_avg_mem_percentage) + "," + str(benchmark_max_physical_mem) + "," \
+                            + str(benchmark_cpu_ipc) + "," + str(benchmark_max_cpu_percentage) + "," \
+                            + str(benchmark_avg_res_gpumem) + "," + str(benchmark_total_res_gpumem) + "\n"
                 bm_output_handle.write(benchmark)
 
                 benchmark_table = "\n"
@@ -783,7 +825,6 @@ def main():
             ##################################################################################
             startTime_sequence = time.time()
 
-        #printLog(output_log_handle, benchmark_app_tag , " APPLICATION: Done")
         end_message = "BENCHMARK APPLICATION: " + benchmark_app_tag +  " : Done"
         execution_time(output_log_handle, end_message, benchmark_starttime, time.time())
 
@@ -832,7 +873,8 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
     rc6_utilization = avg_frequency = cpu_task_clock = \
     total_vm_mem_value = total_res_mem_value = total_shr_mem_value = \
     avg_vm_mem_value = avg_res_mem_value = avg_shr_mem_value = \
-    avg_cpu_percentage = avg_mem_utilization = total_CPU_percents_sessions = total_MEM_percents_sessions = max_cpu_percentage = max_physical_mem = 0
+    avg_cpu_percentage = avg_mem_utilization = total_CPU_percents_sessions = \
+    total_MEM_percents_sessions = max_cpu_percentage = max_physical_mem = total_res_gpumem = avg_res_gpumem = 0
 
     ##################################################################################
     # Example of Free info dump file
@@ -846,9 +888,9 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                 free_info = re.sub(r'\s+'," ",free_info)
                 if "Mem:" in free_info:
                     free_info_split = free_info.split(" ")
-                    free_list["Mem_Total"]  = free_info_split[1]
-                    free_list["Mem_Used"]   = free_info_split[2]
-                    free_list["Mem_Avail"]  = free_info_split[6]
+                    free_list["Mem_Total"]  = float(free_info_split[1])/1000
+                    free_list["Mem_Used"]   = float(free_info_split[2])/1000
+                    free_list["Mem_Avail"]  = float(free_info_split[6])/1000
 
 
     ##################################################################################
@@ -961,6 +1003,25 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
             average_fps = statistics.mean(average_fps_split) if average_fps_split != [] else 0
 
     ##################################################################################
+    # Post Process Top Tools for GPU Utilization and Memory Footprint/Usage
+    # Example GEM Object printout
+    # sample_multi_tr: 253 objects, 125353984 bytes (44523520 active, 29716480 inactive, 60416000 unbound, 0 closed)
+    ##################################################################################
+    if os.path.isfile(benchmark_object.gemobject_gpumem_trace_dump):
+        gpumem_res_max = 0
+        with open(benchmark_object.gemobject_gpumem_trace_dump, "r") as tools_gemobject:
+            for gemmem_line in tools_gemobject:
+                gemmem_line = re.sub(r'\(',"", gemmem_line)
+                gemmem_line_split = gemmem_line.split(" ")
+                if len(gemmem_line_split) > 10:
+                    gpumem_res_cur = float((int(gemmem_line_split[3]) - int(gemmem_line_split[9])) / 1000000)
+                    if gpumem_res_cur > gpumem_res_max:
+                        gpumem_res_max = gpumem_res_cur
+
+        avg_res_gpumem      = round(gpumem_res_max,2)
+        total_res_gpumem    = round(gpumem_res_max * stream_number, 2)
+
+    ##################################################################################
     # Post Process Top Tools for CPU Utilization and Memory Footprint/Usage
     # Example TOP print out per process.
     #   PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
@@ -1013,11 +1074,11 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                         SHR_footprint_max_per_pid_array[top_pid] = top_shr_mem
 
         for each_pid in VM_footprint_max_per_pid_array:
-            total_vm_mem_value = total_vm_mem_value + VM_footprint_max_per_pid_array[each_pid]
+            total_vm_mem_value = round(float(total_vm_mem_value + VM_footprint_max_per_pid_array[each_pid])/1000, 2)
         for each_pid in VM_footprint_max_per_pid_array:
-            total_res_mem_value = total_res_mem_value + RES_footprint_max_per_pid_array[each_pid]
+            total_res_mem_value = round(float(total_res_mem_value + RES_footprint_max_per_pid_array[each_pid])/1000, 2)
         for each_pid in VM_footprint_max_per_pid_array:
-            total_shr_mem_value = total_shr_mem_value + SHR_footprint_max_per_pid_array[each_pid]
+            total_shr_mem_value = round(float(total_shr_mem_value + SHR_footprint_max_per_pid_array[each_pid])/1000, 2)
 
         avg_vm_mem_value    = round(total_vm_mem_value / len(top_pid_list), 2) #take average every each value
         avg_res_mem_value   = round(total_res_mem_value / len(top_pid_list), 2)  # take average every each value
@@ -1025,11 +1086,11 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
 
         dump_top_list["Session_ID_List:"]   = str(top_pid_list) + " list"
         dump_top_list["Max_VM_Mem_list:"]   = str(VM_footprint_max_per_pid_array) + " list"
-        dump_top_list["Max_VM_Mem:"]        = str(avg_vm_mem_value) + " (KiB/session)"
+        dump_top_list["Max_VM_Mem:"]        = str(avg_vm_mem_value) + " (MB/session)"
         dump_top_list["Max_RES_Mem_list:"]  = str(RES_footprint_max_per_pid_array) + " list"
-        dump_top_list["Max_RES_Mem:"]       = str(avg_res_mem_value) + " (KiB/session), " +  str(total_res_mem_value) + " (KiB) total"
+        dump_top_list["Max_RES_Mem:"]       = str(avg_res_mem_value) + " (MB/session), " +  str(total_res_mem_value) + " (MB) total"
         dump_top_list["Max_SHR_Mem_list:"]  = str(SHR_footprint_max_per_pid_array) + " list"
-        dump_top_list["Max_SHR_Mem:"]       = str(avg_shr_mem_value) + " (KiB/session)"
+        dump_top_list["Max_SHR_Mem:"]       = str(avg_shr_mem_value) + " (MB/session)"
 
         for pid_value in top_pid_list:
             CPU_percent_per_pid_average[pid_value]    = round(np.average(CPU_percent_per_pid_array[pid_value]), 2)
@@ -1202,7 +1263,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
 
             plot_filename = benchmark_object.temp_path + benchmark_object.filename_mem_bw_trace + "_read.png"
             plot_output.savefig(plot_filename)
-            printLog(output_log_handle, "\tMEM-RD-BW-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
+            #printLog(output_log_handle, "\tMEM-RD-BW-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
 
             w = np.arange(len(mem_bw_wr))
             plot_output = plt.figure()
@@ -1215,7 +1276,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
 
             plot_filename = benchmark_object.temp_path + benchmark_object.filename_mem_bw_trace + "_write.png"
             plot_output.savefig(plot_filename)
-            printLog(output_log_handle, "\tMEM-WR-BW-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
+            #printLog(output_log_handle, "\tMEM-WR-BW-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
 
             ###################################
             # myplotlib
@@ -1243,24 +1304,36 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                      "\n\tAVG_CPU%\t:",  avg_cpu_percentage, " %"
                      )
 
-        printLog(output_log_handle, " MEM analysis: ")
-        printLog(output_log_handle, "\tMax_Mem\t\t:", free_list["Mem_Total"] , " (KiB)",
-                     "\n\tMem_VM\t\t:", dump_top_list["Max_VM_Mem:"],
+        printLog(output_log_handle, " CPU MEM analysis: ")
+        printLog(output_log_handle, "\tMax_Mem\t\t:", free_list["Mem_Total"] , " (MB)",
+                     #"\n\tMem_VM\t\t:", dump_top_list["Max_VM_Mem:"],
                      "\n\tMem_RES\t\t:", dump_top_list["Max_RES_Mem:"],
-                     "\n\tMem_SHR\t\t:", dump_top_list["Max_SHR_Mem:"],
+                     #"\n\tMem_SHR\t\t:", dump_top_list["Max_SHR_Mem:"],
                      "\n\tAVG_MEM%\t:", dump_top_list["AVG_MEM_Util:"], " %"
                      )
         if debug_verbose:
             printLog(output_log_handle, " [VERBOSE] RAW files:")
             printLog(output_log_handle, "\tProcess_ID_List\t:", dump_top_list["Session_ID_List:"],
-                     "\n\tMem_VM_List\t:", dump_top_list["Max_VM_Mem_list:"],
+                     #"\n\tMem_VM_List\t:", dump_top_list["Max_VM_Mem_list:"],
                      "\n\tMem_RES_List\t:", dump_top_list["Max_RES_Mem_list:"],
-                     "\n\tMem_SHR_List\t:", dump_top_list["Max_SHR_Mem_list:"],
+                     #"\n\tMem_SHR_List\t:", dump_top_list["Max_SHR_Mem_list:"],
                      "\n\tCPU%_List\t:", dump_top_list["CPU_Utilization_List:"],
                      "\n\tMEM%_List\t:", dump_top_list["MEM_Utilization_List:"],
                      "\n\tCPU-MEM-Trace\t:", re.sub(r'.*\/',"" , benchmark_object.top_cpumem_trace_dump))
 
-    return next, average_fps, runtime, vid0_utilization, vid1_utilization, render_utilization, cpu_ipc, rc6_utilization, avg_frequency, avg_vm_mem_value, avg_shr_mem_value, avg_res_mem_value, total_res_mem_value, avg_mem_utilization, max_physical_mem, avg_cpu_percentage, max_cpu_percentage
+        printLog(output_log_handle, "\n[TOOLS][GEM_OBJECTS]")
+
+        printLog(output_log_handle, " GPU MEM analysis: ")
+        printLog(output_log_handle, "\tMax_Gpu_Mem\t:", total_res_gpumem , " (MB)",
+                     "\n\tAvg_Gpu_Res\t:", avg_res_gpumem, " (MB/Session)")
+
+        if debug_verbose:
+            printLog(output_log_handle, " [VERBOSE] RAW files:")
+            printLog(output_log_handle, "\tGPU-MEM-Trace\t:", re.sub(r'.*\/', "", benchmark_object.gemobject_gpumem_trace_dump))
+
+    return next, average_fps, runtime, vid0_utilization, vid1_utilization, render_utilization, cpu_ipc, rc6_utilization, avg_frequency, \
+           avg_vm_mem_value, avg_shr_mem_value, avg_res_mem_value, total_res_mem_value, avg_mem_utilization, max_physical_mem, avg_cpu_percentage, max_cpu_percentage,\
+           avg_res_gpumem, total_res_gpumem
 
 ########### James.Iwan@intel.com Bench Perf ######################################
 def execution_time(output_log_handle, message, start,end):
@@ -1308,19 +1381,11 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
     ######################################################
     filename_only_without_extension = re.sub(r'\..*', "", filename.rstrip())
     duplicate_filename_status = False
-    # for filename in benchmark_object_list:
-    #     if benchmark_object_list[filename].name == filename_only_without_extension:
-    #         duplicate_filename_status = True
 
     if (ffprobe_height ==0) | (ffprobe_frame_rate == 0) | (ffprobe_codec_name ==0):
         if debug_verbose:
             printLog(output_log_handle, " FAIL: via FFMPEG/FFPROBE: content is not supported")
         status = False
-    # elif duplicate_filename_status:
-    #     if (benchmark_object_list[filename.rstrip()].height == ffprobe_height) and (benchmark_object_list[filename.rstrip()].codec == ffprobe_codec_name):
-    #         printLog(output_log_handle, " FAIL: via FFMPEG/FFPROBE: duplicated filename, codec, height")
-    #         status = False
-
 
     if status:
         benchmark_object_list[filename.rstrip()]            = MediaContent()
@@ -1332,7 +1397,6 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
         content_height_list[filename.rstrip()]              = ffprobe_height
         content_codec_list[filename.rstrip()]               = ffprobe_codec_name
         benchmark_sweeping_table[filename.rstrip()]         = []
-        # print ("HELLO DEBUG", benchmark_object_list[filename.rstrip()].fps_limit, benchmark_object_list[filename.rstrip()].height, benchmark_object_list[filename.rstrip()].codec, benchmark_sweeping_table[filename.rstrip()] )
 
     return status
 
@@ -1390,7 +1454,6 @@ def selectLinuxPerfMetrics(temp_path, graphic_model):
             linuxPerfMetric         = re.sub(r'^\s+', "", linuxPerfMetric) # removing any leading spaces
             linuxPerfMetric         = re.sub(r'\s+', " ", linuxPerfMetric) # removing any multiple spaces
             linuxPerfMetric_split   = linuxPerfMetric.split(" ")
-#            print("HELLO DEBUG", linuxPerfMetric_split[0])
             metrics                 = metrics + "," + linuxPerfMetric_split[0]
             if "actual-frequency" in linuxPerfMetric:
                 gpu_freq_traces     = linuxPerfMetric_split[0]
@@ -1398,6 +1461,16 @@ def selectLinuxPerfMetrics(temp_path, graphic_model):
                 mem_bw_traces       = mem_bw_traces + "," + linuxPerfMetric_split[0]
 
     return metrics, gpu_freq_traces, mem_bw_traces
+
+import os, subprocess
+
+def sudo_password_request():
+    status = 0
+    if os.geteuid() != 0:
+        msg = "Request password for enabling CPU/GPU analysis: %u:"
+        status = subprocess.check_call("sudo -v -p '%s'" % msg, shell=True)
+    return status
+
 ########### James.Iwan@intel.com Bench Perf ######################################
 # Execute
 ##################################################################################
