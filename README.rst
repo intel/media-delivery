@@ -79,7 +79,7 @@ To get list of streams you will be able to play, execute::
 
 On the output of the above command you should get list of streams in a format::
 
-  WAR_2Mbps_perceptual_1080p | http://localhost:8080/live/WAR_2Mbps_perceptual_1080p/index.m3u8
+  WAR_TRAILER_HiQ_10_withAudio | http://localhost:8080/live/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 
 Above example just lists content embedded in the container on the build stage.
 See `Content Attribution`_ for the copyright info for the above video. See
@@ -95,7 +95,7 @@ To run it, execute::
 
   docker run -it \
     --privileged --network=host \
-    intel-media-delivery demo ffmpeg WAR_2Mbps_perceptual_1080p
+    intel-media-delivery demo ffmpeg WAR_TRAILER_HiQ_10_withAudio
 
 Upon successful launch you will see output similar to the below one.
 
@@ -125,9 +125,9 @@ awaits for the user interaction. To start demo in this mode, execute::
 After that you need to trigger streaming via some client running outside of the
 container. For example, from the host::
 
-  vlc http://localhost:8080/live/WAR_2Mbps_perceptual_1080p/index.m3u8
+  vlc http://localhost:8080/live/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
   # or
-  ffmpeg -i http://localhost:8080/live/WAR_2Mbps_perceptual_1080p/index.m3u8 -c copy WAR_2Mbps_perceptual_1080p.mkv
+  ffmpeg -i http://localhost:8080/live/WAR_TRAILER_HiQ_10_withAudio/index.m3u8 -c copy WAR_TRAILER_HiQ_10_withAudio.mkv
   
 Available solutions and their architectures
 -------------------------------------------
@@ -152,10 +152,10 @@ available for streaming::
   docker run -it \
     --privileged --network=host \
     intel-media-delivery demo -4 ffmpeg \
-      WAR_2Mbps_perceptual_1080p-1
-      WAR_2Mbps_perceptual_1080p-2
-      WAR_2Mbps_perceptual_1080p-3
-      WAR_2Mbps_perceptual_1080p-4
+      WAR_TRAILER_HiQ_10_withAudio-1
+      WAR_TRAILER_HiQ_10_withAudio-2
+      WAR_TRAILER_HiQ_10_withAudio-3
+      WAR_TRAILER_HiQ_10_withAudio-4
 
 This solution can be further scaled. For example, transcoding requests might not be served
 on the same system where nginx server is running. Instead they are served by dedicated
@@ -201,7 +201,7 @@ Content Attribution
 
 Container image comes with some embedded content attributed as follows::
 
-  /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4:
+  /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4:
     Film: WAR - Courtesy & Copyright: Yash Raj Films Pvt. Ltd.
 
 Inside the container, please, refer to the following file::

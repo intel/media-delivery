@@ -24,7 +24,7 @@ load utils
 
 # subsample by 4
 subs="ffmpeg -i \
-  /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4 \
+  /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -s 480x270 -sws_flags lanczos -vframes 100 WAR.mp4"
 
 @test "bench quality transcode 65 frames and check artifacts" {
@@ -53,7 +53,7 @@ cyuv="ffmpeg -i WAR.mp4 \
 
 # mock ParkScene: subsample to 720p
 subs2="ffmpeg -i \
-  /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4 \
+  /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -s 1280x720 -sws_flags lanczos -vframes 240 ParkScene.mp4"
 
 # mock ParkScene: convert to yuv

@@ -62,7 +62,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 # Refer to usage.txt for the content copyright notice(s)
 RUN mkdir /embedded && cd /embedded && \
   wget --progress=bar:force https://repositories.intel.com/media/usage.txt && \
-  wget --progress=bar:force https://repositories.intel.com/media/WAR_2Mbps_perceptual_1080p.mp4
+  wget --progress=bar:force https://repositories.intel.com/media/WAR_TRAILER_HiQ_10_withAudio.mp4
 
 FROM base AS build-prerequisites
 

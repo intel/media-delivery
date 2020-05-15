@@ -81,31 +81,31 @@ streams and text files with the calculated metrics. Consider an example below
 (`--nframes=10` is given just for the simplicity).
 
 ------------
-# bench quality --nframes=10 /opt/data/embedded/WAR_2Mbps_perceptual_1080p.mp4
+# bench quality --nframes=10 /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4
 <...>
 
 # ls -1
-WAR_2Mbps_perceptual_1080p.mp4.cbr.ffmpeg-qsv.metrics
-WAR_2Mbps_perceptual_1080p.mp4.cbr.sample-encode.metrics
-WAR_2Mbps_perceptual_1080p.mp4.vbr.ffmpeg-qsv.metrics
-WAR_2Mbps_perceptual_1080p.mp4.vbr.sample-encode.metrics
-WAR_2Mbps_perceptual_1080p.mp4_12Mbps_CBR_QSV.h264
-WAR_2Mbps_perceptual_1080p.mp4_12Mbps_VBR_QSV.h264
-WAR_2Mbps_perceptual_1080p.mp4_24Mbps_CBR_QSV.h264
-WAR_2Mbps_perceptual_1080p.mp4_24Mbps_VBR_QSV.h264
-WAR_2Mbps_perceptual_1080p.mp4_2Mbps_CBR_QSV.h264
-WAR_2Mbps_perceptual_1080p.mp4_2Mbps_VBR_QSV.h264
-WAR_2Mbps_perceptual_1080p.mp4_3Mbps_CBR_QSV.h264
-WAR_2Mbps_perceptual_1080p.mp4_3Mbps_VBR_QSV.h264
-WAR_2Mbps_perceptual_1080p.mp4_6Mbps_CBR_QSV.h264
-WAR_2Mbps_perceptual_1080p.mp4_6Mbps_VBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4.cbr.ffmpeg-qsv.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4.cbr.sample-encode.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4.vbr.ffmpeg-qsv.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4.vbr.sample-encode.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4_12Mbps_CBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_12Mbps_VBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_24Mbps_CBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_24Mbps_VBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_2Mbps_CBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_2Mbps_VBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_3Mbps_CBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_3Mbps_VBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_6Mbps_CBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_6Mbps_VBR_QSV.h264
 
-# cat WAR_2Mbps_perceptual_1080p.mp4.cbr.ffmpeg-qsv.metrics
-WAR_2Mbps_perceptual_1080p.mp4_12Mbps_CBR_QSV.h264:33712:99.73896508146471:56.57106818620179:0.9998045802116394:0.9996079494435991
-WAR_2Mbps_perceptual_1080p.mp4_24Mbps_CBR_QSV.h264:28605:99.73896508146471:55.73372554473565:0.9997134983539582:0.9994766423998278
-WAR_2Mbps_perceptual_1080p.mp4_2Mbps_CBR_QSV.h264:4681:98.18199953840941:49.40211511795687:0.9973068058490753:0.9969961779084621
-WAR_2Mbps_perceptual_1080p.mp4_3Mbps_CBR_QSV.h264:6927:99.14454456499617:50.71396113566765:0.9983673691749573:0.9979530665346188
-WAR_2Mbps_perceptual_1080p.mp4_6Mbps_CBR_QSV.h264:14923:99.68411421582299:53.147407625088:0.9992096841335296:0.9988773328701932
+# cat WAR_TRAILER_HiQ_10_withAudio.mp4.cbr.ffmpeg-qsv.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4_12Mbps_CBR_QSV.h264:33712:99.73896508146471:56.57106818620179:0.9998045802116394:0.9996079494435991
+WAR_TRAILER_HiQ_10_withAudio.mp4_24Mbps_CBR_QSV.h264:28605:99.73896508146471:55.73372554473565:0.9997134983539582:0.9994766423998278
+WAR_TRAILER_HiQ_10_withAudio.mp4_2Mbps_CBR_QSV.h264:4681:98.18199953840941:49.40211511795687:0.9973068058490753:0.9969961779084621
+WAR_TRAILER_HiQ_10_withAudio.mp4_3Mbps_CBR_QSV.h264:6927:99.14454456499617:50.71396113566765:0.9983673691749573:0.9979530665346188
+WAR_TRAILER_HiQ_10_withAudio.mp4_6Mbps_CBR_QSV.h264:14923:99.68411421582299:53.147407625088:0.9992096841335296:0.9988773328701932
 ------------
 
 `*.metrics` files contain calculated metrics. File names contain 4 parts:

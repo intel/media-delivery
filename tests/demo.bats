@@ -70,7 +70,7 @@ load utils
   run docker_run demo streams
   print_output
   [ $status -eq 0 ]
-  run grep_for "WAR_2Mbps_perceptual_1080p" ${lines[@]}
+  run grep_for "WAR_TRAILER_HiQ_10_withAudio" ${lines[@]}
   [ $status -eq 0 ]
 }
 
@@ -81,10 +81,10 @@ load utils
     [ $status -eq 0 ]
     streams_output=("${lines[@]}")
 
-    run grep_for "WAR_2Mbps_perceptual_1080p" ${streams_output[@]}
+    run grep_for "WAR_TRAILER_HiQ_10_withAudio" ${streams_output[@]}
     [ $status -eq 0 ]
     for i in `seq 1 $N`; do
-      run grep_for "WAR_2Mbps_perceptual_1080p-$i" ${streams_output[@]}
+      run grep_for "WAR_TRAILER_HiQ_10_withAudio-$i" ${streams_output[@]}
       [ $status -eq 0 ]
     done
   done
@@ -114,7 +114,7 @@ load utils
 
   run grep_for "fake" ${streams_output[@]}
   [ $status -eq 0 ]
-  run grep_for "WAR_2Mbps_perceptual_1080p" ${streams_output[@]}
+  run grep_for "WAR_TRAILER_HiQ_10_withAudio" ${streams_output[@]}
   [ $status -eq 0 ]
   rm -rf $tmp
 }
@@ -136,10 +136,10 @@ load utils
     run grep_for "fake-$i" ${streams_output[@]}
     [ $status -eq 0 ]
   done
-  run grep_for "WAR_2Mbps_perceptual_1080p" ${streams_output[@]}
+  run grep_for "WAR_TRAILER_HiQ_10_withAudio" ${streams_output[@]}
   [ $status -eq 0 ]
   for i in `seq 1 $N`; do
-    run grep_for "WAR_2Mbps_perceptual_1080p-$i" ${streams_output[@]}
+    run grep_for "WAR_TRAILER_HiQ_10_withAudio-$i" ${streams_output[@]}
     [ $status -eq 0 ]
   done
   rm -rf $tmp
@@ -190,27 +190,27 @@ function test_ffmpeg_capture() {
 
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/data/artifacts" demo ffmpeg --exit $type/WAR_2Mbps_perceptual_1080p
+  run docker_run_opts "-v $tmp:/opt/data/artifacts" demo ffmpeg --exit $type/WAR_TRAILER_HiQ_10_withAudio
   [ $status -eq 0 ]
 
   # checking artifacts in an order of appearence
   [ -f $tmp/ffmpeg-hls-client/scheduled ]
-  [ -f $tmp/ffmpeg-hls-client/$type/WAR_2Mbps_perceptual_1080p.log ]
+  [ -f $tmp/ffmpeg-hls-client/$type/WAR_TRAILER_HiQ_10_withAudio.log ]
   [ -f $tmp/ffmpeg-hls-server/lua-client-requests.log ]
   [ -f $tmp/ffmpeg-hls-server/scheduled ]
-  [ -f $tmp/ffmpeg-hls-server/$type/WAR_2Mbps_perceptual_1080p.log ]
-  [ -f $tmp/ffmpeg-hls-client/$type/WAR_2Mbps_perceptual_1080p.mkv ]
+  [ -f $tmp/ffmpeg-hls-server/$type/WAR_TRAILER_HiQ_10_withAudio.log ]
+  [ -f $tmp/ffmpeg-hls-client/$type/WAR_TRAILER_HiQ_10_withAudio.mkv ]
   [ -f $tmp/ffmpeg-hls-server/done ]
   [ -f $tmp/ffmpeg-hls-client/done ]
 
   check_done_status $tmp/ffmpeg-hls-server/done
   check_done_status $tmp/ffmpeg-hls-client/done
 
-  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-server/$type/WAR_2Mbps_perceptual_1080p.log)
+  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-server/$type/WAR_TRAILER_HiQ_10_withAudio.log)
   echo "# server: frames=$frames" >&3
 
   [ "$frames" -eq 3443 ]
-  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-client/$type/WAR_2Mbps_perceptual_1080p.log)
+  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-client/$type/WAR_TRAILER_HiQ_10_withAudio.log)
   echo "# client: frames=$frames" >&3
   [ "$frames" -eq 3443 ]
 }

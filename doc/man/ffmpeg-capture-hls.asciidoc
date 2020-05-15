@@ -27,11 +27,11 @@ loop will produce outpout to `stdout`.
 
 If the script was called as
 ------------
-ffmpeg-capture-hls.sh vod/avc/WAR_2Mbps_perceptual_1080p
+ffmpeg-capture-hls.sh vod/avc/WAR_TRAILER_HiQ_10_withAudio
 ------------
 or as
 ------------
-ffmpeg-capture-hls.sh http://localhost:8080/vod/avc/WAR_2Mbps_perceptual_1080p/index.m3u8
+ffmpeg-capture-hls.sh http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 ------------
 which is the same, then you should see the following output from the
 monitoring loop:
@@ -42,13 +42,13 @@ ffmpeg streaming clients monitor
 Output and logs path: /opt/data/artifacts/ffmpeg-hls-client
 Total clients: 1
 Running clients: 1
-  vod/avc/WAR_2Mbps_perceptual_1080p: size=8.0M, frames=250, fps=24
+  vod/avc/WAR_TRAILER_HiQ_10_withAudio: size=8.0M, frames=250, fps=24
 Completed clients: 0
 ------------
 
 It says that there is a single client being monitored (`Total clients`).
 It is currently running (`Running clients`) and its running status is as
-follows: file being capured is `vod/avc/WAR_2Mbps_perceptual_1080p`,
+follows: file being capured is `vod/avc/WAR_TRAILER_HiQ_10_withAudio`,
 currently 8.0M were received which is around 250 frames and average receiving
 speed is 24 fps.
 
@@ -60,7 +60,7 @@ Output and logs path: /opt/data/artifacts/ffmpeg-hls-client
 Total clients: 1
 Running clients: 0
 Completed clients: 1
-  vod/avc/WAR_2Mbps_perceptual_1080p: size=54M, frames=3443, fps=24, status=0
+  vod/avc/WAR_TRAILER_HiQ_10_withAudio: size=54M, frames=3443, fps=24, status=0
 ------------
 Pay attention that monitoring loop report status of the completed ffmpeg
 capturing.
