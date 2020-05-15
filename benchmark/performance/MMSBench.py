@@ -638,6 +638,8 @@ def main():
                         if (p.returncode != 0):
                                 printLog(output_log_handle, " Exit early, due to not found Linux Perf Tool: ", str(p.returncode))
                                 sys.exit(1)
+                        
+                        os.system('stty sane')
                         ############################################################################################
                         # rename file with iteration# and put into the content object information
                         ############################################################################################
