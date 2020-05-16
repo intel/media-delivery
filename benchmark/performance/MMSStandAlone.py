@@ -36,7 +36,6 @@ d = open(shell_script_mms, 'r')
 mediacmd_temp           = []
 clip_session_iter_tag   = ""
 user_id                 = getpass.getuser()
-#print ("USERID:", user_id)
 
 for dispatch_cmdline in d:
     if re.search("echo ", dispatch_cmdline):
@@ -47,21 +46,22 @@ for dispatch_cmdline in d:
 
 d.close()
 
+# TOP monitors for specified period. Later we filter TOP output by PID to avoid
+# any conflicts with data for other processes.
 cpu_mem_monitor_cmd = "top -b -d 0.01 -n 2000 -i > " + temp_path + clip_session_iter_tag + "_TopSummary.txt &"
 top_cpu_mem_process = subprocess.Popen(cpu_mem_monitor_cmd, shell=True, stderr=subprocess.PIPE)
 
 processes = [subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE) for cmd in mediacmd_temp]
 for p in processes:
-#    print("ConcurrentSessionPID:", p.pid)
     p.wait()
+
+os.system("killall top") # Kill Top Application.
+
+for p in processes:
+    if p.returncode != 0:
+        exit(1)
 
 top_cpu_mem_process.wait()
 top_mem_trace_grep_cmd      = "grep -e '" +  user_id + ".*sample' " + " -e '" +  user_id + ".*ffmpeg' " + temp_path + clip_session_iter_tag + "_TopSummary.txt > " + temp_path + clip_session_iter_tag + "_cpumem_trace.txt"
 top_cpu_mem_grep_process    = subprocess.Popen(top_mem_trace_grep_cmd, shell=True, stderr=subprocess.PIPE)
 top_cpu_mem_grep_process.wait()
-
-
-
-
-
-
