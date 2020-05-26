@@ -1,48 +1,48 @@
-bench-quality(1)
-================
+measure-quality(1)
+==================
 
 NAME
 ----
-bench-quality - run media delivery quality benchmark
+measure-quality - run media delivery quality measure
 
 SYNOPSIS
 --------
 [verse]
-'bench quality' [<options>] [--] <folder>|<stream>
+'measure quality' [<options>] [--] <folder>|<stream>
 
 DESCRIPTION
 -----------
-Run quality benchmark via ffmpeg-qsv and/or Intel Media SDK Sample Encode.
+Run quality measure via ffmpeg-qsv and/or Intel Media SDK Sample Encode.
 There are 3 modes of operation to highlight.
 
-1. Run benchmark on the pre-defined set of workloads
+1. Run quality measurement on the pre-defined set of workloads
 +
 ------------
-     bench quality <folder>
+    measure quality <folder>
 ------------
 +
 In this case `<folder>` sets the root folder to search for the pre-defined set of streams.
 Search is done in the root `<folder>` and all subfolders.
 
-2. Run benchmark for the specified stream
+2. Run quality measurement for the specified stream
 +
 ------------
-    bench quality <stream>
+    measure quality <stream>
 ------------
 +
-In this case benchmark is run only for the specified stream. If stream is YUV you need to
+In this case quality measure is run only for the specified stream. If stream is YUV you need to
 specify its characteristics via command line optins (`-w`, `-h`, `-f`,
-`--fourcc`, etc.). Mind that YUV stream will be benchmarked both via ffmpeg-qsv and
-Sample Encode, but streams in containers (MP4, TS, etc.) will be benchmarked only via
+`--fourcc`, etc.). Mind that YUV stream will be measured both via ffmpeg-qsv and
+Media SDK Sample Encode, but a stream encapsulated in a containers (e.g. MP4, TS, etc.) will be measured only via
 ffmpeg-qsv (since Sample Encode does not support container streams).
 
-3. Run benchmark for the pre-defined stream
+3. Run quality measure for the pre-defined stream
 +
 ------------
-    bench quality <stream>
+    measure quality <stream>
 ------------
 +
-That's simplified variant of the previous mode. If stream name matches one of the
+This is a simplified variant of the previous mode. If the stream name matches one of the
 pre-defined streams (which are YUV streams) you may skip specifying its characteristics.
 
 Script checks whether the input stream is YUV by the following file
@@ -81,7 +81,7 @@ streams and text files with the calculated metrics. Consider an example below
 (`--nframes=10` is given just for the simplicity).
 
 ------------
-# bench quality --nframes=10 /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4
+# measure quality --nframes=10 /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4
 <...>
 
 # ls -1
@@ -112,10 +112,10 @@ WAR_TRAILER_HiQ_10_withAudio.mp4_6Mbps_CBR_QSV.h264:14923:99.68411421582299:53.1
 `<outprefix>.<codec>.<mode>.<application>.metrics`. `<outprefix>` is
 `--outprefix` specified on the command line (running pre-defined set of streams
 default one is always used). `<codec>` is the video compression standard used
-in benchmarking (AVC or HEVC), which can be specified on the command line with
+in quality measurement (AVC or HEVC), which can be specified on the command line with
 `--codec` option. `<mode>` is a bitrate mode like `cbr` (constant bitrate) or
-`vbr` (variable bitrate). `application` is application being benchmarked, ffmpeg
-or Intel Media SDK sample encode. In addition, when BD-rate calculation is enabled,
+`vbr` (variable bitrate). `application` is the application being measured for video quality: ffmpeg
+or Intel Media SDK Sample Encode. In addition, when BD-rate calculation is enabled,
 `application` is set to `ref` indicating metrics files obtained from a reference
 application (e.g. x264 or x265) used for BD-rate calculation. Metrics data is in
 CSV format with colon `:` separator. The first field is a stream name, the second
@@ -194,10 +194,10 @@ WORKING MODE OPTIONS
 	Do not encode anything.
 
 --skip-ffmpeg::
-	Do not run ffmpeg-qsv benchmark.
+	Do not run ffmpeg-qsv quality measurement.
 
 --skip-msdk::
-	Do not run Intel Media SDK samples benchmark.
+	Do not run Intel Media SDK Sample Encode quality measurement.
 
 --skip-cbr::
 	Do not execute Constant Bitrate (CBR) encoding cases.
@@ -224,8 +224,8 @@ PROCESSING OPTIONS
 
 --outdir|-o /path/to/artifacts::
 	Produce output in the specified folder (default:
-	`/opt/data/artifacts/benchmark/quality` if ran under docker,
-	`$HOME/benchmark/quality` otherwise)
+	`/opt/data/artifacts/measure/quality` if ran under docker,
+	`$HOME/measure/quality` otherwise)
 
 --outprefix::
 	File prefix to append to output artifacts (default: `$(basename $inputfile)`).
@@ -257,19 +257,19 @@ Only valid for YUV input stream.
 PREREQUISITES
 -------------
 ffmpeg::
-	Used to benchmark ffmpeg-qsv path (`--enable-libmfx`) and calculate quality metrics
+	Used for quality measurement of ffmpeg-qsv (`--enable-libmfx`) and calculation of quality metrics
 	(`--enable-libvmaf`).
 
 ffprobe::
-	Used to get some information on the input/output stream(s).
+	Used for getting information on the input/output stream(s).
 
 sample_encode::
-	Used for direct benchmark of Intel Media SDK library (YUV input
+	Used for direct quality measurement of Intel Media SDK library (YUV input
 	streams).
 
 python3::
-	For generic script purposes.
+	Used for generic script purposes.
 
 SEE ALSO
 --------
-link:bench.asciidoc[bench]
+link:measure.asciidoc[measure]

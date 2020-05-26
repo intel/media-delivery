@@ -6,12 +6,12 @@ Media Delivery Solutions
 Overview
 --------
 
-This is collection of solutions which demonstrates how to use Intel GPU in simplified
-modelled real live scenarious which involve media streams delivery. Solutions focus
+This is a collection of solutions which demonstrate how to use Intel GPU in simplified
+modelled real-life scenarios involving media streams delivery. Solutions focus
 on the key aspects of the proper Intel software setup and integration with other
-popular tools you will likely use in your final product. We try to our best to provide
-configuration which will demonstrate best quality and performance for Intel media stack.
-Please, refer to the below benchmark results to level set expectations.
+popular tools you will likely use in your final product. We try to do our best to provide
+a configuration which will demonstrate the best quality and performance for Intel media stack.
+Please, refer to the below measurement results to level set expectations.
 
 How to get?
 -----------
@@ -35,16 +35,16 @@ Host requirements
 
 To run these solutions you need to:
 
-1. Have system with enabled Intel GPU card supported by Intel media driver
+1. Have a system with enabled Intel GPU card supported by Intel media driver
    (refer to https://github.com/intel/media-driver documentation for the list of
    supported GPUs)
-2. Run Linux OS with up to date Linux kernel supporting underlying Intel
+2. Run Linux OS with up-to-date Linux kernel supporting underlying Intel
    GPU (see recommendations TBD)
 3. Have installed and configured Docker
 
 Other than that you might wish to install some tools on your host (or some other
-system capable to reach container over network) to be able to interact with the
-service(s) running inside the container. Consider to have on a host:
+system capable of reaching the container over network) to be able to interact with the
+service(s) running inside the container. Consider having on a host the following:
 
 1. `VLC player <https://www.videolan.org/vlc/index.html>`_ to be able to play streaming
    videos
@@ -56,16 +56,16 @@ How to run?
 Each solution contains few entrypoints:
 
 1. ``demo`` allows to run a demo (mind ``demo help``)
-2. ``bench`` allows to run a benchmark (mind ``bench help``)
+2. ``measure`` allows to run a measurement (mind ``measure help``)
 
-In this paragraph we will discuss demo modes. Read how to run benchmarks in
-`How to run benchmark?`_ section.
+In this paragraph we will discuss the demo modes. Read how to run measurements in
+`How to run a measure?`_ section.
 
-Media delivery solutions are about delivering media streams to the clients. So,
-solutions consist of 2 parts:
+Media delivery solutions are about delivering media streams to the clients. As such,
+the solutions consist of 2 parts:
 
 1. Service(s) running inside the container which produce and distribute media streams
-2. And client(s) running somewhere (not necessarily inside the container)
+2. Client(s) running somewhere (not neccessarily inside the container)
    which consume media streams
 
 Run without entrypoint to enter shell and look around inside the container.
@@ -171,8 +171,8 @@ This solution can be built with ``--build-arg SOLUTION=edge``.
 
 This solution is using Nginx RTMP module to generate HLS stream. TODO: describe more.
 
-Benchmark results
------------------
+Measurement results
+-------------------
 
 Quality
 ~~~~~~~
@@ -184,7 +184,7 @@ Performance
 
 Not ready
 
-How to run benchmark?
+How to run a measure?
 ---------------------
 
 Not ready

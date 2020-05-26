@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-bench_quality=$0
+measure_quality=$0
 
 OPTIONS="w:h:f:o:"
 LONGOPTIONS="codec:,preset:,bitrates:"
@@ -54,7 +54,7 @@ if grep docker /proc/1/cgroup -qa; then
 else
   outdir="$HOME"
 fi
-outdir+="/benchmark/quality"
+outdir+="/measure/quality"
 outprefix=""
 
 skip_metrics=no
@@ -278,7 +278,7 @@ function run() {
     echo "error: no such file: $stream" >&2
     set_err -1
   else
-    $bench_quality \
+    $measure_quality \
       --codec=$codec --preset=$preset --bitrates=$bitrates \
       --nframes=$nframes \
       --width=$width --height=$height --fourcc=$fourcc --framerate=$framerate --outdir=$outdir \

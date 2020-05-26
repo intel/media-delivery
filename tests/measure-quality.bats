@@ -27,10 +27,10 @@ subs="ffmpeg -i \
   /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -s 480x270 -sws_flags lanczos -vframes 100 WAR.mp4"
 
-@test "bench quality transcode 65 frames and check artifacts" {
+@test "measure quality transcode 65 frames and check artifacts" {
   run docker_run /bin/bash -c "set -ex; $subs; \
-    bench quality --nframes 65 WAR.mp4; \
-    cat /opt/data/artifacts/benchmark/quality/*{.metrics,bdrate} | wc -l"
+    measure quality --nframes 65 WAR.mp4; \
+    cat /opt/data/artifacts/measure/quality/*{.metrics,bdrate} | wc -l"
   print_output
   [ $status -eq 0 ]
   [ "${lines[$((${#lines[@]}-1))]}" = "24" ]
@@ -40,12 +40,12 @@ subs="ffmpeg -i \
 cyuv="ffmpeg -i WAR.mp4 \
   -c:v rawvideo -pix_fmt yuv420p -vsync passthrough WAR.yuv"
 
-@test "bench quality encode 5 frames" {
+@test "measure quality encode 5 frames" {
   run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
-    bench quality -w 480 -h 270 -f 24 \
+    measure quality -w 480 -h 270 -f 24 \
     --nframes 5 --skip-metrics --skip-bdrate \
     WAR.yuv; \
-    ls /opt/data/artifacts/benchmark/quality/ | wc -l"
+    ls /opt/data/artifacts/measure/quality/ | wc -l"
   print_output
   [ $status -eq 0 ]
   [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
@@ -60,21 +60,21 @@ subs2="ffmpeg -i \
 cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   -vsync passthrough ParkScene_1280x720_24.yuv"
 
-@test "bench quality --codec AVC encode 5 frames of a predefined stream" {
+@test "measure quality --codec AVC encode 5 frames of a predefined stream" {
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
-    bench quality --nframes 5 --skip-metrics --skip-bdrate \
+    measure quality --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
-    ls /opt/data/artifacts/benchmark/quality/ | wc -l"
+    ls /opt/data/artifacts/measure/quality/ | wc -l"
   print_output
   [ $status -eq 0 ]
   [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
 }
 
-@test "bench quality --codec HEVC encode 5 frames of a predefined stream" {
+@test "measure quality --codec HEVC encode 5 frames of a predefined stream" {
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
-    bench quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
+    measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
-    ls /opt/data/artifacts/benchmark/quality/ | wc -l"
+    ls /opt/data/artifacts/measure/quality/ | wc -l"
   print_output
   [ $status -eq 0 ]
   [ "${lines[$((${#lines[@]}-1))]}" = "30" ]

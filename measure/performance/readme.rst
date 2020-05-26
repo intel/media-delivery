@@ -25,18 +25,18 @@ Media Clips to be allocated into specific single directory e.g. below::
 
 Place all Automation Script files into the same directory as the clips::
 
-    python3 MMSBench.py -r /home/intel/forMediaDelivery/req_low_bitrate.txt -lp
+    python3 MSPerf.py -r /home/intel/forMediaDelivery/req_low_bitrate.txt -lp
 
 Custom Command Line::
 
-    python3 MMSBench.py -r /home/intel/forMediaDelivery/req_low_bitrate.txt -lp -s 1080p:1 -n 1 -v
+    python3 MSPerf.py -r /home/intel/forMediaDelivery/req_low_bitrate.txt -lp -s 1080p:1 -n 1 -v
 
 ChangeLog
 =========
 
-MEDIA MULTISTREAM BENCHMARKING v0.20.02.25
+MEDIA MULTISTREAM PERFORMANCE MEASURE v0.20.02.25
 
-2019-12-11 - initialized support for sample_application benchmark transcode HEVC-AVC on SKL
+2019-12-11 - initialized support for sample_application performance measure transcode HEVC-AVC on SKL
 
 2019-12-18 - automated concurrent multistreams and collected raw fps output
 
@@ -54,7 +54,7 @@ MEDIA MULTISTREAM BENCHMARKING v0.20.02.25
 
 2020-01-21 - requested - adding flexibility to different resolution multistream initialization, e.g. -s 720p:8,1080p:5,2160p:2
 
-2020-01-27 - Lots of error checking, and add single resolution benchmarking through -s option, e.g. -s 1080p:5
+2020-01-27 - Lots of error checking, and add single resolution performance measure through -s option, e.g. -s 1080p:5
 
 2020-01-28 - requested - to capture the last fail multistreams run.
 
@@ -64,9 +64,9 @@ MEDIA MULTISTREAM BENCHMARKING v0.20.02.25
 
 2020-02-18 - Add GPU Analysis terminal print-out
 
-2020-02-19 - Benchmark summary will now include GPU Analysis report out
+2020-02-19 - Performance measure summary will now include GPU Analysis report out
 
-2020-02-20 - Adding AVC-AVC Transcode benchmark capabilities.
+2020-02-20 - Adding AVC-AVC Transcode performance measure capabilities.
 
 2020-02-21 - Adding a trace plot for GPU Frequency utilizing metrics from Linux Perf source
 

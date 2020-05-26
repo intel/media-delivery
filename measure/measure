@@ -26,10 +26,10 @@ command=$1
 shift;
 
 if [ "$command" = "quality" ]; then
-  $path/quality/bench-quality $@
+  $path/quality/measure-quality $@
   exit 0
 elif [ "$command" = "perf" ]; then
-  $path/performance/MMSBench.py $@
+  $path/performance/MSPerf.py $@
 else
   echo "error: unknown command: '$command'"
   exit -1

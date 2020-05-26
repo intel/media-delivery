@@ -14,11 +14,12 @@ Demo manual pages
 * `demo-help <demo-help.asciidoc>`_
 * `demo-streams <demo-streams.asciidoc>`_
 
-Benchmark manual pages
-======================
+Measure manual pages
+====================
 
-* `bench <bench.asciidoc>`_
-* `bench-quality <bench-quality.asciidoc>`_
+* `measure <measure.asciidoc>`_
+* `measure-quality <measure-quality.asciidoc>`_
+* `measure-perf <measure-perf.asciidoc>`_
 
 Container entrypoints and setup manual pages
 ============================================
@@ -33,7 +34,7 @@ Manual pages of lower level scripts
 
 These manual pages describe scripts which you won't typically run on your
 own from the command line, but they are being run for you by higher level
-scripts like `demo` or `bench`.
+scripts like `demo` or `measure`.
 
 * `ffmpeg-capture-hls <ffmpeg-capture-hls.asciidoc>`_
 * `monitor-nginx-server <monitor-nginx-server.asciidoc>`_

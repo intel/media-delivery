@@ -37,8 +37,8 @@ if [[ "$1" =~ ^(help|-help|--help|-h)$ ]]; then
   echo "and encoding options preset."
   echo ""
   echo "Input streams are searched in the provided path including subfolders."
-  echo "If path to the file is provides instead of path, only the specified stream is"
-  echo "benchmarked (if it's in the list of known streams)."
+  echo "If path to the file is provided instead of directory path, then quality is measured"
+  echo "only for the specified stream (if it is in the list of known streams)."
   echo ""
   echo "--skip-metrics and --skip-encoding allow to skip corresponding stage in the script."
   exit 0

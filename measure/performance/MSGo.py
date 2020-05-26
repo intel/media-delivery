@@ -20,8 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 ##################################################################################
-########### James.Iwan@intel.com Bench Perf ######################################
-########### Scott.Rowe@intel.com Bench Perf ######################################
+########### James.Iwan@intel.com Measure Perf ####################################
+########### Scott.Rowe@intel.com Measure Perf ####################################
 import subprocess, sys, os, re, argparse, time, statistics, signal, getpass
 
 temp_path = "/tmp/perf/"

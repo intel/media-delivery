@@ -1,23 +1,23 @@
-bench-perf(1)
-=============
+measure-perf(1)
+===============
 
 NAME
 ----
-bench-perf - run media delivery performance benchmark
+measure-perf - run media delivery performance measurement
 
 SYNOPSIS
 --------
 [verse]
-'bench perf' list
-'bench perf' [<options>] [--] <folder>|<stream>
+'measure perf' list
+'measure perf' [<options>] [--] <folder>|<stream>
 
 DESCRIPTION
 -----------
-'bench perf list' gives a list of use cases which can be used. The default
+'measure perf list' gives a list of supported use cases. The default
 use case is 1:1 transcoding.
 
-If `<folder>` is specified, script takes all the streams it can found in this
-folder. Child folders are not analyzed.
+If `<folder>` is specified, the script processes all streams found in that
+folder. Sub-folders are not analyzed.
 
 OUTPUT ARTIFACTS
 ----------------
@@ -26,17 +26,17 @@ TBD
 WORKING MODE OPTIONS
 --------------------
 --scenario|-s <name>::
-	Use case scenario to run. By default script runs 1:1 transcoding use case
-evaluating density (how many transcoding sessions can be run in parallel at
-real time). This option permits to specify more complex 1:N scenario to
-run. Each scenario is assigned with specific name which could be obtainer
-with `bench perf list`.
+	Use case scenario to run. By default the script runs 1:1 transcoding use case
+evaluating density (how many transcoding sessions can be run in parallel in
+real-time). This option allows specifying more complex 1:N scenarios to
+run. Each scenario is assigned a specific name which could be obtained
+by executing `measure perf list`.
 
 --skip-ffmpeg::
-	Do not run ffmpeg-qsv benchmark.
+	Do not run ffmpeg-qsv performance measurements.
 
 --skip-msdk::
-	Do not run Intel Media SDK samples benchmark.
+	Do not run Intel Media SDK Sample Encode performance measurements.
 
 --skip-cbr::
 	Do not execute Constant Bitrate (CBR) encoding cases.
@@ -77,23 +77,23 @@ contstrained to encoding fps)
 
 --outdir|-o /path/to/artifacts::
 	Produce output in the specified folder (default:
-	`/opt/data/artifacts/benchmark/perf` if ran under docker,
-	`$HOME/benchmark/perf` otherwise)
+	`/opt/data/artifacts/measure/perf` if ran under docker,
+	`$HOME/measure/perf` otherwise)
 
 PREREQUISITES
 -------------
 ffmpeg::
-	Used to benchmark ffmpeg-qsv path (`--enable-libmfx`).
+	Used for performance measurement of ffmpeg-qsv (`--enable-libmfx`).
 
 ffprobe::
-	Used to get some information on the input/output stream(s).
+	Used for getting information on the input/output stream(s).
 
 sample_multi_transcode::
-	Used for direct benchmark of Intel Media SDK library.
+	Used for direct performance measurement of Intel Media SDK library.
 
 python3::
-	For generic script purposes.
+	Used for generic script purposes.
 
 SEE ALSO
 --------
-link:bench.asciidoc[bench]
+link:measure.asciidoc[measure]

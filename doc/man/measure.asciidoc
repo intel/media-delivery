@@ -1,0 +1,28 @@
+measure(1)
+==========
+
+NAME
+----
+measure - run media delivery measurements
+
+SYNOPSIS
+--------
+[verse]
+'measure' [<options>] [<command> [<args>]]
+
+DESCRIPTION
+-----------
+`measure` runs media delivery quality or performance measure.
+
+COMMANDS
+-------
+perf::
+	Run performance measure
+
+quality::
+	Run quality measure
+
+SEE ALSO
+--------
+link:measure-perf.asciidoc[measure-perf]
+link:measure-quality.asciidoc[measure-quality]

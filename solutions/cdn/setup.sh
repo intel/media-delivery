@@ -50,7 +50,7 @@ scripts=" \
   ../../assets/ffmpeg-capture-hls.sh \
   ../../assets/info \
   ../../assets/monitor-nginx-server.sh \
-  ../../benchmark/* \
+  ../../measure/* \
   ../../scripts/setup-apt-proxy.sh \
   nginx-trigger-streaming.sh"
 

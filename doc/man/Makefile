@@ -28,8 +28,9 @@ mandir?=$(prefix)/share/man
 man1dir=$(mandir)/man1
 
 MAN:=
-MAN+=bench.asciidoc
-MAN+=bench-quality.asciidoc
+MAN+=measure.asciidoc
+MAN+=measure-quality.asciidoc
+MAN+=measure-perf.asciidoc
 MAN+=demo.asciidoc
 MAN+=demo-bash.asciidoc
 MAN+=demo.env.asciidoc

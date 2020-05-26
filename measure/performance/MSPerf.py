@@ -23,14 +23,14 @@
 ##################################################################################
 
 ##################################################################################
-# Benchmark automation flow: (by intel pnp silicon lab)
+# Performance automation flow: (by intel pnp silicon lab)
 ##################################################################################
 import subprocess, sys, os, re, argparse, time, statistics, signal, getpass
 
 
-########### James.Iwan@intel.com Bench Perf ######################################
+########### James.Iwan@intel.com MSPerf ######################################
 class MediaContent:
-    width = height = fps_limit = benchmark_stream = benchmark_fps = init_stream_number = linux_perf_cmdlines = 0
+    width = height = fps_limit = performance_stream = performance_fps = init_stream_number = linux_perf_cmdlines = 0
     def name (self, name):
         self.name = name
     def height (self, height):
@@ -41,10 +41,10 @@ class MediaContent:
         self.width = width
     def codec(self, codec):
         self.codec = codec
-    def benchmark_stream (self, benchmark_stream):
-        self.benchmark_stream = benchmark_stream
-    def benchmark_fps (self, benchmark_fps):
-        self.benchmark_fps = benchmark_fps
+    def performance_stream (self, performance_stream):
+        self.performance_stream = performance_stream
+    def performance_fps (self, performance_fps):
+        self.performance_fps = performance_fps
     def init_stream_number (self, init_stream_number):
         self.init_stream_number = init_stream_number
     def dispatch_cmdline (self, dispatch_cmdline):
@@ -82,14 +82,14 @@ class MediaContent:
     def linux_perf_cmdlines(self, linux_perf_cmdlines):
         self.linux_perf_cmdlines = linux_perf_cmdlines
 
-########### James.Iwan@intel.com Bench Perf ######################################
+########### James.Iwan@intel.com MSPerf ######################################
 def main():
     startTime = time.time()
     # Collect command line arguments
-    parser = argparse.ArgumentParser(description='MEDIA MULTISTREAM BENCHMARKING v0.20.04.27')
+    parser = argparse.ArgumentParser(description='MEDIA MULTISTREAM performance v0.20.04.27')
     parser.add_argument('workloads_path',help='Full path option for workload_directories/ OR for single workload_file')
-    parser.add_argument('--skip-ffmpeg', '--skip_ffmpeg', action='store_true', help='skipping benchmark that use FFMPEG app')
-    parser.add_argument('--skip-msdk', '--skip_msdk', action='store_true', help='skipping benchmark that use MSDK/Sample app')
+    parser.add_argument('--skip-ffmpeg', '--skip_ffmpeg', action='store_true', help='skipping measure that use FFMPEG app')
+    parser.add_argument('--skip-msdk', '--skip_msdk', action='store_true', help='skipping measure that use MSDK/Sample app')
     parser.add_argument('--skip-perf', '--skip_perf', action='store_true', help='skipping linux perf stat Utilization, such as VD0/VD1/RCS/etc')
     parser.add_argument('--skip-perf-trace', '--skip_perf_trace', action='store_true', help='skipping linux perf stat additional Traces, such as GT-Freq/BW-Rd/BW-Wr/etc')
     parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
@@ -104,39 +104,39 @@ def main():
     parser.add_argument('-o', '--user_artifact_path', help='output directory for any artifacts')
     parser.add_argument('-log', '--output_log_file', help='print any run-log into this file onto main directory')
     parser.add_argument('-v', '--verbose', action='store_true', help='Dump debug related printout, such as each-cmdlines/version-log/etc')
-    global benchmarkargs
-    benchmarkargs = parser.parse_args()
+    global performanceargs
+    performanceargs = parser.parse_args()
 
     ################################# Baremetal or Docker/Container check ##################################
     artifacts_path_docker           = "/opt/data/artifacts"
     artifacts_path_baremetal        = os.getenv("HOME")
     isInsideContainer               = os.system("grep docker /proc/1/cgroup -qa")
 
-    if str(benchmarkargs.user_artifact_path) != "None":
-        artifacts_path_users = os.path.realpath(benchmarkargs.user_artifact_path)
+    if str(performanceargs.user_artifact_path) != "None":
+        artifacts_path_users = os.path.realpath(performanceargs.user_artifact_path)
         artifact_path = artifacts_path_users + "/"
     elif isInsideContainer == 0:
-        artifact_path = artifacts_path_docker  + "/benchmark/perf/"
+        artifact_path = artifacts_path_docker  + "/measure/perf/"
     else:
-        artifact_path = artifacts_path_baremetal  + "/benchmark/perf/"
+        artifact_path = artifacts_path_baremetal  + "/measure/perf/"
 
     ################################# Variable Assignment #################################################
-    starting_streamnumber           = str(benchmarkargs.initialized_multiStream) if benchmarkargs.initialized_multiStream else "all:1"
-    maximum_iteration               = int(benchmarkargs.numbers_of_iteration) if benchmarkargs.numbers_of_iteration else 1
-    maximum_multiStream             = int(benchmarkargs.maximum_multiStream) if benchmarkargs.maximum_multiStream else 99
-    maximum_workloads               = int(benchmarkargs.numbers_of_Workloads) if benchmarkargs.numbers_of_Workloads else 20
-    debug_verbose                   = True if benchmarkargs.verbose else False
-    tool_linux_perf                 = False if benchmarkargs.skip_perf else True
-    tool_linux_perf_trace           = False if benchmarkargs.skip_perf_trace else True
-    enable_debugfs                  = True if benchmarkargs.enable_debugfs else False
-    fps_constraint_enable           = True if benchmarkargs.constraint else False
-    skip_ffmpeg                     = True if benchmarkargs.skip_ffmpeg else False
-    skip_msdk                       = True if benchmarkargs.skip_msdk else False
-    encode_codec                    = str(benchmarkargs.encode_codec).lower() if benchmarkargs.encode_codec else "all"
-    overwrite_content_fps           = float(benchmarkargs.overwrite_content_fps) if benchmarkargs.overwrite_content_fps else 0
-    overwrite_content_resolution    = str(benchmarkargs.overwrite_content_resolution) if benchmarkargs.overwrite_content_resolution else "unavailable"
+    starting_streamnumber           = str(performanceargs.initialized_multiStream) if performanceargs.initialized_multiStream else "all:1"
+    maximum_iteration               = int(performanceargs.numbers_of_iteration) if performanceargs.numbers_of_iteration else 1
+    maximum_multiStream             = int(performanceargs.maximum_multiStream) if performanceargs.maximum_multiStream else 99
+    maximum_workloads               = int(performanceargs.numbers_of_Workloads) if performanceargs.numbers_of_Workloads else 20
+    debug_verbose                   = True if performanceargs.verbose else False
+    tool_linux_perf                 = False if performanceargs.skip_perf else True
+    tool_linux_perf_trace           = False if performanceargs.skip_perf_trace else True
+    enable_debugfs                  = True if performanceargs.enable_debugfs else False
+    fps_constraint_enable           = True if performanceargs.constraint else False
+    skip_ffmpeg                     = True if performanceargs.skip_ffmpeg else False
+    skip_msdk                       = True if performanceargs.skip_msdk else False
+    encode_codec                    = str(performanceargs.encode_codec).lower() if performanceargs.encode_codec else "all"
+    overwrite_content_fps           = float(performanceargs.overwrite_content_fps) if performanceargs.overwrite_content_fps else 0
+    overwrite_content_resolution    = str(performanceargs.overwrite_content_resolution) if performanceargs.overwrite_content_resolution else "unavailable"
     script_root_path                = os.path.dirname(os.path.realpath(__file__))
-    output_log_filename             = str(benchmarkargs.output_log_file) if str(benchmarkargs.output_log_file) != "None" else "benchperf.txt"
+    output_log_filename             = str(performanceargs.output_log_file) if str(performanceargs.output_log_file) != "None" else "msperf.txt"
     temp_path                       = "/tmp/perf/"
     ##################################################################################
     # Initiate artifacts directory
@@ -155,7 +155,7 @@ def main():
     ######################################################################################################
     if debug_verbose:
         printLog(output_log_handle, '#' * 69)
-        printLog(output_log_handle, 'PNP MEDIA BENCHMARKING v0.20.04.28')
+        printLog(output_log_handle, 'PNP MULTI STREAMS PERFORMANCE v0.20.05.19')
         printLog(output_log_handle, '#' * 69 + '\n')
     ######################################################################################################
     # Linux Perf pre-req
@@ -218,26 +218,26 @@ def main():
         raise sys.exit(1)
 
     ######################################################################################################
-    # Setup for Workloads directory or a  single Workload benchmarking
+    # Setup for Workloads directory or a  single Workload performance
     ######################################################################################################
     try:
-        benchmarkargs.workloads_path = os.path.realpath(benchmarkargs.workloads_path)
+        performanceargs.workloads_path = os.path.realpath(performanceargs.workloads_path)
         # checks if path is a directory
-        isDirectory = os.path.isdir(benchmarkargs.workloads_path)
+        isDirectory = os.path.isdir(performanceargs.workloads_path)
 
         # checks if path is a file
-        isFile = os.path.isfile(benchmarkargs.workloads_path)
+        isFile = os.path.isfile(performanceargs.workloads_path)
 
-        benchmark_sweeping_table = {}
+        performance_sweeping_table = {}
         content_fps_list    = {}
         content_height_list = {}
         content_codec_list  = {}
-        benchmark_object_list = {}
+        performance_object_list = {}
         printLog(output_log_handle, "\n")
         printLog(output_log_handle, '#' * 69)
 
         if (isDirectory):
-            content_path = str(benchmarkargs.workloads_path)
+            content_path = str(performanceargs.workloads_path)
             if (content_path[-1] != "/"):
                 content_path = content_path + "/"
             #################################################################################
@@ -254,69 +254,69 @@ def main():
 
                     printLog (output_log_handle, " Profiling: " + content_filename)
 
-                    if ffmpegffprobeCheck(output_log_handle, content_path, content_filename, temp_path, debug_verbose, benchmark_sweeping_table, content_fps_list, content_height_list, content_codec_list, benchmark_object_list):
+                    if ffmpegffprobeCheck(output_log_handle, content_path, content_filename, temp_path, debug_verbose, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list, performance_object_list):
                         if debug_verbose:
                             printLog(output_log_handle, " PASS: via FFMPEG/FFPROBE")
-                            printLog(output_log_handle, " content_fps =", benchmark_object_list[content_filename].fps_limit,", content_height =", benchmark_object_list[content_filename].height, ", content_codec =",benchmark_object_list[content_filename].codec, ", initialized_benchmark =",benchmark_sweeping_table[content_filename], "\n")
+                            printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_limit,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
 
-                    elif ContentNamingCheck(output_log_handle, content_filename, benchmark_sweeping_table, content_fps_list, content_height_list, content_codec_list):
+                    elif ContentNamingCheck(output_log_handle, content_filename, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list):
                         if debug_verbose:
                             printLog(output_log_handle, " PASS: via File-Naming-Format")
-                            printLog(output_log_handle, " content_fps =", benchmark_object_list[content_filename].fps_limit,", content_height =", benchmark_object_list[content_filename].height, ", content_codec =",benchmark_object_list[content_filename].codec, ", initialized_benchmark =",benchmark_sweeping_table[content_filename], "\n")
+                            printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_limit,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
 
                     if (float(overwrite_content_fps) > 0):
                         content_fps_list[content_filename] = float(overwrite_content_fps)
-                        benchmark_object_list[content_filename].fps_limit = float(overwrite_content_fps)
+                        performance_object_list[content_filename].fps_limit = float(overwrite_content_fps)
 
             content_list_temp_fh.close()
 
         elif (isFile):
-            content_path, content_filename = os.path.split(benchmarkargs.workloads_path)
+            content_path, content_filename = os.path.split(performanceargs.workloads_path)
             content_path = content_path + "/" # required because the extraction dir/filename above doesn't include the "/" character.
             printLog(output_log_handle, " Profiling: " + content_filename)
             content_filename = content_filename.rstrip()
-            if ffmpegffprobeCheck(output_log_handle, content_path, content_filename, temp_path, debug_verbose, benchmark_sweeping_table, content_fps_list, content_height_list, content_codec_list, benchmark_object_list):
+            if ffmpegffprobeCheck(output_log_handle, content_path, content_filename, temp_path, debug_verbose, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list, performance_object_list):
                 if debug_verbose:
                     printLog(output_log_handle, " PASS: via FFMPEG/FFPROBE")
-                    printLog(output_log_handle, " content_fps =", benchmark_object_list[content_filename].fps_limit,", content_height =", benchmark_object_list[content_filename].height, ", content_codec =",benchmark_object_list[content_filename].codec, ", initialized_benchmark =",benchmark_sweeping_table[content_filename], "\n")
+                    printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_limit,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
 
-            elif ContentNamingCheck(output_log_handle, content_filename, benchmark_sweeping_table, content_fps_list, content_height_list, content_codec_list):
+            elif ContentNamingCheck(output_log_handle, content_filename, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list):
                 if debug_verbose:
                     printLog(output_log_handle, " PASS: via File-Naming-Format")
-                    printLog(output_log_handle, " content_fps =", benchmark_object_list[content_filename].fps_limit,", content_height =", benchmark_object_list[content_filename].height, ", content_codec =",benchmark_object_list[content_filename].codec, ", initialized_benchmark =",benchmark_sweeping_table[content_filename], "\n")
+                    printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_limit,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
 
             if (float(overwrite_content_fps) > 0):
                 content_fps_list[content_filename] = float(overwrite_content_fps)
-                benchmark_object_list[content_filename].fps_limit = float(overwrite_content_fps)
+                performance_object_list[content_filename].fps_limit = float(overwrite_content_fps)
 
         else:
-            message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + benchmarkargs.workloads_path)
+            message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + performanceargs.workloads_path)
             raise sys.exit(1)
 
 
     except:
-        message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + benchmarkargs.workloads_path + " OR ")
+        message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + performanceargs.workloads_path + " OR ")
         message_block(output_log_handle,'white', "Install FFMPEG/FFPROBE OR Rename content to the following format <clipname>_<width>x<height>p_<bitrate>_<content_fps>_<total_frames>.<codec>")
         raise sys.exit(1)
 
     ##################################################################################
-    # Iterating benchmark applications
+    # Iterating measure applications
     # 1st SMT
     # 2nd FFMPEG
     # 3rd TBD/continue..
     ##################################################################################
-    benchmark_starttime = time.time()
-    benchmark_datetime  = str(time.ctime()) # to be used for archiving purposes.
-    for benchmark_applications in range (2):
+    performance_starttime = time.time()
+    performance_datetime  = str(time.ctime()) # to be used for archiving purposes.
+    for performance_applications in range (2):
         required_information_file = os.path.dirname(os.path.realpath(__file__))
-        if (benchmark_applications == 0) and not skip_msdk:
+        if (performance_applications == 0) and not skip_msdk:
             required_information_file += "/por_SMT_LB.txt"
             ffmpeg_mode = False
-            benchmark_app_tag = "SMT"
-        elif (benchmark_applications == 1) and not skip_ffmpeg:
+            performance_app_tag = "SMT"
+        elif (performance_applications == 1) and not skip_ffmpeg:
             required_information_file += "/por_FFMPEG_LB.txt"
             ffmpeg_mode = True
-            benchmark_app_tag = "FFMPEG"
+            performance_app_tag = "FFMPEG"
         else:
             continue
         ######################################################################################################
@@ -326,25 +326,25 @@ def main():
             with open(required_information_file, 'r') as configfile:
                 for workloadline in configfile:
                     if (not re.search("^#", str(workloadline))):
-                        if (re.search(r"^720p_hevc-avc:\s", str(workloadline))): benchmark_cmdline_720p_hevc2avc = workloadline.replace("720p_hevc-avc: ", "")
-                        if (re.search(r"^1080p_hevc-avc:\s", str(workloadline))): benchmark_cmdline_1080p_hevc2avc = workloadline.replace("1080p_hevc-avc: ", "")
-                        if (re.search(r"^2160p_hevc-avc:\s", str(workloadline))): benchmark_cmdline_2160p_hevc2avc = workloadline.replace("2160p_hevc-avc: ", "")
-                        if (re.search(r"^720p_avc-avc:\s", str(workloadline))): benchmark_cmdline_720p_avc2avc = workloadline.replace("720p_avc-avc: ", "")
-                        if (re.search(r"^1080p_avc-avc:\s", str(workloadline))): benchmark_cmdline_1080p_avc2avc = workloadline.replace("1080p_avc-avc: ", "")
-                        if (re.search(r"^2160p_avc-avc:\s", str(workloadline))): benchmark_cmdline_2160p_avc2avc = workloadline.replace("2160p_avc-avc: ", "")
-                        if (re.search(r"^720p_hevc-hevc:\s", str(workloadline))): benchmark_cmdline_720p_hevc2hevc = workloadline.replace("720p_hevc-hevc: ", "")
-                        if (re.search(r"^1080p_hevc-hevc:\s", str(workloadline))): benchmark_cmdline_1080p_hevc2hevc = workloadline.replace("1080p_hevc-hevc: ", "")
-                        if (re.search(r"^2160p_hevc-hevc:\s", str(workloadline))): benchmark_cmdline_2160p_hevc2hevc = workloadline.replace("2160p_hevc-hevc: ", "")
-                        if (re.search(r"^720p_avc-hevc:\s", str(workloadline))): benchmark_cmdline_720p_avc2hevc = workloadline.replace("720p_avc-hevc: ", "")
-                        if (re.search(r"^1080p_avc-hevc:\s", str(workloadline))): benchmark_cmdline_1080p_avc2hevc = workloadline.replace("1080p_avc-hevc: ", "")
-                        if (re.search(r"^2160p_avc-hevc:\s", str(workloadline))): benchmark_cmdline_2160p_avc2hevc = workloadline.replace("2160p_avc-hevc: ", "")
+                        if (re.search(r"^720p_hevc-avc:\s", str(workloadline))): performance_cmdline_720p_hevc2avc = workloadline.replace("720p_hevc-avc: ", "")
+                        if (re.search(r"^1080p_hevc-avc:\s", str(workloadline))): performance_cmdline_1080p_hevc2avc = workloadline.replace("1080p_hevc-avc: ", "")
+                        if (re.search(r"^2160p_hevc-avc:\s", str(workloadline))): performance_cmdline_2160p_hevc2avc = workloadline.replace("2160p_hevc-avc: ", "")
+                        if (re.search(r"^720p_avc-avc:\s", str(workloadline))): performance_cmdline_720p_avc2avc = workloadline.replace("720p_avc-avc: ", "")
+                        if (re.search(r"^1080p_avc-avc:\s", str(workloadline))): performance_cmdline_1080p_avc2avc = workloadline.replace("1080p_avc-avc: ", "")
+                        if (re.search(r"^2160p_avc-avc:\s", str(workloadline))): performance_cmdline_2160p_avc2avc = workloadline.replace("2160p_avc-avc: ", "")
+                        if (re.search(r"^720p_hevc-hevc:\s", str(workloadline))): performance_cmdline_720p_hevc2hevc = workloadline.replace("720p_hevc-hevc: ", "")
+                        if (re.search(r"^1080p_hevc-hevc:\s", str(workloadline))): performance_cmdline_1080p_hevc2hevc = workloadline.replace("1080p_hevc-hevc: ", "")
+                        if (re.search(r"^2160p_hevc-hevc:\s", str(workloadline))): performance_cmdline_2160p_hevc2hevc = workloadline.replace("2160p_hevc-hevc: ", "")
+                        if (re.search(r"^720p_avc-hevc:\s", str(workloadline))): performance_cmdline_720p_avc2hevc = workloadline.replace("720p_avc-hevc: ", "")
+                        if (re.search(r"^1080p_avc-hevc:\s", str(workloadline))): performance_cmdline_1080p_avc2hevc = workloadline.replace("1080p_avc-hevc: ", "")
+                        if (re.search(r"^2160p_avc-hevc:\s", str(workloadline))): performance_cmdline_2160p_avc2hevc = workloadline.replace("2160p_avc-hevc: ", "")
         except:
-            message_block(output_log_handle,'red', 'Unable to locate required file: ' + benchmarkargs.required_information_file)
+            message_block(output_log_handle,'red', 'Unable to locate required file: ' + performanceargs.required_information_file)
             raise sys.exit(1)
 
 
         ##################################################################################
-        # Iterating benchmark sequence
+        # Iterating measure sequence
         # 1st HEVC-AVC
         # 2nd AVC-AVC
         # 3rd HEVC-HEVC
@@ -352,48 +352,48 @@ def main():
         # 5th TBD/continue..
         ##################################################################################
         startTime_sequence = time.time()
-        for benchmark_sequence in range(4):
+        for performance_sequence in range(4):
             ##################################################################################
-            # Initiate outputfile benchmark result as per last best stream# and fps#
-            # Initiate outputfile benchmark table sweep as per last best stream# and fps#
+            # Initiate outputfile measure result as per last best stream# and fps#
+            # Initiate outputfile measure table sweep as per last best stream# and fps#
             ##################################################################################
 
-            if benchmark_sequence == 0 and (encode_codec == "all" or encode_codec == "avc"):
-                benchmark_tag = "HEVC-AVC"
-            elif benchmark_sequence == 1 and (encode_codec == "all" or encode_codec == "avc"):
-                benchmark_tag = "AVC-AVC"
-            elif benchmark_sequence == 2 and (encode_codec == "all" or encode_codec == "hevc"):
-                benchmark_tag = "HEVC-HEVC"
-            elif benchmark_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc"):
-                benchmark_tag = "AVC-HEVC"
+            if performance_sequence == 0 and (encode_codec == "all" or encode_codec == "avc"):
+                performance_tag = "HEVC-AVC"
+            elif performance_sequence == 1 and (encode_codec == "all" or encode_codec == "avc"):
+                performance_tag = "AVC-AVC"
+            elif performance_sequence == 2 and (encode_codec == "all" or encode_codec == "hevc"):
+                performance_tag = "HEVC-HEVC"
+            elif performance_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc"):
+                performance_tag = "AVC-HEVC"
             else:
                 continue
 
-            output_log_file_benchmark_media = re.sub(r'.txt', "_" + benchmark_app_tag + "_" + benchmark_tag + "_benchmark.csv", output_log_file)
-            output_log_file_benchmark_sweep = re.sub(r'.txt', "_" + benchmark_app_tag + "_" + benchmark_tag + "_benchmark_table_sweep.csv", output_log_file)
+            output_log_file_performance_media = re.sub(r'.txt', "_" + performance_app_tag + "_" + performance_tag + "_performance.csv", output_log_file)
+            output_log_file_performance_sweep = re.sub(r'.txt', "_" + performance_app_tag + "_" + performance_tag + "_performance_table_sweep.csv", output_log_file)
 
             ##################################################################################
             # Archiving potential duplicate runs.
             ##################################################################################
-            isFile = os.path.isfile(output_log_file_benchmark_media)
+            isFile = os.path.isfile(output_log_file_performance_media)
             if (isFile):
-                archived_filepath       = "archived_" + benchmark_datetime
+                archived_filepath       = "archived_" + performance_datetime
                 archived_filepath       = re.sub(r'\:', "", archived_filepath)
                 archived_filepath       = re.sub(r'\s', "_", archived_filepath)
                 isDirectory             = os.path.isdir(artifact_path + archived_filepath)
                 if not isDirectory:
                     archived_command    = "mkdir "  + artifact_path + archived_filepath
                     os.system(archived_command)
-                move_command = "mv " + artifact_path + "*" + benchmark_app_tag + "*" + benchmark_tag + "* " + artifact_path + archived_filepath + "/."
+                move_command = "mv " + artifact_path + "*" + performance_app_tag + "*" + performance_tag + "* " + artifact_path + archived_filepath + "/."
                 os.system(move_command)
 
 
             ##################################################################################
-            # Initiate temporary directory for calculation and post-processing data. ReCreated for every benchmark sequence.
+            # Initiate temporary directory for calculation and post-processing data. ReCreated for every measure sequence.
             ##################################################################################
             directory_check         = os.path.isdir(temp_path)
-            filepath_free_info      = temp_path + benchmark_app_tag + "_" + benchmark_tag + "_" + "free.txt"
-            filepath_lscpu_info     = temp_path + benchmark_app_tag + "_" + benchmark_tag + "_" + "lscpu.txt"
+            filepath_free_info      = temp_path + performance_app_tag + "_" + performance_tag + "_" + "free.txt"
+            filepath_lscpu_info     = temp_path + performance_app_tag + "_" + performance_tag + "_" + "lscpu.txt"
 
             if not directory_check:
                 os.system("mkdir " + temp_path)
@@ -415,13 +415,13 @@ def main():
                 directory_check = os.path.isdir(iteration_path_cmd)
                 if not directory_check: os.system("mkdir " + iteration_path_cmd)
 
-            bm_output_handle = open(output_log_file_benchmark_media, 'w')
-            benchmark = "clipname, benchmark_session, fps, runtime(s), GPU_Vid0(%), GPU_Vid1(%), GPU_Render(%), AVG_CPU(%), RC6(%), GPU_Freq_Avg(MHz), MEM_RES_Avg(MB/Session), MEM_RES_Total(MB), AVG_MEM(%), PHYSICAL_MEM(MB), CPU_IPC, TOTAL_CPU(%), GPU_MEM_RES_Avg(MB/Session), GPU_MEM_RES_Total(MB)\n"
-            bm_output_handle.write(benchmark)
-            benchmark_table_sweep = output_log_file_benchmark_sweep
-            bt_output_handle = open(benchmark_table_sweep, 'w')
+            bm_output_handle = open(output_log_file_performance_media, 'w')
+            measure = "clipname, performance_session, fps, runtime(s), GPU_Vid0(%), GPU_Vid1(%), GPU_Render(%), AVG_CPU(%), RC6(%), GPU_Freq_Avg(MHz), MEM_RES_Avg(MB/Session), MEM_RES_Total(MB), AVG_MEM(%), PHYSICAL_MEM(MB), CPU_IPC, TOTAL_CPU(%), GPU_MEM_RES_Avg(MB/Session), GPU_MEM_RES_Total(MB)\n"
+            bm_output_handle.write(measure)
+            performance_table_sweep = output_log_file_performance_sweep
+            bt_output_handle = open(performance_table_sweep, 'w')
 
-            ########### James.Iwan@intel.com Bench Perf ######################################
+            ########### James.Iwan@intel.com Multi Streams Perf ######################################
             # ITERATION/WORKLOADS/etc START HERE
             ##################################################################################
             for key in content_fps_list:
@@ -430,72 +430,72 @@ def main():
                 if curContent == "":
                     printLog(output_log_handle, "SCRIPT ERROR: empty content") # exit.
                     exit(1)
-                elif (re.search(r'.*.mp4$', curContent)) and (benchmark_app_tag == "SMT"):
+                elif (re.search(r'.*.mp4$', curContent)) and (performance_app_tag == "SMT"):
                     printLog(output_log_handle, "MSDK SKIP: .mp4 file unsupported by msdk currently: ", curContent) # skip
                     continue
 
 
-                benchmark_sweeping_table[curContent] = []
+                performance_sweeping_table[curContent] = []
 
-                if (benchmark_sequence == 0) and (encode_codec == "all" or encode_codec == "avc"):  # HEVC-AVC benchmark sequence
-                    if benchmark_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
+                if (performance_sequence == 0) and (encode_codec == "all" or encode_codec == "avc"):  # HEVC-AVC measure sequence
+                    if performance_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
                         continue
-                elif (benchmark_sequence == 1) and (encode_codec == "all" or encode_codec == "avc"):  # AVC-AVC benchmark sequence
-                    if benchmark_object_list[curContent].codec != "h264":  # skip if its not h264 input clip
+                elif (performance_sequence == 1) and (encode_codec == "all" or encode_codec == "avc"):  # AVC-AVC measure sequence
+                    if performance_object_list[curContent].codec != "h264":  # skip if its not h264 input clip
                         continue
-                elif (benchmark_sequence == 2) and (encode_codec == "all" or encode_codec == "hevc"):  # HEVC-HEVC benchmark sequence
-                    if benchmark_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
+                elif (performance_sequence == 2) and (encode_codec == "all" or encode_codec == "hevc"):  # HEVC-HEVC measure sequence
+                    if performance_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
                         continue
-                elif (benchmark_sequence == 3) and (encode_codec == "all" or encode_codec == "hevc"):  # AVC-HEVC benchmark sequence
-                    if benchmark_object_list[curContent].codec != "h264":  # skip if its not HEVC input clip
+                elif (performance_sequence == 3) and (encode_codec == "all" or encode_codec == "hevc"):  # AVC-HEVC measure sequence
+                    if performance_object_list[curContent].codec != "h264":  # skip if its not HEVC input clip
                         continue
                 else:
                     continue
                 ##################################################################################
                 # UNSUPPORTED checks and skips
                 ##################################################################################
-                if  (benchmark_object_list[curContent].height != 720 and
-                    benchmark_object_list[curContent].height != 1080 and
-                    benchmark_object_list[curContent].height != 2160):
+                if  (performance_object_list[curContent].height != 720 and
+                    performance_object_list[curContent].height != 1080 and
+                    performance_object_list[curContent].height != 2160):
 
-                    printLog(output_log_handle, "Content height is not supported: ", curContent, ":", benchmark_object_list[curContent].height)
+                    printLog(output_log_handle, "Content height is not supported: ", curContent, ":", performance_object_list[curContent].height)
                     continue
 
                 ##################################################################################
                 # Create initialize streamnumber for each resolution
                 ##################################################################################
-                if benchmark_object_list[curContent].height == 720:
+                if performance_object_list[curContent].height == 720:
                     streamnumber = init_stream_720p
-                    benchmark_object_list[curContent].init_stream_number = init_stream_720p
-                elif benchmark_object_list[curContent].height == 1080:
+                    performance_object_list[curContent].init_stream_number = init_stream_720p
+                elif performance_object_list[curContent].height == 1080:
                     streamnumber = init_stream_1080p
-                    benchmark_object_list[curContent].init_stream_number = init_stream_1080p
-                elif benchmark_object_list[curContent].height == 2160:
+                    performance_object_list[curContent].init_stream_number = init_stream_1080p
+                elif performance_object_list[curContent].height == 2160:
                     streamnumber = init_stream_2160p
-                    benchmark_object_list[curContent].init_stream_number = init_stream_2160p
+                    performance_object_list[curContent].init_stream_number = init_stream_2160p
                 else:
                     streamnumber = 1
-                    benchmark_object_list[curContent].init_stream_number = 1
+                    performance_object_list[curContent].init_stream_number = 1
 
                 nextStreamNumber = True if int(streamnumber) > 0 else False
                 content_fps_limit = 0
-                benchmark_stream = 0
-                benchmark_fps = 0
-                benchmark_exetime = 0
-                benchmark_vid0_u = 0
-                benchmark_vid1_u = 0
-                benchmark_render_u = 0
-                benchmark_cpu_ipc = 0
-                benchmark_rc6_u = 0
-                benchmark_avg_freq = 0
-                benchmark_avg_vm_mem = 0
-                benchmark_avg_shr_mem = 0
-                benchmark_avg_res_mem = 0
-                benchmark_total_res_mem = 0
-                benchmark_max_cpu_percentage = 0
-                benchmark_max_physical_mem = 0
-                benchmark_avg_res_gpumem = 0
-                benchmark_total_res_gpumem = 0
+                performance_stream = 0
+                performance_fps = 0
+                performance_exetime = 0
+                performance_vid0_u = 0
+                performance_vid1_u = 0
+                performance_render_u = 0
+                performance_cpu_ipc = 0
+                performance_rc6_u = 0
+                performance_avg_freq = 0
+                performance_avg_vm_mem = 0
+                performance_avg_shr_mem = 0
+                performance_avg_res_mem = 0
+                performance_total_res_mem = 0
+                performance_max_cpu_percentage = 0
+                performance_max_physical_mem = 0
+                performance_avg_res_gpumem = 0
+                performance_total_res_gpumem = 0
 
                 while nextStreamNumber and (streamnumber <= maximum_multiStream):
                     shell_script_mms = temp_path + "mms.sh" # Move this to /tmp/perf/
@@ -508,10 +508,10 @@ def main():
                     content_split           = key.replace('.', '_').split('_')
                     clip_name               = content_split[0]
                     clip_resolution         = content_split[1]
-                    clip_session_iter_tag   = benchmark_app_tag + "_" + benchmark_tag + "_" +  clip_name+ "_" + clip_resolution + "_" + str(streamnumber)
+                    clip_session_iter_tag   = performance_app_tag + "_" + performance_tag + "_" +  clip_name+ "_" + clip_resolution + "_" + str(streamnumber)
 
                     if fps_constraint_enable:
-                        fps_constraint = benchmark_object_list[curContent].fps_limit
+                        fps_constraint = performance_object_list[curContent].fps_limit
                     else:
                         fps_constraint  = 0
 
@@ -520,34 +520,34 @@ def main():
                         # Construct 720p/1080p/2160p Command lines for
                         ##################################################################################
                         dispatch_cmdline = transcode_input_clip = "N/A"
-                        if benchmark_sequence == 0 and (encode_codec == "all" or encode_codec == "avc"): # HEVC-AVC benchmark sequence
-                            if benchmark_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_720p_hevc2avc
-                            elif benchmark_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_1080p_hevc2avc
-                            elif benchmark_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_2160p_hevc2avc
-                        elif benchmark_sequence == 1 and (encode_codec == "all" or encode_codec == "avc"): # AVC-AVC benchmark sequence
-                            if benchmark_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_720p_avc2avc
-                            elif benchmark_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_1080p_avc2avc
-                            elif benchmark_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_2160p_avc2avc
-                        elif benchmark_sequence == 2 and (encode_codec == "all" or encode_codec == "hevc"): # HEVC-HEVC benchmark sequence
-                            if benchmark_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_720p_hevc2hevc
-                            elif benchmark_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_1080p_hevc2hevc
-                            elif benchmark_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_2160p_hevc2hevc
-                        elif benchmark_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc"): # AVC-HEVC benchmark sequence
-                            if benchmark_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_720p_avc2hevc
-                            elif benchmark_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_1080p_avc2hevc
-                            elif benchmark_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
-                                dispatch_cmdline = benchmark_cmdline_2160p_avc2hevc
+                        if performance_sequence == 0 and (encode_codec == "all" or encode_codec == "avc"): # HEVC-AVC measure sequence
+                            if performance_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_720p_hevc2avc
+                            elif performance_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_1080p_hevc2avc
+                            elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_2160p_hevc2avc
+                        elif performance_sequence == 1 and (encode_codec == "all" or encode_codec == "avc"): # AVC-AVC measure sequence
+                            if performance_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_720p_avc2avc
+                            elif performance_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_1080p_avc2avc
+                            elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_2160p_avc2avc
+                        elif performance_sequence == 2 and (encode_codec == "all" or encode_codec == "hevc"): # HEVC-HEVC measure sequence
+                            if performance_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_720p_hevc2hevc
+                            elif performance_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_1080p_hevc2hevc
+                            elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_2160p_hevc2hevc
+                        elif performance_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc"): # AVC-HEVC measure sequence
+                            if performance_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_720p_avc2hevc
+                            elif performance_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_1080p_avc2hevc
+                            elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_2160p_avc2hevc
 
 
                         if (ffmpeg_mode):
@@ -555,10 +555,10 @@ def main():
                             dispatch_cmdline = dispatch_cmdline.replace("-i <>", transcode_input_clip)
 
                         else: # SMT section (DEFAULT)
-                            if benchmark_object_list[curContent].codec == "hevc":
+                            if performance_object_list[curContent].codec == "hevc":
                                 transcode_input_clip = "-i::h265 " + content_path + key
                                 dispatch_cmdline = dispatch_cmdline.replace("-i::h265 <>", transcode_input_clip)
-                            elif benchmark_object_list[curContent].codec == "h264":
+                            elif performance_object_list[curContent].codec == "h264":
                                 transcode_input_clip = "-i::h264 " + content_path + key
                                 dispatch_cmdline = dispatch_cmdline.replace("-i::h264 <>", transcode_input_clip)
 
@@ -605,7 +605,7 @@ def main():
                         else: # SMT section (DEFAULT)
                             dispatch_cmdline = dispatch_cmdline + " >> " + temp_path + "console_log.txt 2>&1" + "\n"
 
-                        benchmark_object_list[curContent].dispatch_cmdline = dispatch_cmdline
+                        performance_object_list[curContent].dispatch_cmdline = dispatch_cmdline
                         shell_script_handle.write("echo " + clip_session_iter_tag + "\n")
                         shell_script_handle.write(dispatch_cmdline)
                     shell_script_handle.close()
@@ -621,8 +621,8 @@ def main():
                     for j in range(maximum_iteration):
                         printLog(output_log_handle, "\n")
                         printLog(output_log_handle, '#' * 69)
-                        print_benchmark_label = "PNP MEDIA " + benchmark_app_tag + " " + benchmark_tag + ": " + "MULTISTREAM: " + str(streamnumber) + " & ITERATION: " + str(j)
-                        printLog(output_log_handle, print_benchmark_label)
+                        print_performance_label = "PNP MEDIA " + performance_app_tag + " " + performance_tag + ": " + "MULTISTREAM: " + str(streamnumber) + " & ITERATION: " + str(j)
+                        printLog(output_log_handle, print_performance_label)
                         printLog(output_log_handle, '#' * 69)
 
                         linux_perf_dump = temp_path + clip_session_iter_tag + "_" + str(j) + "_metrics.txt"
@@ -631,20 +631,20 @@ def main():
                         filename_mem_bw_trace = clip_session_iter_tag + "_" + str(j) + "_mem_bw_traces"
                         linux_perf_mem_bw_trace_dump = temp_path + filename_mem_bw_trace + ".txt"
 
-                        benchmark_object_list[curContent].temp_path                       = temp_path
-                        benchmark_object_list[curContent].linux_perf_dump                 = linux_perf_dump
-                        benchmark_object_list[curContent].filename_gpu_freq_trace         = filename_gpu_freq_trace
-                        benchmark_object_list[curContent].linux_perf_gpu_freq_trace_dump  = linux_perf_gpu_freq_trace_dump
-                        benchmark_object_list[curContent].filename_mem_bw_trace           = filename_mem_bw_trace
-                        benchmark_object_list[curContent].linux_perf_mem_bw_trace_dump    = linux_perf_mem_bw_trace_dump
-                        benchmark_object_list[curContent].tool_linux_perf_trace           = tool_linux_perf_trace
-                        benchmark_object_list[curContent].ffmpeg_mode                     = ffmpeg_mode
+                        performance_object_list[curContent].temp_path                       = temp_path
+                        performance_object_list[curContent].linux_perf_dump                 = linux_perf_dump
+                        performance_object_list[curContent].filename_gpu_freq_trace         = filename_gpu_freq_trace
+                        performance_object_list[curContent].linux_perf_gpu_freq_trace_dump  = linux_perf_gpu_freq_trace_dump
+                        performance_object_list[curContent].filename_mem_bw_trace           = filename_mem_bw_trace
+                        performance_object_list[curContent].linux_perf_mem_bw_trace_dump    = linux_perf_mem_bw_trace_dump
+                        performance_object_list[curContent].tool_linux_perf_trace           = tool_linux_perf_trace
+                        performance_object_list[curContent].ffmpeg_mode                     = ffmpeg_mode
 
-                        graphic_model = "generic" # must search for profiling what graphic model that we benchmarking.
+                        graphic_model = "generic" # must search for profiling what graphic model that we performance.
                         metrics, gpu_freq_traces, mem_bw_traces = selectLinuxPerfMetrics(temp_path, graphic_model)
 
                         ########### Scott.Rowe@intel.com Linux Perf ################################################
-                        linux_perf_cmdlines = os.path.dirname(os.path.realpath(__file__)) + "/MMSStandAlone.py"
+                        linux_perf_cmdlines = os.path.dirname(os.path.realpath(__file__)) + "/MSGo.py"
                         if tool_linux_perf:
                             linux_perf_cmdlines = "perf stat -a -e {} -o " + linux_perf_dump + " " + linux_perf_cmdlines
                             linux_perf_cmdlines = linux_perf_cmdlines.format(metrics)
@@ -653,15 +653,15 @@ def main():
                             linux_perf_cmdlines = "perf stat -I 100 -a -e {} -o " + linux_perf_mem_bw_trace_dump + " " + linux_perf_cmdlines
                             linux_perf_cmdlines = linux_perf_cmdlines.format(mem_bw_traces)
 
-                        benchmark_object_list[curContent].linux_perf_cmdlines = linux_perf_cmdlines
+                        performance_object_list[curContent].linux_perf_cmdlines = linux_perf_cmdlines
                         p = subprocess.Popen(linux_perf_cmdlines, shell=True, stderr=subprocess.PIPE)
                         #p.send_signal(signal.SIGINT)
                         p.wait()
                         ########### James.Iwan@intel.com Linux Perf ################################################
                         if (p.returncode != 0):
                             if debug_verbose:
-                                printLog(output_log_handle, " [VERBOSE][CMD]", benchmark_object_list[curContent].dispatch_cmdline)
-                                printLog(output_log_handle, " [VERBOSE][LINUX_PERF_TOOLS]", benchmark_object_list[curContent].linux_perf_cmdlines, "\n")
+                                printLog(output_log_handle, " [VERBOSE][CMD]", performance_object_list[curContent].dispatch_cmdline)
+                                printLog(output_log_handle, " [VERBOSE][LINUX_PERF_TOOLS]", performance_object_list[curContent].linux_perf_cmdlines, "\n")
                                 printLog(output_log_handle, " Exit early, error in submitted commands:", str(p.returncode))
                             else:
                                 printLog(output_log_handle, " Exit early, error in submitted commands:", str(p.returncode), "(please use -v to debug further)")
@@ -674,8 +674,8 @@ def main():
                         ############################################################################################
                         filename_gpumem_trace = clip_session_iter_tag + "_" + str(j) + "_gpumem_trace"
                         gemobject_gpumem_trace_dump = temp_path + filename_gpumem_trace + ".txt"
-                        benchmark_object_list[curContent].filename_gpumem_trace = filename_gpumem_trace
-                        benchmark_object_list[curContent].gemobject_gpumem_trace_dump = gemobject_gpumem_trace_dump
+                        performance_object_list[curContent].filename_gpumem_trace = filename_gpumem_trace
+                        performance_object_list[curContent].gemobject_gpumem_trace_dump = gemobject_gpumem_trace_dump
                         os.system("mv " + temp_path + clip_session_iter_tag + "_gpumem_trace.txt " + gemobject_gpumem_trace_dump)
 
                         ############################################################################################
@@ -683,15 +683,15 @@ def main():
                         ############################################################################################
                         filename_cpumem_trace = clip_session_iter_tag + "_" + str(j) + "_cpumem_trace"
                         top_cpumem_trace_dump = temp_path + filename_cpumem_trace + ".txt"
-                        benchmark_object_list[curContent].filename_cpumem_trace = filename_cpumem_trace
-                        benchmark_object_list[curContent].top_cpumem_trace_dump = top_cpumem_trace_dump
+                        performance_object_list[curContent].filename_cpumem_trace = filename_cpumem_trace
+                        performance_object_list[curContent].top_cpumem_trace_dump = top_cpumem_trace_dump
                         os.system("mv " + temp_path + clip_session_iter_tag + "_cpumem_trace.txt " + top_cpumem_trace_dump)
 
                         ############################################################################################
 
                         nextStreamNumber0, avg_fps, exetime, vid0_u, vid1_u, render_u, cpu_ipc, rc6_u, avg_freq , avg_vm_mem, avg_shr_mem, avg_res_mem, total_res_mem, \
                         avg_mem_utilization, max_physical_mem, avg_cpu_percentage, max_cpu_percentage, avg_res_gpumem, total_res_gpumem  = \
-                        postprocess_multistream(output_log_handle, streamnumber, j, debug_verbose, filepath_free_info, filepath_lscpu_info, benchmark_object_list[curContent])
+                        postprocess_multistream(output_log_handle, streamnumber, j, debug_verbose, filepath_free_info, filepath_lscpu_info, performance_object_list[curContent])
 
                         if j == 0:
                             move_command = "mv " + temp_path + "*transcode_log.txt " + temp_path + "iteration_0/."
@@ -716,122 +716,122 @@ def main():
                     # Compare and Decide
                     ##################################################################################
                     if nextStreamNumber0 or nextStreamNumber1 or nextStreamNumber2 or nextStreamNumber3:
-                        benchmark_stream    = streamnumber
-                        benchmark_fps       = round(statistics.mean(avg_fps_split),1)
-                        benchmark_exetime   = exetime
-                        benchmark_vid0_u    = vid0_u
-                        benchmark_vid1_u    = vid1_u
-                        benchmark_render_u  = render_u
-                        benchmark_cpu_ipc     = cpu_ipc
-                        benchmark_rc6_u     = rc6_u
-                        benchmark_avg_freq  = avg_freq
-                        benchmark_avg_vm_mem = avg_vm_mem
-                        benchmark_avg_shr_mem = avg_shr_mem
-                        benchmark_avg_res_mem = avg_res_mem
-                        benchmark_total_res_mem = total_res_mem
-                        benchmark_avg_mem_percentage =  avg_mem_utilization
-                        benchmark_max_physical_mem =  max_physical_mem
-                        benchmark_avg_cpu_percentage =  avg_cpu_percentage
-                        benchmark_max_cpu_percentage =  max_cpu_percentage
-                        benchmark_avg_res_gpumem = avg_res_gpumem
-                        benchmark_total_res_gpumem = total_res_gpumem
-                        #printLog(output_log_handle, "benchmark_stream: ",benchmark_stream, "average_fps: ", benchmark_fps)
-                        benchmark_sweeping_table[key].append(benchmark_fps)
+                        performance_stream    = streamnumber
+                        performance_fps       = round(statistics.mean(avg_fps_split),1)
+                        performance_exetime   = exetime
+                        performance_vid0_u    = vid0_u
+                        performance_vid1_u    = vid1_u
+                        performance_render_u  = render_u
+                        performance_cpu_ipc     = cpu_ipc
+                        performance_rc6_u     = rc6_u
+                        performance_avg_freq  = avg_freq
+                        performance_avg_vm_mem = avg_vm_mem
+                        performance_avg_shr_mem = avg_shr_mem
+                        performance_avg_res_mem = avg_res_mem
+                        performance_total_res_mem = total_res_mem
+                        performance_avg_mem_percentage =  avg_mem_utilization
+                        performance_max_physical_mem =  max_physical_mem
+                        performance_avg_cpu_percentage =  avg_cpu_percentage
+                        performance_max_cpu_percentage =  max_cpu_percentage
+                        performance_avg_res_gpumem = avg_res_gpumem
+                        performance_total_res_gpumem = total_res_gpumem
+                        #printLog(output_log_handle, "performance_stream: ",performance_stream, "average_fps: ", performance_fps)
+                        performance_sweeping_table[key].append(performance_fps)
                         nextStreamNumber = True
                         if int(streamnumber) == 1:
-                            benchmark_table = key + "," + str(benchmark_fps)
-                            bt_output_handle.write(benchmark_table)
+                            performance_table = key + "," + str(performance_fps)
+                            bt_output_handle.write(performance_table)
                         else:
-                            benchmark_table = "," + str(benchmark_fps)
-                            bt_output_handle.write(benchmark_table)
+                            performance_table = "," + str(performance_fps)
+                            bt_output_handle.write(performance_table)
 
                         streamnumber = streamnumber + 1
                     elif int(streamnumber) == 1:
-                        benchmark_stream = 0
-                        benchmark_fps = round(statistics.mean(avg_fps_split), 1)
-                        benchmark_exetime = exetime
-                        benchmark_vid0_u = vid0_u
-                        benchmark_vid1_u = vid1_u
-                        benchmark_render_u = render_u
-                        benchmark_cpu_ipc = cpu_ipc
-                        benchmark_rc6_u = rc6_u
-                        benchmark_avg_freq = avg_freq
-                        benchmark_avg_vm_mem = avg_vm_mem
-                        benchmark_avg_shr_mem  = avg_shr_mem
-                        benchmark_total_res_mem = total_res_mem
-                        benchmark_avg_res_mem = avg_res_mem
-                        benchmark_avg_mem_percentage =  avg_mem_utilization
-                        benchmark_max_physical_mem =  max_physical_mem
-                        benchmark_avg_cpu_percentage =  avg_cpu_percentage
-                        benchmark_max_cpu_percentage =  max_cpu_percentage
-                        benchmark_avg_res_gpumem = avg_res_gpumem
-                        benchmark_total_res_gpumem = total_res_gpumem
-                        printLog(output_log_handle, " average current TPT: ",benchmark_stream, "average_fps: ", benchmark_fps)
-                        benchmark_sweeping_table[key].append(benchmark_fps)
+                        performance_stream = 0
+                        performance_fps = round(statistics.mean(avg_fps_split), 1)
+                        performance_exetime = exetime
+                        performance_vid0_u = vid0_u
+                        performance_vid1_u = vid1_u
+                        performance_render_u = render_u
+                        performance_cpu_ipc = cpu_ipc
+                        performance_rc6_u = rc6_u
+                        performance_avg_freq = avg_freq
+                        performance_avg_vm_mem = avg_vm_mem
+                        performance_avg_shr_mem  = avg_shr_mem
+                        performance_total_res_mem = total_res_mem
+                        performance_avg_res_mem = avg_res_mem
+                        performance_avg_mem_percentage =  avg_mem_utilization
+                        performance_max_physical_mem =  max_physical_mem
+                        performance_avg_cpu_percentage =  avg_cpu_percentage
+                        performance_max_cpu_percentage =  max_cpu_percentage
+                        performance_avg_res_gpumem = avg_res_gpumem
+                        performance_total_res_gpumem = total_res_gpumem
+                        printLog(output_log_handle, " average current TPT: ",performance_stream, "average_fps: ", performance_fps)
+                        performance_sweeping_table[key].append(performance_fps)
                         nextStreamNumber = False
-                        benchmark_table = key + "," + str(benchmark_fps)
-                        bt_output_handle.write(benchmark_table)
+                        performance_table = key + "," + str(performance_fps)
+                        bt_output_handle.write(performance_table)
                     else:
                         last_failing_fps = round(statistics.mean(avg_fps_split), 1)
-                        benchmark_sweeping_table[key].append(last_failing_fps) # to add the last failing multistreams.
+                        performance_sweeping_table[key].append(last_failing_fps) # to add the last failing multistreams.
                         nextStreamNumber = False
-                        benchmark_table = "," + str(last_failing_fps)
-                        bt_output_handle.write(benchmark_table)
+                        performance_table = "," + str(last_failing_fps)
+                        bt_output_handle.write(performance_table)
 
                     printLog(output_log_handle, "MULTISTREAM: Done")
 
                 ##################################################################################
-                # Before go to next workload, captured the benchmark result
+                # Before go to next workload, captured the measure result
                 ##################################################################################
-                benchmark = key + "," + str(benchmark_stream) + "," \
-                            + str(benchmark_fps)  + "," + str(benchmark_exetime) + "," \
-                            + str(benchmark_vid0_u) + "," + str(benchmark_vid1_u) + "," \
-                            + str(benchmark_render_u) + "," + str(benchmark_avg_cpu_percentage) + "," \
-                            + str(benchmark_rc6_u) + "," + str(benchmark_avg_freq) + "," \
-                            + str(benchmark_avg_res_mem) + "," + str(benchmark_total_res_mem) + "," \
-                            + str(benchmark_avg_mem_percentage) + "," + str(benchmark_max_physical_mem) + "," \
-                            + str(benchmark_cpu_ipc) + "," + str(benchmark_max_cpu_percentage) + "," \
-                            + str(benchmark_avg_res_gpumem) + "," + str(benchmark_total_res_gpumem) + "\n"
-                bm_output_handle.write(benchmark)
+                measure = key + "," + str(performance_stream) + "," \
+                            + str(performance_fps)  + "," + str(performance_exetime) + "," \
+                            + str(performance_vid0_u) + "," + str(performance_vid1_u) + "," \
+                            + str(performance_render_u) + "," + str(performance_avg_cpu_percentage) + "," \
+                            + str(performance_rc6_u) + "," + str(performance_avg_freq) + "," \
+                            + str(performance_avg_res_mem) + "," + str(performance_total_res_mem) + "," \
+                            + str(performance_avg_mem_percentage) + "," + str(performance_max_physical_mem) + "," \
+                            + str(performance_cpu_ipc) + "," + str(performance_max_cpu_percentage) + "," \
+                            + str(performance_avg_res_gpumem) + "," + str(performance_total_res_gpumem) + "\n"
+                bm_output_handle.write(measure)
 
-                benchmark_table = "\n"
-                bt_output_handle.write(benchmark_table)
+                performance_table = "\n"
+                bt_output_handle.write(performance_table)
 
-                if str(benchmark_sweeping_table[key])[1:-1] == "":
+                if str(performance_sweeping_table[key])[1:-1] == "":
                     printLog(output_log_handle, key, ": SKIPPED")
                 else:
-                    printLog(output_log_handle, " benchmark sessions of", key, ":", len(benchmark_sweeping_table[key]) - 1, ":", str(benchmark_sweeping_table[key])[1:-1])
+                    printLog(output_log_handle, " measure sessions of", key, ":", len(performance_sweeping_table[key]) - 1, ":", str(performance_sweeping_table[key])[1:-1])
                 printLog(output_log_handle, "WORKLOAD: Done")
 
             ##################################################################################
-            # Benchmark sequence is done
+            # Performance sequence is done
             ##################################################################################
 
             ##################################################################################
             # Saved traces.
             ##################################################################################
 
-            output_directory_archived = re.sub(r'.txt', "_" + benchmark_app_tag + "_" + benchmark_tag + "_traces",output_log_filename)
+            output_directory_archived = re.sub(r'.txt', "_" + performance_app_tag + "_" + performance_tag + "_traces",output_log_filename)
             output_directory_archived = artifact_path + output_directory_archived
             move_command = "mv /tmp/perf " + output_directory_archived
             os.system(move_command)
 
-            # print out total time during the benchmark sequence
-            end_message = "BENCHMARK SEQUENCE : " + benchmark_tag + " : Done"
+            # print out total time during the measure sequence
+            end_message = "PERFORMANCE SEQUENCE : " + performance_tag + " : Done"
             execution_time(output_log_handle, end_message, startTime_sequence, time.time())
 
             ##################################################################################
-            # start new start time of next benchmark sequence
+            # start new start time of next measure sequence
             ##################################################################################
             startTime_sequence = time.time()
 
-        end_message = "BENCHMARK APPLICATION: " + benchmark_app_tag +  " : Done"
-        execution_time(output_log_handle, end_message, benchmark_starttime, time.time())
+        end_message = "PERFORMANCE APPLICATION: " + performance_app_tag +  " : Done"
+        execution_time(output_log_handle, end_message, performance_starttime, time.time())
 
         ##################################################################################
         # Rename output/ path into output_<Application>/
         ##################################################################################
-        archived_local_output_path  = re.sub(r'output', "output_" + benchmark_app_tag, local_output_path)
+        archived_local_output_path  = re.sub(r'output', "output_" + performance_app_tag, local_output_path)
         isDirectory                 = os.path.isdir(archived_local_output_path)
         if (isDirectory):
             rename_application_output_cmd = ("mv " + local_output_path + "* " + archived_local_output_path + ".")
@@ -841,11 +841,11 @@ def main():
             rename_application_output_cmd = ("mv " + local_output_path + " " + archived_local_output_path)
             os.system(rename_application_output_cmd)
         ##################################################################################
-        # start new start time of next benchmark application
+        # start new start time of next measure application
         ##################################################################################
-        benchmark_starttime = time.time()
+        performance_starttime = time.time()
 
-    end_message = "PNP MEDIA BENCHMARK: Done"
+    end_message = "PNP MEDIA PERFORMANCE: Done"
     execution_time(output_log_handle, end_message, startTime, time.time())
 
     printLog(output_log_handle, "\nDate:", time.ctime())
@@ -863,10 +863,10 @@ def message_block(output_log_handle, block_color, block_str):
 # Post Process Multistream FPS/session against Content_FPS definition
 # jiwan
 ##################################################################################
-def postprocess_multistream(output_log_handle, stream_number, iteration_number, debug_verbose, tools_free_info, tools_lscpu_info, benchmark_object):
+def postprocess_multistream(output_log_handle, stream_number, iteration_number, debug_verbose, tools_free_info, tools_lscpu_info, performance_object):
     if debug_verbose:
-        printLog(output_log_handle, " [VERBOSE][CMD]", benchmark_object.dispatch_cmdline)
-        printLog(output_log_handle, " [VERBOSE][LINUX_PERF_TOOLS]", benchmark_object.linux_perf_cmdlines, "\n")
+        printLog(output_log_handle, " [VERBOSE][CMD]", performance_object.dispatch_cmdline)
+        printLog(output_log_handle, " [VERBOSE][LINUX_PERF_TOOLS]", performance_object.linux_perf_cmdlines, "\n")
 
     next = True
     runtime = vid0_utilization = vid1_utilization = render_utilization = cpu_ipc = \
@@ -933,30 +933,30 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                     lscpu_list["CurCPUFreq"]        = lscpu_info_split[1]
 
 
-    temp_file = benchmark_object.temp_path + "iteration_temp.txt"
+    temp_file = performance_object.temp_path + "iteration_temp.txt"
     average_fps = 0
 
     # 5% (default)
-    fps_limit = round(0.95 * float(benchmark_object.fps_limit), 2)
+    fps_limit = round(0.95 * float(performance_object.fps_limit), 2)
 
-    if (benchmark_object.ffmpeg_mode):
-        cmd_grep = "grep -b1 'video:' " + benchmark_object.temp_path + "*transcode_log.txt " + "> " + temp_file
+    if (performance_object.ffmpeg_mode):
+        cmd_grep = "grep -b1 'video:' " + performance_object.temp_path + "*transcode_log.txt " + "> " + temp_file
         exit_progress = os.system(cmd_grep)
-        cmd_perl = "perl -pi -e 's/^.*video\:.*\n//' " + benchmark_object.temp_path + "iteration_temp.txt"
+        cmd_perl = "perl -pi -e 's/^.*video\:.*\n//' " + performance_object.temp_path + "iteration_temp.txt"
         os.system(cmd_perl)
-        cmd_perl = "perl -pi -e 's/^.*fps=\s*/fps /' " + benchmark_object.temp_path + "iteration_temp.txt"
+        cmd_perl = "perl -pi -e 's/^.*fps=\s*/fps /' " + performance_object.temp_path + "iteration_temp.txt"
         os.system(cmd_perl)
-        cmd_perl = "perl -pi -e 's/q=.*\n//' " + benchmark_object.temp_path + "iteration_temp.txt"
+        cmd_perl = "perl -pi -e 's/q=.*\n//' " + performance_object.temp_path + "iteration_temp.txt"
         os.system(cmd_perl)
     else:
-        cmd_grep = "grep -H ' fps' " + benchmark_object.temp_path + "*transcode_log.txt " + "> " + temp_file
+        cmd_grep = "grep -H ' fps' " + performance_object.temp_path + "*transcode_log.txt " + "> " + temp_file
         exit_progress = os.system(cmd_grep)
-        cmd_perl = "perl -pi -e 's/_transcode_log.*,//' " + benchmark_object.temp_path + "iteration_temp.txt"
+        cmd_perl = "perl -pi -e 's/_transcode_log.*,//' " + performance_object.temp_path + "iteration_temp.txt"
         os.system(cmd_perl)
 
     if exit_progress == 0:
         # using With to open file to ensure the next codes are blocked until the file is exited.
-        #temp_file = benchmark_object.temp_path + "/iteration_temp.txt"
+        #temp_file = performance_object.temp_path + "/iteration_temp.txt"
         #with open("/home/intel/forMediaDelivery/interim/iteration_temp.txt", "r") as b2b_temp_fh:
         with open(temp_file, "r") as b2b_temp_fh:
             fps_per_session_previous = 0
@@ -1007,9 +1007,9 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
     # Example GEM Object printout
     # sample_multi_tr: 253 objects, 125353984 bytes (44523520 active, 29716480 inactive, 60416000 unbound, 0 closed)
     ##################################################################################
-    if os.path.isfile(benchmark_object.gemobject_gpumem_trace_dump):
+    if os.path.isfile(performance_object.gemobject_gpumem_trace_dump):
         gpumem_res_max = 0
-        with open(benchmark_object.gemobject_gpumem_trace_dump, "r") as tools_gemobject:
+        with open(performance_object.gemobject_gpumem_trace_dump, "r") as tools_gemobject:
             for gemmem_line in tools_gemobject:
                 gemmem_line = re.sub(r'\(',"", gemmem_line)
                 gemmem_line_split = gemmem_line.split(" ")
@@ -1027,7 +1027,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
     #   PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
     # 24480 intel     20   0  486824  27372  15172 R  33.3   0.2   0:00.05 sample_mu+
     ##################################################################################
-    if os.path.isfile(benchmark_object.top_cpumem_trace_dump):
+    if os.path.isfile(performance_object.top_cpumem_trace_dump):
         import numpy as np
         dump_top_list                   = {}
         top_pid_list                    = []
@@ -1039,7 +1039,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
         CPU_percent_per_pid_average     = {}
         MEM_percent_per_pid_average     = {}
 
-        with open(benchmark_object.top_cpumem_trace_dump, "r") as tools_top:
+        with open(performance_object.top_cpumem_trace_dump, "r") as tools_top:
             for line in tools_top:
                 line_list = re.sub(r'^\s+', "", line) # Remove any leading empty characters.
                 line_list = re.sub(r'\s+', " ", line_list).split(" ")
@@ -1115,9 +1115,9 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
     ##################################################################################
     # Post Process Linux Perf for GPU Utilization and Average GPU Frequency
     ##################################################################################
-    if os.path.isfile(benchmark_object.linux_perf_dump):
+    if os.path.isfile(performance_object.linux_perf_dump):
         dump_lp_list = {}
-        with open(benchmark_object.linux_perf_dump, "r") as tools_lp:
+        with open(performance_object.linux_perf_dump, "r") as tools_lp:
             for line in tools_lp:
                 line = line.replace("\t","")
                 if re.search(r'\sns',line):
@@ -1203,7 +1203,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
         ##################################################################################
         # Post Process Linux Perf for Traces
         ##################################################################################
-        if (benchmark_object.tool_linux_perf_trace):
+        if (performance_object.tool_linux_perf_trace):
             import matplotlib.pyplot as plt
             import numpy as np
             printLog(output_log_handle, " Traces Chart:")
@@ -1212,7 +1212,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
             ##################################################################################
             y_axis = []
 
-            with open(benchmark_object.linux_perf_gpu_freq_trace_dump, 'r') as lp_traces:
+            with open(performance_object.linux_perf_gpu_freq_trace_dump, 'r') as lp_traces:
                 for sampling_line in lp_traces:
                     if re.search(r'actual-frequency', sampling_line):
                         sampling_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", sampling_line).split("_")
@@ -1224,12 +1224,12 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
             plot_output = plt.figure()
             subplot_output = plt.subplot()
             subplot_output.plot(x_axis, y_axis, label='GT-Freq(GHz)')
-            trace_title = "MMSBench Trace - " + benchmark_object.filename_gpu_freq_trace
+            trace_title = "MSPerf Trace - " + performance_object.filename_gpu_freq_trace
             plt.title(trace_title)
             subplot_output.legend()
             # plt.show()
 
-            plot_filename = benchmark_object.temp_path + benchmark_object.filename_gpu_freq_trace + ".png"
+            plot_filename = performance_object.temp_path + performance_object.filename_gpu_freq_trace + ".png"
             plot_output.savefig(plot_filename)
             printLog(output_log_handle, "\tGPU-Freq-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
 
@@ -1239,7 +1239,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
             mem_bw_rd = []
             mem_bw_wr = []
 
-            with open(benchmark_object.linux_perf_mem_bw_trace_dump, 'r') as lp_gpubw_traces:
+            with open(performance_object.linux_perf_mem_bw_trace_dump, 'r') as lp_gpubw_traces:
                 for membw_line in lp_gpubw_traces:
                     if re.search(r'data_reads', membw_line):
                         membw_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", membw_line).split("_")
@@ -1256,12 +1256,12 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
             plot_output = plt.figure()
             subplot_output = plt.subplot()
             subplot_output.plot(r, mem_bw_rd, label='MEMORY-Read-BW-Traces(MB/s)')
-            trace_title = "MMSBench Trace - " + benchmark_object.filename_mem_bw_trace
+            trace_title = "MSPerf Trace - " + performance_object.filename_mem_bw_trace
             plt.title(trace_title)
             subplot_output.legend()
             # plt.show()
 
-            plot_filename = benchmark_object.temp_path + benchmark_object.filename_mem_bw_trace + "_read.png"
+            plot_filename = performance_object.temp_path + performance_object.filename_mem_bw_trace + "_read.png"
             plot_output.savefig(plot_filename)
             #printLog(output_log_handle, "\tMEM-RD-BW-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
 
@@ -1269,12 +1269,12 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
             plot_output = plt.figure()
             subplot_output = plt.subplot()
             subplot_output.plot(w, mem_bw_wr, label='MEMORY-Write-BW-Traces(MB/s)')
-            trace_title = "MMSBench Trace - " + benchmark_object.filename_mem_bw_trace
+            trace_title = "MSPerf Trace - " + performance_object.filename_mem_bw_trace
             plt.title(trace_title)
             subplot_output.legend()
             # plt.show()
 
-            plot_filename = benchmark_object.temp_path + benchmark_object.filename_mem_bw_trace + "_write.png"
+            plot_filename = performance_object.temp_path + performance_object.filename_mem_bw_trace + "_write.png"
             plot_output.savefig(plot_filename)
             #printLog(output_log_handle, "\tMEM-WR-BW-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
 
@@ -1289,9 +1289,9 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
 
         if debug_verbose:
             printLog(output_log_handle, " [VERBOSE] RAW files:")
-            printLog(output_log_handle, "\tmetrics\t\t:", re.sub(r'.*\/',"" , benchmark_object.linux_perf_dump))
-            printLog(output_log_handle, "\tGPU-Freq traces\t:", re.sub(r'.*\/',"" , benchmark_object.linux_perf_gpu_freq_trace_dump))
-            printLog(output_log_handle, "\tMEMORY traces\t:", re.sub(r'.*\/',"" , benchmark_object.linux_perf_mem_bw_trace_dump))
+            printLog(output_log_handle, "\tmetrics\t\t:", re.sub(r'.*\/',"" , performance_object.linux_perf_dump))
+            printLog(output_log_handle, "\tGPU-Freq traces\t:", re.sub(r'.*\/',"" , performance_object.linux_perf_gpu_freq_trace_dump))
+            printLog(output_log_handle, "\tMEMORY traces\t:", re.sub(r'.*\/',"" , performance_object.linux_perf_mem_bw_trace_dump))
 
         printLog(output_log_handle, "\n[TOOLS][TOP][FREE][LSCPU]")
 
@@ -1319,7 +1319,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                      #"\n\tMem_SHR_List\t:", dump_top_list["Max_SHR_Mem_list:"],
                      "\n\tCPU%_List\t:", dump_top_list["CPU_Utilization_List:"],
                      "\n\tMEM%_List\t:", dump_top_list["MEM_Utilization_List:"],
-                     "\n\tCPU-MEM-Trace\t:", re.sub(r'.*\/',"" , benchmark_object.top_cpumem_trace_dump))
+                     "\n\tCPU-MEM-Trace\t:", re.sub(r'.*\/',"" , performance_object.top_cpumem_trace_dump))
 
         printLog(output_log_handle, "\n[TOOLS][GEM_OBJECTS]")
 
@@ -1329,13 +1329,13 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
 
         if debug_verbose:
             printLog(output_log_handle, " [VERBOSE] RAW files:")
-            printLog(output_log_handle, "\tGPU-MEM-Trace\t:", re.sub(r'.*\/', "", benchmark_object.gemobject_gpumem_trace_dump))
+            printLog(output_log_handle, "\tGPU-MEM-Trace\t:", re.sub(r'.*\/', "", performance_object.gemobject_gpumem_trace_dump))
 
     return next, average_fps, runtime, vid0_utilization, vid1_utilization, render_utilization, cpu_ipc, rc6_utilization, avg_frequency, \
            avg_vm_mem_value, avg_shr_mem_value, avg_res_mem_value, total_res_mem_value, avg_mem_utilization, max_physical_mem, avg_cpu_percentage, max_cpu_percentage,\
            avg_res_gpumem, total_res_gpumem
 
-########### James.Iwan@intel.com Bench Perf ######################################
+########### James.Iwan@intel.com MSPerf ######################################
 def execution_time(output_log_handle, message, start,end):
     time = float(end - start)
     total = time
@@ -1349,8 +1349,8 @@ def execution_time(output_log_handle, message, start,end):
 
     printLog(output_log_handle, message, " - execution time: %d s (%dD:%dhr:%dmin:%dsec)\n" % (total, day, hour, minutes, seconds))
 
-########### James.Iwan@intel.com Bench Perf ######################################
-def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, debug_verbose, benchmark_sweeping_table, content_fps_list, content_height_list, content_codec_list, benchmark_object_list):
+########### James.Iwan@intel.com MSPerf ######################################
+def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, debug_verbose, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list, performance_object_list):
     status = True
     filename_split = filename.replace('.', '_').split('_')
     ffprobe_dump        = out_temp_path + "/ffprobe_" + filename_split[0] + ".txt"
@@ -1388,21 +1388,21 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
         status = False
 
     if status:
-        benchmark_object_list[filename.rstrip()]            = MediaContent()
-        benchmark_object_list[filename.rstrip()].name       = filename_only_without_extension
-        benchmark_object_list[filename.rstrip()].fps_limit  = ffprobe_frame_rate
-        benchmark_object_list[filename.rstrip()].height     = ffprobe_height
-        benchmark_object_list[filename.rstrip()].codec      = ffprobe_codec_name
+        performance_object_list[filename.rstrip()]            = MediaContent()
+        performance_object_list[filename.rstrip()].name       = filename_only_without_extension
+        performance_object_list[filename.rstrip()].fps_limit  = ffprobe_frame_rate
+        performance_object_list[filename.rstrip()].height     = ffprobe_height
+        performance_object_list[filename.rstrip()].codec      = ffprobe_codec_name
         content_fps_list[filename.rstrip()]                 = ffprobe_frame_rate
         content_height_list[filename.rstrip()]              = ffprobe_height
         content_codec_list[filename.rstrip()]               = ffprobe_codec_name
-        benchmark_sweeping_table[filename.rstrip()]         = []
+        performance_sweeping_table[filename.rstrip()]         = []
 
     return status
 
-########### James.Iwan@intel.com Bench Perf ######################################
+########### James.Iwan@intel.com MSPerf ######################################
 # Contentlist
-# Naming convention for each benchmark workload
+# Naming convention for each measure workload
 # 0 - content name
 # 1 - content resolution
 # 2 - content bitrate
@@ -1410,7 +1410,7 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
 # 4 - content total_frames
 # 5 - content codec type
 ##################################################################################
-def ContentNamingCheck(output_log_handle, filename, benchmark_sweeping_table, content_fps_list, content_height_list, content_codec_list):
+def ContentNamingCheck(output_log_handle, filename, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list):
     status = True
     filename_split      = filename.rstrip().replace('.', '_').split('_')
     for profile in filename_split:
@@ -1427,7 +1427,7 @@ def ContentNamingCheck(output_log_handle, filename, benchmark_sweeping_table, co
     #printLog(output_log_handle, filename_fps, " ", filename_height, " ", filename_codec)
     if (filename_fps != 0) or (filename_height != 0):
         content_fps_list[filename] = filename_fps
-        benchmark_sweeping_table[filename] = []
+        performance_sweeping_table[filename] = []
         content_height_list[filename] = filename_height
         content_codec_list[filename] = filename_codec
         status = True
@@ -1437,7 +1437,7 @@ def ContentNamingCheck(output_log_handle, filename, benchmark_sweeping_table, co
 
     return status
 
-########### James.Iwan@intel.com Bench Perf ######################################
+########### James.Iwan@intel.com MSPerf ######################################
 # Print log
 ##################################################################################
 def printLog(filehandle_printout, *args):
@@ -1471,7 +1471,7 @@ def sudo_password_request():
         status = subprocess.check_call("sudo -v -p '%s'" % msg, shell=True)
     return status
 
-########### James.Iwan@intel.com Bench Perf ######################################
+########### James.Iwan@intel.com MSPerf ######################################
 # Execute
 ##################################################################################
 main()

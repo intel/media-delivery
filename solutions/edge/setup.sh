@@ -51,7 +51,7 @@ scripts=" \
   ../../assets/ffmpeg-capture-hls.sh \
   ../../assets/monitor-nginx-server.sh \
   ../../assets/info \
-  ../../benchmark/* \
+  ../../measure/* \
   ../../scripts/setup-apt-proxy.sh \
   nginx-trigger-streaming.sh"
 
