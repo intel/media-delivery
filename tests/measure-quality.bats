@@ -30,10 +30,10 @@ subs="ffmpeg -i \
 @test "measure quality transcode 65 frames and check artifacts" {
   run docker_run /bin/bash -c "set -ex; $subs; \
     measure quality --nframes 65 WAR.mp4; \
-    cat /opt/data/artifacts/measure/quality/*{.metrics,bdrate} | wc -l"
+    result=\$(cat /opt/data/artifacts/measure/quality/*{.metrics,bdrate} | wc -l); \
+    [[ \$result = 24 ]]"
   print_output
   [ $status -eq 0 ]
-  [ "${lines[$((${#lines[@]}-1))]}" = "24" ]
 }
 
 # convert to yuv420
@@ -45,10 +45,10 @@ cyuv="ffmpeg -i WAR.mp4 \
     measure quality -w 480 -h 270 -f 24 \
     --nframes 5 --skip-metrics --skip-bdrate \
     WAR.yuv; \
-    ls /opt/data/artifacts/measure/quality/ | wc -l"
+    result=\$(ls /opt/data/artifacts/measure/quality/ | wc -l); \
+    [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
-  [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
 }
 
 # mock ParkScene: subsample to 720p
@@ -64,19 +64,19 @@ cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     measure quality --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
-    ls /opt/data/artifacts/measure/quality/ | wc -l"
+    result=\$(ls /opt/data/artifacts/measure/quality/ | wc -l); \
+    [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
-  [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
 }
 
 @test "measure quality --codec HEVC encode 5 frames of a predefined stream" {
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
-    ls /opt/data/artifacts/measure/quality/ | wc -l"
+    result=\$(ls /opt/data/artifacts/measure/quality/ | wc -l); \
+    [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
-  [ "${lines[$((${#lines[@]}-1))]}" = "30" ]
 }
 
