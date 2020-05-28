@@ -30,6 +30,12 @@ load utils
   [ $status -eq 255 ]
 }
 
+@test "demo no such device" {
+  run docker_run_opts "-e DEVICE=/dev/dri/nodevice" whoami
+  print_output
+  [ $status -eq 255 ]
+}
+
 #################
 # demo help tests
 #################

@@ -70,4 +70,5 @@ done
   echo "export PYTHONUSERBASE=\$DEMO_PREFIX"
   echo "export MANPATH=\$DEMO_PREFIX/share/man:\$MANPATH"
   echo "export LIBVA_DRIVER_NAME=iHD"
+  echo "export DEVICE=\${DEVICE:-/dev/dri/renderD128}"
 } > /etc/demo.env

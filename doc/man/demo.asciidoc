@@ -37,7 +37,6 @@ No interaction from host or other system is required. Example:
 `-<n>` option is useful for demo purposes. With it solution pretends to have <n> copies of
 each input stream. Execute 'demo -4 streams' to explore the difference.
 
-
 OPTIONS
 -------
 --help::
@@ -56,6 +55,13 @@ help::
 
 streams::
 	Print available streams
+
+ENVIRONMENT VARIABLES
+---------------------
+
+DEVICE::
+	GPU device to run the demo on. Default device is '/dev/dri/renderD128'.
+	Can be overwritten by externally set environment variable.
 
 SEE ALSO
 --------

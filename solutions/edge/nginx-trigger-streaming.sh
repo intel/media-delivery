@@ -49,6 +49,7 @@ log() {
 }
 
 addlog "$0 $@: start"
+addlog "$0 $@: DEVICE=$DEVICE"
 
 source /etc/demo.env
 
@@ -119,7 +120,7 @@ function run() {
 
 if [ "$type" = "vod/avc" ]; then
   cmd=(ffmpeg
-    -hwaccel qsv -hwaccel_device /dev/dri/renderD128
+    -hwaccel qsv -hwaccel_device $DEVICE
     -c:v h264_qsv -re -i $to_play
     -c:v h264_qsv -preset medium -profile:v high -b:v 3000000 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0
     -c:a copy -f flv rtmp://localhost:1935/$type/$stream)

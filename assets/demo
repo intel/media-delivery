@@ -226,6 +226,8 @@ function start_nginx() {
   fi
 }
 
+nginx_opts="env DEVICE=${DEVICE}"
+
 if tty -s; then
   {
     if [ $_exit -eq 1 ]; then
@@ -239,7 +241,7 @@ if tty -s; then
     echo "select-layout tiled"
   } >> /home/user/.tmux.conf
 
-  start_nginx
+  start_nginx -g "$nginx_opts;"
   tmux attach
 else
   echo "note: not running under tty"
@@ -252,12 +254,12 @@ else
     echo "note: starting up nginx server and specified client"
     echo "note:   full-scale demo mode requires access to terminal"
     echo -ne "$goto_tty_note"
-    start_nginx
+    start_nginx -g "$nginx_opts;"
     $client
   else
     echo "note: starting up nginx server"
     echo "note:   request streaming from host or other system in the network"
     echo -ne "$goto_tty_note"
-    start_nginx -g "daemon off;"
+    start_nginx -g "daemon off; $nginx_opts;"
   fi
 fi

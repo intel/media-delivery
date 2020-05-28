@@ -49,6 +49,7 @@ log() {
 }
 
 addlog "$0 $@: start"
+addlog "$0 $@: DEVICE=${DEVICE}"
 
 source /etc/demo.env
 
@@ -122,7 +123,7 @@ function run() {
 
 if [ "$type" = "vod/avc" ]; then
   cmd=(ffmpeg
-    -hwaccel qsv -hwaccel_device /dev/dri/renderD128
+    -hwaccel qsv -hwaccel_device $DEVICE
     -c:v h264_qsv -re -i $to_play -c:a copy
     -c:v h264_qsv -preset medium -profile:v high -b:v 3000000 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0
     -f hls -hls_time 10 -hls_playlist_type event
@@ -132,7 +133,7 @@ if [ "$type" = "vod/avc" ]; then
     -var_stream_map 'v:0,a:0' stream_%v.m3u8)
 elif [ "$type" = "vod/hevc" ]; then
   cmd=(ffmpeg
-    -hwaccel qsv -hwaccel_device /dev/dri/renderD128
+    -hwaccel qsv -hwaccel_device $DEVICE
     -c:v h264_qsv -re -i $to_play -c:a copy
     -c:v hevc_qsv -preset medium -profile:v main -b:v 3000000 -extbrc 1 -refs 5 -vsync 0
     -f hls -hls_time 10 -hls_playlist_type event
@@ -143,7 +144,7 @@ elif [ "$type" = "vod/hevc" ]; then
 elif [ "$type" = "vod/abr" ]; then
   # This is not tuned placeholder for ABR transcoding
   cmd=(ffmpeg
-    -hwaccel qsv -hwaccel_device /dev/dri/renderD128
+    -hwaccel qsv -hwaccel_device $DEVICE
     -c:v h264_qsv -re -i $to_play
     -filter_complex '[v:0]split=2[o1][s2];[s2]scale_qsv=w=640:h=-1[o2]'
     -map [o1] -c:v h264_qsv -b:v 5M

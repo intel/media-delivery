@@ -86,6 +86,16 @@ See `Content Attribution`_ for the copyright info for the above video. See
 `Container volumes (adding your content, access logs, etc.) <doc/howto.rst#container-volumes-adding-your-content-access-logs-etc>`_
 for how to add your own content to the demo.
 
+If your system has multiple GPU devices, you can specify the one you want to
+ren demo on with the ``DEVICE`` environment variable (default one is
+``/dev/dri/renderD128``)::
+
+  docker run -it \
+    $(env | grep -E '_proxy=' | sed 's/^/-e /') \
+    -e DEVICE=${DEVICE:-/dev/dri/renderD128} \
+    --privileged --network=host \
+    intel-media-delivery demo streams
+
 ffmpeg demo mode
 ~~~~~~~~~~~~~~~~
 

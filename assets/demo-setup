@@ -20,6 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+if [[ ! ( -n "$DEVICE" && "$DEVICE" =~ /dev/dri/ && -e $DEVICE ) ]]; then
+  echo "error: device not availabe: $DEVICE"
+  exit -1
+fi
+
 video_grps=($(ls -g /dev/dri/renderD* | awk '{print $3}' | uniq))
 
 if [ ${#video_grps[@]} -eq 0 ]; then
