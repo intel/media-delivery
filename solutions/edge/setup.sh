@@ -39,7 +39,7 @@ prefix=$1
 # nginx user should have permission to read/write in
 # the HLS streams location
 mkdir -p /var/www/hls/vod
-chown -R www-data /var/www/hls
+chown -R user /var/www/hls
 
 # Installing nginx configuration
 cp nginx.conf /etc/nginx/nginx.conf

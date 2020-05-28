@@ -38,7 +38,7 @@ prefix=$1
 
 # nginx user should have permission to read/write in
 # the HLS streams location
-chown www-data /var/www/hls
+chown user /var/www/hls
 
 # Installing nginx configuration
 cp nginx.conf /etc/nginx/nginx.conf

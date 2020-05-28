@@ -61,7 +61,7 @@ for grp in ${video_grps[@]}; do
     fi
     n=$((++n))
   fi
-  add_users_to_group $grpname user www-data
+  add_users_to_group $grpname user
 done
 
 content=/opt/data/content
@@ -101,20 +101,19 @@ function check_access() {
 }
 
 # verifying access rights to input/output folders
-check_access $content "r" user www-data
+check_access $content "r" user
 # demo scripts write logs and some output files (captured streaming
 # video) to $artifacts folder, and scripts also read and parse logs
 # to display monitoring statistics
-check_access $artifacts "r" user www-data
-check_access $artifacts "w" user www-data
+check_access $artifacts "r" user
+check_access $artifacts "w" user
 
 # cleaning up any prev. artifacts
 sudo rm -rf $artifacts/*
 
-# demo writes streaming video to $hls folder (and we need write permissions
-# for www-data)
-check_access $hls "r" user www-data
-check_access $hls "w" www-data
+# demo writes streaming video to $hls folder
+check_access $hls "r" user
+check_access $hls "w" user
 
 # Enable perf events for all users, we need access to global events
 # to dump GPU utilization stats. Actually this can be done by different ways
@@ -122,3 +121,4 @@ check_access $hls "w" www-data
 # capability to user and/or application(s) which need access to global
 # events.
 echo -1 | sudo tee /proc/sys/kernel/perf_event_paranoid >/dev/null
+
