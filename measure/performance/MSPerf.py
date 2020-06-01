@@ -95,7 +95,7 @@ def main():
     parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
     parser.add_argument('-codec', '--encode_codec', help='Default both AVC/HEVC, AVC only, or HEVC only')
     parser.add_argument('-initStreams', '--initialized_multiStream', help='Custom initialized concurrent of multi stream e.g. -s 720p:8,1080p:5,2160p:2')
-    parser.add_argument('-maxStreams', '--maximum_multiStream', help='Set Maximum number of MultiStream session')
+    parser.add_argument('-maxStreams', '--maximum_multiStream', help='Set Maximum number of Stream')
     parser.add_argument('-n', '--numbers_of_iteration', help='Custom limit the number of iteration of each same execution (max is 4)')
     parser.add_argument('-content_fps', '--overwrite_content_fps', help='Only for -w <file> , to overwrite content_fps_list target e.g. (-w ../content.hevc -content_fps_list 50 -content_resolution 1080p )')
     parser.add_argument('-content_resolution', '--overwrite_content_resolution', help='Only for -w <file> , to overwrite content_resolution choices target e.g. (-w ../content.hevc -content_fps_list 50 -content_resolution 1080p )')
@@ -416,7 +416,7 @@ def main():
                 if not directory_check: os.system("mkdir " + iteration_path_cmd)
 
             bm_output_handle = open(output_log_file_performance_media, 'w')
-            measure = "clipname, performance_session, fps, runtime(s), GPU_Vid0(%), GPU_Vid1(%), GPU_Render(%), AVG_CPU(%), RC6(%), GPU_Freq_Avg(MHz), MEM_RES_Avg(MB/Session), MEM_RES_Total(MB), AVG_MEM(%), PHYSICAL_MEM(MB), CPU_IPC, TOTAL_CPU(%), GPU_MEM_RES_Avg(MB/Session), GPU_MEM_RES_Total(MB)\n"
+            measure = "clipname, performance_stream, fps, runtime(s), GPU_Vid0(%), GPU_Vid1(%), GPU_Render(%), AVG_CPU(%), RC6(%), GPU_Freq_Avg(MHz), MEM_RES_Avg(MB/stream), MEM_RES_Total(MB), AVG_MEM(%), PHYSICAL_MEM(MB), CPU_IPC, TOTAL_CPU(%), GPU_MEM_RES_Avg(MB/stream), GPU_MEM_RES_Total(MB)\n"
             bm_output_handle.write(measure)
             performance_table_sweep = output_log_file_performance_sweep
             bt_output_handle = open(performance_table_sweep, 'w')
@@ -508,7 +508,7 @@ def main():
                     content_split           = key.replace('.', '_').split('_')
                     clip_name               = content_split[0]
                     clip_resolution         = content_split[1]
-                    clip_session_iter_tag   = performance_app_tag + "_" + performance_tag + "_" +  clip_name+ "_" + clip_resolution + "_" + str(streamnumber)
+                    clip_stream_iter_tag   = performance_app_tag + "_" + performance_tag + "_" +  clip_name+ "_" + clip_resolution + "_" + str(streamnumber)
 
                     if fps_constraint_enable:
                         fps_constraint = performance_object_list[curContent].fps_limit
@@ -563,9 +563,9 @@ def main():
                                 dispatch_cmdline = dispatch_cmdline.replace("-i::h264 <>", transcode_input_clip)
 
                         ######################################################################################################
-                        # this below code is for constructing unique output for each session.
+                        # this below code is for constructing unique output for each stream.
                         # e.g. Crowdrun_720p_output_1.264, Crowdrun_720p_output_2.264,
-                        # and constructing unique log file for each session for further post processing
+                        # and constructing unique log file for each stream for further post processing
                         # e.g. Crowdrun_720p_log_1.txt, Crowdrun_720p_log_2.txt,
                         # jiwan
                         ##################################################################################
@@ -606,7 +606,7 @@ def main():
                             dispatch_cmdline = dispatch_cmdline + " >> " + temp_path + "console_log.txt 2>&1" + "\n"
 
                         performance_object_list[curContent].dispatch_cmdline = dispatch_cmdline
-                        shell_script_handle.write("echo " + clip_session_iter_tag + "\n")
+                        shell_script_handle.write("echo " + clip_stream_iter_tag + "\n")
                         shell_script_handle.write(dispatch_cmdline)
                     shell_script_handle.close()
 
@@ -625,10 +625,10 @@ def main():
                         printLog(output_log_handle, print_performance_label)
                         printLog(output_log_handle, '#' * 69)
 
-                        linux_perf_dump = temp_path + clip_session_iter_tag + "_" + str(j) + "_metrics.txt"
-                        filename_gpu_freq_trace = clip_session_iter_tag + "_" + str(j) + "_gpu_freq_traces"
+                        linux_perf_dump = temp_path + clip_stream_iter_tag + "_" + str(j) + "_metrics.txt"
+                        filename_gpu_freq_trace = clip_stream_iter_tag + "_" + str(j) + "_gpu_freq_traces"
                         linux_perf_gpu_freq_trace_dump = temp_path + filename_gpu_freq_trace + ".txt"
-                        filename_mem_bw_trace = clip_session_iter_tag + "_" + str(j) + "_mem_bw_traces"
+                        filename_mem_bw_trace = clip_stream_iter_tag + "_" + str(j) + "_mem_bw_traces"
                         linux_perf_mem_bw_trace_dump = temp_path + filename_mem_bw_trace + ".txt"
 
                         performance_object_list[curContent].temp_path                       = temp_path
@@ -643,7 +643,6 @@ def main():
                         graphic_model = "generic" # must search for profiling what graphic model that we performance.
                         metrics, gpu_freq_traces, mem_bw_traces = selectLinuxPerfMetrics(temp_path, graphic_model)
 
-                        ########### Scott.Rowe@intel.com Linux Perf ################################################
                         linux_perf_cmdlines = os.path.dirname(os.path.realpath(__file__)) + "/MSGo.py"
                         if tool_linux_perf:
                             linux_perf_cmdlines = "perf stat -a -e {} -o " + linux_perf_dump + " " + linux_perf_cmdlines
@@ -657,7 +656,7 @@ def main():
                         p = subprocess.Popen(linux_perf_cmdlines, shell=True, stderr=subprocess.PIPE)
                         #p.send_signal(signal.SIGINT)
                         p.wait()
-                        ########### James.Iwan@intel.com Linux Perf ################################################
+
                         if (p.returncode != 0):
                             if debug_verbose:
                                 printLog(output_log_handle, " [VERBOSE][CMD]", performance_object_list[curContent].dispatch_cmdline)
@@ -672,20 +671,20 @@ def main():
                         ############################################################################################
                         # rename file with iteration# and put into the content object information
                         ############################################################################################
-                        filename_gpumem_trace = clip_session_iter_tag + "_" + str(j) + "_gpumem_trace"
+                        filename_gpumem_trace = clip_stream_iter_tag + "_" + str(j) + "_gpumem_trace"
                         gemobject_gpumem_trace_dump = temp_path + filename_gpumem_trace + ".txt"
                         performance_object_list[curContent].filename_gpumem_trace = filename_gpumem_trace
                         performance_object_list[curContent].gemobject_gpumem_trace_dump = gemobject_gpumem_trace_dump
-                        os.system("mv " + temp_path + clip_session_iter_tag + "_gpumem_trace.txt " + gemobject_gpumem_trace_dump)
+                        os.system("mv " + temp_path + clip_stream_iter_tag + "_gpumem_trace.txt " + gemobject_gpumem_trace_dump)
 
                         ############################################################################################
                         # rename file with iteration# and put into the content object information
                         ############################################################################################
-                        filename_cpumem_trace = clip_session_iter_tag + "_" + str(j) + "_cpumem_trace"
+                        filename_cpumem_trace = clip_stream_iter_tag + "_" + str(j) + "_cpumem_trace"
                         top_cpumem_trace_dump = temp_path + filename_cpumem_trace + ".txt"
                         performance_object_list[curContent].filename_cpumem_trace = filename_cpumem_trace
                         performance_object_list[curContent].top_cpumem_trace_dump = top_cpumem_trace_dump
-                        os.system("mv " + temp_path + clip_session_iter_tag + "_cpumem_trace.txt " + top_cpumem_trace_dump)
+                        os.system("mv " + temp_path + clip_stream_iter_tag + "_cpumem_trace.txt " + top_cpumem_trace_dump)
 
                         ############################################################################################
 
@@ -800,7 +799,7 @@ def main():
                 if str(performance_sweeping_table[key])[1:-1] == "":
                     printLog(output_log_handle, key, ": SKIPPED")
                 else:
-                    printLog(output_log_handle, " measure sessions of", key, ":", len(performance_sweeping_table[key]) - 1, ":", str(performance_sweeping_table[key])[1:-1])
+                    printLog(output_log_handle, " measure streams of", key, ":", len(performance_sweeping_table[key]) - 1, ":", str(performance_sweeping_table[key])[1:-1])
                 printLog(output_log_handle, "WORKLOAD: Done")
 
             ##################################################################################
@@ -860,7 +859,7 @@ def message_block(output_log_handle, block_color, block_str):
     printLog(output_log_handle, formatted_string)
 
 ##################################################################################
-# Post Process Multistream FPS/session against Content_FPS definition
+# Post Process Multistream FPS/stream against Content_FPS definition
 # jiwan
 ##################################################################################
 def postprocess_multistream(output_log_handle, stream_number, iteration_number, debug_verbose, tools_free_info, tools_lscpu_info, performance_object):
@@ -873,8 +872,8 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
     rc6_utilization = avg_frequency = cpu_task_clock = \
     total_vm_mem_value = total_res_mem_value = total_shr_mem_value = \
     avg_vm_mem_value = avg_res_mem_value = avg_shr_mem_value = \
-    avg_cpu_percentage = avg_mem_utilization = total_CPU_percents_sessions = \
-    total_MEM_percents_sessions = max_cpu_percentage = max_physical_mem = total_res_gpumem = avg_res_gpumem = 0
+    avg_cpu_percentage = avg_mem_utilization = total_CPU_percents_streams = \
+    total_MEM_percents_streams = max_cpu_percentage = max_physical_mem = total_res_gpumem = avg_res_gpumem = 0
 
     ##################################################################################
     # Example of Free info dump file
@@ -959,7 +958,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
         #temp_file = performance_object.temp_path + "/iteration_temp.txt"
         #with open("/home/intel/forMediaDelivery/interim/iteration_temp.txt", "r") as b2b_temp_fh:
         with open(temp_file, "r") as b2b_temp_fh:
-            fps_per_session_previous = 0
+            fps_per_stream_previous = 0
             average_iter = 0
             average_fps_split = []
             for line in b2b_temp_fh:
@@ -968,31 +967,31 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                     continue
                 elif not float(line_split[1]):
                     continue
-                fps_per_session = round(float(line_split[1]), 2)
-                average_fps_split.append(fps_per_session)
+                fps_per_stream = round(float(line_split[1]), 2)
+                average_fps_split.append(fps_per_stream)
                 ##################################################################################
-                # Post Process Multistream FPS/session against Content FPS limit target
+                # Post Process Multistream FPS/stream against Content FPS limit target
                 ##################################################################################
-                next = True if fps_per_session > fps_limit else False
+                next = True if fps_per_stream > fps_limit else False
 
                 ##################################################################################
-                # Post Process Multistream FPS/session is within 2% margin among its own average
+                # Post Process Multistream FPS/stream is within 2% margin among its own average
                 ##################################################################################
                 two_percent_margin = True
                 delta_margin = 0
-                if fps_per_session_previous > 0:
-                    delta_margin = round(abs(1 - (fps_per_session / fps_per_session_previous)), 2)
+                if fps_per_stream_previous > 0:
+                    delta_margin = round(abs(1 - (fps_per_stream / fps_per_stream_previous)), 2)
                     two_percent_margin = True if delta_margin <= 0.02 else False
                 else:
-                    fps_per_session_previous = fps_per_session
+                    fps_per_stream_previous = fps_per_stream
 
                 ##################################################################################
-                # Readable console output for fps/session, 2%margin, and limit
+                # Readable console output for fps/stream, 2%margin, and limit
                 ##################################################################################
                 output_file_split = line_split[0].split("/")
                 output_file_split_len = len(output_file_split)
                 clipname = output_file_split[output_file_split_len - 1]
-                print_check_result = " CONCURRENT: " + clipname + " " + str(fps_per_session) + " fps/session" + " , Meets ContentFPS " + str(fps_limit) + " : " + str(next) + " , Within margin 2%: " + str(delta_margin) + " " + str(two_percent_margin)
+                print_check_result = " CONCURRENT: " + clipname + " " + str(fps_per_stream) + " fps/stream" + " , Meets ContentFPS " + str(fps_limit) + " : " + str(next) + " , Within margin 2%: " + str(delta_margin) + " " + str(two_percent_margin)
                 printLog(output_log_handle, print_check_result)
 
                 ##################################################################################
@@ -1084,13 +1083,13 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
         avg_res_mem_value   = round(total_res_mem_value / len(top_pid_list), 2)  # take average every each value
         avg_shr_mem_value   = round(total_shr_mem_value / len(top_pid_list), 2) # take average every each value
 
-        dump_top_list["Session_ID_List:"]   = str(top_pid_list) + " list"
+        dump_top_list["stream_ID_List:"]   = str(top_pid_list) + " list"
         dump_top_list["Max_VM_Mem_list:"]   = str(VM_footprint_max_per_pid_array) + " list"
-        dump_top_list["Max_VM_Mem:"]        = str(avg_vm_mem_value) + " (MB/session)"
+        dump_top_list["Max_VM_Mem:"]        = str(avg_vm_mem_value) + " (MB/stream)"
         dump_top_list["Max_RES_Mem_list:"]  = str(RES_footprint_max_per_pid_array) + " list"
-        dump_top_list["Max_RES_Mem:"]       = str(avg_res_mem_value) + " (MB/session), " +  str(total_res_mem_value) + " (MB) total"
+        dump_top_list["Max_RES_Mem:"]       = str(avg_res_mem_value) + " (MB/stream), " +  str(total_res_mem_value) + " (MB) total"
         dump_top_list["Max_SHR_Mem_list:"]  = str(SHR_footprint_max_per_pid_array) + " list"
-        dump_top_list["Max_SHR_Mem:"]       = str(avg_shr_mem_value) + " (MB/session)"
+        dump_top_list["Max_SHR_Mem:"]       = str(avg_shr_mem_value) + " (MB/stream)"
 
         for pid_value in top_pid_list:
             CPU_percent_per_pid_average[pid_value]    = round(np.average(CPU_percent_per_pid_array[pid_value]), 2)
@@ -1100,15 +1099,15 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
         dump_top_list["MEM_Utilization_List:"]  = str(MEM_percent_per_pid_average) + " list"
 
         for each_pid in CPU_percent_per_pid_average:
-            total_CPU_percents_sessions = total_CPU_percents_sessions + CPU_percent_per_pid_average[each_pid]
+            total_CPU_percents_streams = total_CPU_percents_streams + CPU_percent_per_pid_average[each_pid]
         for each_pid in MEM_percent_per_pid_average:
-            total_MEM_percents_sessions = total_MEM_percents_sessions + MEM_percent_per_pid_average[each_pid]
+            total_MEM_percents_streams = total_MEM_percents_streams + MEM_percent_per_pid_average[each_pid]
 
-        avg_avg_cpu_percents_sessions   = round(total_CPU_percents_sessions / len(top_pid_list), 2)  # take average every each value
-        avg_avg_mem_percents_sessions   = round(total_MEM_percents_sessions / len(top_pid_list), 2)  # take average every each value
+        avg_avg_cpu_percents_streams   = round(total_CPU_percents_streams / len(top_pid_list), 2)  # take average every each value
+        avg_avg_mem_percents_streams   = round(total_MEM_percents_streams / len(top_pid_list), 2)  # take average every each value
 
-        dump_top_list["AVG_CPU_Util:"]  = str(avg_avg_cpu_percents_sessions)
-        dump_top_list["AVG_MEM_Util:"]  = str(avg_avg_mem_percents_sessions)
+        dump_top_list["AVG_CPU_Util:"]  = str(avg_avg_cpu_percents_streams)
+        dump_top_list["AVG_MEM_Util:"]  = str(avg_avg_mem_percents_streams)
 
 
 
@@ -1313,7 +1312,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                      )
         if debug_verbose:
             printLog(output_log_handle, " [VERBOSE] RAW files:")
-            printLog(output_log_handle, "\tProcess_ID_List\t:", dump_top_list["Session_ID_List:"],
+            printLog(output_log_handle, "\tProcess_ID_List\t:", dump_top_list["stream_ID_List:"],
                      #"\n\tMem_VM_List\t:", dump_top_list["Max_VM_Mem_list:"],
                      "\n\tMem_RES_List\t:", dump_top_list["Max_RES_Mem_list:"],
                      #"\n\tMem_SHR_List\t:", dump_top_list["Max_SHR_Mem_list:"],
@@ -1325,7 +1324,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
 
         printLog(output_log_handle, " GPU MEM analysis: ")
         printLog(output_log_handle, "\tMax_Gpu_Mem\t:", total_res_gpumem , " (MB)",
-                     "\n\tAvg_Gpu_Res\t:", avg_res_gpumem, " (MB/Session)")
+                     "\n\tAvg_Gpu_Res\t:", avg_res_gpumem, " (MB/stream)")
 
         if debug_verbose:
             printLog(output_log_handle, " [VERBOSE] RAW files:")
