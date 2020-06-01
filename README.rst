@@ -72,14 +72,20 @@ Run without entrypoint to enter shell and look around inside the container.
 
 To get list of streams you will be able to play, execute::
 
-  docker run -it \
+  docker run --rm -it \
     $(env | grep -E '_proxy=' | sed 's/^/-e /') \
-    --privileged --network=host \
+    --privileged -p 8080:8080 \
     intel-media-delivery demo streams
 
-On the output of the above command you should get list of streams in a format::
+On the output you should get list of streams in a format::
 
-  WAR_TRAILER_HiQ_10_withAudio | http://localhost:8080/live/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
+  http://172.17.0.2:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
+
+``172.17.0.2`` stands for the container IP address (locally you might see
+some other value). Mind that since we've published container port to the
+host port, streams will also be available via links like::
+
+  http://<host-ip>:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 
 Above example just lists content embedded in the container on the build stage.
 See `Content Attribution`_ for the copyright info for the above video. See
@@ -90,10 +96,10 @@ If your system has multiple GPU devices, you can specify the one you want to
 ren demo on with the ``DEVICE`` environment variable (default one is
 ``/dev/dri/renderD128``)::
 
-  docker run -it \
+  docker run --rm -it \
     $(env | grep -E '_proxy=' | sed 's/^/-e /') \
     -e DEVICE=${DEVICE:-/dev/dri/renderD128} \
-    --privileged --network=host \
+    --privileged -p 8080:8080 \
     intel-media-delivery demo streams
 
 ffmpeg demo mode
@@ -103,9 +109,9 @@ Using ``ffmpeg`` demo mode client is ran inside the container. You don't need
 to interact with the container in any other way rather than to start and stop it.
 To run it, execute::
 
-  docker run -it \
-    --privileged --network=host \
-    intel-media-delivery demo ffmpeg WAR_TRAILER_HiQ_10_withAudio
+  docker run --rm -it \
+    --privileged -p 8080:8080 \
+    intel-media-delivery demo ffmpeg http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 
 Upon successful launch you will see output similar to the below one.
 
@@ -128,16 +134,22 @@ Interactive demo mode (use vlc)
 In interactive demo mode container runs all the services required for streaming, but
 awaits for the user interaction. To start demo in this mode, execute::
 
-  docker run -it \
-    --privileged --network=host \
+  docker run --rm -it \
+    --privileged -p 8080:8080 \
     intel-media-delivery demo
 
 After that you need to trigger streaming via some client running outside of the
 container. For example, from the host::
 
-  vlc http://localhost:8080/live/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
+  vlc http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
   # or
-  ffmpeg -i http://localhost:8080/live/WAR_TRAILER_HiQ_10_withAudio/index.m3u8 -c copy WAR_TRAILER_HiQ_10_withAudio.mkv
+  ffmpeg -i http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8 -c copy WAR_TRAILER_HiQ_10_withAudio.mkv
+
+Or from some other machine in the network:
+
+  vlc http://<host-ip>:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
+  # or
+  ffmpeg -i http://<host-ip>:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8 -c copy WAR_TRAILER_HiQ_10_withAudio.mkv
   
 Available solutions and their architectures
 -------------------------------------------
@@ -159,13 +171,13 @@ requests for different streams would allow to exercise how system behaves under 
 loads. Mind that you can use ``-<n>`` demo option to emulate multiple streams
 available for streaming::
 
-  docker run -it \
-    --privileged --network=host \
+  docker run --rm -it \
+    --privileged -p 8080:8080 \
     intel-media-delivery demo -4 ffmpeg \
-      WAR_TRAILER_HiQ_10_withAudio-1
-      WAR_TRAILER_HiQ_10_withAudio-2
-      WAR_TRAILER_HiQ_10_withAudio-3
-      WAR_TRAILER_HiQ_10_withAudio-4
+      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-1/index.m3u8
+      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-2/index.m3u8
+      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-3/index.m3u8
+      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-4/index.m3u8
 
 This solution can be further scaled. For example, transcoding requests might not be served
 on the same system where nginx server is running. Instead they are served by dedicated

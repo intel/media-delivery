@@ -15,6 +15,14 @@ DESCRIPTION
 Run demo w/ ffmpeg client(s). ffmpeg will catch streaming video
 and dump it to the disk.
 
+`<stream>` must be an HLS stream name obtained from
+link:demo-streams.asciidoc[demo-streams]. Mind that since 'demo-ffmpeg' runs
+inside a container, you can actually use `localhost` instead of real
+container IP address. Also, simplified stream names are accepted as
+`vod/avc/WAR_TRAILER_HiQ_10_withAudio` which would stand for
+`http://172.17.0.2:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8`
+(real IP address might be different).
+
 OPTIONS
 -------
 --exit::

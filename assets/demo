@@ -144,7 +144,7 @@ elif [ "$command" = "streams" ]; then
     name=$1
     types=$(echo $DEMO_STREAM_TYPES | sed 's/:/ /g')
     for type in $types; do
-      echo "$type/$name | http://localhost:8080/$type/$name/index.m3u8"
+      echo "http://$(hostname -i):8080/$type/$name/index.m3u8"
     done
   }
 

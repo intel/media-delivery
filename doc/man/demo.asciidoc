@@ -37,6 +37,11 @@ No interaction from host or other system is required. Example:
 `-<n>` option is useful for demo purposes. With it solution pretends to have <n> copies of
 each input stream. Execute 'demo -4 streams' to explore the difference.
 
+NETWORK PORTS
+-------------
+8080::
+	Port used by nginx server to expose HLS streams
+
 OPTIONS
 -------
 --help::

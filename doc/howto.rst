@@ -130,7 +130,7 @@ command will slightly automate that::
 
   docker build \
     $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
-    --network=host \
+    -network=host \
     <...rest-of-arguments...>
 
 These proxy settings will be used to:
@@ -153,7 +153,6 @@ can be done by passing proxy host envronment variables as follows::
 
   docker run -it \
     $(env | grep -E '_proxy=' | sed 's/^/-e /') \
-    --network=host \
     <...rest-of-arguments...>
 
 If you are going to play around with the container and install additional packages,
