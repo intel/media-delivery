@@ -43,7 +43,9 @@ shift
 
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000))')
 
-cmd=(sample_encode -hw \
+DEVICE=${DEVICE:-/dev/dri/renderD128}
+
+cmd=(sample_encode -hw -device $DEVICE \
   h264 -w $width -h $height -f $framerate -i $file \
   -u $preset -b $bitrate -cbr -n $nframes  \
   $options \

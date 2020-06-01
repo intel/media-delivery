@@ -52,7 +52,9 @@ shift
 
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000000))')
 
-cmd=(ffmpeg -an \
+DEVICE=${DEVICE:-/dev/dri/renderD128}
+
+cmd=(ffmpeg -hwaccel qsv -hwaccel_device $DEVICE -an \
   $rawvideo -i $file -vframes $nframes \
   -c:v h264_qsv -preset $preset -profile:v high -b:v $bitrate \
   $options \
