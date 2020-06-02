@@ -120,6 +120,12 @@ def main():
     else:
         artifact_path = artifacts_path_baremetal  + "/measure/perf/"
 
+    ################################# Multiple Device default/user overwrite check #########################
+    os_env_DEVICE = "/dev/dri/renderD128"
+    for k, v in os.environ.items():
+        if k == "DEVICE":
+            os_env_DEVICE = os.environ['DEVICE']
+
     ################################# Variable Assignment #################################################
     starting_streamnumber           = str(performanceargs.initialized_multiStream) if performanceargs.initialized_multiStream else "all:1"
     maximum_iteration               = int(performanceargs.numbers_of_iteration) if performanceargs.numbers_of_iteration else 1
@@ -588,12 +594,17 @@ def main():
                             dispatch_cmdline = dispatch_cmdline.replace("-o::h264 <>", "-o::h264 " + transcode_output_clip)
                             dispatch_cmdline = dispatch_cmdline.replace("-o::h265 <>", "-o::h265 " + transcode_output_clip)
 
+                        # Adding Transcode_Output_Log file and Multiple Device knobs
                         if (ffmpeg_mode):
                             transcode_output_logfile = " 2> " + temp_path + clip_name + "_" + clip_resolution + "_" + str(streamnumber) + "_" + str(m) + "_transcode_log.txt"
+                            ffmpeg_device_knob = " -hwaccel_device " + os_env_DEVICE
+                            transcode_output_logfile = ffmpeg_device_knob + transcode_output_logfile
                             dispatch_cmdline = dispatch_cmdline.replace("-report", transcode_output_logfile).rstrip()
 
                         else: # SMT section (DEFAULT)
                             transcode_output_logfile = " -p " + temp_path + clip_name + "_" + clip_resolution + "_" + str(m) + "_transcode_log.txt"
+                            smt_device_knob = " -device " + os_env_DEVICE
+                            transcode_output_logfile = smt_device_knob + transcode_output_logfile
                             dispatch_cmdline = dispatch_cmdline.replace("-p <>", transcode_output_logfile).rstrip()
 
                         ##################################################################################
