@@ -30,13 +30,13 @@ import subprocess, sys, os, re, argparse, time, statistics, signal, getpass
 
 ########### James.Iwan@intel.com MSPerf ######################################
 class MediaContent:
-    width = height = fps_limit = performance_stream = performance_fps = init_stream_number = linux_perf_cmdlines = 0
+    width = height = fps_target = performance_stream = performance_fps = init_stream_number = linux_perf_cmdlines = 0
     def name (self, name):
         self.name = name
     def height (self, height):
         self.height = height
-    def fps_limit (self, fps_limit):
-        self.fps_limit = fps_limit
+    def fps_target (self, fps_target):
+        self.fps_target = fps_target
     def width(self, width):
         self.width = width
     def codec(self, codec):
@@ -97,10 +97,10 @@ def main():
     parser.add_argument('-initStreams', '--initialized_multiStream', help='Custom initialized concurrent of multi stream e.g. -s 720p:8,1080p:5,2160p:2')
     parser.add_argument('-maxStreams', '--maximum_multiStream', help='Set Maximum number of Stream')
     parser.add_argument('-n', '--numbers_of_iteration', help='Custom limit the number of iteration of each same execution (max is 4)')
-    parser.add_argument('-content_fps', '--overwrite_content_fps', help='Only for -w <file> , to overwrite content_fps_list target e.g. (-w ../content.hevc -content_fps_list 50 -content_resolution 1080p )')
+    parser.add_argument('--no-fps-limit', '--no_fps_limit', action='store_true', help='to run workload unconstraint, or as fast as possible')
+    parser.add_argument('--fps-target', '--fps_target', help='to overwrite fps limit')
     parser.add_argument('-content_resolution', '--overwrite_content_resolution', help='Only for -w <file> , to overwrite content_resolution choices target e.g. (-w ../content.hevc -content_fps_list 50 -content_resolution 1080p )')
     parser.add_argument('-w_max', '--numbers_of_Workloads', help='Custom limit the number of total workloads to be executed')
-    parser.add_argument('-c', '--constraint', action='store_true', help='Constraint the fps into content-fps with 0.02 margin limit, (.e.g adding -fps into command line)')
     parser.add_argument('-o', '--user_artifact_path', help='output directory for any artifacts')
     parser.add_argument('-log', '--output_log_file', help='print any run-log into this file onto main directory')
     parser.add_argument('-v', '--verbose', action='store_true', help='Dump debug related printout, such as each-cmdlines/version-log/etc')
@@ -132,14 +132,14 @@ def main():
     maximum_multiStream             = int(performanceargs.maximum_multiStream) if performanceargs.maximum_multiStream else 99
     maximum_workloads               = int(performanceargs.numbers_of_Workloads) if performanceargs.numbers_of_Workloads else 20
     debug_verbose                   = True if performanceargs.verbose else False
+    no_fps_limit                    = True if performanceargs.no_fps_limit else False
     tool_linux_perf                 = False if performanceargs.skip_perf else True
     tool_linux_perf_trace           = False if performanceargs.skip_perf_trace else True
     enable_debugfs                  = True if performanceargs.enable_debugfs else False
-    fps_constraint_enable           = True if performanceargs.constraint else False
     skip_ffmpeg                     = True if performanceargs.skip_ffmpeg else False
     skip_msdk                       = True if performanceargs.skip_msdk else False
     encode_codec                    = str(performanceargs.encode_codec).lower() if performanceargs.encode_codec else "all"
-    overwrite_content_fps           = float(performanceargs.overwrite_content_fps) if performanceargs.overwrite_content_fps else 0
+    fps_target                      = float(performanceargs.fps_target) if performanceargs.fps_target else 0
     overwrite_content_resolution    = str(performanceargs.overwrite_content_resolution) if performanceargs.overwrite_content_resolution else "unavailable"
     script_root_path                = os.path.dirname(os.path.realpath(__file__))
     output_log_filename             = str(performanceargs.output_log_file) if str(performanceargs.output_log_file) != "None" else "msperf.txt"
@@ -263,16 +263,16 @@ def main():
                     if ffmpegffprobeCheck(output_log_handle, content_path, content_filename, temp_path, debug_verbose, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list, performance_object_list):
                         if debug_verbose:
                             printLog(output_log_handle, " PASS: via FFMPEG/FFPROBE")
-                            printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_limit,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
+                            printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_target,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
 
                     elif ContentNamingCheck(output_log_handle, content_filename, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list):
                         if debug_verbose:
                             printLog(output_log_handle, " PASS: via File-Naming-Format")
-                            printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_limit,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
+                            printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_target,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
 
-                    if (float(overwrite_content_fps) > 0):
-                        content_fps_list[content_filename] = float(overwrite_content_fps)
-                        performance_object_list[content_filename].fps_limit = float(overwrite_content_fps)
+                    if (float(fps_target) > 0):
+                        content_fps_list[content_filename] = float(fps_target)
+                        performance_object_list[content_filename].fps_target = float(fps_target)
 
             content_list_temp_fh.close()
 
@@ -284,16 +284,16 @@ def main():
             if ffmpegffprobeCheck(output_log_handle, content_path, content_filename, temp_path, debug_verbose, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list, performance_object_list):
                 if debug_verbose:
                     printLog(output_log_handle, " PASS: via FFMPEG/FFPROBE")
-                    printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_limit,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
+                    printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_target,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
 
             elif ContentNamingCheck(output_log_handle, content_filename, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list):
                 if debug_verbose:
                     printLog(output_log_handle, " PASS: via File-Naming-Format")
-                    printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_limit,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
+                    printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_target,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
 
-            if (float(overwrite_content_fps) > 0):
-                content_fps_list[content_filename] = float(overwrite_content_fps)
-                performance_object_list[content_filename].fps_limit = float(overwrite_content_fps)
+            if (float(fps_target) > 0):
+                content_fps_list[content_filename] = float(fps_target)
+                performance_object_list[content_filename].fps_target = float(fps_target)
 
         else:
             message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + performanceargs.workloads_path)
@@ -514,12 +514,8 @@ def main():
                     content_split           = key.replace('.', '_').split('_')
                     clip_name               = content_split[0]
                     clip_resolution         = content_split[1]
-                    clip_stream_iter_tag   = performance_app_tag + "_" + performance_tag + "_" +  clip_name+ "_" + clip_resolution + "_" + str(streamnumber)
-
-                    if fps_constraint_enable:
-                        fps_constraint = performance_object_list[curContent].fps_limit
-                    else:
-                        fps_constraint  = 0
+                    clip_stream_iter_tag    = performance_app_tag + "_" + performance_tag + "_" +  clip_name+ "_" + clip_resolution + "_" + str(streamnumber)
+                    fps_constraint          = performance_object_list[curContent].fps_target
 
                     for m in range(int(streamnumber)):
                         ##################################################################################
@@ -575,24 +571,24 @@ def main():
                         # e.g. Crowdrun_720p_log_1.txt, Crowdrun_720p_log_2.txt,
                         # jiwan
                         ##################################################################################
+                        # Adding Constraint and UnConstraint FPS
                         if (ffmpeg_mode):
-                            if fps_constraint_enable:
-                                transcode_output_clip = "-maxrate " + str(fps_constraint) + " -y " + temp_path + clip_name + "_" + clip_resolution + "_" + str(m)
+                            transcode_output_clip = local_output_path + clip_name + "_" + clip_resolution + "_" + str(m)
+
+                            if not no_fps_limit:
+                                dispatch_cmdline = dispatch_cmdline.replace("-y <>", "-maxrate " + str(fps_constraint) + " -y " + transcode_output_clip)
                             else:
-                                transcode_output_clip = local_output_path + clip_name + "_" + clip_resolution + "_" + str(m)
+                                dispatch_cmdline = dispatch_cmdline.replace("-y <>", "-y " + transcode_output_clip)
 
                         else: # SMT section (DEFAULT)
-                            if fps_constraint_enable:
-                                transcode_output_clip = "-fps " + str(fps_constraint) + " -o::h264 " + temp_path + clip_name + "_" + clip_resolution + "_" + str(m)
+                            transcode_output_clip = local_output_path + clip_name + "_" + clip_resolution + "_" + str(m)
+
+                            if not no_fps_limit:
+                                dispatch_cmdline = dispatch_cmdline.replace("-o::h264 <>","-fps " + str(fps_constraint) + " -o::h264 " + transcode_output_clip)
+                                dispatch_cmdline = dispatch_cmdline.replace("-o::h265 <>","-fps " + str(fps_constraint) + " -o::h265 " + transcode_output_clip)
                             else:
-                                transcode_output_clip = local_output_path + clip_name + "_" + clip_resolution + "_" + str(m)
-
-                        if (ffmpeg_mode):
-                            dispatch_cmdline = dispatch_cmdline.replace("-y <>", "-y " + transcode_output_clip)
-
-                        else: # SMT section (DEFAULT)
-                            dispatch_cmdline = dispatch_cmdline.replace("-o::h264 <>", "-o::h264 " + transcode_output_clip)
-                            dispatch_cmdline = dispatch_cmdline.replace("-o::h265 <>", "-o::h265 " + transcode_output_clip)
+                                dispatch_cmdline = dispatch_cmdline.replace("-o::h264 <>", "-o::h264 " + transcode_output_clip)
+                                dispatch_cmdline = dispatch_cmdline.replace("-o::h265 <>", "-o::h265 " + transcode_output_clip)
 
                         # Adding Transcode_Output_Log file and Multiple Device knobs
                         if (ffmpeg_mode):
@@ -947,7 +943,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
     average_fps = 0
 
     # 5% (default)
-    fps_limit = round(0.95 * float(performance_object.fps_limit), 2)
+    fps_target = round(0.95 * float(performance_object.fps_target), 2)
 
     if (performance_object.ffmpeg_mode):
         cmd_grep = "grep -b1 'video:' " + performance_object.temp_path + "*transcode_log.txt " + "> " + temp_file
@@ -983,7 +979,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                 ##################################################################################
                 # Post Process Multistream FPS/stream against Content FPS limit target
                 ##################################################################################
-                next = True if fps_per_stream > fps_limit else False
+                next = True if fps_per_stream > fps_target else False
 
                 ##################################################################################
                 # Post Process Multistream FPS/stream is within 2% margin among its own average
@@ -1002,7 +998,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                 output_file_split = line_split[0].split("/")
                 output_file_split_len = len(output_file_split)
                 clipname = output_file_split[output_file_split_len - 1]
-                print_check_result = " CONCURRENT: " + clipname + " " + str(fps_per_stream) + " fps/stream" + " , Meets ContentFPS " + str(fps_limit) + " : " + str(next) + " , Within margin 2%: " + str(delta_margin) + " " + str(two_percent_margin)
+                print_check_result = " CONCURRENT: " + clipname + " " + str(fps_per_stream) + " fps/stream" + " , Meets ContentFPS " + str(fps_target) + " : " + str(next) + " , Within margin 2%: " + str(delta_margin) + " " + str(two_percent_margin)
                 printLog(output_log_handle, print_check_result)
 
                 ##################################################################################
@@ -1400,7 +1396,7 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
     if status:
         performance_object_list[filename.rstrip()]            = MediaContent()
         performance_object_list[filename.rstrip()].name       = filename_only_without_extension
-        performance_object_list[filename.rstrip()].fps_limit  = ffprobe_frame_rate
+        performance_object_list[filename.rstrip()].fps_target  = ffprobe_frame_rate
         performance_object_list[filename.rstrip()].height     = ffprobe_height
         performance_object_list[filename.rstrip()].codec      = ffprobe_codec_name
         content_fps_list[filename.rstrip()]                 = ffprobe_frame_rate
