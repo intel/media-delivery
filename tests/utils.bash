@@ -55,13 +55,28 @@ function teardown() {
 # helper functions
 ##################
 function docker_run() {
-  docker run --rm --privileged -p 8080:8080 ${MDS_IMAGE} "$@"
+  local DEVICE=/dev/dri/renderD128
+  local DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
+    xargs getent group | awk -F: '{print $3}')
+
+  docker run --rm -p 8080:8080 \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN \
+    ${MDS_IMAGE} "$@"
 }
 
 function docker_run_opts() {
-  opts=$1
+  local opts=$1
   shift
-  docker run --rm --privileged -p 8080:8080 $opts ${MDS_IMAGE} "$@"
+
+  local DEVICE=/dev/dri/renderD128
+  local DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
+    xargs getent group | awk -F: '{print $3}')
+
+  docker run --rm -p 8080:8080 \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN \
+    $opts ${MDS_IMAGE} "$@"
 }
 
 function print_output() {

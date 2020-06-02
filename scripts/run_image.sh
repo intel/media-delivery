@@ -22,10 +22,14 @@
 
 export http_proxy=http://proxy-chain.intel.com:911
 export https_proxy=http://proxy-chain.intel.com:911
-#export no_proxy=localhost
-#unset no_proxy
+export no_proxy=localhost
+
+DEVICE=${DEVICE:-/dev/dri/renderD128}
+DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
+  xargs getent group | awk -F: '{print $3}')
 
 docker run \
-  -it --privileged --network=host \
+  --rm -it -p 8080:8080 \
+  --device=$DEVICE --group-add $DEVICE_GRP --cap-add SYS_ADMIN \
   $(env | grep -E '_proxy=' | sed 's/^/-e /') \
   intel-media-delivery "$@"

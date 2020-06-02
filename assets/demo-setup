@@ -21,48 +21,44 @@
 # SOFTWARE.
 
 if [[ ! ( -n "$DEVICE" && "$DEVICE" =~ /dev/dri/ && -e $DEVICE ) ]]; then
-  echo "error: device not availabe: $DEVICE"
+  echo "error: device not available: $DEVICE"
+  echo "error:   if you run under docker add host device(s) with:" >&2
+  echo "error:     --device=$DEVICE (preferred)" >&2
+  echo "error:     --device=/dev/dri/" >&2
+  echo "error:     --privileged" >&2
+  echo "error:   you can change device you want to use with:" >&2
+  echo "error:     -e DEVICE=${DEVICE:-/dev/dri/renderD128}" >&2
   exit -1
 fi
 
-video_grps=($(ls -g /dev/dri/renderD* | awk '{print $3}' | uniq))
-
-if [ ${#video_grps[@]} -eq 0 ]; then
-  echo "error: no render node GPU devices exposed" >&2
-  echo "error:   if you run under docker you might need to map devices" >&2
-  echo "error:   with commands like --device=/dev/dri or --privileged" >&2
-  exit -1
-fi
-
-function add_users_to_group()
+function get_gid()
 {
-  grp=$1
-  shift
-  for usr in $@; do
-    if ! sudo usermod -aG $grp $usr; then
-      echo "error: failed to add user to '$grp' group: $usr" >&2
-      exit -1
-    fi
-  done
+  local grp=$1
+  local gid=$(grep "^$grp:" /etc/group | cut -d: -f3)
+  if [ -n "$gid" ]; then
+    echo "$gid"
+  else
+    echo "$grp" # $grp _is_ GID which does not have group name
+  fi
 }
 
-n=0
-for grp in ${video_grps[@]}; do
-  grpname=$grp
-  if ! grep "^$grp:" /etc/group >/dev/null; then
-    # Having no group in /etc/group means that we get GID instead
-    # of group name and group name is absent on this system (which
-    # is usual case runnning under docker). So, we just need to
-    # create the group.
-    grpname=mds_render$n
-    if ! sudo groupadd -g $grp $grpname; then
-      echo "error: failed to create '$grpname' corresponding to GID: $grp" >&2
-      exit -1
-    fi
-    n=$((++n))
-  fi
-  add_users_to_group $grpname user
-done
+device_grp=$(ls -g $DEVICE | awk '{print $3}' | uniq)
+device_gid=$(get_gid $device_grp)
+
+if ! groups | grep -q "$device_grp"; then
+  echo "error: user (UID=`id -u`) is not a member of GID=$device_gid" >&2
+  echo "error:   if you run under docker rerun with:" >&2
+  echo "error:     --group-add=$device_gid" >&2
+  echo "error:   if you run on bare metal add user to group (see 'man 8 usermod')" >&2
+  exit -1
+fi
+
+if ! capsh --print | grep Current | grep -q cap_sys_admin; then
+  echo "error: no CAP_SYS_ADMIN capability (required to get GPU% metrics)" >&2
+  echo "error:   if you run under docker, rerun with:" >&2
+  echo "error:     --cap-add SYS_ADMIN" >&2
+  exit -1
+fi
 
 content=/opt/data/content
 artifacts=/opt/data/artifacts
@@ -82,7 +78,7 @@ function print_error() {
   folder=$1
   perm=$2
   user=$3
-  echo "error: can't access $folder for $(get_perm $perm) (user '$user')" >&2
+  echo "error: can't access $folder for $(get_perm $perm) (UID=$(id -u))" >&2
   echo "error:   if you attempt to map a host folder under docker" >&2
   echo "error:   you might need to adjust its access permissions on a host side" >&2
 }
@@ -90,14 +86,10 @@ function print_error() {
 function check_access() {
   folder=$1
   perm=$2
-  shift 2
-  users=$@
-  for u in $users; do
-    if ! sudo -u $u test -$perm $folder; then
-      print_error $folder $perm $u
-      exit -1
-    fi
-  done
+  if ! test -$perm $folder; then
+    print_error $folder $perm $u
+    exit -1
+  fi
 }
 
 # verifying access rights to input/output folders
@@ -114,11 +106,3 @@ sudo rm -rf $artifacts/*
 # demo writes streaming video to $hls folder
 check_access $hls "r" user
 check_access $hls "w" user
-
-# Enable perf events for all users, we need access to global events
-# to dump GPU utilization stats. Actually this can be done by different ways
-# and you see below one of them. Another one would be to grant CAP_SYS_ADMIN
-# capability to user and/or application(s) which need access to global
-# events.
-echo -1 | sudo tee /proc/sys/kernel/perf_event_paranoid >/dev/null
-

@@ -68,13 +68,29 @@ the solutions consist of 2 parts:
 2. Client(s) running somewhere (not neccessarily inside the container)
    which consume media streams
 
-Run without entrypoint to enter shell and look around inside the container.
+Run without entrypoint to enter shell and look around inside the container::
+
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
+    xargs getent group | awk -F: '{print $3}')
+  docker run --rm -it \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN \
+    -p 8080:8080 \
+    intel-media-delivery
+
+Mind that ``-e DEVICE=$DEVICE`` option allows to adjust the host GPU device
+to be used under the demo.
 
 To get list of streams you will be able to play, execute::
 
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
+    xargs getent group | awk -F: '{print $3}')
   docker run --rm -it \
-    $(env | grep -E '_proxy=' | sed 's/^/-e /') \
-    --privileged -p 8080:8080 \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN \
+    -p 8080:8080 \
     intel-media-delivery demo streams
 
 On the output you should get list of streams in a format::
@@ -92,16 +108,6 @@ See `Content Attribution`_ for the copyright info for the above video. See
 `Container volumes (adding your content, access logs, etc.) <doc/howto.rst#container-volumes-adding-your-content-access-logs-etc>`_
 for how to add your own content to the demo.
 
-If your system has multiple GPU devices, you can specify the one you want to
-ren demo on with the ``DEVICE`` environment variable (default one is
-``/dev/dri/renderD128``)::
-
-  docker run --rm -it \
-    $(env | grep -E '_proxy=' | sed 's/^/-e /') \
-    -e DEVICE=${DEVICE:-/dev/dri/renderD128} \
-    --privileged -p 8080:8080 \
-    intel-media-delivery demo streams
-
 ffmpeg demo mode
 ~~~~~~~~~~~~~~~~
 
@@ -109,8 +115,13 @@ Using ``ffmpeg`` demo mode client is ran inside the container. You don't need
 to interact with the container in any other way rather than to start and stop it.
 To run it, execute::
 
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
+    xargs getent group | awk -F: '{print $3}')
   docker run --rm -it \
-    --privileged -p 8080:8080 \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN \
+    -p 8080:8080 \
     intel-media-delivery demo ffmpeg http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 
 Upon successful launch you will see output similar to the below one.
@@ -134,8 +145,13 @@ Interactive demo mode (use vlc)
 In interactive demo mode container runs all the services required for streaming, but
 awaits for the user interaction. To start demo in this mode, execute::
 
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' \
+    xargs getent group | awk -F: '{print $3}')
   docker run --rm -it \
-    --privileged -p 8080:8080 \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN \
+    -p 8080:8080 \
     intel-media-delivery demo
 
 After that you need to trigger streaming via some client running outside of the
@@ -171,8 +187,13 @@ requests for different streams would allow to exercise how system behaves under 
 loads. Mind that you can use ``-<n>`` demo option to emulate multiple streams
 available for streaming::
 
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' \
+    xargs getent group | awk -F: '{print $3}')
   docker run --rm -it \
-    --privileged -p 8080:8080 \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN \
+    -p 8080:8080 \
     intel-media-delivery demo -4 ffmpeg \
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-1/index.m3u8
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-2/index.m3u8

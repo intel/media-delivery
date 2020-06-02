@@ -209,6 +209,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-matplotlib \
     python3-numpy \
+    socat \
     tmux \
     vainfo \
     $(apt-cache depends libx264-dev | grep Depends | grep libx264 | cut -d: -f2) \

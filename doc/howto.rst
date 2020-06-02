@@ -13,7 +13,7 @@ Under Linux Intel GPU is represented by 2 devices:
 
 Card nodes allow work with the display (modesetting), but come with more
 strict access control. Render nodes do not allow interactions with the
-display, limited to headless operations and come with relaxed access control.
+display, are limited to headless operations and come with relaxed access control.
 In this solutions we use render nodes.
 
 Ran by default docker does not allow access to any devices. To access
@@ -102,17 +102,11 @@ Run Intel GPU Top under container (or how to access GPU Linux perf data)
 
 Intel GPUs are managed by i915 kernel mode driver which exposes some performance
 monitoring data via Linux `perf <https://perf.wiki.kernel.org/index.php/Main_Page>`_
-kernel subsystem. There are few detail levels you can access and they are protected
-by access rights. i915 driver exposes so called global metrics which means that you
-get data describing the whole GPU rather than particular running task. Such global
-data is definitely protected by access rights management.
-
-To access Intel GPUs data exposed via Linux perf either run the container with
-``--privileged``::
-
-  docker run --privileged <...rest-of-arguments...>
-
-or if you need finer access rights control with ``--cap-add SYS_ADMIN``::
+kernel subsystem. There are few levels of statistics data being managed by access
+rights. For this demo purposes we collect i915 global metrics, i.e. those
+which describe the whole GPU rather than particular running process. Such
+metrics require CAP_SYS_ADMIN to be collected. So, run container as follows
+to allow GPU metrics collection::
 
   docker run --cap-add SYS_ADMIN <...rest-of-arguments...>
 
@@ -130,7 +124,7 @@ command will slightly automate that::
 
   docker build \
     $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
-    -network=host \
+    --network=host \
     <...rest-of-arguments...>
 
 These proxy settings will be used to:
@@ -242,7 +236,7 @@ FFMPEG_VERSION
   or branch name or commit id.
 
 VMAF_VERSION
-  Possible values: ``<version tag>``. Default value: ``v1.3.15``
+  Possible values: ``<version tag>``. Default value: ``v1.5.1``
 
   VMAF version to build. Use one of the VMAF release tags from https://github.com/Netflix/vmaf/releases
   or branch name or commit id.

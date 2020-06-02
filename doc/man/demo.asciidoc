@@ -40,7 +40,21 @@ each input stream. Execute 'demo -4 streams' to explore the difference.
 NETWORK PORTS
 -------------
 8080::
-	Port used by nginx server to expose HLS streams
+	Port used by nginx server to expose HLS streams. You might wish to
+	publish this port out of docker container to be able to connect
+	external clients to get HLS server. Use `-p 8080:8080` option for
+	`docker run`.
+
+1234::
+	Port used by simple socat server capable to execute incoming bash
+	scripts. Nginx uses this server to schedule transcoding tasks for
+	the incoming HLS requests. For this demo this is internal port and
+	there is no need to publish it out of container. However, in real
+	deployments you will likely wish to scale the solution and move
+	socat server (or some other server with the same purpose) to a
+	separate container (which likely will run on separate GPU-capbable
+	machine). In such a case you eventually will need to publish the
+	port.
 
 OPTIONS
 -------

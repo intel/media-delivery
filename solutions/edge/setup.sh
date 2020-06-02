@@ -53,6 +53,7 @@ scripts=" \
   ../../assets/info \
   ../../measure/* \
   ../../scripts/setup-apt-proxy.sh \
+  do-transcode.sh \
   nginx-trigger-streaming.sh"
 
 for s in $scripts; do
