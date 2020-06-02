@@ -173,6 +173,9 @@ ENCODING OPTIONS
 	Sets list of bitrates in Mbps to use (default: use hardcoded bitrates which
 	depend on stream resolution and codec)
 
+--tu veryslow|slower|slow|medium|fast|faster|veryfast::
+        Sets target usage preset (default: `medium`)
+
 WORKING MODE OPTIONS
 --------------------
 --skip-metrics::
@@ -213,6 +216,9 @@ WORKING MODE OPTIONS
 
 --single-bdrate::
 	Force Single BD-rate per sequence mode (default is Dual).
+
+--enable-vdenc::
+	Force using low power VDEnc hardware mode (disabled by default).
 
 PROCESSING OPTIONS
 ------------------

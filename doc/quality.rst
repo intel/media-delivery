@@ -19,7 +19,7 @@ In addition, we measure 2 encoding modes: variable bitrate (VBR) and, constant b
 (CBR) modes. The BD-rate for a sequence encoded with a given encoder is computed by 
 averaging these 4 individual BD-rates. For assessing the quality of Intel's H.264 Advanced 
 Video Coding (AVC) and H.265 High Efficiency Video Coding (HEVC) codecs we used ffmpeg-x264 and 
-ffmpeg-x265 in very-slow presets, respectively, for the BD-rate reference.
+ffmpeg-x265 in `veryslow` presets, respectively, for the BD-rate reference.
 
 Bitrates
 --------

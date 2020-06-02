@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+dry_run=$1
+shift
 file=$1
 shift
 prefix=$1
@@ -43,13 +45,22 @@ else
 fi
 bitrate_Mbps=$1
 shift
+preset=$1
+shift
 options=$@
 shift
 
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000000))')
 
-ffmpeg -an \
+cmd=(ffmpeg -an \
   $rawvideo -i $file -vframes $nframes \
-  -c:v h264_qsv -preset medium -profile:v high -b:v $bitrate \
+  -c:v h264_qsv -preset $preset -profile:v high -b:v $bitrate \
   $options \
-  -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_VBR_QSV.h264
+  -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_VBR_QSV.h264)
+
+if [ "$dry_run" = "no" ]; then
+  "${cmd[@]}"
+else
+  echo "${cmd[@]}"
+  touch ${prefix}_${bitrate_Mbps}Mbps_VBR_QSV.h264
+fi

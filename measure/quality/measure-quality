@@ -23,11 +23,11 @@
 measure_quality=$0
 
 OPTIONS="w:h:f:o:"
-LONGOPTIONS="codec:,preset:,bitrates:"
+LONGOPTIONS="codec:,preset:,bitrates:,tu:"
 LONGOPTIONS+=",width:,height:,fourcc:,framerate:,progressive,interlaced"
 LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-ms-ssim,skip-vmaf"
 LONGOPTIONS+=",skip-encoding,skip-ffmpeg,skip-msdk,skip-cbr,skip-vbr"
-LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate"
+LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate,enable-vdenc"
 LONGOPTIONS+=",nframes:,dry-run,outdir:,outprefix:"
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
@@ -46,6 +46,7 @@ progressive=yes
 codec=AVC
 preset=best
 bitrates=""
+tu=medium
 
 nframes=0
 dry_run=no
@@ -70,6 +71,7 @@ skip_vbr=no
 skip_reference=no
 skip_bdrate=no
 single_bdrate=no
+enable_vdenc=no
 
 while true; do
     case "$1" in
@@ -107,6 +109,10 @@ while true; do
             ;;
         --bitrates)
             bitrates=$2
+            shift 2
+            ;;
+        --tu)
+            tu=$2
             shift 2
             ;;
         --nframes)
@@ -175,6 +181,10 @@ while true; do
             ;;
         --single-bdrate)
             single_bdrate=yes
+            shift
+            ;;
+        --enable-vdenc)
+            enable_vdenc=yes
             shift
             ;;
         --)
@@ -279,7 +289,7 @@ function run() {
     set_err -1
   else
     $measure_quality \
-      --codec=$codec --preset=$preset --bitrates=$bitrates \
+      --codec=$codec --preset=$preset --bitrates=$bitrates --tu=$tu \
       --nframes=$nframes \
       --width=$width --height=$height --fourcc=$fourcc --framerate=$framerate --outdir=$outdir \
       $(if_no $progressive "--interlaced") \
@@ -299,6 +309,7 @@ function run() {
       $(if_yes $skip_reference "--skip-reference") \
       $(if_yes $skip_bdrate "--skip-bdrate") \
       $(if_yes $single_bdrate "--single-bdrate") \
+      $(if_yes $enable_vdenc "--enable-vdenc") \
       -- \
       $stream
     set_err $?
@@ -366,13 +377,20 @@ function get_coding_commandline_options() {
   local codec=$1
   local preset=$2
   local app=$3
+  local enable_vdenc=$4
   local options_qsv=""
   local options_senc=""
   local options_ref=""
+
+  if [ "$enable_vdenc" = "yes" ]; then
+      options_qsv+="-low_power true "
+      options_senc+="-qsv-ff "
+  fi
+
   if [ "$codec" = "AVC" ]; then
     if [ "$preset" = "best" ]; then
-      options_qsv="-extbrc 1 -b_strategy 1 -bf 7 -refs 5"
-      options_senc="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5"
+      options_qsv+="-extbrc 1 -b_strategy 1 -bf 7 -refs 5"
+      options_senc+="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5"
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
@@ -380,17 +398,18 @@ function get_coding_commandline_options() {
     options_ref="-preset veryslow -profile:v high"
   elif [ "$codec" = "HEVC" ]; then
     if [ "$preset" = "best" ]; then
-      options_qsv="-extbrc 1 -bf 7 -refs 5"
-      options_senc="-extbrc:on -x 5"
+      options_qsv+="-extbrc 1 -bf 7 -refs 5"
+      options_senc+="-extbrc:on -x 5"
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
     fi
-    options_ref="-preset veryslow"
+    options_ref+="-preset veryslow"
   else
     echo "error: invalid codec (AVC|HEVC): $codec" >&2
     exit -1
   fi
+
   if [ $app = "qsv" ]; then
     echo "$options_qsv"
   elif [ $app = "senc" ]; then
@@ -749,9 +768,9 @@ END
 else # use predefined bitrates
   bitrates=$(get_bitrates $codec $resolution)
 fi
-options_ref=$(get_coding_commandline_options $codec $preset "ref")
-options_qsv=$(get_coding_commandline_options $codec $preset "qsv")
-options_senc=$(get_coding_commandline_options $codec $preset "senc")
+options_ref=$(get_coding_commandline_options $codec $preset "ref" $enable_vdenc)
+options_qsv=$(get_coding_commandline_options $codec $preset "qsv" $enable_vdenc)
+options_senc=$(get_coding_commandline_options $codec $preset "senc" $enable_vdenc)
 vmaf_model_path=$(get_vmaf_model $resolution)
 
 mkdir -p $outdir && cd $outdir
@@ -765,25 +784,25 @@ if [ "$skip_encoding" = "no" ]; then
   for b in ${bitrates[@]}; do
     if [ "$is_yuv" = "no" ]; then
       if [ "$skip_reference" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-ref.sh $file $outprefix $nframes $framerate $b $options_ref
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-ref.sh $file $outprefix $nframes $framerate $b $options_ref
+        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $framerate $b $options_ref
+        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $framerate $b $options_ref
       fi
       if [ "$skip_ffmpeg" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-qsv.sh $file $outprefix $nframes $framerate $b $options_qsv
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $file $outprefix $nframes $framerate $b $options_qsv
+        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $framerate $b $tu $options_qsv
+        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $framerate $b $tu $options_qsv
       fi
     else
       if [ "$skip_reference" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-ref.sh $file $outprefix $width $height $nframes $framerate $b $options_ref
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-ref.sh $file $outprefix $width $height $nframes $framerate $b $options_ref
+        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $options_ref
+        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $options_ref
       fi
       if [ "$skip_ffmpeg" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-qsv.sh $file $outprefix $width $height $nframes $framerate $b $options_qsv
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $file $outprefix $width $height $nframes $framerate $b $options_qsv
+        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_qsv
+        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_qsv
       fi
       if [ "$skip_msdk" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_sample-encode.sh $file $outprefix $width $height $nframes $framerate $b $options_senc
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_sample-encode.sh $file $outprefix $width $height $nframes $framerate $b $options_senc
+        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_sample-encode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_senc
+        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_sample-encode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_senc
       fi
     fi
   done

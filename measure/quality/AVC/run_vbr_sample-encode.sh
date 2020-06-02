@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+dry_run=$1
+shift
 file=$1
 shift
 prefix=$1
@@ -34,13 +36,22 @@ framerate=$1
 shift
 bitrate_Mbps=$1
 shift
+preset=$1
+shift
 options=$@
 shift
 
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000))')
 
-sample_encode -hw \
+cmd=(sample_encode -hw \
   h264 -w $width -h $height -f $framerate -i $file \
-  -u medium -b $bitrate -vbr -n $nframes  \
+  -u $preset -b $bitrate -vbr -n $nframes  \
   $options \
-  -o ${prefix}_${bitrate_Mbps}Mbps_VBR_SENC.h264
+  -o ${prefix}_${bitrate_Mbps}Mbps_VBR_SENC.h264)
+
+if [ "$dry_run" = "no" ]; then
+  "${cmd[@]}"
+else
+  echo "${cmd[@]}"
+  touch ${prefix}_${bitrate_Mbps}Mbps_VBR_SENC.h264
+fi

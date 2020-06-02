@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+dry_run=$1
+shift
 file=$1
 shift
 prefix=$1
@@ -50,7 +52,14 @@ bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000000))')
 maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
 bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
 
-ffmpeg -an \
+cmd=(ffmpeg -an \
   $rawvideo -i $file -vframes $nframes \
   -c:v libx265 $options -b:v $bitrate -maxrate $maxrate -bufsize $bufsize -tune psnr \
-  -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_VBR_REF.h265
+  -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_VBR_REF.h265)
+
+if [ "$dry_run" = "no" ]; then
+  "${cmd[@]}"
+else
+  echo "${cmd[@]}"
+  touch ${prefix}_${bitrate_Mbps}Mbps_VBR_REF.h265
+fi
