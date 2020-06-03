@@ -107,13 +107,12 @@ elif [[ "$command" =~ ^-([0-9]+)$ ]]; then
 fi
 
 if [ $n_pretend -gt 0 ]; then
-  sudo mkdir /opt/data/duplicates
   for stream in `ls -1 /opt/data/content/*.mp4 2>/dev/null`; do
     name=$(basename -- "$stream")
     extension="${name##*.}"
     name="${name%.*}"
     for n in `seq 1 $n_pretend`; do
-      sudo ln -s $stream /opt/data/duplicates/$name-$n.$extension
+      ln -s $stream /opt/data/duplicates/$name-$n.$extension
     done
   done
   for stream in `ls -1 /opt/data/embedded/*.mp4 2>/dev/null`; do
@@ -122,7 +121,7 @@ if [ $n_pretend -gt 0 ]; then
     name="${name%.*}"
     for n in `seq 1 $n_pretend`; do
       if [ ! -e $name-$n.$extension ]; then
-        sudo ln -s $stream /opt/data/duplicates/$name-$n.$extension
+        ln -s $stream /opt/data/duplicates/$name-$n.$extension
       fi
     done
   done

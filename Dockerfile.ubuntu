@@ -253,6 +253,7 @@ COPY --from=content /embedded /opt/data/embedded
 # Creating locations solution will need
 RUN mkdir -p /opt/data/content
 RUN mkdir -p /opt/data/artifacts && chmod a+w /opt/data/artifacts
+RUN mkdir -p /opt/data/duplicates && chown user /opt/data/duplicates
 RUN mkdir -p /var/www/hls
 
 # Setting up solution

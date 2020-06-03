@@ -59,6 +59,22 @@ load utils
   rm -rf $tmp_content $tmp_artifacts $tmp_hls
 }
 
+@test "demo-bash no artifact rewrite" {
+  tmp=`mktemp -p $_TMP -d -t artifacts-XXXX`
+  chmod 777 $tmp
+  run docker_run_opts "-v $tmp:/opt/data/artifacts" whoami
+  print_output
+  [ "$status" -eq 0 ]
+  [ "$output" = "user" ]
+
+  touch $tmp/somefile
+  run docker_run_opts "-v $tmp:/opt/data/artifacts" whoami
+  print_output
+  [ "$status" -eq 255 ]
+
+  rm -rf $tmp
+}
+
 @test "demo-bash bad content map" {
   tmp=`mktemp -p $_TMP -d -t content-XXXX`
   chmod a-r $tmp

@@ -101,7 +101,12 @@ check_access $artifacts "r" user
 check_access $artifacts "w" user
 
 # cleaning up any prev. artifacts
-sudo rm -rf $artifacts/*
+if find $artifacts -mindepth 1 | read; then
+  echo "error: artifacts folder is not empty: $artifacts" >&2
+  echo "error:   if you run under docker, please, make sure to map" >&2
+  echo "error:   empty folder for output artifacts" >&2
+  exit -1
+fi
 
 # demo writes streaming video to $hls folder
 check_access $hls "r" user
