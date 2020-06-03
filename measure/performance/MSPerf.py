@@ -86,22 +86,22 @@ class MediaContent:
 def main():
     startTime = time.time()
     # Collect command line arguments
-    parser = argparse.ArgumentParser(description='MEDIA MULTISTREAM performance v0.20.04.27')
+    parser = argparse.ArgumentParser(description='MSPERF (MULTI STREAM PERFORMANCE) v0.20.06.03', conflict_handler='resolve')
     parser.add_argument('workloads_path',help='Full path option for workload_directories/ OR for single workload_file')
     parser.add_argument('--skip-ffmpeg', '--skip_ffmpeg', action='store_true', help='skipping measure that use FFMPEG app')
     parser.add_argument('--skip-msdk', '--skip_msdk', action='store_true', help='skipping measure that use MSDK/Sample app')
     parser.add_argument('--skip-perf', '--skip_perf', action='store_true', help='skipping linux perf stat Utilization, such as VD0/VD1/RCS/etc')
     parser.add_argument('--skip-perf-trace', '--skip_perf_trace', action='store_true', help='skipping linux perf stat additional Traces, such as GT-Freq/BW-Rd/BW-Wr/etc')
     parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
-    parser.add_argument('-codec', '--encode_codec', help='Default both AVC/HEVC, AVC only, or HEVC only')
-    parser.add_argument('-initStreams', '--initialized_multiStream', help='Custom initialized concurrent of multi stream e.g. -s 720p:8,1080p:5,2160p:2')
-    parser.add_argument('-maxStreams', '--maximum_multiStream', help='Set Maximum number of Stream')
+    parser.add_argument('-c', '--codec', help='To choose Encoder Codec type, AVC or HEVC, Default will execute all')
+    parser.add_argument('-s', '--startStreams', help='To set starting of multi stream performance measurement, e.g. --startStreams 720p:8,1080p:5,2160p:2 or all:2')
+    parser.add_argument('-e', '--endStreams', help='To set ending number of multi stream performance measurement, e.g. --endStreams 5')
     parser.add_argument('-n', '--numbers_of_iteration', help='Custom limit the number of iteration of each same execution (max is 4)')
     parser.add_argument('--no-fps-limit', '--no_fps_limit', action='store_true', help='to run workload unconstraint, or as fast as possible')
     parser.add_argument('--fps-target', '--fps_target', help='to overwrite fps limit')
     parser.add_argument('-content_resolution', '--overwrite_content_resolution', help='Only for -w <file> , to overwrite content_resolution choices target e.g. (-w ../content.hevc -content_fps_list 50 -content_resolution 1080p )')
     parser.add_argument('-w_max', '--numbers_of_Workloads', help='Custom limit the number of total workloads to be executed')
-    parser.add_argument('-o', '--user_artifact_path', help='output directory for any artifacts')
+    parser.add_argument('-o', '--outdir', help='output directory for any artifacts')
     parser.add_argument('-log', '--output_log_file', help='print any run-log into this file onto main directory')
     parser.add_argument('-v', '--verbose', action='store_true', help='Dump debug related printout, such as each-cmdlines/version-log/etc')
     global performanceargs
@@ -112,8 +112,8 @@ def main():
     artifacts_path_baremetal        = os.getenv("HOME")
     isInsideContainer               = os.system("grep docker /proc/1/cgroup -qa")
 
-    if str(performanceargs.user_artifact_path) != "None":
-        artifacts_path_users = os.path.realpath(performanceargs.user_artifact_path)
+    if str(performanceargs.outdir) != "None":
+        artifacts_path_users = os.path.realpath(performanceargs.outdir)
         artifact_path = artifacts_path_users + "/"
     elif isInsideContainer == 0:
         artifact_path = artifacts_path_docker  + "/measure/perf/"
@@ -127,9 +127,9 @@ def main():
             os_env_DEVICE = os.environ['DEVICE']
 
     ################################# Variable Assignment #################################################
-    starting_streamnumber           = str(performanceargs.initialized_multiStream) if performanceargs.initialized_multiStream else "all:1"
+    starting_streamnumber           = str(performanceargs.startStreams) if performanceargs.startStreams else "all:1"
     maximum_iteration               = int(performanceargs.numbers_of_iteration) if performanceargs.numbers_of_iteration else 1
-    maximum_multiStream             = int(performanceargs.maximum_multiStream) if performanceargs.maximum_multiStream else 99
+    endStreams             = int(performanceargs.endStreams) if performanceargs.endStreams else 99
     maximum_workloads               = int(performanceargs.numbers_of_Workloads) if performanceargs.numbers_of_Workloads else 20
     debug_verbose                   = True if performanceargs.verbose else False
     no_fps_limit                    = True if performanceargs.no_fps_limit else False
@@ -138,7 +138,7 @@ def main():
     enable_debugfs                  = True if performanceargs.enable_debugfs else False
     skip_ffmpeg                     = True if performanceargs.skip_ffmpeg else False
     skip_msdk                       = True if performanceargs.skip_msdk else False
-    encode_codec                    = str(performanceargs.encode_codec).lower() if performanceargs.encode_codec else "all"
+    encode_codec                    = str(performanceargs.codec).lower() if performanceargs.codec else "all"
     fps_target                      = float(performanceargs.fps_target) if performanceargs.fps_target else 0
     overwrite_content_resolution    = str(performanceargs.overwrite_content_resolution) if performanceargs.overwrite_content_resolution else "unavailable"
     script_root_path                = os.path.dirname(os.path.realpath(__file__))
@@ -161,7 +161,7 @@ def main():
     ######################################################################################################
     if debug_verbose:
         printLog(output_log_handle, '#' * 69)
-        printLog(output_log_handle, 'PNP MULTI STREAMS PERFORMANCE v0.20.05.19')
+        printLog(output_log_handle, 'MSPERF (MULTI STREAMS PERFORMANCE) v0.20.06.03')
         printLog(output_log_handle, '#' * 69 + '\n')
     ######################################################################################################
     # Linux Perf pre-req
@@ -503,7 +503,7 @@ def main():
                 performance_avg_res_gpumem = 0
                 performance_total_res_gpumem = 0
 
-                while nextStreamNumber and (streamnumber <= maximum_multiStream):
+                while nextStreamNumber and (streamnumber <= endStreams):
                     shell_script_mms = temp_path + "mms.sh" # Move this to /tmp/perf/
                     shell_script_handle = open(shell_script_mms, 'w')
                     avg_fps = exetime = vid0_u = vid1_u = render_u = avg_freq = 0
