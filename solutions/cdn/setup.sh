@@ -43,6 +43,11 @@ chown user /var/www/hls
 # Installing nginx configuration
 cp nginx.conf /etc/nginx/nginx.conf
 
+# We will start nginx under non-root, for that to work we need to give user
+# some permissions.
+chown -R user /var/log/nginx
+chown -R user /var/lib/nginx
+
 # Installing solution scripts
 scripts=" \
   ../../assets/demo \

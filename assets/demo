@@ -220,7 +220,7 @@ elif [ "$command" != "" ]; then
 fi
 
 function start_nginx() {
-  if ! sudo nginx "$@"; then
+  if ! nginx "$@"; then
     echo "error: failed to start nginx (specified options: $@)" >&2
     exit -1
   fi
