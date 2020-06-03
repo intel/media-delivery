@@ -27,7 +27,7 @@ LONGOPTIONS="codec:,preset:,bitrates:,tu:"
 LONGOPTIONS+=",width:,height:,fourcc:,framerate:,progressive,interlaced"
 LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-ms-ssim,skip-vmaf"
 LONGOPTIONS+=",skip-encoding,skip-ffmpeg,skip-msdk,skip-cbr,skip-vbr"
-LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate,enable-vdenc"
+LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate,use-vdenc"
 LONGOPTIONS+=",nframes:,dry-run,outdir:,outprefix:"
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
@@ -71,7 +71,7 @@ skip_vbr=no
 skip_reference=no
 skip_bdrate=no
 single_bdrate=no
-enable_vdenc=no
+use_vdenc=no
 
 while true; do
     case "$1" in
@@ -183,8 +183,8 @@ while true; do
             single_bdrate=yes
             shift
             ;;
-        --enable-vdenc)
-            enable_vdenc=yes
+        --use-vdenc)
+            use_vdenc=yes
             shift
             ;;
         --)
@@ -309,7 +309,7 @@ function run() {
       $(if_yes $skip_reference "--skip-reference") \
       $(if_yes $skip_bdrate "--skip-bdrate") \
       $(if_yes $single_bdrate "--single-bdrate") \
-      $(if_yes $enable_vdenc "--enable-vdenc") \
+      $(if_yes $use_vdenc "--use-vdenc") \
       -- \
       $stream
     set_err $?
@@ -377,14 +377,14 @@ function get_coding_commandline_options() {
   local codec=$1
   local preset=$2
   local app=$3
-  local enable_vdenc=$4
+  local use_vdenc=$4
   local options_qsv=""
   local options_senc=""
   local options_ref=""
 
-  if [ "$enable_vdenc" = "yes" ]; then
+  if [ "$use_vdenc" = "yes" ]; then
       options_qsv+="-low_power true "
-      options_senc+="-qsv-ff "
+      options_senc+="-lowpower:on "
   fi
 
   if [ "$codec" = "AVC" ]; then
@@ -768,9 +768,9 @@ END
 else # use predefined bitrates
   bitrates=$(get_bitrates $codec $resolution)
 fi
-options_ref=$(get_coding_commandline_options $codec $preset "ref" $enable_vdenc)
-options_qsv=$(get_coding_commandline_options $codec $preset "qsv" $enable_vdenc)
-options_senc=$(get_coding_commandline_options $codec $preset "senc" $enable_vdenc)
+options_ref=$(get_coding_commandline_options $codec $preset "ref" $use_vdenc)
+options_qsv=$(get_coding_commandline_options $codec $preset "qsv" $use_vdenc)
+options_senc=$(get_coding_commandline_options $codec $preset "senc" $use_vdenc)
 vmaf_model_path=$(get_vmaf_model $resolution)
 
 mkdir -p $outdir && cd $outdir

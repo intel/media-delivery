@@ -217,7 +217,7 @@ WORKING MODE OPTIONS
 --single-bdrate::
 	Force Single BD-rate per sequence mode (default is Dual).
 
---enable-vdenc::
+--use-vdenc::
 	Force using low power VDEnc hardware mode (disabled by default).
 
 PROCESSING OPTIONS
