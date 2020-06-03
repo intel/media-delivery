@@ -21,16 +21,17 @@
 
 load utils
 
-@test "demo-bash whoami" {
-  run docker_run whoami
-  print_output
-  [ "$status" -eq 0 ]
-  [ "$output" = "user" ]
+whoami_test=(/bin/bash -c "set -ex; res=\$(whoami); [[ "\$res" = "user" ]];")
+pwd_test=(/bin/bash -c "set -ex; res=\$(pwd); [[ "\$res" = "/home/user" ]];")
 
-  run docker_run pwd
+@test "demo-bash whoami" {
+  run docker_run "${whoami_test[@]}"
   print_output
   [ "$status" -eq 0 ]
-  [ "$output" = "/home/user" ]
+
+  run docker_run "${pwd_test[@]}"
+  print_output
+  [ "$status" -eq 0 ]
 }
 
 @test "demo-bash no gpu" {
@@ -52,25 +53,23 @@ load utils
   chmod 777 $tmp_artifacts $tmp_hls
   run docker_run_opts \
     "-v $tmp_content:/opt/data/content -v $tmp_artifacts:/opt/data/artifacts -v $tmp_hls:/var/www/hls" \
-    whoami
+    "${whoami_test[@]}"
   print_output
   [ "$status" -eq 0 ]
-  [ "$output" = "user" ]
   rm -rf $tmp_content $tmp_artifacts $tmp_hls
 }
 
-@test "demo-bash no artifact rewrite" {
+@test "demo-bash no artifacts rewrite" {
   tmp=`mktemp -p $_TMP -d -t artifacts-XXXX`
   chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/data/artifacts" whoami
+  run docker_run_opts "-v $tmp:/opt/data/artifacts" "${whoami_test[@]}"
   print_output
   [ "$status" -eq 0 ]
-  [ "$output" = "user" ]
 
   touch $tmp/somefile
   run docker_run_opts "-v $tmp:/opt/data/artifacts" whoami
   print_output
-  [ "$status" -eq 255 ]
+  [ "$status" -ne 0 ]
 
   rm -rf $tmp
 }

@@ -64,12 +64,11 @@ load utils
 from vmaf.tools.bd_rate_calculator import BDrateCalculator;
 setA = [(35, 21),(37, 25),(39, 28),(42, 30)];
 setB = [(49, 28),(52, 32),(55, 35),(58, 37)];
-print(int(BDrateCalculator.CalcBDRate(setA,setB)*100));
+if int(BDrateCalculator.CalcBDRate(setA,setB)*100) != 23: exit(-1);
 END
   )"
   print_output
   [ $status -eq 0 ]
-  [ $output -eq 23 ]
 }
 
 @test "linux perf is ready" {
