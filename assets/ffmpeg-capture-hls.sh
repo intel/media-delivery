@@ -61,24 +61,23 @@ rm -rf $ARTIFACTS
 mkdir -p $ARTIFACTS && chmod -R 777 $ARTIFACTS
 
 function run() {
-  name=$1
+  local name=$1
   shift
 
   "$@" >$ARTIFACTS/$name.log 2>&1 &
-  pid=$!
+  local pid=$!
   echo "$pid:$name:$ARTIFACTS/$name.log" >> $ARTIFACTS/scheduled
   wait $pid
   echo "$pid:$name:$ARTIFACTS/$name.log:$?" >> $ARTIFACTS/done
 }
 
 for s in $@; do
-  if echo $s | grep http; then
+  if echo $s | grep -q http; then
     stream=$s
     # dealing with "http://localhost:8080/$stream/index.m3u8" beast
     # and we need to get $stream from it
-    stream=${stream%/*}        # remove "/index.m3u8"
-    stream=${stream#http://*/} # remove "http://<ip>:<port>/"
-    name=$stream
+    name=${stream%/*}      # remove "/index.m3u8"
+    name=${name#http://*/} # remove "http://<ip>:<port>/"
   else
     stream="http://localhost:8080/$s/index.m3u8"
     name=$s
