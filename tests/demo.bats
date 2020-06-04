@@ -196,7 +196,8 @@ function test_ffmpeg_capture() {
 
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/data/artifacts" demo ffmpeg --exit $type/WAR_TRAILER_HiQ_10_withAudio
+  run docker_run_opts "-v $tmp:/opt/data/artifacts --security-opt=no-new-privileges" \
+    demo ffmpeg --exit $type/WAR_TRAILER_HiQ_10_withAudio
   [ $status -eq 0 ]
 
   # checking artifacts in an order of appearence
