@@ -34,7 +34,7 @@ rawh264="ffmpeg -an -hwaccel qsv \
   -c:v h264_qsv -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -vf scale_qsv=w=-1:h=2160,vpp_qsv=framerate=60 \
   -c:v h264_qsv -preset medium -profile:v high -b:v 1000000 -vframes 20 \
-  -y WAR.h264"
+  -y /tmp/WAR.h264"
 
 # prepare raw 2160p h264 file, high resolution and fps=60 is needed to
 # reduce test time
@@ -42,28 +42,23 @@ rawh265="ffmpeg -an -hwaccel qsv \
   -c:v h264_qsv -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -vf scale_qsv=w=-1:h=2160,vpp_qsv=framerate=60 \
   -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 20 \
-  -y WAR.hevc"
+  -y /tmp/WAR.hevc"
 
 # Container creates artifacts under container user and host user (if not
 # 'root'), can't delete them. We change permissions to the artifacts to
 # allow full access to anyone.
 function get_test_body() {
-    ffcmd=$1
-    bcmd=$2
-    echo " \
-      set -ex; \
-      $ffcmd; \
-      $bcmd; \
-      set +e; \
-      cp -rd /opt/data/artifacts/* /opt/tmp/; \
-      sudo chmod -R 777 /opt/tmp/*"
+    local ffcmd=$1
+    local bcmd=$2
+    echo "set -ex; $ffcmd; $bcmd;"
 }
 
 @test "measure perf raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
-    $(get_test_body "$rawh264" "measure perf WAR.h264")"
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  run docker_run_opts "$opts" /bin/bash -c " \
+    $(get_test_body "$rawh264" "measure perf /tmp/WAR.h264")"
   print_output
   if ! kernel_ge_4_16; then
     [ $status -ne 0 ]
@@ -94,9 +89,10 @@ function get_test_body() {
 
 @test "measure perf raw h265" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
-    $(get_test_body "$rawh265" "measure perf WAR.hevc")"
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  run docker_run_opts "$opts" /bin/bash -c " \
+    $(get_test_body "$rawh265" "measure perf /tmp/WAR.hevc")"
   print_output
   if ! kernel_ge_4_16; then
     [ $status -ne 0 ]
@@ -127,9 +123,10 @@ function get_test_body() {
 
 @test "measure perf --skip-perf raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
-    $(get_test_body "$rawh264" "measure perf --skip-perf WAR.h264")"
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  run docker_run_opts "$opts" /bin/bash -c " \
+    $(get_test_body "$rawh264" "measure perf --skip-perf /tmp/WAR.h264")"
   print_output
   [ $status -eq 0 ]
 
@@ -156,9 +153,10 @@ function get_test_body() {
 
 @test "measure perf --skip-perf raw h265" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
-    $(get_test_body "$rawh265" "measure perf --skip-perf WAR.hevc")"
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  run docker_run_opts "$opts" /bin/bash -c " \
+    $(get_test_body "$rawh265" "measure perf --skip-perf /tmp/WAR.hevc")"
   print_output
   [ $status -eq 0 ]
 
@@ -185,9 +183,10 @@ function get_test_body() {
 
 @test "measure perf --skip-perf --skip-msdk raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
-    $(get_test_body "$rawh264" "measure perf --skip-perf --skip-msdk WAR.h264")"
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  run docker_run_opts "$opts" /bin/bash -c " \
+    $(get_test_body "$rawh264" "measure perf --skip-perf --skip-msdk /tmp/WAR.h264")"
   print_output
   [ $status -eq 0 ]
 
@@ -209,9 +208,10 @@ function get_test_body() {
 
 @test "measure perf --skip-perf --skip-ffmpeg raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/tmp" /bin/bash -c " \
-    $(get_test_body "$rawh264" "measure perf --skip-perf --skip-ffmpeg WAR.h264")"
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  run docker_run_opts "$opts" /bin/bash -c " \
+    $(get_test_body "$rawh264" "measure perf --skip-perf --skip-ffmpeg /tmp/WAR.h264")"
   print_output
   [ $status -eq 0 ]
 
