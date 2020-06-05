@@ -225,3 +225,29 @@ function get_perf_opts() {
   npng=$(find $ptmp -name *.png | wc -l)
   [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
 }
+
+@test "measure perf -decode --skip-ffmpeg raw h265" {
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$rawh265" "measure perf --enable-decode --skip-ffmpeg /tmp/WAR.hevc")"
+  print_output
+  if ! kernel_ge_4_16; then
+    [ $status -ne 0 ]
+  else
+    [ $status -eq 0 ]
+
+    ptmp=$tmp/measure/perf
+    nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_SMT -name "*.h265" | wc -l)
+    [ "$nout" -gt 0 ]
+    nlines=$(cat $ptmp/msperf_SMT_HEVC-AVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    nlines=$(cat $ptmp/msperf_SMT_HEVC-HEVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+	nlines=$(cat $ptmp/msperf_SMT_DECODE-HEVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    npng=$(find $ptmp -name "*.png" | wc -l)
+    [ "$npng" -ge 4 ] # we should have at least one picture for each performance
+  fi
+}

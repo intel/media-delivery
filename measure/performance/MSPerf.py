@@ -93,6 +93,7 @@ def main():
     parser.add_argument('--skip-perf', '--skip_perf', action='store_true', default=False, help='skipping linux perf stat Utilization, such as VD0/VD1/RCS/etc')
     parser.add_argument('--skip-perf-trace', '--skip_perf_trace', action='store_true', default=False, help='skipping linux perf stat additional Traces, such as GT-Freq/BW-Rd/BW-Wr/etc')
     parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', default=False, help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
+    parser.add_argument('--enable-decode', '--enable_decode', action='store_true', default=False, help='Enabling Multi Stream Decode support, Decode-HEVC')
     parser.add_argument('-c', '--codec', help='To choose Encoder Codec type, AVC or HEVC, Default will execute all')
     parser.add_argument('-s', '--startStreams', help='To set starting of multi stream performance measurement, e.g. --startStreams 720p:8,1080p:5,2160p:2 or all:2, Default=all:1')
     parser.add_argument('-e', '--endStreams', help='To set ending number of multi stream performance measurement, e.g. --endStreams 5, Default=NoLimit')
@@ -138,6 +139,7 @@ def main():
     enable_debugfs                  = ARGS.enable_debugfs
     skip_ffmpeg                     = ARGS.skip_ffmpeg
     skip_msdk                       = ARGS.skip_msdk
+    enable_decode                   = ARGS.enable_decode
     encode_codec                    = str(ARGS.codec).lower() if ARGS.codec else "all"
     fps_target                      = float(ARGS.fps_target) if ARGS.fps_target else 0
     overwrite_content_resolution    = str(ARGS.overwrite_content_resolution) if ARGS.overwrite_content_resolution else "unavailable"
@@ -329,9 +331,16 @@ def main():
         # command line based on resolution
         ######################################################################################################
         try:
+            cmdline_config_hevc2avc_exist = cmdline_config_avc2avc_exist = cmdline_config_hevc2hevc_exist = cmdline_config_avc2hevc_exist = cmdline_config_decode_hevc_exist = False
             with open(required_information_file, 'r') as configfile:
                 for workloadline in configfile:
                     if (not re.search("^#", str(workloadline))):
+                        if (re.search(r"hevc-avc:", str(workloadline))):  cmdline_config_hevc2avc_exist = True
+                        if (re.search(r"avc-avc:", str(workloadline))):  cmdline_config_avc2avc_exist = True
+                        if (re.search(r"hevc-hevc:", str(workloadline))):  cmdline_config_hevc2hevc_exist = True
+                        if (re.search(r"avc-hevc:", str(workloadline))):  cmdline_config_avc2hevc_exist = True
+                        if (re.search(r"decode-hevc:", str(workloadline))):  cmdline_config_decode_hevc_exist = True
+
                         if (re.search(r"^720p_hevc-avc:\s", str(workloadline))): performance_cmdline_720p_hevc2avc = workloadline.replace("720p_hevc-avc: ", "")
                         if (re.search(r"^1080p_hevc-avc:\s", str(workloadline))): performance_cmdline_1080p_hevc2avc = workloadline.replace("1080p_hevc-avc: ", "")
                         if (re.search(r"^2160p_hevc-avc:\s", str(workloadline))): performance_cmdline_2160p_hevc2avc = workloadline.replace("2160p_hevc-avc: ", "")
@@ -344,6 +353,9 @@ def main():
                         if (re.search(r"^720p_avc-hevc:\s", str(workloadline))): performance_cmdline_720p_avc2hevc = workloadline.replace("720p_avc-hevc: ", "")
                         if (re.search(r"^1080p_avc-hevc:\s", str(workloadline))): performance_cmdline_1080p_avc2hevc = workloadline.replace("1080p_avc-hevc: ", "")
                         if (re.search(r"^2160p_avc-hevc:\s", str(workloadline))): performance_cmdline_2160p_avc2hevc = workloadline.replace("2160p_avc-hevc: ", "")
+                        if (re.search(r"^720p_decode-hevc:\s",str(workloadline))): performance_cmdline_720p_decode_hevc = workloadline.replace("720p_decode-hevc: ", "")
+                        if (re.search(r"^1080p_decode-hevc:\s",str(workloadline))): performance_cmdline_1080p_decode_hevc = workloadline.replace("1080p_decode-hevc: ", "")
+                        if (re.search(r"^2160p_decode-hevc:\s",str(workloadline))): performance_cmdline_2160p_decode_hevc = workloadline.replace("2160p_decode-hevc: ", "")
         except:
             message_block(output_log_handle,'red', 'Unable to locate required file: ' + ARGS.required_information_file)
             raise sys.exit(1)
@@ -355,23 +367,31 @@ def main():
         # 2nd AVC-AVC
         # 3rd HEVC-HEVC
         # 4th AVC-HEVC
-        # 5th TBD/continue..
+        # 5th DECODE-HEVC
+        # 6th TBD/continue..
         ##################################################################################
         startTime_sequence = time.time()
-        for performance_sequence in range(4):
+        for performance_sequence in range(5):
             ##################################################################################
             # Initiate outputfile measure result as per last best stream# and fps#
             # Initiate outputfile measure table sweep as per last best stream# and fps#
             ##################################################################################
 
-            if performance_sequence == 0 and (encode_codec == "all" or encode_codec == "avc"):
+            if performance_sequence == 0 and (encode_codec == "all" or encode_codec == "avc") and cmdline_config_hevc2avc_exist:
                 performance_tag = "HEVC-AVC"
-            elif performance_sequence == 1 and (encode_codec == "all" or encode_codec == "avc"):
+                sequence_mode = "TRANSCODE"
+            elif performance_sequence == 1 and (encode_codec == "all" or encode_codec == "avc") and cmdline_config_avc2avc_exist:
                 performance_tag = "AVC-AVC"
-            elif performance_sequence == 2 and (encode_codec == "all" or encode_codec == "hevc"):
+                sequence_mode = "TRANSCODE"
+            elif performance_sequence == 2 and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_hevc2hevc_exist:
                 performance_tag = "HEVC-HEVC"
-            elif performance_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc"):
+                sequence_mode = "TRANSCODE"
+            elif performance_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_avc2hevc_exist:
                 performance_tag = "AVC-HEVC"
+                sequence_mode = "TRANSCODE"
+            elif performance_sequence == 4 and enable_decode and cmdline_config_decode_hevc_exist:
+                performance_tag = "DECODE-HEVC"
+                sequence_mode = "DECODE"
             else:
                 continue
 
@@ -453,7 +473,10 @@ def main():
                     if performance_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
                         continue
                 elif (performance_sequence == 3) and (encode_codec == "all" or encode_codec == "hevc"):  # AVC-HEVC measure sequence
-                    if performance_object_list[curContent].codec != "h264":  # skip if its not HEVC input clip
+                    if performance_object_list[curContent].codec != "h264":  # skip if its not h264 input clip
+                        continue
+                elif (performance_sequence == 4): # Decode-HEVC measure sequence
+                    if performance_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
                         continue
                 else:
                     continue
@@ -516,6 +539,7 @@ def main():
                     clip_resolution         = content_split[1]
                     clip_stream_iter_tag    = performance_app_tag + "_" + performance_tag + "_" +  clip_name+ "_" + clip_resolution + "_" + str(streamnumber)
                     fps_constraint          = int(performance_object_list[curContent].fps_target)
+                    shell_script_handle.write("echo " + clip_stream_iter_tag + "\n")
 
                     for m in range(int(streamnumber)):
                         ##################################################################################
@@ -550,7 +574,13 @@ def main():
                                 dispatch_cmdline = performance_cmdline_1080p_avc2hevc
                             elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
                                 dispatch_cmdline = performance_cmdline_2160p_avc2hevc
-
+                        elif performance_sequence == 4: # DECODE HEVC
+                            if performance_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_720p_decode_hevc
+                            elif performance_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_1080p_decode_hevc
+                            elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                                dispatch_cmdline = performance_cmdline_2160p_decode_hevc
 
                         if (ffmpeg_mode):
                             transcode_input_clip = "-i " + content_path + key
@@ -559,7 +589,7 @@ def main():
 
                             dispatch_cmdline = dispatch_cmdline.replace("-i <>", transcode_input_clip)
 
-                        else: # SMT section (DEFAULT)
+                        elif (performance_sequence < 4): # SMT Transcode
                             if performance_object_list[curContent].codec == "hevc":
                                 transcode_input_clip = "-i::h265 " + content_path + key
                                 if not no_fps_limit:
@@ -572,6 +602,12 @@ def main():
                                     transcode_input_clip = "-fps " + str(fps_constraint) + " " + transcode_input_clip
 
                                 dispatch_cmdline = dispatch_cmdline.replace("-i::h264 <>", transcode_input_clip)
+
+                        elif (performance_sequence >= 4): # SMT Decode
+                            transcode_input_clip = "-i " + content_path + key
+                            if not no_fps_limit:
+                                transcode_input_clip = "-f " + str(fps_constraint) + " " + transcode_input_clip
+                            dispatch_cmdline = dispatch_cmdline.replace("-i <>", transcode_input_clip)
 
                         ######################################################################################################
                         # this below code is for constructing unique output for each stream.
@@ -597,8 +633,14 @@ def main():
                             transcode_output_logfile = ffmpeg_device_knob + transcode_output_logfile
                             dispatch_cmdline = dispatch_cmdline.replace("-report", transcode_output_logfile).rstrip()
 
-                        else: # SMT section (DEFAULT)
+                        elif (performance_sequence < 4): # SMT Transcode
                             transcode_output_logfile = " -p " + temp_path + clip_name + "_" + clip_resolution + "_" + str(m) + "_transcode_log.txt"
+                            smt_device_knob = " -device " + os_env_DEVICE
+                            transcode_output_logfile = smt_device_knob + transcode_output_logfile
+                            dispatch_cmdline = dispatch_cmdline.replace("-p <>", transcode_output_logfile).rstrip()
+
+                        elif (performance_sequence >= 4) and not ffmpeg_mode: # SMT DECODE
+                            transcode_output_logfile = " > " + temp_path + clip_name + "_" + clip_resolution + "_" + str(m) + "_transcode_log.txt"
                             smt_device_knob = " -device " + os_env_DEVICE
                             transcode_output_logfile = smt_device_knob + transcode_output_logfile
                             dispatch_cmdline = dispatch_cmdline.replace("-p <>", transcode_output_logfile).rstrip()
@@ -609,11 +651,12 @@ def main():
                         if (ffmpeg_mode):
                             dispatch_cmdline = dispatch_cmdline + "\n"
 
-                        else: # SMT section (DEFAULT)
+                        elif (performance_sequence < 4): # SMT TRANSCODE
                             dispatch_cmdline = dispatch_cmdline + " >> " + temp_path + "console_log.txt 2>&1" + "\n"
+                        elif (performance_sequence >= 4): # SMT DECODE
+                            dispatch_cmdline = dispatch_cmdline + " 2>&1" + "\n"
 
                         performance_object_list[curContent].dispatch_cmdline = dispatch_cmdline
-                        shell_script_handle.write("echo " + clip_stream_iter_tag + "\n")
                         shell_script_handle.write(dispatch_cmdline)
                     shell_script_handle.close()
 
@@ -668,9 +711,9 @@ def main():
                             if debug_verbose:
                                 printLog(output_log_handle, " [VERBOSE][CMD]", performance_object_list[curContent].dispatch_cmdline)
                                 printLog(output_log_handle, " [VERBOSE][LINUX_PERF_TOOLS]", performance_object_list[curContent].linux_perf_cmdlines, "\n")
-                                printLog(output_log_handle, " Exit early, error in submitted commands:", str(p.returncode))
+                                printLog(output_log_handle, " Exit early, hang/error in submitted commands:", str(p.returncode))
                             else:
-                                printLog(output_log_handle, " Exit early, error in submitted commands:", str(p.returncode), "(please use -v to debug further)")
+                                printLog(output_log_handle, " Exit early, hang/error in submitted commands:", str(p.returncode), "(please use -v to debug further)")
 
                             sys.exit(1)
 
@@ -697,7 +740,7 @@ def main():
 
                         nextStreamNumber0, avg_fps, exetime, vid0_u, vid1_u, render_u, cpu_ipc, rc6_u, avg_freq , avg_vm_mem, avg_shr_mem, avg_res_mem, total_res_mem, \
                         avg_mem_utilization, max_physical_mem, avg_cpu_percentage, max_cpu_percentage, avg_res_gpumem, total_res_gpumem  = \
-                        postprocess_multistream(output_log_handle, streamnumber, j, debug_verbose, filepath_free_info, filepath_lscpu_info, performance_object_list[curContent])
+                        postprocess_multistream(output_log_handle, streamnumber, j, debug_verbose, filepath_free_info, filepath_lscpu_info, performance_object_list[curContent],sequence_mode)
 
                         if j == 0:
                             move_command = "mv " + temp_path + "*transcode_log.txt " + temp_path + "iteration_0/."
@@ -869,7 +912,7 @@ def message_block(output_log_handle, block_color, block_str):
 # Post Process Multistream FPS/stream against Content_FPS definition
 # jiwan
 ##################################################################################
-def postprocess_multistream(output_log_handle, stream_number, iteration_number, debug_verbose, tools_free_info, tools_lscpu_info, performance_object):
+def postprocess_multistream(output_log_handle, stream_number, iteration_number, debug_verbose, tools_free_info, tools_lscpu_info, performance_object, sequence_mode):
     if debug_verbose:
         printLog(output_log_handle, " [VERBOSE][CMD]", performance_object.dispatch_cmdline)
         printLog(output_log_handle, " [VERBOSE][LINUX_PERF_TOOLS]", performance_object.linux_perf_cmdlines, "\n")
@@ -880,7 +923,8 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
     total_vm_mem_value = total_res_mem_value = total_shr_mem_value = \
     avg_vm_mem_value = avg_res_mem_value = avg_shr_mem_value = \
     avg_cpu_percentage = avg_mem_utilization = total_CPU_percents_streams = \
-    total_MEM_percents_streams = max_cpu_percentage = max_physical_mem = total_res_gpumem = avg_res_gpumem = 0
+    total_MEM_percents_streams = max_cpu_percentage = max_physical_mem = total_res_gpumem = avg_res_gpumem = \
+    avg_avg_cpu_percents_streams = avg_avg_mem_percents_streams = 0
 
     ##################################################################################
     # Example of Free info dump file
@@ -955,10 +999,18 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
         cmd_perl = "perl -pi -e 's/q=.*\n//' " + performance_object.temp_path + "iteration_temp.txt"
         os.system(cmd_perl)
     else:
-        cmd_grep = "grep -H ' fps' " + performance_object.temp_path + "*transcode_log.txt " + "> " + temp_file
-        exit_progress = os.system(cmd_grep)
-        cmd_perl = "perl -pi -e 's/_transcode_log.*,//' " + performance_object.temp_path + "iteration_temp.txt"
-        os.system(cmd_perl)
+        if (sequence_mode == "DECODE"):
+            cmd_grep = "grep -H ' fps' " + performance_object.temp_path + "*transcode_log.txt " + "> " + temp_file
+            exit_progress = os.system(cmd_grep)
+            cmd_perl = "perl -pi -e 's/^.*\sfps:\s*/fps /' " + performance_object.temp_path + "iteration_temp.txt"
+            os.system(cmd_perl)
+            cmd_perl = "perl -pi -e 's/,.*\n/\n/' " + performance_object.temp_path + "iteration_temp.txt"
+            os.system(cmd_perl)
+        else:
+            cmd_grep = "grep -H ' fps' " + performance_object.temp_path + "*transcode_log.txt " + "> " + temp_file
+            exit_progress = os.system(cmd_grep)
+            cmd_perl = "perl -pi -e 's/_transcode_log.*,//' " + performance_object.temp_path + "iteration_temp.txt"
+            os.system(cmd_perl)
 
     if exit_progress == 0:
         # using With to open file to ensure the next codes are blocked until the file is exited.
@@ -1032,6 +1084,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
     # Example TOP print out per process.
     #   PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
     # 24480 intel     20   0  486824  27372  15172 R  33.3   0.2   0:00.05 sample_mu+
+    #     1 1000      20   0    4084   3456   3024 S   0.0   0.0   0:00.24 sample_mu+
     ##################################################################################
     if os.path.isfile(performance_object.top_cpumem_trace_dump):
         import numpy as np
@@ -1086,9 +1139,10 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
         for each_pid in VM_footprint_max_per_pid_array:
             total_shr_mem_value = round(float(total_shr_mem_value + SHR_footprint_max_per_pid_array[each_pid])/1000, 2)
 
-        avg_vm_mem_value    = round(total_vm_mem_value / len(top_pid_list), 2) #take average every each value
-        avg_res_mem_value   = round(total_res_mem_value / len(top_pid_list), 2)  # take average every each value
-        avg_shr_mem_value   = round(total_shr_mem_value / len(top_pid_list), 2) # take average every each value
+        if (avg_vm_mem_value != 0) and (avg_res_mem_value != 0) and (avg_shr_mem_value != 0):
+            avg_vm_mem_value    = round(total_vm_mem_value / len(top_pid_list), 2) #take average every each value
+            avg_res_mem_value   = round(total_res_mem_value / len(top_pid_list), 2)  # take average every each value
+            avg_shr_mem_value   = round(total_shr_mem_value / len(top_pid_list), 2) # take average every each value
 
         dump_top_list["stream_ID_List:"]   = str(top_pid_list) + " list"
         dump_top_list["Max_VM_Mem_list:"]   = str(VM_footprint_max_per_pid_array) + " list"
@@ -1110,8 +1164,9 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
         for each_pid in MEM_percent_per_pid_average:
             total_MEM_percents_streams = total_MEM_percents_streams + MEM_percent_per_pid_average[each_pid]
 
-        avg_avg_cpu_percents_streams   = round(total_CPU_percents_streams / len(top_pid_list), 2)  # take average every each value
-        avg_avg_mem_percents_streams   = round(total_MEM_percents_streams / len(top_pid_list), 2)  # take average every each value
+        if (total_CPU_percents_streams != 0) and (total_MEM_percents_streams != 0):
+            avg_avg_cpu_percents_streams   = round(total_CPU_percents_streams / len(top_pid_list), 2)  # take average every each value
+            avg_avg_mem_percents_streams   = round(total_MEM_percents_streams / len(top_pid_list), 2)  # take average every each value
 
         dump_top_list["AVG_CPU_Util:"]  = str(avg_avg_cpu_percents_streams)
         dump_top_list["AVG_MEM_Util:"]  = str(avg_avg_mem_percents_streams)
