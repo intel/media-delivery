@@ -81,6 +81,10 @@ function print_error() {
   echo "error: can't access $folder for $(get_perm $perm) (UID=$(id -u))" >&2
   echo "error:   if you attempt to map a host folder under docker" >&2
   echo "error:   you might need to adjust its access permissions on a host side" >&2
+  echo "error:   if you attempt to change docker user with" >&2
+  echo "error:     docker run -u \$(id -u):\$(id -g)" >&2
+  echo "error:   then you actually must mount a number of folders" >&2
+  echo "error:   since by default they are owned by internal container user" >&2
 }
 
 function check_access() {
@@ -93,12 +97,12 @@ function check_access() {
 }
 
 # verifying access rights to input/output folders
-check_access $content "r" user
+check_access $content "r"
 # demo scripts write logs and some output files (captured streaming
 # video) to $artifacts folder, and scripts also read and parse logs
 # to display monitoring statistics
-check_access $artifacts "r" user
-check_access $artifacts "w" user
+check_access $artifacts "r"
+check_access $artifacts "w"
 
 # cleaning up any prev. artifacts
 if find $artifacts -mindepth 1 | read; then
@@ -109,5 +113,8 @@ if find $artifacts -mindepth 1 | read; then
 fi
 
 # demo writes streaming video to $hls folder
-check_access $hls "r" user
-check_access $hls "w" user
+check_access $hls "r"
+check_access $hls "w"
+
+check_access /var/log/nginx "w"
+check_access /var/lib/nginx "w"

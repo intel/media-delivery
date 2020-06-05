@@ -58,7 +58,7 @@ if [ "$1" = "--exit" ]; then
 fi
 
 rm -rf $ARTIFACTS
-mkdir -p $ARTIFACTS && chmod -R 777 $ARTIFACTS
+mkdir -p $ARTIFACTS
 
 function run() {
   local name=$1
@@ -85,7 +85,7 @@ for s in $@; do
 
   # $name could actually be: <type>/<name>
   # So, we need to create <type> folder(s) to be able to place outputs and logs
-  mkdir -p $(dirname $ARTIFACTS/$name) && chmod -R 777 $ARTIFACTS
+  mkdir -p $(dirname $ARTIFACTS/$name)
 
   cmd=(ffmpeg -hide_banner -i $stream -c copy -y $ARTIFACTS/$name.mkv)
   run $name "${cmd[@]}" </dev/null >/dev/null 2>&1 &

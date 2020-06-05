@@ -54,15 +54,31 @@ function teardown() {
 ##################
 # helper functions
 ##################
-function docker_run() {
-  local DEVICE=/dev/dri/renderD128
-  local DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
-    xargs getent group | awk -F: '{print $3}')
+function get_mounts() {
+  local opts="$@"
+  local mnts=""
+  local dirs=" \
+    /opt/data/artifacts \
+    /opt/data/duplicates \
+    /var/www/hls \
+    /var/log/nginx \
+    /var/lib/nginx"
+  if echo $@ | grep -E "(-u|--read-only)"; then
+    for d in $dirs; do
+      if ! echo "$@" | grep "$d"; then
+        mnts+=" --tmpfs=$d:uid=$(id -u)"
+      fi
+    done
 
-  docker run --rm -p 8080:8080 \
-    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
-    --cap-add SYS_ADMIN \
-    ${MDS_IMAGE} "$@"
+    if ! echo "$@" | grep "/tmp"; then
+      mnts+=" --tmpfs=/tmp"
+    fi
+  fi
+  echo $mnts
+}
+
+function get_security_opts() {
+  echo "--security-opt=no-new-privileges:true --read-only"
 }
 
 function docker_run_opts() {
@@ -73,10 +89,19 @@ function docker_run_opts() {
   local DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
     xargs getent group | awk -F: '{print $3}')
 
-  docker run --rm -p 8080:8080 \
+  local cmd=(docker run --rm -p 8080:8080 \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \
-    $opts ${MDS_IMAGE} "$@"
+    $opts ${MDS_IMAGE} "$@")
+  echo "# RUN: ${cmd[@]}" >>$_TMP/cmd.txt
+  local res=0
+  "${cmd[@]}" || res=$?
+  echo "# STS: $res" >>$_TMP/cmd.txt
+  return $res
+}
+
+function docker_run() {
+  docker_run_opts "--security-opt=no-new-privileges:true" "$@"
 }
 
 function print_output() {

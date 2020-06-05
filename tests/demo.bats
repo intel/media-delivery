@@ -195,8 +195,11 @@ function test_ffmpeg_capture() {
   echo "# type=$type" >&3
 
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  chmod 777 $tmp
-  run docker_run_opts "-v $tmp:/opt/data/artifacts --security-opt=no-new-privileges" \
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+
+  run docker_run_opts "$opts" \
     demo ffmpeg --exit $type/WAR_TRAILER_HiQ_10_withAudio
   [ $status -eq 0 ]
 

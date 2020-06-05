@@ -251,11 +251,16 @@ COPY . $PREFIX/src/intel-media-delivery
 # Making content available in the container
 COPY --from=content /embedded /opt/data/embedded
 
-# Creating locations solution will need
+# Creating locations solution will need and giving permissions
+# to the default user
 RUN mkdir -p /opt/data/content
-RUN mkdir -p /opt/data/artifacts && chmod a+w /opt/data/artifacts
+RUN mkdir -p /opt/data/artifacts && chown user /opt/data/artifacts
 RUN mkdir -p /opt/data/duplicates && chown user /opt/data/duplicates
-RUN mkdir -p /var/www/hls
+# The following are locations used by nginx to produce HLS streams,
+# dump logs, etc.
+RUN mkdir -p /var/www/hls && chown user /var/www/hls
+RUN chown -R user /var/log/nginx
+RUN chown -R user /var/lib/nginx
 
 # Setting up solution
 ARG SOLUTION=cdn

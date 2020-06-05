@@ -54,7 +54,7 @@ addlog "$0 $@: DEVICE=$DEVICE"
 source /etc/demo.env
 
 ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-server
-mkdir -p $ARTIFACTS && chmod -R 777 $ARTIFACTS
+mkdir -p $ARTIFACTS
 
 # Let's parse incoming URL request which is expected to be: "/<type>/<stream>/index.m3u8"
 tmp=$1
@@ -109,7 +109,7 @@ if [ "$to_play" = "" ]; then
 fi
 
 function run() {
-  mkdir -p $ARTIFACTS/$type && chmod -R 777 $ARTIFACTS
+  mkdir -p $ARTIFACTS/$type
   echo "$@" >$ARTIFACTS/$type/$stream.log
   "$@" >>$ARTIFACTS/$type/$stream.log 2>&1 &
   pid=$!
