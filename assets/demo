@@ -239,10 +239,10 @@ if tty -s; then
     echo "split-window -v top"
     echo "split-window -v monitor-nginx-server.sh"
     echo "select-layout tiled"
-  } >> /home/user/.tmux.conf
+  } >> /tmp/tmux.conf
 
   start_nginx
-  tmux attach
+  tmux -f /tmp/tmux.conf attach
 else
   echo "note: not running under tty"
   goto_tty_note="note:   if you run under docker, consider restarting with '-it' option\n"
