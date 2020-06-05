@@ -88,32 +88,32 @@ def main():
     # Collect command line arguments
     parser = argparse.ArgumentParser(description='MSPERF (MULTI STREAM PERFORMANCE) v0.20.06.03', conflict_handler='resolve')
     parser.add_argument('workloads_path',help='Full path option for workload_directories/ OR for single workload_file')
-    parser.add_argument('--skip-ffmpeg', '--skip_ffmpeg', action='store_true', help='skipping measure that use FFMPEG app')
-    parser.add_argument('--skip-msdk', '--skip_msdk', action='store_true', help='skipping measure that use MSDK/Sample app')
-    parser.add_argument('--skip-perf', '--skip_perf', action='store_true', help='skipping linux perf stat Utilization, such as VD0/VD1/RCS/etc')
-    parser.add_argument('--skip-perf-trace', '--skip_perf_trace', action='store_true', help='skipping linux perf stat additional Traces, such as GT-Freq/BW-Rd/BW-Wr/etc')
-    parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
+    parser.add_argument('--skip-ffmpeg', '--skip_ffmpeg', action='store_true', default=False, help='skipping measure that use FFMPEG app')
+    parser.add_argument('--skip-msdk', '--skip_msdk', action='store_true', default=False, help='skipping measure that use MSDK/Sample app')
+    parser.add_argument('--skip-perf', '--skip_perf', action='store_true', default=False, help='skipping linux perf stat Utilization, such as VD0/VD1/RCS/etc')
+    parser.add_argument('--skip-perf-trace', '--skip_perf_trace', action='store_true', default=False, help='skipping linux perf stat additional Traces, such as GT-Freq/BW-Rd/BW-Wr/etc')
+    parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', default=False, help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
     parser.add_argument('-c', '--codec', help='To choose Encoder Codec type, AVC or HEVC, Default will execute all')
-    parser.add_argument('-s', '--startStreams', help='To set starting of multi stream performance measurement, e.g. --startStreams 720p:8,1080p:5,2160p:2 or all:2')
-    parser.add_argument('-e', '--endStreams', help='To set ending number of multi stream performance measurement, e.g. --endStreams 5')
-    parser.add_argument('-n', '--numbers_of_iteration', help='Custom limit the number of iteration of each same execution (max is 4)')
-    parser.add_argument('--no-fps-limit', '--no_fps_limit', action='store_true', help='to run workload unconstraint, or as fast as possible')
-    parser.add_argument('--fps-target', '--fps_target', help='to overwrite fps limit')
+    parser.add_argument('-s', '--startStreams', help='To set starting of multi stream performance measurement, e.g. --startStreams 720p:8,1080p:5,2160p:2 or all:2, Default=all:1')
+    parser.add_argument('-e', '--endStreams', help='To set ending number of multi stream performance measurement, e.g. --endStreams 5, Default=NoLimit')
+    parser.add_argument('-n', '--numbers_of_iteration', help='Custom limit the number of iteration of each same execution (max is 4), Default=1')
+    parser.add_argument('--no-fps-limit', '--no_fps_limit', action='store_true', default=False, help='to run workload unconstraint, or as fast as possible')
+    parser.add_argument('--fps-target', '--fps_target', help='to overwrite fps limit, Default=input-fps')
     parser.add_argument('-content_resolution', '--overwrite_content_resolution', help='Only for -w <file> , to overwrite content_resolution choices target e.g. (-w ../content.hevc -content_fps_list 50 -content_resolution 1080p )')
     parser.add_argument('-w_max', '--numbers_of_Workloads', help='Custom limit the number of total workloads to be executed')
     parser.add_argument('-o', '--outdir', help='output directory for any artifacts')
-    parser.add_argument('-log', '--output_log_file', help='print any run-log into this file onto main directory')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Dump debug related printout, such as each-cmdlines/version-log/etc')
-    global performanceargs
-    performanceargs = parser.parse_args()
+    parser.add_argument('-log', '--output_log_file', help='print any run-log into this file onto main directory, Default=msperf.txt')
+    parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Dump debug related printout, such as each-cmdlines/version-log/etc')
+    global ARGS
+    ARGS = parser.parse_args()
 
     ################################# Baremetal or Docker/Container check ##################################
     artifacts_path_docker           = "/opt/data/artifacts"
     artifacts_path_baremetal        = os.getenv("HOME")
     isInsideContainer               = os.system("grep docker /proc/1/cgroup -qa")
 
-    if str(performanceargs.outdir) != "None":
-        artifacts_path_users = os.path.realpath(performanceargs.outdir)
+    if str(ARGS.outdir) != "None":
+        artifacts_path_users = os.path.realpath(ARGS.outdir)
         artifact_path = artifacts_path_users + "/"
     elif isInsideContainer == 0:
         artifact_path = artifacts_path_docker  + "/measure/perf/"
@@ -127,22 +127,22 @@ def main():
             os_env_DEVICE = os.environ['DEVICE']
 
     ################################# Variable Assignment #################################################
-    starting_streamnumber           = str(performanceargs.startStreams) if performanceargs.startStreams else "all:1"
-    maximum_iteration               = int(performanceargs.numbers_of_iteration) if performanceargs.numbers_of_iteration else 1
-    endStreams             = int(performanceargs.endStreams) if performanceargs.endStreams else 99
-    maximum_workloads               = int(performanceargs.numbers_of_Workloads) if performanceargs.numbers_of_Workloads else 20
-    debug_verbose                   = True if performanceargs.verbose else False
-    no_fps_limit                    = True if performanceargs.no_fps_limit else False
-    tool_linux_perf                 = False if performanceargs.skip_perf else True
-    tool_linux_perf_trace           = False if performanceargs.skip_perf_trace else True
-    enable_debugfs                  = True if performanceargs.enable_debugfs else False
-    skip_ffmpeg                     = True if performanceargs.skip_ffmpeg else False
-    skip_msdk                       = True if performanceargs.skip_msdk else False
-    encode_codec                    = str(performanceargs.codec).lower() if performanceargs.codec else "all"
-    fps_target                      = float(performanceargs.fps_target) if performanceargs.fps_target else 0
-    overwrite_content_resolution    = str(performanceargs.overwrite_content_resolution) if performanceargs.overwrite_content_resolution else "unavailable"
+    starting_streamnumber           = str(ARGS.startStreams) if ARGS.startStreams else "all:1"
+    maximum_iteration               = int(ARGS.numbers_of_iteration) if ARGS.numbers_of_iteration else 1
+    endStreams             = int(ARGS.endStreams) if ARGS.endStreams else 99
+    maximum_workloads               = int(ARGS.numbers_of_Workloads) if ARGS.numbers_of_Workloads else 20
+    debug_verbose                   = ARGS.verbose
+    no_fps_limit                    = ARGS.no_fps_limit
+    tool_linux_perf                 = not ARGS.skip_perf
+    tool_linux_perf_trace           = not ARGS.skip_perf_trace
+    enable_debugfs                  = ARGS.enable_debugfs
+    skip_ffmpeg                     = ARGS.skip_ffmpeg
+    skip_msdk                       = ARGS.skip_msdk
+    encode_codec                    = str(ARGS.codec).lower() if ARGS.codec else "all"
+    fps_target                      = float(ARGS.fps_target) if ARGS.fps_target else 0
+    overwrite_content_resolution    = str(ARGS.overwrite_content_resolution) if ARGS.overwrite_content_resolution else "unavailable"
     script_root_path                = os.path.dirname(os.path.realpath(__file__))
-    output_log_filename             = str(performanceargs.output_log_file) if str(performanceargs.output_log_file) != "None" else "msperf.txt"
+    output_log_filename             = str(ARGS.output_log_file) if str(ARGS.output_log_file) != "None" else "msperf.txt"
     temp_path                       = "/tmp/perf/"
     ##################################################################################
     # Initiate artifacts directory
@@ -227,12 +227,12 @@ def main():
     # Setup for Workloads directory or a  single Workload performance
     ######################################################################################################
     try:
-        performanceargs.workloads_path = os.path.realpath(performanceargs.workloads_path)
+        ARGS.workloads_path = os.path.realpath(ARGS.workloads_path)
         # checks if path is a directory
-        isDirectory = os.path.isdir(performanceargs.workloads_path)
+        isDirectory = os.path.isdir(ARGS.workloads_path)
 
         # checks if path is a file
-        isFile = os.path.isfile(performanceargs.workloads_path)
+        isFile = os.path.isfile(ARGS.workloads_path)
 
         performance_sweeping_table = {}
         content_fps_list    = {}
@@ -243,7 +243,7 @@ def main():
         printLog(output_log_handle, '#' * 69)
 
         if (isDirectory):
-            content_path = str(performanceargs.workloads_path)
+            content_path = str(ARGS.workloads_path)
             if (content_path[-1] != "/"):
                 content_path = content_path + "/"
             #################################################################################
@@ -277,7 +277,7 @@ def main():
             content_list_temp_fh.close()
 
         elif (isFile):
-            content_path, content_filename = os.path.split(performanceargs.workloads_path)
+            content_path, content_filename = os.path.split(ARGS.workloads_path)
             content_path = content_path + "/" # required because the extraction dir/filename above doesn't include the "/" character.
             printLog(output_log_handle, " Profiling: " + content_filename)
             content_filename = content_filename.rstrip()
@@ -296,12 +296,12 @@ def main():
                 performance_object_list[content_filename].fps_target = float(fps_target)
 
         else:
-            message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + performanceargs.workloads_path)
+            message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + ARGS.workloads_path)
             raise sys.exit(1)
 
 
     except:
-        message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + performanceargs.workloads_path + " OR ")
+        message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + ARGS.workloads_path + " OR ")
         message_block(output_log_handle,'white', "Install FFMPEG/FFPROBE OR Rename content to the following format <clipname>_<width>x<height>p_<bitrate>_<content_fps>_<total_frames>.<codec>")
         raise sys.exit(1)
 
@@ -345,7 +345,7 @@ def main():
                         if (re.search(r"^1080p_avc-hevc:\s", str(workloadline))): performance_cmdline_1080p_avc2hevc = workloadline.replace("1080p_avc-hevc: ", "")
                         if (re.search(r"^2160p_avc-hevc:\s", str(workloadline))): performance_cmdline_2160p_avc2hevc = workloadline.replace("2160p_avc-hevc: ", "")
         except:
-            message_block(output_log_handle,'red', 'Unable to locate required file: ' + performanceargs.required_information_file)
+            message_block(output_log_handle,'red', 'Unable to locate required file: ' + ARGS.required_information_file)
             raise sys.exit(1)
 
 
@@ -515,7 +515,7 @@ def main():
                     clip_name               = content_split[0]
                     clip_resolution         = content_split[1]
                     clip_stream_iter_tag    = performance_app_tag + "_" + performance_tag + "_" +  clip_name+ "_" + clip_resolution + "_" + str(streamnumber)
-                    fps_constraint          = performance_object_list[curContent].fps_target
+                    fps_constraint          = int(performance_object_list[curContent].fps_target)
 
                     for m in range(int(streamnumber)):
                         ##################################################################################
@@ -554,14 +554,23 @@ def main():
 
                         if (ffmpeg_mode):
                             transcode_input_clip = "-i " + content_path + key
+                            if not no_fps_limit:
+                                transcode_input_clip = "-re " + transcode_input_clip
+
                             dispatch_cmdline = dispatch_cmdline.replace("-i <>", transcode_input_clip)
 
                         else: # SMT section (DEFAULT)
                             if performance_object_list[curContent].codec == "hevc":
                                 transcode_input_clip = "-i::h265 " + content_path + key
+                                if not no_fps_limit:
+                                    transcode_input_clip = "-fps " + str(fps_constraint) + " " + transcode_input_clip
+
                                 dispatch_cmdline = dispatch_cmdline.replace("-i::h265 <>", transcode_input_clip)
                             elif performance_object_list[curContent].codec == "h264":
                                 transcode_input_clip = "-i::h264 " + content_path + key
+                                if not no_fps_limit:
+                                    transcode_input_clip = "-fps " + str(fps_constraint) + " " + transcode_input_clip
+
                                 dispatch_cmdline = dispatch_cmdline.replace("-i::h264 <>", transcode_input_clip)
 
                         ######################################################################################################
@@ -574,21 +583,12 @@ def main():
                         # Adding Constraint and UnConstraint FPS
                         if (ffmpeg_mode):
                             transcode_output_clip = local_output_path + clip_name + "_" + clip_resolution + "_" + str(m)
-
-                            if not no_fps_limit:
-                                dispatch_cmdline = dispatch_cmdline.replace("-y <>", "-maxrate " + str(fps_constraint) + " -y " + transcode_output_clip)
-                            else:
-                                dispatch_cmdline = dispatch_cmdline.replace("-y <>", "-y " + transcode_output_clip)
+                            dispatch_cmdline = dispatch_cmdline.replace("-y <>", "-y " + transcode_output_clip)
 
                         else: # SMT section (DEFAULT)
                             transcode_output_clip = local_output_path + clip_name + "_" + clip_resolution + "_" + str(m)
-
-                            if not no_fps_limit:
-                                dispatch_cmdline = dispatch_cmdline.replace("-o::h264 <>","-fps " + str(fps_constraint) + " -o::h264 " + transcode_output_clip)
-                                dispatch_cmdline = dispatch_cmdline.replace("-o::h265 <>","-fps " + str(fps_constraint) + " -o::h265 " + transcode_output_clip)
-                            else:
-                                dispatch_cmdline = dispatch_cmdline.replace("-o::h264 <>", "-o::h264 " + transcode_output_clip)
-                                dispatch_cmdline = dispatch_cmdline.replace("-o::h265 <>", "-o::h265 " + transcode_output_clip)
+                            dispatch_cmdline = dispatch_cmdline.replace("-o::h264 <>", "-o::h264 " + transcode_output_clip)
+                            dispatch_cmdline = dispatch_cmdline.replace("-o::h265 <>", "-o::h265 " + transcode_output_clip)
 
                         # Adding Transcode_Output_Log file and Multiple Device knobs
                         if (ffmpeg_mode):
@@ -1220,8 +1220,14 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
 
             with open(performance_object.linux_perf_gpu_freq_trace_dump, 'r') as lp_traces:
                 for sampling_line in lp_traces:
+                    sampling_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", sampling_line).split("_")
+                    if len(sampling_line_split) < 3:
+                        continue
+
+                    if (sampling_line_split[1] == "Performance"):
+                        break
+
                     if re.search(r'actual-frequency', sampling_line):
-                        sampling_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", sampling_line).split("_")
                         freq_trace = round(float(int(sampling_line_split[2]) / 100), 2)
                         y_axis.append(freq_trace)
 
@@ -1247,12 +1253,18 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
 
             with open(performance_object.linux_perf_mem_bw_trace_dump, 'r') as lp_gpubw_traces:
                 for membw_line in lp_gpubw_traces:
-                    if re.search(r'data_reads', membw_line):
-                        membw_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", membw_line).split("_")
+                    membw_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", membw_line).split("_")
+
+                    if len(membw_line_split) < 3:
+                        continue
+
+                    if (membw_line_split[1] == "Performance"):
+                        break
+
+                    if re.search(r'data_reads', membw_line) and type(membw_line_split[2]) == "float":
                         read_trace = round((float(membw_line_split[2]) * 1.024 / 100), 2)
                         mem_bw_rd.append(read_trace)
-                    elif re.search(r'data_writes', membw_line):
-                        membw_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", membw_line).split("_")
+                    elif re.search(r'data_writes', membw_line) and type(membw_line_split[2]) == "float":
                         write_trace = round((float(membw_line_split[2]) * 1.024 / 100), 2)
                         mem_bw_wr.append(write_trace)
                     else:
@@ -1454,17 +1466,17 @@ def printLog(filehandle_printout, *args):
 
 def selectLinuxPerfMetrics(temp_path, graphic_model):
     metrics = gpu_freq_traces = mem_bw_traces = ""
-    os.system("perf list | grep -E '^\s*i915|^\s*uncore_|^\s*cycle_|^\s*task-clock|^\s*cpu-cycles|^\s*instructions OR cpu/instructions/' > " + temp_path + "perf_list_metrics.txt")
+    os.system("perf list | grep -E '^\s*i915|^\s*uncore_imc|^\s*cycle_|^\s*task-clock|^\s*cpu-cycles|^\s*instructions OR cpu/instructions/' > " + temp_path + "perf_list_metrics.txt")
     with open(temp_path + "perf_list_metrics.txt", "r") as linuxPerfMetricHandle:
         for linuxPerfMetric in linuxPerfMetricHandle:
             linuxPerfMetric         = re.sub(r'^\s+', "", linuxPerfMetric) # removing any leading spaces
             linuxPerfMetric         = re.sub(r'\s+', " ", linuxPerfMetric) # removing any multiple spaces
             linuxPerfMetric_split   = linuxPerfMetric.split(" ")
-            metrics                 = metrics + "," + linuxPerfMetric_split[0]
+            metrics                 = linuxPerfMetric_split[0] if (metrics == "") else metrics + "," + linuxPerfMetric_split[0]
             if "actual-frequency" in linuxPerfMetric:
                 gpu_freq_traces     = linuxPerfMetric_split[0]
             elif "uncore_" in linuxPerfMetric:
-                mem_bw_traces       = mem_bw_traces + "," + linuxPerfMetric_split[0]
+                mem_bw_traces       = linuxPerfMetric_split[0] if (mem_bw_traces == "") else mem_bw_traces + "," + linuxPerfMetric_split[0]
 
     return metrics, gpu_freq_traces, mem_bw_traces
 
