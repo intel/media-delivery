@@ -84,6 +84,7 @@ DEVICE::
 
 SEE ALSO
 --------
+link:demo-alive.asciidoc[demo-alive]
 link:demo-ffmpeg.asciidoc[demo-ffmpeg]
 link:demo-help.asciidoc[demo-help]
 link:demo-streams.asciidoc[demo-streams]

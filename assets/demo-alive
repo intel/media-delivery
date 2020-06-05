@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Copyright (c) 2020 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,42 +20,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# This is simple Makefile to build and install demo manual pages. It is supposed
-# to be run under docker build, so we skip comprehensive configure stage for now.
+# This is solution healthcheck:
+#   0 - all is OK
+#   1 - something is WRONG
 
-INSTALL=install
+if [ -f /tmp/socat.pid ]; then
+  ps -p $(cat /tmp/socat.pid) >/dev/null 2>&1 || exit 1
+fi
 
-prefix?=$(HOME)
-mandir?=$(prefix)/share/man
-man1dir=$(mandir)/man1
+if [ -f /tmp/nginx.pid ]; then
+  ps -p $(cat /tmp/nginx.pid) >/dev/null 2>&1 || exit 1
+fi
 
-MAN:=
-MAN+=measure.asciidoc
-MAN+=measure-quality.asciidoc
-MAN+=measure-perf.asciidoc
-MAN+=demo.asciidoc
-MAN+=demo-alive.asciidoc
-MAN+=demo-bash.asciidoc
-MAN+=demo.env.asciidoc
-MAN+=demo-ffmpeg.asciidoc
-MAN+=demo-help.asciidoc
-MAN+=demo-setup.asciidoc
-MAN+=demo-streams.asciidoc
-MAN+=ffmpeg-capture-hls.asciidoc
-MAN+=hello-bash.asciidoc
-MAN+=info.asciidoc
-MAN+=monitor-nginx-server.asciidoc
-
-DOC_MAN1=$(patsubst %.asciidoc,%.1,$(MAN))
-
-all: $(DOC_MAN1)
-
-%.1: %.asciidoc
-	a2x --format manpage --no-xmllint $<
-
-clean:
-	$(RM) *.1
-
-install: all
-	$(INSTALL) -d -m 755 $(DESTDIR)$(man1dir)
-	$(INSTALL) -m 644 $(DOC_MAN1) $(DESTDIR)$(man1dir)
+exit 0
