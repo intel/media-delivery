@@ -51,12 +51,14 @@ options=$@
 shift
 
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000000))')
+bufsize=$(python3 -c 'print(int('$bitrate' * 2))')
 
 DEVICE=${DEVICE:-/dev/dri/renderD128}
 
 cmd=(ffmpeg -hwaccel qsv -hwaccel_device $DEVICE -an \
   $rawvideo -i $file -vframes $nframes \
   -c:v hevc_qsv -preset $preset -profile:v main -b:v $bitrate -maxrate $bitrate -minrate $bitrate \
+  -bufsize $bufsize \
   $options \
   -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_CBR_QSV.h265)
 

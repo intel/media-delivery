@@ -389,8 +389,8 @@ function get_coding_commandline_options() {
 
   if [ "$codec" = "AVC" ]; then
     if [ "$preset" = "best" ]; then
-      options_qsv+="-extbrc 1 -b_strategy 1 -bf 7 -refs 5"
-      options_senc+="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5"
+      options_qsv+="-extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256"
+      options_senc+="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
@@ -398,8 +398,8 @@ function get_coding_commandline_options() {
     options_ref="-preset veryslow -profile:v high"
   elif [ "$codec" = "HEVC" ]; then
     if [ "$preset" = "best" ]; then
-      options_qsv+="-extbrc 1 -bf 7 -refs 5"
-      options_senc+="-extbrc:on -x 5"
+      options_qsv+="-extbrc 1 -bf 7 -refs 5 -g 256"
+      options_senc+="-extbrc:implicit -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1

@@ -42,6 +42,7 @@ options=$@
 shift
 
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000))')
+bufsize=$(python3 -c 'print(int('$bitrate' / 4))')
 
 DEVICE=${DEVICE:-/dev/dri/renderD128}
 
@@ -49,6 +50,7 @@ cmd=(sample_encode -hw -device $DEVICE \
   h265 -w $width -h $height -f $framerate -i $file \
   -u $preset -b $bitrate -cbr -n $nframes  \
   $options \
+  -BufferSizeInKB $bufsize \
   -o ${prefix}_${bitrate_Mbps}Mbps_CBR_SENC.h265)
 
 if [ "$dry_run" = "no" ]; then
