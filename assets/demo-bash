@@ -37,4 +37,10 @@ if ! demo-setup; then
   fi
 fi
 
+if ! test -w $(pwd) && test -w /tmp; then
+  echo "info: no write permissions to $(pwd) for current user (UID=$(id -u))" >&2
+  echo "info:   changing to /tmp..." >&2
+  cd /tmp
+fi
+
 "$@"

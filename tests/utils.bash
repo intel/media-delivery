@@ -63,14 +63,14 @@ function get_mounts() {
     /var/www/hls \
     /var/log/nginx \
     /var/lib/nginx"
-  if echo $@ | grep -E "(-u|--read-only)"; then
+  if echo $@ | grep -qE "(-u|--read-only)"; then
     for d in $dirs; do
-      if ! echo "$@" | grep "$d"; then
+      if ! echo "$@" | grep -q "$d"; then
         mnts+=" --tmpfs=$d:uid=$(id -u)"
       fi
     done
 
-    if ! echo "$@" | grep "/tmp"; then
+    if ! echo "$@" | grep -q "/tmp"; then
       mnts+=" --tmpfs=/tmp"
     fi
   fi

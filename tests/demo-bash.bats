@@ -22,16 +22,26 @@
 load utils
 
 whoami_test=(/bin/bash -c "set -ex; res=\$(whoami); [[ "\$res" = "user" ]];")
-pwd_test=(/bin/bash -c "set -ex; res=\$(pwd); [[ "\$res" = "/home/user" ]];")
+pwd_home_test=(/bin/bash -c "set -ex; res=\$(pwd); [[ "\$res" = "/home/user" ]];")
 
 @test "demo-bash whoami" {
   run docker_run "${whoami_test[@]}"
   print_output
   [ "$status" -eq 0 ]
 
-  run docker_run "${pwd_test[@]}"
+  run docker_run "${pwd_home_test[@]}"
   print_output
   [ "$status" -eq 0 ]
+}
+
+@test "demo-bash whoami host user" {
+  opts="-u $(id -u):$(id -g)"
+  opts+=" $(get_mounts $opts)"
+
+  run docker_run_opts "$opts" pwd
+  print_output
+  [ "$status" -eq 0 ]
+  grep_for "/tmp" ${lines[@]}
 }
 
 @test "demo-bash no gpu" {
