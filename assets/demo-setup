@@ -45,7 +45,10 @@ function get_gid()
 device_grp=$(ls -g $DEVICE | awk '{print $3}' | uniq)
 device_gid=$(get_gid $device_grp)
 
-if ! groups | grep -q "$device_grp"; then
+# groups might output some error message if there is no group name for the
+# GID. That's common case for the docker container and we just need to
+# ignore the error.
+if ! groups 2>/dev/null | grep -q "$device_grp"; then
   echo "error: user (UID=`id -u`) is not a member of GID=$device_gid" >&2
   echo "error:   if you run under docker rerun with:" >&2
   echo "error:     --group-add=$device_gid" >&2
