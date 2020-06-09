@@ -53,11 +53,16 @@ function get_test_body() {
     echo "set -ex; $ffcmd; $bcmd;"
 }
 
+function get_perf_opts() {
+  local tmp=$1
+  local opts="-u $(id -u):$(id -g) $(get_security_opts)"
+  opts+=" -v $tmp:/opt/data/artifacts"
+  echo "$opts $(get_mounts $opts)"
+}
+
 @test "measure perf raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
-  opts+=" $(get_mounts $opts)"
-  run docker_run_opts "$opts" /bin/bash -c " \
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
     $(get_test_body "$rawh264" "measure perf /tmp/WAR.h264")"
   print_output
   if ! kernel_ge_4_16; then
@@ -89,9 +94,7 @@ function get_test_body() {
 
 @test "measure perf raw h265" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
-  opts+=" $(get_mounts $opts)"
-  run docker_run_opts "$opts" /bin/bash -c " \
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
     $(get_test_body "$rawh265" "measure perf /tmp/WAR.hevc")"
   print_output
   if ! kernel_ge_4_16; then
@@ -123,9 +126,7 @@ function get_test_body() {
 
 @test "measure perf --skip-perf raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
-  opts+=" $(get_mounts $opts)"
-  run docker_run_opts "$opts" /bin/bash -c " \
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
     $(get_test_body "$rawh264" "measure perf --skip-perf /tmp/WAR.h264")"
   print_output
   [ $status -eq 0 ]
@@ -153,9 +154,7 @@ function get_test_body() {
 
 @test "measure perf --skip-perf raw h265" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
-  opts+=" $(get_mounts $opts)"
-  run docker_run_opts "$opts" /bin/bash -c " \
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
     $(get_test_body "$rawh265" "measure perf --skip-perf /tmp/WAR.hevc")"
   print_output
   [ $status -eq 0 ]
@@ -183,9 +182,7 @@ function get_test_body() {
 
 @test "measure perf --skip-perf --skip-msdk raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
-  opts+=" $(get_mounts $opts)"
-  run docker_run_opts "$opts" /bin/bash -c " \
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
     $(get_test_body "$rawh264" "measure perf --skip-perf --skip-msdk /tmp/WAR.h264")"
   print_output
   [ $status -eq 0 ]
@@ -208,9 +205,7 @@ function get_test_body() {
 
 @test "measure perf --skip-perf --skip-ffmpeg raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
-  opts+=" $(get_mounts $opts)"
-  run docker_run_opts "$opts" /bin/bash -c " \
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
     $(get_test_body "$rawh264" "measure perf --skip-perf --skip-ffmpeg /tmp/WAR.h264")"
   print_output
   [ $status -eq 0 ]
