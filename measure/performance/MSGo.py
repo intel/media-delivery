@@ -22,7 +22,7 @@
 ##################################################################################
 ########### James.Iwan@intel.com Measure Perf ####################################
 ########### Scott.Rowe@intel.com Measure Perf ####################################
-import subprocess, sys, os, re, argparse, time, statistics, signal, getpass
+import subprocess, sys, os, re, argparse, time, statistics, signal
 
 temp_path = "/tmp/perf/"
 
@@ -35,7 +35,6 @@ shell_script_mms = temp_path + "mms.sh"
 d = open(shell_script_mms, 'r')
 mediacmd_temp           = []
 clip_session_iter_tag   = ""
-user_id                 = getpass.getuser()
 
 for dispatch_cmdline in d:
     if re.search("echo ", dispatch_cmdline):
@@ -51,7 +50,7 @@ processes = [subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=su
 
 # TOP monitors for specified period. Later we filter TOP output by PID to avoid
 # any conflicts with data for other processes.
-cpu_mem_monitor_cmd = "top -b -d 0.01 -n 2000 -i > " + temp_path + clip_session_iter_tag + "_TopSummary.txt &"
+cpu_mem_monitor_cmd = "top -b -d 0.01 -i > " + temp_path + clip_session_iter_tag + "_TopSummary.txt &"
 top_cpu_mem_process = subprocess.Popen(cpu_mem_monitor_cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
 #Monitor GPU_MEM Utilization
@@ -76,14 +75,14 @@ os.system("killall watch") # kill all watch command , workaround.
 ############################################################################################
 # Top CPU MEM filtered by applications
 ############################################################################################
-top_cpu_mem_grep_cmd      = "grep -e '" +  user_id + ".*sample' " + " -e '" +  user_id + ".*ffmpeg' " + temp_path + clip_session_iter_tag + "_TopSummary.txt > " + temp_path + clip_session_iter_tag + "_cpumem_trace.txt"
+top_cpu_mem_grep_cmd      = "grep -E '(sample|ffmpeg)' " + temp_path + clip_session_iter_tag + "_TopSummary.txt > " + temp_path + clip_session_iter_tag + "_cpumem_trace.txt"
 top_cpu_mem_grep_process    = subprocess.Popen(top_cpu_mem_grep_cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 top_cpu_mem_grep_process.wait()
 
 ############################################################################################
 # GemObject GPU MEM filtered by applications
 ############################################################################################
-gemobject_gpu_mem_trace_grep_cmd        = "grep -e 'sample_multi' -e 'ffmpeg' " + temp_path + clip_session_iter_tag + "_GemObjectSummary.txt | grep -v '0 active' > " + temp_path + clip_session_iter_tag + "_gpumem_trace.txt"
+gemobject_gpu_mem_trace_grep_cmd        = "grep -E '(sample_multi|ffmpeg|sample_decode)' " + temp_path + clip_session_iter_tag + "_GemObjectSummary.txt | grep -v '0 active' > " + temp_path + clip_session_iter_tag + "_gpumem_trace.txt"
 gemobject_gpu_mem_trace_grep_process    = subprocess.Popen(gemobject_gpu_mem_trace_grep_cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 gemobject_gpu_mem_trace_grep_process.wait()
 
