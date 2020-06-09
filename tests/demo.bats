@@ -198,6 +198,7 @@ function test_ffmpeg_capture() {
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" \
     demo ffmpeg --exit $type/WAR_TRAILER_HiQ_10_withAudio
