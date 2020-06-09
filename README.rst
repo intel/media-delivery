@@ -27,7 +27,7 @@ build default solution (`CDN`_) run::
     --tag intel-media-delivery \
     .
 
-Use ``--build-arg SOLUTION=$SOLUTION`` docker build argument to specify other solution to
+Use ``--build-arg SAMPLE=$SAMPLE`` docker build argument to specify other solution to
 build.
 
 Host requirements
@@ -173,7 +173,7 @@ Available solutions and their architectures
 CDN
 ~~~
 
-This solution can be built with ``--build-arg SOLUTION=cdn`` which is the default.
+This solution can be built with ``--build-arg SAMPLE=cdn`` which is the default.
 
 This solution is using ffmpeg to generate HLS stream. Below image provides solution
 architecture diagram.
@@ -210,7 +210,7 @@ accelerated offloads. For bigger scale CDN solution, please, take a look on
 Edge
 ~~~~
 
-This solution can be built with ``--build-arg SOLUTION=edge``.
+This solution can be built with ``--build-arg SAMPLE=edge``.
 
 This solution is using Nginx RTMP module to generate HLS stream. TODO: describe more.
 

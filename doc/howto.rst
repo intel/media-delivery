@@ -224,7 +224,7 @@ PREFIX
   Path prefix inside the container to install custom build target and solution
   assets.
 
-SOLUTION
+SAMPLE
   Possible values: ``<path>``. Default value: ``cdn``
 
   Selects solution to build and install inside the container.
