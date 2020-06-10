@@ -100,7 +100,7 @@ RUN python3 -m pip install --upgrade pip && python3 -m pip install \
 FROM build-prerequisites AS build-all
 
 # We will install self-build components at $PREFIX whenever possible
-ARG PREFIX=/opt/intel/solutions
+ARG PREFIX=/opt/intel/samples
 ARG LIBDIR=$PREFIX/lib
 ARG PKG_CONFIG_PATH=$LIBDIR/pkgconfig
 COPY patches $PREFIX/patches
@@ -180,8 +180,8 @@ FROM build-prerequisites AS build-man
 
 USER user
 
-# Building some manual pages for the solution
-ARG PREFIX=/opt/intel/solutions
+# Building some manual pages for the sample
+ARG PREFIX=/opt/intel/samples
 COPY --chown=user doc/man /home/user/mdsman
 RUN cd /home/user/mdsman && make -j $(nproc --all) && sudo make prefix=$PREFIX install
 RUN rm -rf /home/user/mdsman
@@ -231,7 +231,7 @@ RUN rm -rf /etc/apt/apt.conf
 RUN rm -rf /tmp/scripts
 
 # Install runtime environment we manually built on 'build' stage
-ARG PREFIX=/opt/intel/solutions
+ARG PREFIX=/opt/intel/samples
 COPY --from=build-man $PREFIX $PREFIX
 COPY --from=build-all $PREFIX $PREFIX
 RUN echo "$PREFIX/lib" > /etc/ld.so.conf.d/intel-media-delivery.conf
@@ -243,15 +243,15 @@ COPY assets/demo-bash /usr/bin/
 COPY assets/hello-bash /usr/bin/
 
 FROM runtime
-ARG PREFIX=/opt/intel/solutions
+ARG PREFIX=/opt/intel/samples
 
-# Making solution sources available in the final container
+# Making sample sources available in the final container
 COPY . $PREFIX/src/intel-media-delivery
 
 # Making content available in the container
 COPY --from=content /embedded /opt/data/embedded
 
-# Creating locations solution will need and giving permissions
+# Creating locations sample will need and giving permissions
 # to the default user
 RUN mkdir -p /opt/data/content
 RUN mkdir -p /opt/data/artifacts && chown user /opt/data/artifacts
@@ -262,21 +262,21 @@ RUN mkdir -p /var/www/hls && chown user /var/www/hls
 RUN chown -R user /var/log/nginx
 RUN chown -R user /var/lib/nginx
 
-# Setting up solution
+# Setting up sample
 ARG SAMPLE=cdn
 RUN cd $PREFIX/src/intel-media-delivery/solutions/$SAMPLE && ./setup.sh $PREFIX
 
-# Setting up 'user' environment common for all solutions
+# Setting up 'user' environment common for all samples
 USER user
 WORKDIR /home/user
 
 # Declaring volumes which you might wish to optionally mount
 #  * /opt/data/content is where you can put your own content to access from inside
-#    the solution demos
-#  * /opt/data/artifacts is a location where solution will produce some output
+#    the sample demos
+#  * /opt/data/artifacts is a location where sample will produce some output
 #    artifacts like generated or captured stream and logs. You can wish to twick
 #    this location to get artifacts on your host system
-#  * /var/www/hls is a location where solution demos will generate HLS streams. You
+#  * /var/www/hls is a location where sample demos will generate HLS streams. You
 #    might wish to twick this location to get access to these streams. Mind that
 #    this is server side raw HLS stream. If you run some demo client to capture
 #    streaming video - look in the /opt/data/artifacts

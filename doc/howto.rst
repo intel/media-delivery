@@ -219,7 +219,7 @@ ENABLE_INTEL_REPO
 .. _PREFIX:
 
 PREFIX
-  Possible values: ``<path>``. Default value: ``/opt/intel/solutions``
+  Possible values: ``<path>``. Default value: ``/opt/intel/samples``
 
   Path prefix inside the container to install custom build target and solution
   assets.

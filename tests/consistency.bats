@@ -47,8 +47,8 @@ load utils
 # and user did not forget to rebuild image with --no-cache
 @test "ffmpeg patches were applied" {
   run docker_run diff \
-    /opt/intel/solutions/patches \
-    /opt/intel/solutions/src/intel-media-delivery/patches
+    /opt/intel/samples/patches \
+    /opt/intel/samples/src/intel-media-delivery/patches
   print_output
   [ $status -eq 0 ]
 }
