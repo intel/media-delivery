@@ -1,5 +1,5 @@
-Media Delivery Solutions - Video Quality
-========================================
+Video Quality
+=============
 
 .. contents::
 

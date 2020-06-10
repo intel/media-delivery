@@ -1,5 +1,5 @@
-Intel Media Deliver Solutions HowTo
-===================================
+HowTo
+=====
 
 .. contents::
 
@@ -14,14 +14,16 @@ Under Linux Intel GPU is represented by 2 devices:
 Card nodes allow work with the display (modesetting), but come with more
 strict access control. Render nodes do not allow interactions with the
 display, are limited to headless operations and come with relaxed access control.
-In this solutions we use render nodes.
+In Media Delivery samples we use render nodes.
 
 Ran by default docker does not allow access to any devices. To access
-all host devices run containter with ``--privileged``::
+all host devices you can run containter with ``--privileged``::
 
   docker run --privileged <...rest-of-arguments...>
 
-To access only GPU, run::
+However, this is not recommended way especially for final product
+deployments. Instead, it is advised to explicitly list only those device(s)
+you need to access under the container::
 
   docker run --device=/dev/dri <...rest-of-arguments...>
 
@@ -29,73 +31,38 @@ Unfortunately that's only part of the story. Following the above ``root``
 will be able to access GPU, but general users might experience problems. To
 assure that user can access GPU he should be granted corresponding permissions
 to access the device, i.e. he should be added to the group owning the device.
-This can be done from inside the container with the following commands (for the
-user ``user``)::
 
-  video_grps=$(ls -g /dev/dri/* | awk '{print $3}' | uniq)
-  n=0
-  for grp in $video_grps; do
-    grpname=$grp
-    if ! grep "^$grp:" /etc/group >/dev/null; then
-      grpname=mds_render$n
-      grpname -g $grp $grpname
-      n=$((++n))
-    fi
-    sudo usermod -aG $grpname user  # adjust 'user' name here
-  done
+To achieve that use ``--group-add`` docker run comamnd line option::
 
-Basically, that's what Intel Media Delivery Solutions are doing when you run
-demo or enter the container with ``bash``.
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
+    xargs getent group | awk -F: '{print $3}')
+  docker run --rm -it \
+    --device $DEVICE --group-add $DEVICE_GRP <...rest-of-arguments...>
 
-If you need to give permissions to the single user at the container launch
-time, use ``--group-add`` argument as follows::
+With that you explicitly grant permissions to access the specified device to
+the container user. This is advised way. If you have multiple users under
+container and experience issues granting access to all of them, then
+consider refactoring container having a single user or break single continer
+into few with single user in each. General guidance is: docker container should
+be designed to solve specific problem, be as simple as possible, permissions
+should be managed explicitly. From this perspective, alternative way to
+adjust permissions at runtime with ``usermod`` is not advisable.
 
-  docker run --device=/dev/dri \
-    $(ls -g /dev/dri/* | awk '{print $3}' | uniq | \
-      xargs getent group | awk -F: '{print $3}' | sed 's/^/--group-add /') \
+Once GPU devices become visible under container you can use them with GPU
+capable applications like ffmpeg or Media SDK samples. Typically these
+applications have support command line options (``-hwaccel`` and
+``-hwaccel_device`` for ffmpeg and ``-device`` for Media SDK samples) to select
+specific GPU device if there are few available. Media Delivery containers
+support ``DEVICE`` environment variable to adjust the device for the entire
+demo::
+
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
+    xargs getent group | awk -F: '{print $3}')
+  docker run --rm -it \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     <...rest-of-arguments...>
-
-At this point we need to comment complexity while you might be accustomed
-to just add user to the ``video`` or ``render`` group (depending on the node type and
-underlying OS)? Explanation is the following. In riality device is eventually owned
-by host OS which assigned some group to it, let's say ``video``. The point is that
-container OS inherits these permissions and group assignment, but ultimately group
-is identified by ``GID`` (Group ID) and group name (``video`` in our example) is just
-a name assigned by the OS for the user convenience. Let's say that our host OS has
-``GID=39`` for the ``video`` group. Now, different distributions have different map
-policies between ``GID`` and group names. As an outcome, container OS will see that
-device is owned by ``GID=39``, but it might assign different group name. For example,
-it might assign ``irc`` group name. You can check assignments in ``/etc/group`` files
-in host and container. As a nota bene trust ``GID`` instead of group name when you
-manage device access permissions between host and container OS.
-
-The above in-line example is a real example when you run host as CentOS and container
-OS as Ubuntu. Here is some log to illustrate what was just explained in
-the text::
-
-  #cat /etc/centos-release
-  CentOS Linux release 7.7.1908 (Core)
-
-  # ls -al /dev/dri/
-  total 0
-  drwxr-xr-x.  2 root root        80 Oct 17 02:33 .
-  drwxr-xr-x. 19 root root      3580 Oct 17 02:33 ..
-  crw-rw----+  1 root video 226,   0 Oct 17 02:33 card0
-  crw-rw----+  1 root video 226, 128 Oct 17 02:33 renderD128
-
-  # getent group video
-  video:x:39:
-
-  # docker run -it --privileged ubuntu:19.04 ls -al /dev/dri
-  total 0
-  drwxr-xr-x.  2 root root       80 Jan 30 18:11 .
-  drwxr-xr-x. 15 root root     3440 Jan 30 18:11 ..
-  crw-rw----.  1 root irc  226,   0 Jan 30 18:11 card0
-  crw-rw----.  1 root irc  226, 128 Jan 30 18:11 renderD128
-
-  # docker run -it --privileged ubuntu:19.04 getent group irc video
-  irc:x:39:
-  video:x:44:
 
 Run Intel GPU Top under container (or how to access GPU Linux perf data)
 ------------------------------------------------------------------------
@@ -116,7 +83,7 @@ use of i915 Linux perf data. Follow the above BKM to run it.
 Working under proxy
 --------------------
 
-To properly build Intel Media Delivery Solutions under network proxy, you need to
+To properly build Media Delivery samples under network proxy, you need to
 configure HTTP and HTTPS proxy servers. For example, if you have them specified
 in the usual ``http_proxy``, ``https_proxy`` and ``no_proxy`` enviornment variables,
 you can pass them to the docker build as ``--build-arg`` arguments. The following
@@ -132,7 +99,7 @@ These proxy settings will be used to:
 1. Access network to fetch OS packages (via ``apt-get`` or similar package manager)
 2. Access network to clone some git repositories or download other content
 
-Solutions use the `setup-apt-proxy.sh <../scripts/setup-apt-proxy.sh>`_ to configure
+Samples use the `setup-apt-proxy.sh <../scripts/setup-apt-proxy.sh>`_ to configure
 ``apt`` package manager.
 
 Mind that **final image will NOT contain any pre-configured proxy configuration**. This
@@ -159,38 +126,45 @@ as one of the assets to the image (at ``$PREFIX/bin`` location, see PREFIX_)::
 Container volumes (adding your content, access logs, etc.)
 ----------------------------------------------------------
 
-Container exposes few volumes which you can use to mount host folders and customize
-solution behavior. See table below for the mount points inside a container and required
+Containers exposes few volumes which you can use to mount host folders and customize
+samples behavior. See table below for the mount points inside a container and required
 access rights.
 
-=================== ============= ===========================================
+=================== ============= ====================================
 Volume              Rights needed Purpose
-=================== ============= ===========================================
-/opt/data/content   Read          Add your media content to the solution demo
-/opt/data/artifacts Read|Write    Access solution generated content and logs
+=================== ============= ====================================
+/opt/data/content   Read          Add your media content to the demo
+/opt/data/artifacts Read|Write    Access generated content and logs
 /var/www/hls        Read|Write    Access server side generated content
-=================== ============= ===========================================
+=================== ============= ====================================
 
-So, for example if you have some local content you wish to play via solution demo in
-a ``$HOME/media/`` folder you can add this folder to the container as follows::
+So, for example if you have some local content in a ``$HOME/media/`` folder which you
+wish to play via demo, you can add this folder to the container as follows::
 
   docker run -it \
     -v $HOME/media:/opt/data/content \
     <...rest-of-arguments...>
 
 In case you want to access container output artifacts (streams, logs, etc.) you need
-to give write permissions to the container users. For example in this way::
+to give write permissions to the container users. The most stright forward
+way would be::
 
   mkdir $HOME/artifacts && chmod a+w $HOME/artifacts
   docker run -it \
     -v $HOME/artifacts:/opt/data/artifacts \
     <...rest-of-arguments...>
 
+The downside of this approach would be that files will be created by the container
+user which is different from the host user, hence host user might not have
+access rights to delete them and you will need to use ``sudo`` for that
+purpose. Read `managing access rights for container user`_ for better
+approach.
+
 Media content requirements
 --------------------------
 
 Mounting a host folder to ``/opt/data/content`` inside a container allows you to
-access your own media content in solution demos::
+access your own media content in demos::
 
   docker run -it \
     -v $HOME/media:/opt/data/content \
@@ -205,11 +179,73 @@ Video track should be encoded as H.264 video. Audio track can be encoded as any 
 which would recognize by ffmpeg version available in the container. AAC or MP3 are
 recommended.
 
+Managing access rights for container user
+-----------------------------------------
+
+Managing permissions between container and a host might be tricky. Remember that the
+user you have under container (by default Media Delivery containers have
+user account named 'user') generally speaking is not the same user you have
+on your host system. Hence, you might have all bunch of access problems that
+container user can't write to the host folder or it can write there, but
+host user can't delete these files and you are forced to use ``sudo`` to modify
+them). The way to handle all that correctly would be to start container
+under host user with ``-u $(id -u):$(id -g)``. But here you step into vice versa
+problem: host user does not have access to some folder which demo is using since
+they are configured for the container default user. To handle this situation, you
+need to mount all the folders which demo is using for write access in a way host
+user will be able to use them. This can be achieved in the following way::
+
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
+    xargs getent group | awk -F: '{print $3}')
+  docker run --rm -it \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN -p 8080:8080 \
+    -u $(id -u):$(id -g) \
+    --tmpfs=/opt/data/artifacts:uid=$(id -u) \
+    --tmpfs=/opt/data/duplicates:uid=$(id -u) \
+    --tmpfs=/var/www/hls:uid=$(id -u) \
+    --tmpfs=/var/log/nginx:uid=$(id -u) \
+    --tmpfs=/var/lib/nginx:uid=$(id -u) \
+    --tmpfs=/tmp \
+    intel-media-delivery
+
+We use ``--tmpfs`` above for the simplicity to just highlight which mounts
+you need to make. Effectively, it is strongly recommended to mount output
+locations for big files (like ``/opt/data/artifacts``, and ``/var/www/hls``
+in the example above) as real volumes (with ``-v`` option) pointing to real
+folders on a host system disk space.
+
+There is another type of sitation when you need to know exact locations to where
+container writes something. That's when you wish to strengthen container security
+mounting root file system as read-only (via ``--read-only`` option). Here is
+desired command line where we will additionally deny container to gain new
+privileges::
+
+  mkdir -p $HOME/output/artifacts
+  mkdir -p $HOME/output/hls
+
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
+    xargs getent group | awk -F: '{print $3}')
+  docker run --rm -it \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN -p 8080:8080 \
+    -u $(id -u):$(id -g) \
+    -v $HOME/output/artifacts:/opt/data/artifacts \
+    -v $HOME/output/hls:/var/www/hls \
+    --tmpfs=/opt/data/duplicates:uid=$(id -u) \
+    --tmpfs=/var/log/nginx:uid=$(id -u) \
+    --tmpfs=/var/lib/nginx:uid=$(id -u) \
+    --tmpfs=/tmp \
+    --security-opt=no-new-privileges:true --read-only \
+    intel-media-delivery
+
 Container build time customizations
 -----------------------------------
 
-Solutions Dockerfiles support a number of arguments to customize the final image.
-Pass these arguments as ``docker --build-arg ARGUMENT=VALUE``.
+Dockerfiles support a number of arguments to customize the final image. Pass these
+arguments as ``docker --build-arg ARGUMENT=VALUE``.
 
 ENABLE_INTEL_REPO
   Possible values: ``yes|no``. Default value: ``yes``
@@ -221,13 +257,13 @@ ENABLE_INTEL_REPO
 PREFIX
   Possible values: ``<path>``. Default value: ``/opt/intel/samples``
 
-  Path prefix inside the container to install custom build target and solution
+  Path prefix inside the container to install custom build target and sample
   assets.
 
 SAMPLE
   Possible values: ``<path>``. Default value: ``cdn``
 
-  Selects solution to build and install inside the container.
+  Selects sample to build and install inside the container.
 
 FFMPEG_VERSION
   Possible values: ``<version tag>``. Default value: ``master``
@@ -240,3 +276,4 @@ VMAF_VERSION
 
   VMAF version to build. Use one of the VMAF release tags from https://github.com/Netflix/vmaf/releases
   or branch name or commit id.
+

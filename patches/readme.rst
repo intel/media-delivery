@@ -1,8 +1,8 @@
-Media Delivery Solutions Patches
-================================
+Patches
+=======
 
 This folder contains patches for the software included in Media Delivery
-Solutions. Folder is structured in the following way::
+Software Stacks. Folder is structured in the following way::
 
   <component-1>/series
   <component-1>/<patch-1>
@@ -19,8 +19,8 @@ be applied, for example::
   <patch-2>
 
 Mind that if patch is not listed in the `series` file (like `<patch-1>` is
-not listed in the above example), then it will not be applied even if
-presents in the components directory.
+not listed in the above example), then it will not be applied even if it
+presents in the component directory.
 
 Each patch is applied with `patch` command like::
 

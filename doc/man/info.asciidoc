@@ -13,8 +13,8 @@ SYNOPSIS
 DESCRIPTION
 -----------
 `info` is a helper script to print essential information about the system
-relevant to the media delivery solutions like OS type and version, kernel
-version, available GPUs, etc.
+relevant to the media delivery software stack like OS type and version,
+kernel version, available GPUs, etc.
 
 This script might be helpful for both the container and the host system
 considering that GPU access comes from the host, i.e. kernel version is

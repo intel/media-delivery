@@ -3,7 +3,7 @@ demo-bash(1)
 
 NAME
 ----
-demo-bash - media delivery solutions entrypoint
+demo-bash - media delivery containers entrypoint
 
 SYNOPSIS
 --------
@@ -12,11 +12,11 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-'demo-bash' is media delivery solutions entrypoint. It gets executed anytime
+'demo-bash' is media delivery containers entrypoint. It gets executed anytime
 you try to run anything via container. This script assures that correct
 environment is setup and acts as follows. First it `source /etc/demo.env` to
-get solution environment variables. Then it executes `demo-setup` script which
-should setup solution environment and return non-zero exit status in case of
+get demo environment variables. Then it executes `demo-setup` script which
+should setup demo environment and return non-zero exit status in case of
 any errors. If 'demo-bash' sees an error form `demo-setup` it exits
 immediately dumping error message to `stderr`. This behavior can be
 overwritten with `MDS_IGNORE_ERRORS=yes` enviroment variable.

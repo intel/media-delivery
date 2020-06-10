@@ -34,7 +34,7 @@ No interaction from host or other system is required. Example:
    $ demo ffmpeg <stream>
 ------------
 
-`-<n>` option is useful for demo purposes. With it solution pretends to have <n> copies of
+`-<n>` option is useful for demo purposes. With it demo pretends to have <n> copies of
 each input stream. Execute 'demo -4 streams' to explore the difference.
 
 NETWORK PORTS
@@ -50,7 +50,7 @@ NETWORK PORTS
 	scripts. Nginx uses this server to schedule transcoding tasks for
 	the incoming HLS requests. For this demo this is internal port and
 	there is no need to publish it out of container. However, in real
-	deployments you will likely wish to scale the solution and move
+	deployments you will likely wish to scale the sample and move
 	socat server (or some other server with the same purpose) to a
 	separate container (which likely will run on separate GPU-capbable
 	machine). In such a case you eventually will need to publish the

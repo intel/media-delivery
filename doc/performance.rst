@@ -1,5 +1,5 @@
-Media Delivery Solutions - Video Performance
-============================================
+Video Performance
+=================
 
 .. contents::
 

@@ -1,9 +1,10 @@
-Media Delivery Solutions Tests
-==============================
+Tests
+=====
 
-This folder contains some tests used to verify Media Delivery Solutions consistency.
-To run these tests, additionally to Media Delivery Solutions requirements you need
-to have `bats <https://github.com/bats-core/bats-core>`_ on your host system.
+This folder contains some tests used to verify Media Delivery Software Stack
+samples consistency. To run these tests, additionally to Media Delivery
+Software Stack requirements you need to have
+`bats <https://github.com/bats-core/bats-core>`_ on your host system.
 
 Before running these tests setup the following environment variable::
 

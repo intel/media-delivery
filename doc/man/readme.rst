@@ -1,15 +1,16 @@
-Media Delivery Solutions Manual Pages
-=====================================
+Manual Pages
+============
 
-Media Delivery Solutions come with comprehensive manual pages available
-from inside the running container via `man <page>` command and online.
-Primary man pages gives a command line reference for the tools included
-and forming the solution.
+Samples included into Media Delivery Software Stack come with comprehensive
+manual pages available from inside the running container via both `man <page>`
+command and online. Primary man pages gives a command line reference for the
+tools included into the samples.
 
 Demo manual pages
 =================
 
 * `demo <demo.asciidoc>`_
+* `demo-alive <demo-alive.asciidoc>`_
 * `demo-ffmpeg <demo-ffmpeg.asciidoc>`_
 * `demo-help <demo-help.asciidoc>`_
 * `demo-streams <demo-streams.asciidoc>`_
@@ -28,6 +29,7 @@ Container entrypoints and setup manual pages
 * `demo.env <demo.env.asciidoc>`_
 * `demo-setup <demo-setup.asciidoc>`_
 * `hello-bash <hello-bash.asciidoc>`_
+* `info <info.asciidoc>`_
 
 Manual pages of lower level scripts
 ===================================
