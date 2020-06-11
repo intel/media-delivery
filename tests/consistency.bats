@@ -31,6 +31,12 @@ load utils
   [ $status -eq 0 ]
 }
 
+@test "vainfo is ready" {
+  run docker_run vainfo
+  print_output
+  [ $status -eq 0 ]
+}
+
 @test "ffmpeg is ready" {
   run docker_run ffmpeg --help
   print_output
