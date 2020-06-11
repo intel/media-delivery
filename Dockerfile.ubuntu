@@ -264,7 +264,7 @@ RUN chown -R user /var/lib/nginx
 
 # Setting up sample
 ARG SAMPLE=cdn
-RUN cd $PREFIX/src/intel-media-delivery/solutions/$SAMPLE && ./setup.sh $PREFIX
+RUN cd $PREFIX/src/intel-media-delivery/samples/$SAMPLE && ./setup.sh $PREFIX
 
 # Setting up 'user' environment common for all samples
 USER user

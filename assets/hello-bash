@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# This is solutions default entrypoint script which prints out welcome
+# This is samples default entrypoint script which prints out welcome
 # message, mimimal usage instructions and enters into container.
 
 source /etc/demo.env
@@ -28,7 +28,8 @@ source /etc/demo.env
 echo "Welcome to Media Delivery $DEMO_NAME Demo!"
 echo
 echo "You've entered demo container with /bin/bash and can play around."
-echo "For example, try to run something via ffmpeg..."
+echo "For example, try to run something via ffmpeg or review manuals for"
+echo "sample ingredients ('man demo' or 'man measure')"
 echo
 echo "If you want to start demo, exit the container (type exit or CTRL+D)"
 echo "and rerun passing 'demo help' as a docker run command to get"

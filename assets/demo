@@ -50,7 +50,7 @@ function print_help() {
   echo "No interaction from host or other system is required. Example:"
   echo "   $ demo ffmpeg <stream>"
   echo ""
-  echo "'-<n>' option is useful for demo purposes. With it solution pretends to have <n> copies of"
+  echo "'-<n>' option is useful for demo purposes. With it demo pretends to have <n> copies of"
   echo "each input stream. Execute 'demo -4 streams' to explore the difference."
 }
 

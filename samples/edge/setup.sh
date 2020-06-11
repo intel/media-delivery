@@ -22,12 +22,12 @@
 
 # Usage: setup.sh <prefix>
 #
-# This scripts setups the solution by creating required directories,
+# This script setups sample by creating required directories,
 # adjusting access rights, copying configuration files and executables.
 #
 # Mind 2 key scripts created by this setup:
-#  /usr/bin/demo-bash - shell script which is an entrypoint to the solution
-#  /etc/demo.env - script containing solution environment variables to
+#  /usr/bin/demo-bash - shell script which is an entrypoint to the sample
+#  /etc/demo.env - script containing sample environment variables to
 #    source in shell scripts
 
 (( EUID != 0 )) && exec sudo -- "$0" "$@"
@@ -39,7 +39,7 @@ prefix=$1
 # Installing nginx configuration
 cp nginx.conf /etc/nginx/nginx.conf
 
-# Installing solution scripts
+# Installing asset scripts
 scripts=" \
   ../../assets/demo \
   ../../assets/demo-setup \

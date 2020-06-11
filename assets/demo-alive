@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# This is solution healthcheck:
+# This is a healthcheck script following docker HEALTHCHECK expectations:
 #   0 - all is OK
 #   1 - something is WRONG
 
