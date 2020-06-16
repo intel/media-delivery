@@ -30,6 +30,7 @@ Container entrypoints and setup manual pages
 * `demo-setup <demo-setup.asciidoc>`_
 * `hello-bash <hello-bash.asciidoc>`_
 * `info <info.asciidoc>`_
+* `setup-apt-proxy <setup-apt-proxy>`_
 
 Manual pages of lower level scripts
 ===================================

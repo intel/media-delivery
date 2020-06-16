@@ -46,8 +46,8 @@ scripts=" \
   ../../assets/ffmpeg-capture-hls.sh \
   ../../assets/info \
   ../../assets/monitor-nginx-server.sh \
+  ../../assets/setup-apt-proxy \
   ../../measure/* \
-  ../../scripts/setup-apt-proxy.sh \
   do-transcode.sh \
   nginx-trigger-streaming.sh"
 

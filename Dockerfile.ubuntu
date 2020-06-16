@@ -20,11 +20,13 @@
 
 FROM ubuntu:19.10 AS base
 
-# Helper scripts to build image
+# Copy helper scripts to base image
 COPY scripts /tmp/scripts
+COPY assets/setup-apt-proxy /tmp/scripts/
 
-# If you work under proxy - adjust this file to see outside world
-RUN /tmp/scripts/setup-apt-proxy.sh
+# If you work under proxy, adjust http(s)_proxy invironment variable(s) and
+# this script will propagate the enviroment to apt proxies.
+RUN /tmp/scripts/setup-apt-proxy
 
 # Now let's setup Intel Graphics repository
 RUN apt-get update && \
@@ -228,7 +230,7 @@ RUN /tmp/scripts/setup-runtime-image.sh
 
 # Cleaning up
 RUN rm -rf /etc/apt/apt.conf
-RUN rm -rf /tmp/scripts
+RUN rm -rf /tmp/assets
 
 # Install runtime environment we manually built on 'build' stage
 ARG PREFIX=/opt/intel/samples

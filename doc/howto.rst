@@ -99,7 +99,7 @@ These proxy settings will be used to:
 1. Access network to fetch OS packages (via ``apt-get`` or similar package manager)
 2. Access network to clone some git repositories or download other content
 
-Samples use the `setup-apt-proxy.sh <../scripts/setup-apt-proxy.sh>`_ to configure
+Samples use the `setup-apt-proxy.sh <../assets/setup-apt-proxy>`_ to configure
 ``apt`` package manager.
 
 Mind that **final image will NOT contain any pre-configured proxy configuration**. This
@@ -118,10 +118,10 @@ can be done by passing proxy host envronment variables as follows::
 
 If you are going to play around with the container and install additional packages,
 configure proxy for package manager. For that you can use the same
-`setup-apt-proxy.sh <../scripts/setup-apt-proxy.sh>`_ script which actually is included
+`setup-apt-proxy.sh <../assets/setup-apt-proxy>`_ script which actually is included
 as one of the assets to the image (at ``$PREFIX/bin`` location, see PREFIX_)::
 
-  sudo -E `which setup-apt-proxy.sh`
+  sudo -E $(which setup-apt-proxy)
 
 Container volumes (adding your content, access logs, etc.)
 ----------------------------------------------------------

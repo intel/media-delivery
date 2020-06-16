@@ -1,0 +1,37 @@
+setup-apt-proxy(1)
+==================
+
+NAME
+----
+setup-apt-proxy - helper script to setup apt proxies
+
+SYNOPSIS
+--------
+[verse]
+'setup-apt-proxy'
+
+DESCRIPTION
+-----------
+`setup-apt-proxy.sh` is a helper script to setup apt proxies from the
+standard proxy environment variables. Run it as follows:
+
+------------
+sudo -E $(which setup-apt-proxy)
+------------
+
+Upon successful run '/etc/apt/apt.conf' file will be updated. Mind that this
+configuration file gets overwritten by the script.
+
+EXIT STATUS
+-----------
+0 - if setup was successful
+
+non-zero - some error has occurred
+
+ENVIRONMENT VARIABLES
+---------------------
+http_proxy::
+	HTTP protocol proxy.
+
+https_proxy::
+	HTTPS protocol proxy.
