@@ -29,8 +29,7 @@ Each sample is available in a form of `Docker <https://docker.com>`_ container
 which you need to build locally. To build default sample (`CDN`_) run::
 
   docker build \
-    $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
-    --network=host \
+    $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
     --file Dockerfile.ubuntu \
     --tag intel-media-delivery \
     .

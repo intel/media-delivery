@@ -25,8 +25,7 @@ export https_proxy=http://proxy-chain.intel.com:911
 unset no_proxy
 
 docker build \
-  --network=host \
-  $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
+  $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
   --file Dockerfile.ubuntu \
   -t intel-media-delivery \
   .

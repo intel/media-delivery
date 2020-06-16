@@ -90,8 +90,7 @@ you can pass them to the docker build as ``--build-arg`` arguments. The followin
 command will slightly automate that::
 
   docker build \
-    $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
-    --network=host \
+    $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
     <...rest-of-arguments...>
 
 These proxy settings will be used to:
@@ -113,7 +112,7 @@ is not the case if you just run demo locally and don't play with the container).
 can be done by passing proxy host envronment variables as follows::
 
   docker run -it \
-    $(env | grep -E '_proxy=' | sed 's/^/-e /') \
+    $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/-e /') \
     <...rest-of-arguments...>
 
 If you are going to play around with the container and install additional packages,
