@@ -284,6 +284,25 @@ does not produce HLS stream. Instead it sends transcoded stream to RTMP
 server which actually breaks the stream into fragments and creates HLS
 stream. One of the downsides of using RTMP module is that it has limited
 codec capabilities. Specifically, as of now H.265 video is not supported.
+See "Edge" sample architecture diagram below.
+
+.. image:: doc/pic/edge-demo-architecture.png
+
+Effectively, commands lines to try Edge sample are similar to CDN sample.
+For example::
+
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' \
+    xargs getent group | awk -F: '{print $3}')
+  docker run --rm -it \
+    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN \
+    -p 8080:8080 \
+    intel-media-delivery demo -4 ffmpeg \
+      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-1/index.m3u8
+      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-2/index.m3u8
+      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-3/index.m3u8
+      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-4/index.m3u8
 
 How to run measurement infrastructure?
 --------------------------------------
