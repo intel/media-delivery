@@ -50,6 +50,13 @@ Effectively this will disable GPU engines utilization collection. Script
 will still be able to run and evaluate density, collect FPS, but detailed
 data will be missed.
 
+--enable-debugfs::
+	Try access debugfs data for additional metrics. Specifically, currently
+	this is the only way to estimate GPU memory consumption which is being
+	done via `/sys/kernel/debug/dri/0/i915_gem_objects` (`0` stands for
+	card number and might need to be adjusted for muti-GPU systeams).
+	Please, mind that access to debugfs requires root privileges.
+
 1:1 TRANSCODING USE CASE OPTIONS
 --------------------------------
 
@@ -80,6 +87,10 @@ contstrained to encoding fps)
 	`/opt/data/artifacts/measure/perf` if ran under docker,
 	`$HOME/measure/perf` otherwise)
 
+--verbose|-v::
+	Be verbose. Print additional info. Useful for debug to understand
+	which command lines actually got executed.
+
 PREREQUISITES
 -------------
 ffmpeg::
@@ -92,7 +103,9 @@ sample_multi_transcode::
 	Used for direct performance measurement of Intel Media SDK library.
 
 python3::
-	Used for generic script purposes.
+	Used for generic script purposes. The following Python modules are
+	required for all the features to work: `numpy`, `matplotlib`. Specifically,
+	these tools are used to generate charts.
 
 SEE ALSO
 --------
