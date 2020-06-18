@@ -97,10 +97,17 @@ END
   [ $status -eq 0 ]
   for e in ${events[@]};
   do
-    if echo $e | grep i915; then
+    if echo $e | grep -q i915; then
       ee=$(echo $e | sed 's/  */ /g' | sed 's/^ //g' | cut -d' ' -f1)
-      run docker_run perf stat -a -e $ee whoami
+      run docker_run_opts "" perf stat -a -e $ee whoami
       [ $status -eq 0 ]
+      # run with no new priv should fail with paranoid>=1
+      run docker_run perf stat -a -e $ee whoami
+      if [[ "$(cat /proc/sys/kernel/perf_event_paranoid)" -ge 1 ]]; then
+        [ $status -ne 0 ]
+      else
+        [ $status -eq 0 ]
+      fi
       break # single working event is enough for us
     fi
   done

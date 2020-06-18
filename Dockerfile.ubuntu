@@ -225,6 +225,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN rm -f /usr/bin/man && dpkg-divert --quiet --remove --rename /usr/bin/man
 RUN ln -fs `find /usr/lib/linux-tools -name perf` /usr/bin/perf;
 
+# Granting CAP_SYS_ADMIN to the Linux perf to be able to get global perf
+# events (specifically: i915 events). Mind that this will work if container
+# is started with:
+#   --cap-add SYS_ADMIN --security-opt="no-new-privileges:false"
+# If it was started with
+#   --cap-add SYS_ADMIN --security-opt="no-new-privileges:true"
+# then you need to adjust /proc/sys/kernel/perf_event_paranoid on a host to have
+# value <=0
+RUN setcap cap_sys_admin+ep $(readlink -f $(which perf))
+RUN setcap cap_sys_admin+ep $(readlink -f $(which intel_gpu_top))
+
 # This script is a placeholder to further setup the final runtime image.
 RUN /tmp/scripts/setup-runtime-image.sh
 

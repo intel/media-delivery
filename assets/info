@@ -5,7 +5,8 @@ commands=(
   "uname -a"
   "cat /proc/cmdline"
   "cat /proc/cpuinfo | grep \"model name\" | uniq"
-  "lspci -nn | grep VGA")
+  "lspci -nn | grep VGA"
+  "cat /proc/sys/kernel/perf_event_paranoid")
 
 res=0
   

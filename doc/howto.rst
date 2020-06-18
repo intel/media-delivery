@@ -72,13 +72,32 @@ monitoring data via Linux `perf <https://perf.wiki.kernel.org/index.php/Main_Pag
 kernel subsystem. There are few levels of statistics data being managed by access
 rights. For this demo purposes we collect i915 global metrics, i.e. those
 which describe the whole GPU rather than particular running process. Such
-metrics require CAP_SYS_ADMIN to be collected. So, run container as follows
-to allow GPU metrics collection::
+metrics require CAP_SYS_ADMIN or ``/proc/sys/kernel/perf_event_paranoid<=0``to be
+collected. So, run container as follows to allow GPU metrics collection::
 
   docker run --cap-add SYS_ADMIN <...rest-of-arguments...>
 
+This docker run command line works along with the following adjustment of
+the access rights for those applications which will collect perf metrics::
+
+  setcap cap_sys_admin+ep $(readlink -f $(which perf))
+  setcap cap_sys_admin+ep $(readlink -f $(which intel_gpu_top))
+
+This approach won't work however if you start container with
+``--security-opt="no-new-privileges:true"`` since it will be considered that
+you try to get additional permissions from the executable file. In this
+case, please, adjust paranoid setting on the host system::
+
+  echo 0 | sudo tee /proc/sys/kernel/perf_event_paranoid
+
+To make Media Delivery demo functional you need to specify value ``<=0``.
+
 Intel GPU Top (from Intel GPU Tools package) is one of the applications which get
 use of i915 Linux perf data. Follow the above BKM to run it.
+
+For further reading on the Linux perf security refer to Linux kernel
+`perf-security <https://www.kernel.org/doc/html/latest/admin-guide/perf-security.html>`_
+admin guide.
 
 Working under proxy
 --------------------

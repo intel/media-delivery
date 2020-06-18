@@ -55,7 +55,12 @@ function get_test_body() {
 
 function get_perf_opts() {
   local tmp=$1
-  local opts="-u $(id -u):$(id -g) $(get_security_opts)"
+  local opts="-u $(id -u):$(id -g)"
+  if [[ "$(cat /proc/sys/kernel/perf_event_paranoid)" -ge 1 ]]; then
+    opts+=" --read-only"
+  else
+    opts+=" $(get_security_opts)"
+  fi
   opts+=" -v $tmp:/opt/data/artifacts"
   echo "$opts $(get_mounts $opts)"
 }
