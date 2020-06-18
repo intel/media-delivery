@@ -3,28 +3,29 @@ Video Quality
 
 .. contents::
 
+Video Quality Assessment Methodology
+------------------------------------
 
-Video Quality Metrics
----------------------
+In this document we describe the methodology which is used to measure video quality of Intel® Media SDK 
+`Sample Encode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-encode_linux.md>`_ and 
+`ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration into FFmpeg) codecs.
+A `video quality measuring tool <man/measure-quality.asciidoc>`_ which implements this methodology is provided as 
+a part of Media Delivery Software Stack. In addition, a `performance measuring tool <man/measure-perf.asciidoc>`_ is 
+provided for allowing users to evaluate performance (see `performance methodology <performance.rst>`_ documentation).
 
-Peak signal-to-noise ratio (PSNR) is the most widely used objective image quality metric. 
-We use arithmetic average PSNR of the luminance frames (PSNR-Y) as the basic quality assessment 
-metric. Since PSNR fails to capture certain perceptual quality traits, we also make use of the 
-following additional quality metrics: SSIM, MS-SSIM, and VMAF. To compare quality with 
-different codecs and/or coding options, we compute the Bjøntegaard-Delta bitrate 
-(BD-rate) measure, in which negative values indicate how much lower the bitrate 
-is reduced, and positive values indicate how much the bitrate is increased for the same 
-PSNR-Y. We use a 4-point BD-rate measure for both low and high bitrates settings. 
-In addition, we measure 2 encoding modes: variable bitrate (VBR) and, constant bitrate 
-(CBR) modes. The BD-rate for a sequence encoded with a given encoder is computed by 
-averaging these 4 individual BD-rates. For assessing the quality of Intel's H.264 Advanced 
-Video Coding (AVC) and H.265 High Efficiency Video Coding (HEVC) codecs we used ffmpeg-x264 and 
-ffmpeg-x265 in `veryslow` presets, respectively, for the BD-rate reference.
+Peak signal-to-noise ratio (PSNR) is the most widely used objective image quality metric. We use arithmetic average PSNR of the luminance 
+frames (PSNR-Y) as the basic quality assessment metric. Since PSNR fails to capture certain perceptual quality traits, we also make use of 
+the following additional quality metrics: SSIM, MS-SSIM, and VMAF.
 
-Bitrates
---------
+To compare quality with different codecs and/or coding options, we compute the Bjøntegaard-Delta bitrate (BD-rate) measure, in which 
+negative values indicate how much the bitrate is reduced, and positive values indicate how much the bitrate is increased for the same PSNR-Y. 
+Minimum of 4 distinct points are needed for a successful BD-rate measure, so minimum of 4 distinct bitrates need to be used for each sequence 
+being tested. We resort to measuring quality using 5 target bitrates in order to capture a variety of modern encoding scenarios. However, 
+instead of using a single 5-point BD-rate measure, we use an average of two 4-point BD-rate measures instead, where the lowest 4 of 5 points 
+are used as the low bitrates BD-rate measure and the highest 4 of 5 points are used as the high bitrates BD-rate measure. The following tables 
+show specific target bitrates which we are using with H.264/AVC and H.265/HEVC video coding standards. 
 
-Coding bitrates for H.264/AVC video quality assessment:
+Target bitrates for H.264/AVC video quality assessment:
 
 +------------+---------------+-----------------+
 | Resolution | Setting       | Bitrates (Mb/s) |
@@ -43,7 +44,7 @@ Coding bitrates for H.264/AVC video quality assessment:
 +------------+---------------+-----------------+
 
 
-Coding bitrates for H.265/HEVC video quality assessment:
+Target bitrates for H.265/HEVC video quality assessment:
 
 +------------+---------------+-----------------+
 | Resolution | Setting       | Bitrates (Mb/s) |
@@ -61,13 +62,50 @@ Coding bitrates for H.265/HEVC video quality assessment:
 |            | High          | 1.5, 3, 4.5, 7.5|
 +------------+---------------+-----------------+
 
-Command Lines
--------------
+In addition, we measure 2 encoding modes: variable bitrate (VBR) and, constant bitrate (CBR) modes. 
+The BD-rate for a video sequence encoded with a given encoder is computed by averaging the following 4 
+individual BD-rates: 
 
-In the following sections you can find command lines used for high quality H.264/AVC and H.265/HEVC video coding
-with Intel® Media SDK `Sample Encode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-encode_linux.md>`_
-and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration
-into FFmpeg).
+1. CBR low bitrates BD-rate
+2. CBR high bitrates BD-rate
+3. VBR low bitrates BD-rate
+4. VBR high bitrates BD-rate.
+
+In the following sections you can find command lines used for high quality H.264/AVC and H.265/HEVC video 
+coding with Intel® Media SDK `Sample Encode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-encode_linux.md>`_
+and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration into FFmpeg).
+
+Video Quality Measuring Tool
+----------------------------
+A `video quality measuring tool <man/measure-quality.asciidoc>`_ is provided as a part of Media Delivery Software Stack.
+The tool allows users to measure video quality for themselves in a manner described in this document for either 
+a predefined set of video sequences, or a video sequences of their choosing.  The input can be a raw YUV 4:2:0 8-bit file, 
+or any video encoded bitstream (raw or within a container) supported by ffmpeg.
+
+YUV Quality Measure Example
+***************************
+
+::
+
+  measure quality -w 1920 -h 1080 -f 24 InputVideo.yuv
+
+H.264 Bitstream Quality Measure Example
+***************************************
+
+::
+
+  measure quality InputVideo.h264
+
+Only ffmpeg-based quality results will be computed for pre-encoded input content.
+
+MP4 Container Quality Measure Example
+*************************************
+
+::
+
+  measure quality InputVideo.mp4
+
+Only ffmpeg-based quality results will be computed for pre-encoded input content encapsulated in a container.
 
 H.264/AVC Command Lines
 -----------------------
@@ -77,32 +115,58 @@ ffmpeg-qsv VBR
 
 ::
 
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y \
-    -c:v h264_qsv -preset medium -profile:v high -b:v $bitrate \
-    -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+  ffmpeg -hwaccel qsv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v h264_qsv -preset medium -profile:v high \
+    -b:v $bitrate -maxrate $maxrate -bufsize $bufsize \
+    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+
+Here ``$bitrate`` represents target bitrate in bits, ``$maxrate`` represents maximum allowed bitrate in bits for VBR and it is set to 2 sec 
+(i.e. ``bitrate*2``), and ``$bufsize`` represents buffer size in bits and it is set to 4 sec (i.e. ``bitrate*4``).
 
 ffmpeg-qsv CBR
 **************
 
 ::
 
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y \
-    -c:v h264_qsv -preset medium -profile:v high -b:v $bitrate -maxrate $bitrate -minrate $bitrate \
-    -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+  ffmpeg -hwaccel qsv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v h264_qsv -preset medium -profile:v high \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $bufsize \
+    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+
+Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in bits and it is set to 2 sec (i.e. ``bitrate*2``).
+
 
 Intel Media SDK sample-encode VBR
 *********************************
 ::
 
-  sample_encode h264 -hw -i $input -w $width -h $height -n $numframes -f $framerate -o $output -u medium -vbr -b $bitrate \
-    -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5
+  sample_encode h264 -hw \
+    -i $input -w $width -h $height -n $numframes -f $framerate \
+    -o $output \
+    -u medium -vbr -b $bitrate \
+    -BufferSizeInKB $bufsize \
+    -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 \
+    -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
+
+Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in KB and it is set to 4 sec (i.e. ``bitrate/2``).
 
 Intel Media SDK sample-encode CBR
 *********************************
 ::
 
-  sample_encode h264 -hw -i $input -w $width -h $height -n $numframes -f $framerate -o $output -u medium -cbr -b $bitrate \
-    -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5
+  sample_encode h264 -hw \
+    -i $input -w $width -h $height -n $numframes -f $framerate \
+    -o $output \
+    -u medium -cbr -b $bitrate \
+    -BufferSizeInKB $bufsize \
+    -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 \
+    -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
+
+Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in KB and it is set to 2 sec (i.e. ``bitrate/4``).
 
 H.265/HEVC Command Lines
 ------------------------
@@ -112,34 +176,70 @@ ffmpeg-qsv VBR
 
 ::
 
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y \
-    -c:v hevc_qsv -preset medium -profile:v main -b:v $bitrate -extbrc 1 -qmin 1 -qmax 51 -refs 5 -vsync 0 $output
+  ffmpeg -hwaccel qsv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v hevc_qsv -preset medium -profile:v main \
+    -b:v $bitrate -maxrate $maxrate -bufsize $bufsize \
+    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+
+Here ``$bitrate`` represents target bitrate in bits, ``$maxrate`` represents maximum allowed bitrate in bits for VBR and it is set to 2 sec 
+(i.e. ``bitrate*2``), and ``$bufsize`` represents buffer size in bits and it is set to 4 sec (i.e. ``bitrate*4``).
 
 ffmpeg-qsv CBR
 **************
 
 ::
 
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv -vframes $numframes -y \
-    -c:v hevc_qsv -preset medium -profile:v main -b:v $bitrate -maxrate $bitrate -minrate $bitrate \
-    -extbrc 1 -qmin 1 -qmax 51 -refs 5 -vsync 0 $output
+  ffmpeg -hwaccel qsv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v hevc_qsv -preset medium -profile:v main \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $bufsize \
+    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+
+Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in bits and it is set to 2 sec (i.e. ``bitrate*2``).
 
 Intel Media SDK sample-encode VBR
 *********************************
 
 ::
 
-  sample_encode h265 -hw -i $input -w $width -h $height -n $numframes -f $framerate -o $output -u medium -vbr -b $bitrate -extbrc:on -x 5
+  sample_encode h265 -hw \
+    -i $input -w $width -h $height -n $numframes -f $framerate \
+    -o $output \
+    -u medium -vbr -b $bitrate \
+    -BufferSizeInKB $bufsize \
+    -extbrc:implicit -x 5 \
+    -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
+
+Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in KB and it is set to 4 sec (i.e. ``bitrate/2``).
 
 Intel Media SDK sample-encode CBR
 *********************************
 
 ::
 
-  sample_encode h265 -hw -i $input -w $width -h $height -n $numframes -f $framerate -o $output -u medium -cbr -b $bitrate -extbrc:on -x 5
+  sample_encode h265 -hw \
+    -i $input -w $width -h $height -n $numframes -f $framerate \
+    -o $output \
+    -u medium -cbr -b $bitrate \
+    -BufferSizeInKB $bufsize \
+    -extbrc:implicit -x 5 \
+    -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
+
+Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in KB and it is set to 2 sec (i.e. ``bitrate/4``).
+
+Reference Codecs
+----------------
+
+For assessing the quality of Intel's H.264 Advanced Video Coding (AVC) and H.265 High Efficiency Video Coding (HEVC) codecs we are using 
+ffmpeg-x264 and ffmpeg-x265 in ``veryslow`` preset as reference codecs for the BD-rate measure. For both reference codecs we are using default 
+coding options along with ``-tune psnr`` option. 
 
 Links
 -----
 
 * `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
 * `Intel Media SDK sample-encode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-encode_linux.md>`_
+
