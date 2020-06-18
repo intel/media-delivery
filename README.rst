@@ -304,15 +304,90 @@ For example::
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-3/index.m3u8
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-4/index.m3u8
 
-How to run measurement infrastructure?
---------------------------------------
+Tips for best performance
+-------------------------
 
-Not ready
+Recommended command lines
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Throughout the project we suggest ffmpeg-qsv (and Media SDK samples) command
+lines tuned for the quality and performance. Please, refere to the following
+documents to find them and see underlying quality and performance evaluation
+methodologies used to select optimal setting:
+
+* `Video Quality Command Lines and Measuring Methodology <doc/quality.rst>`_
+* `Video Performance Command Linux and Measuring Methodology <doc/performance.rst>`_
+
+How to run measuring tools?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This project comes with `performance <measure/performance/MSPerf.py>`_ and
+`quality <measure/quality/measure-quality>`_ measuring tools which implement
+measuring methodologies discussed in `performance <doc/performance.rst>`_
+and `quality <doc/quality.rst>`_ methodology documents.
+
+Running these tools is as simply as the following examples.
+
+* For encoding quality measurement of some YUV file:
+
+::
+
+  measure quality -w 1920 -h 1080 -f 24 InputVideo.yuv
+
+* For encoding quality measurement of some MP4 file:
+
+::
+
+  measure quality InputVideo.mp4
+
+* For performance measurement of transcoding of some raw H.264/AVC file:
+
+::
+
+  measure performance InputVideo.h264
+
+By default measuring tools will encode with H.264/AVC, to change a codec,
+use a ``--codec`` option::
+
+  measure quality --codec HEVC -w 1920 -h 1080 -f 24 InputVideo.yuv
+  measure perf --codec HEVC InputVideo.h264
+
+For detailed tools usage refer to the manual pages for
+`performance <doc/man/measure-perf.asciidoc>`_ and
+`quality <doc/man/measure-quality.asciidoc>`_.
+
+Known limitations
++++++++++++++++++
+
+* `measure-quality <doc/man/measure-quality.asciidoc>`_ does not support
+  transcoding of input streams in raw video formats w/ Media SDK sample
+  applications (i.e. you will get results for ffmpeg-qsv only)
+
+* `measure-perf <doc/man/measure-perf.asciidoc>`_ does not support input
+  streams in container formats (i.e. .mp4, .ts files won't be accepted - feed
+  the tool with raw video streams like .h264, .h265, etc.)
+
+* `measure-perf <doc/man/measure-perf.asciidoc>`_ supports input streams
+  with specific resolutions only: 720p, 1080p, 2160p
+
+* Intel Media SDK samples don't support input streams in container formats
+  (i.e. .mp4, .ts, etc.), hence both measure-quality and measure-perf will
+  run measurement for ffmpeg-qsv path only for such streams.
 
 Further reading
 ---------------
 
 * `Manual Pages <doc/man/readme.rst>`_
+
+  * `man demo <doc/man/demo.asciidoc>`_
+  * `man measure-perf <doc/man/measure-perf.asciidoc>`_
+  * `man measure-quality <doc/man/measure-quality.asciidoc>`_
+
+* Reference command lines & methodologies
+
+  * `performance <doc/performance.rst>`_
+  * `quality <doc/quality.rst>`_
+
 * `HowTo <doc/howto.rst>`_
 * `Tests <tests/readme.rst>`_
 
@@ -335,3 +410,5 @@ Links
 * `FFmpeg <http://ffmpeg.org/>`_
 * `VLC player <https://www.videolan.org/vlc/index.html>`_
 * `NGinx <http://nginx.org>`_
+* `Intel Media SDK <https://github.com/Intel-Media-SDK/MediaSDK>`_
+* `Intel Media Driver <https://github.com/intel/media-driver>`_
