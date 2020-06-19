@@ -119,10 +119,15 @@ function run() {
 }
 
 if [ "$type" = "vod/avc" ]; then
+  bitrate=3000000
+  maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
+  bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
   cmd=(ffmpeg
     -hwaccel qsv -hwaccel_device $DEVICE
     -c:v h264_qsv -re -i $to_play
-    -c:v h264_qsv -preset medium -profile:v high -b:v 3000000 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0
+    -c:v h264_qsv -profile:v high -preset medium
+      -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
+      -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 -vsync 0
     -c:a copy -f flv rtmp://localhost:1935/$type/$stream)
 else
   cmd=(bash -c 'echo "bug: unsupported streaming type: $type"; exit 1;')

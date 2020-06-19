@@ -122,20 +122,30 @@ function run() {
 }
 
 if [ "$type" = "vod/avc" ]; then
+  bitrate=3000000
+  maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
+  bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
   cmd=(ffmpeg
     -hwaccel qsv -hwaccel_device $DEVICE
     -c:v h264_qsv -re -i $to_play -c:a copy
-    -c:v h264_qsv -preset medium -profile:v high -b:v 3000000 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0
+    -c:v h264_qsv -profile:v high -preset medium
+      -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
+      -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 -vsync 0
     -f hls -hls_time 10 -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
     -use_localtime_mkdir 1
     -var_stream_map 'v:0,a:0' stream_%v.m3u8)
 elif [ "$type" = "vod/hevc" ]; then
+  bitrate=3000000
+  maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
+  bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
   cmd=(ffmpeg
     -hwaccel qsv -hwaccel_device $DEVICE
     -c:v h264_qsv -re -i $to_play -c:a copy
-    -c:v hevc_qsv -preset medium -profile:v main -b:v 3000000 -extbrc 1 -refs 5 -vsync 0
+    -c:v hevc_qsv -profile:v main -preset medium
+      -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
+      -extbrc 1 -bf 7 -refs 5 -g 256 -vsync 0
     -f hls -hls_time 10 -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
