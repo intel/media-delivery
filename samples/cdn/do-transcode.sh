@@ -130,7 +130,7 @@ if [ "$type" = "vod/avc" ]; then
     -c:v h264_qsv -re -i $to_play -c:a copy
     -c:v h264_qsv -profile:v high -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
-      -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 -vsync 0
+      -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256
     -f hls -hls_time 10 -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
@@ -145,7 +145,7 @@ elif [ "$type" = "vod/hevc" ]; then
     -c:v h264_qsv -re -i $to_play -c:a copy
     -c:v hevc_qsv -profile:v main -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
-      -extbrc 1 -bf 7 -refs 5 -g 256 -vsync 0
+      -extbrc 1 -bf 7 -refs 5 -g 256
     -f hls -hls_time 10 -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts

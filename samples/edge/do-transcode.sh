@@ -127,7 +127,7 @@ if [ "$type" = "vod/avc" ]; then
     -c:v h264_qsv -re -i $to_play
     -c:v h264_qsv -profile:v high -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
-      -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 -vsync 0
+      -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256
     -c:a copy -f flv rtmp://localhost:1935/$type/$stream)
 else
   cmd=(bash -c 'echo "bug: unsupported streaming type: $type"; exit 1;')
