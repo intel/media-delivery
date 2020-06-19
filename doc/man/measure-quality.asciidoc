@@ -31,9 +31,9 @@ Search is done in the root `<folder>` and all subfolders.
 ------------
 +
 In this case quality measure is run only for the specified stream. If stream is YUV you need to
-specify its characteristics via command line optins (`-w`, `-h`, `-f`,
-`--fourcc`, etc.). Mind that YUV stream will be measured both via ffmpeg-qsv and
-Media SDK Sample Encode, but a stream encapsulated in a containers (e.g. MP4, TS, etc.) will be measured only via
+specify its characteristics via command line optins (`-w`, `-h`, `-f`, etc.). Mind that YUV 
+stream will be measured both via ffmpeg-qsv and Media SDK Sample Encode, but a stream 
+encapsulated in a containers (e.g. MP4, TS, etc.) will be measured only via
 ffmpeg-qsv (since Sample Encode does not support container streams).
 
 3. Run quality measure for the pre-defined stream
@@ -114,30 +114,42 @@ WAR_TRAILER_HiQ_10_withAudio.mp4_6Mbps_CBR_QSV.h264:14923:99.68411421582299:53.1
 default one is always used). `<codec>` is the video compression standard used
 in quality measurement (AVC or HEVC), which can be specified on the command line with
 `--codec` option. `<mode>` is a bitrate mode like `cbr` (constant bitrate) or
-`vbr` (variable bitrate). `application` is the application being measured for video quality: ffmpeg
-or Intel Media SDK Sample Encode. In addition, when BD-rate calculation is enabled,
-`application` is set to `ref` indicating metrics files obtained from a reference
-application (e.g. x264 or x265) used for BD-rate calculation. Metrics data is in
+`vbr` (variable bitrate). `application` is the application being measured for video 
+quality: ffmpeg or Intel Media SDK Sample Encode. In addition, when BD-rate calculation 
+is enabled, `application` is set to `ref` indicating metrics files obtained from a 
+reference (e.g. x264 or x265) used for BD-rate calculation. Metrics data is in
 CSV format with colon `:` separator. The first field is a stream name, the second
 is the bitrate, and the remaining fields are the metrics. Metrics are published in
 the following order: VMAF, PSNR-Y, SSIM, MS-SSIM. If any of the `--skip-*` metrics
 options are specified, then the corresponding metrics are represented with an empty
-string between the separators in the report.
+string between the separators in the output report.
 
 `*bdrate` files contain calculated BD-rates. Bjøntegaard-Delta bitrate (BD-rate)
-compares video quality between test and reference codec by taking into account
+compares video quality between test and reference codecs by taking into account
 bitrates and corresponding quality metrics (e.g. PSNR, VMAF, etc.). At least 4
 (bitrate, metric) pairs (vector points) are needed for BD-rate calculation. The
 BD-rate is a percentage indicating how much the bitrate is reduced (negative
 percent values) or how much the bitrate is increased (positive percent values)
-for the *same* value of a quality metric. The script supports 2 different BD-rate modes:
+for the *same* value of a quality metric. The script supports 2 different BD-rate 
+modes:
 
  . _Single BD-rate per sequence mode_ where a single BD-rate is computed from
-all available (bitrate, metric) vector points, for all enabled metrics.
+all available (bitrate, metric) vector points, for all enabled metrics. Minimum 
+number of points required for BD-rate computation is 4.
  . _Dual BD-rate per sequence mode_ where 2 BD-rates are computed per sequence:
 one from 4 points corresponding to the 4 highest bitrates (High Bitrates BD-rate),
 and one from 4 points corresponding to the 4 lowest bitrates (Low Bitrates
 BD-rate).
+
+Dual mode is used by default. However, users can force Single BD-rate mode with 
+`--single-bdrate` option. In addition, users are able to override default 
+bitrates with `--bitrates` option.  When overriding default bitrates, at least 4 
+distinct bitrates need to be specified. If N bitrates are specified (N >= 4) with 
+Dual BD-rate mode, then smallest 4 out of N bitrates are set as Low Bitrates, and 
+the highest 4 out of N bitrates are set as High Bitrates. Setting N < 8 is allowed 
+in which case there will be an overlap between Low and High bitrates. Also,setting 
+N > 8 is allowed, in which case mid-range bitrates will be ignored. On the other 
+hand, if Single BD-rate mode is used, then all N >= 4 bitrates are utilized. 
 
 `*bdrate` file names contain 5 parts:
 `<outprefix>.<codec>.<mode>.<application>.<extension>`. The first 4 parts are
@@ -158,23 +170,24 @@ first field is a stream name, followed by the BD-rate values for available metri
 published in the following order: VMAF BD-rate, PSNR-Y BD-rate, SSIM BD-rate,
 MS-SSIM BD-rate. If any of the `--skip-*` metrics options are specified, then the
 BD-rates corresponding these metrics are represented with an empty string between
-the separators in the report.
+the separators in the output report.
 
 
 ENCODING OPTIONS
 ----------------
 --codec AVC|HEVC::
-	Sets encoder to use (default: `AVC`)
+	Sets encoder to use (default: `AVC`).
 
 --preset default|best::
-	Sets quality preset options (default: `best`)
+	Sets quality preset options (default: `best`).
 
 --bitrates <float>[:<float>...]::
 	Sets list of bitrates in Mbps to use (default: use hardcoded bitrates which
-	depend on stream resolution and codec)
+	depend on stream resolution and codec). A minimum of 4 distinct bitrates are 
+        needed for calculating BD-rate.
 
 --tu veryslow|slower|slow|medium|fast|faster|veryfast::
-        Sets target usage preset (default: `medium`)
+        Sets target usage preset (default: `medium`).
 
 WORKING MODE OPTIONS
 --------------------
@@ -215,7 +228,7 @@ WORKING MODE OPTIONS
 	Do not calculate BD-rate.
 
 --single-bdrate::
-	Force Single BD-rate per sequence mode (default is Dual).
+	Force Single BD-rate per sequence mode (default is Dual, i.e. calculate BD-rates for lo- and hi-bitrate ranges).
 
 --use-vdenc::
 	Force using low power VDEnc hardware mode (disabled by default).
