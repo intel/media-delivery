@@ -20,63 +20,43 @@ Configuration
 Content
 =======
 
-Media Clips to be allocated into specific single directory e.g. below::
-
-    cd ~/forMediaDelivery/
-
-Command to run with directory of all clips::
-
-    python3 MSPerf.py ~/forMediaDelivery/
-
-Command to run with a file::
-
-    python3 MSPerf.py ~/forMediaDelivery/CrowdRun.hevc
-
 Command to run with all clips with specific output path:
 
     python3 MSPerf.py ~/forMediaDelivery/ -o ~/MultiStreamPerformance_2020WW20/
-	
-Command to run with all clips with specific output path, and save the console output into log file:
 
-    python3 MSPerf.py ~/forMediaDelivery/ -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+Command to run with all clips with specific output path, with skipping Application::
 
-Command to run with all clips with specific output path, and save the console output into log file, with skipping Application::
-
-    python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+    python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk -o ~/MultiStreamPerformance_2020WW20/
 	or
-	python3 MSPerf.py ~/forMediaDelivery/ --skip-ffmpeg -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+	python3 MSPerf.py ~/forMediaDelivery/ --skip-ffmpeg -o ~/MultiStreamPerformance_2020WW20/
 
-Command to run with all clips with specific output path, and save the console output into log file, with verbose/debug::
+Command to run with all clips with specific output path, with verbose/debug and with additional Tools CPU/GPU analysis::
 
-    python3 MSPerf.py ~/forMediaDelivery/ -v -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+    python3 MSPerf.py ~/forMediaDelivery/ -v --enable-debugfs -o ~/MultiStreamPerformance_2020WW20/
 
-Command to run with all clips with specific output path, and save the console output into log file, with verbose/debug and with additional Tools CPU/GPU analysis::
+Command to run with all clips with specific output path, with verbose/debug, Disabling LINUX PERF Tools::
 
-    python3 MSPerf.py ~/forMediaDelivery/ -v --enable-debugfs -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+    python3 MSPerf.py ~/forMediaDelivery/ -v --skip-perf -o ~/MultiStreamPerformance_2020WW20/
 
-Command to run with all clips with specific output path, and save the console output into log file, with verbose/debug, Disabling LINUX PERF Tools::
+Command to run with all clips with specific output path, with verbose/debug, Disabling just the Trace capture of LINUX PERF Tools::
 
-    python3 MSPerf.py ~/forMediaDelivery/ -v --skip-perf -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+    python3 MSPerf.py ~/forMediaDelivery/ -v --skip-perf-trace -o ~/MultiStreamPerformance_2020WW20/
 
-Command to run with all clips with specific output path, and save the console output into log file, with verbose/debug, Disabling just the Trace capture of LINUX PERF Tools::
+Command to run with all clips with specific output path, with skipping Application, and specific encoder codec::
 
-    python3 MSPerf.py ~/forMediaDelivery/ -v --skip-perf-trace -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
-
-Command to run with all clips with specific output path, and save the console output into log file, with skipping Application, and specific encoder codec::
-
-    python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk -c HEVC -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+    python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk -c HEVC -o ~/MultiStreamPerformance_2020WW20/
 	or
-	python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk --codec HEVC -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+	python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk --codec HEVC -o ~/MultiStreamPerformance_2020WW20/
 
-Command to run with all clips with specific output path, and save the console output into log file, with skipping Application, and specific encoder codec, startStream::
+Command to run with all clips with specific output path, with skipping Application, and specific encoder codec, startStream::
 
-    python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk -c HEVC -s 1080p:2 -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+    python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk -c HEVC -s 1080p:2 -o ~/MultiStreamPerformance_2020WW20/
 	or
-	python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk --codec HEVC -s 720p:4,1080p:3,2160p:2 -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+	python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk --codec HEVC -s 720p:4,1080p:3,2160p:2 -o ~/MultiStreamPerformance_2020WW20/
 
-Command to run with all clips with specific output path, and save the console output into log file, with skipping Application, and specific encoder codec, endStream::
+Command to run with all clips with specific output path, with skipping Application, and specific encoder codec, endStream::
 
-    python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk -c HEVC -e 3 -o ~/MultiStreamPerformance_2020WW20/ -log MultiStreamPerformance_2020WW20_log.txt
+    python3 MSPerf.py ~/forMediaDelivery/ --skip-msdk -c HEVC -e 3 -o ~/MultiStreamPerformance_2020WW20/
 
 
 ChangeLog

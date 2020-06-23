@@ -13,24 +13,136 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-'measure perf list' gives a list of supported use cases. The default
+'measure-perf' is designed to help in various performance measurements of media workloads,
+including multi-stream (density) 1:1 transcode, multi-stream 1:N transcode, and multi-stream
+decode. It operates by preparing cmd lines, launching them concurrently in separate
+processes, and collecting system metrics during the workload run. It is enabled with multiple
+tools that collect various metrics for debug and analysis. 'measure-perf' is designed to be flexible
+so that users can adapt it to meet their needs by changing input clips, command line options, or
+metrics to be collected. Another application of this tool is to help validate and debug
+performance related issues such as low GPU utilization, low concurrency, limited GT frequency, etc.
+Some key metrics collected are the peak # of concurrent streams meeting Real-Time (RT) performance
+along with aggregate FPS, per-engine GPU utilization, CPU utilization, CPU/GPU frequency traces,
+and memory analysis.
+
+'measure perf list' gives a list of supported use cases to measure. The default
 use case is 1:1 transcoding.
 
+Being launched with the specific input `<stream>` the tool will measure
+performance for this stream used in the multi-stream 1:1 transcoding use
+case. Use '--scenario' command line option to specify another use case.
+
+'measure-perf' accepts raw H.264/AVC and H.265/HEVC input streams of the
+following resolutions only:
+
+* 720p
+* 1080p
+* 2160p
+
 If `<folder>` is specified, the script processes all streams found in that
-folder. Sub-folders are not analyzed.
+folder matching criteria (see above). Sub-folders are not analyzed.
 
 OUTPUT ARTIFACTS
 ----------------
-TBD
+The default output 'measure/perf' directory is relative to:
+
+* '$HOME' environment variable if ran on bare metal
+* '/opt/data/artifacts' if ran under docker
+
+If output folder does not exist, 'measure-perf' will attempt to create it.
+Default output directory can be changed with '--outdir <dir>' command line option.
+
+Upon successful return you will find a number of files listed below with the output
+data relative to the output location. The key output files to be aware of
+are the following
+
+<app>_<transcode>_performance.csv::
+	This file contains top level performance summary and provides all
+	relevant high-level metrics like multi-stream density#, GPU%, CPU%,
+	memory footprint, etc. in a csv file.
+
+<app>_<transcode>_performance_table_sweep.csv::
+	When using '--fps-no-limit' this file can show the maximum single stream
+	FPS. Mind that here under single stream performance we understand single
+	stream performance ran concurently with other stream. If '--fps-no-limit'
+	is not specified, all streams will be run constrained to real time
+	framerate and this file won't be very intresting.
+
+<app>_<workload>_trace/<clip>_<resolution>_<multistream#>_<iteration#>_gpu_freq_traces.png::
+	This is a GPU frequency trace captured at 0.1 second sampling rate throughout
+	the execution. This can help to reveal issues with GPU frequency drops during the
+	workload run and can also reveal certain initialization delays before the actual
+	workload execution on the GPU.
+
+The following output files are helpful for detailed analysis like looking
+into individual command lines outputs, metrics, etc. Refer to them for the
+second level of details and/or to debug some issues.
+
+msperf.txt::
+	Primary console output for this script is logged under this file. When user
+	enables '--verbose' option, 'measure-perf' will also show applications and
+	tools command lines to reproduce manually in case of hang or crashes.
+	This file won't contain application and tools console outputs, only
+	the 'measure-perf' tol self-output.
+
+<app>_<workload>_trace/console_log.txt::
+<app>_<workload>_trace/<clip_info>_<unique_stream#>_transcode_log.txt::
+	'console_log.txt' is combined version of all `*_transcode_log.txt`
+	files which contain application console outputs. If user has multiple
+	clips/contents, every run can be found on these log files. The best way to
+	navigate this file is to search for <unique_stream#>.
+
+<app>_<workload>_trace/perf_list_metrics.txt::
+	This file contains all metric names which will be gathered via Linux perf.
+	It does not contain any actual data, but is helpful to check which
+	metrics will be available.
+
+<app>_<workload>_trace/<clip_info>_<unique_streams#>_<iteration#>_metrics.txt::
+	This file is a summary of all the Linux perf metrics logged for each concurrent
+	multi-stream execution. It gives:
+	* The output summary of GPU utilization, frequency average, and other metrics
+	  shown on console-log. Only the best result from this file is summarized into the
+	  <app>_<transcode>_performance.csv
+ 	* When there is an issue on the setup that suggests metrics are inaccurate, this
+	  would be one of the first files to look into to debug.
+	* The '--verbose' option will show the command lines to use to manually run the
+	  linux perf tools if needed for debug
+
+<app>_<workload>_trace/iteration_<iteration#>/*.txt::
+	A separate directory is made for each iteration run. In this directory the 'measure-perf'
+	saves every application console output individually. These files are useful
+	for:
+	* Making sure the application has no warning messages
+	* The application reported execution time and wall-clock execution time are matching
+	* FPS and total processed frames inumber are within user's expectation.
+
+<app>_<workload>_trace/*_TopSummary.txt::
+<app>_<workload>_trace/*_cpumem_trace.txt::
+	These two files are outputs from Linux Top tool: '* _TopSummary.txt'
+	is a raw 'top' output and '*_cpumem_trace.txt' is a filtered 'top'
+	output for only relevant application(s). This file is useful for:
+	* Confirming there were no additional workloads running during the multi-stream performance test
+	* Confirming if CPU% utilization measured in summary '*performnace.csv' file is accurate
+	* Viewing each unique `pid` in concurrent scenarios
+	* Confirming the CPU memory footprint/residency 'MEM_RES_Total(MB)' or
+	  'avg_res_mem"during the workload run.
+
+<app>_<workload>_trace/*_GemObjectSummary.txt::
+	This file is a raw record of memory footprint for each multi-stream performance
+	execution. Looking into this is useful:
+	* To confirm there were no additional workloads running during the multi-stream exectuion
+	* To confirm the Active and Inactive memory usage during application run
+	* To confirm the GPU memory footprint/residency	'GPU_MEM_RES_Total(MB)' or
+	  'avg_res_gpumem' during the Multi Streams workload run.
 
 WORKING MODE OPTIONS
 --------------------
 --scenario|-s <name>::
-	Use case scenario to run. By default the script runs 1:1 transcoding use case
-evaluating density (how many transcoding sessions can be run in parallel in
-real-time). This option allows specifying more complex 1:N scenarios to
-run. Each scenario is assigned a specific name which could be obtained
-by executing `measure perf list`.
+	Use-case scenario to run. By default the script runs 1:1 transcoding use case
+	evaluating density (how many 1:1 transcoding sessions can be run in parallel in
+	real-time). This option allows specifying more complex 1:N scenarios to
+	run. Each scenario is assigned a specific name which could be obtained
+	by executing `measure perf list`.
 
 --skip-ffmpeg::
 	Do not run ffmpeg-qsv performance measurements.
@@ -46,9 +158,9 @@ by executing `measure perf list`.
 
 --skip-perf::
 	Do not use Linux perf to collect some performance metrics.
-Effectively this will disable GPU engines utilization collection. Script
-will still be able to run and evaluate density, collect FPS, but detailed
-data will be missed.
+	Effectively this will disable GPU engines utilization collection. Script
+	will still be able to run and evaluate density, collect FPS, but detailed
+	data will be missed.
 
 --enable-debugfs::
 	Try access debugfs data for additional metrics. Specifically, currently
@@ -77,7 +189,7 @@ PROCESSING OPTIONS
 
 --no-fps-limit::
 	Run each workload as fast as possible (by default workloads run
-contstrained to encoding fps)
+	constrained to playback framerate.  e.g.: a video clip with playback framerate of 30fps, will be limited to transcode speed of 30fps.)
 
 --dry-run::
 	Do not execute any commands, but dump them to `stdout`.
@@ -88,7 +200,7 @@ contstrained to encoding fps)
 	`$HOME/measure/perf` otherwise)
 
 --verbose|-v::
-	Be verbose. Print additional info. Useful for debug to understand
+	Be verbose. Print additional info. Useful for debugging to understand
 	which command lines actually got executed.
 
 PREREQUISITES
@@ -101,6 +213,10 @@ ffprobe::
 
 sample_multi_transcode::
 	Used for direct performance measurement of Intel Media SDK library.
+
+perf::
+	Linux perf is used to collect a range of CPU and GPU metrics,
+	utilization at the first place.
 
 python3::
 	Used for generic script purposes. The following Python modules are

@@ -3,43 +3,89 @@ Video Performance
 
 .. contents::
 
-Video Performance Metrics
--------------------------
+Video Performance Assessment Methodology
+----------------------------------------
 
-Key metrics we collect with out performance measurement scripts are:
+In this document we describe the methodology which is used to measure
+performance of Intel® Media SDK `Sample Multi Transcode  <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
+and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
+(Intel® Media SDK integration into FFmpeg). A `video performance measuring tool <man/measure-perf.asciidoc>`_
+which implements this methodology is provided as a part of Media
+Delivery Software Stack. In addition, a `quality measuring tool <man/measure-quality.asciidoc>`_ is
+provided for allowing users to evaluate video quality (see `quality methodology <quality.rst>`_ documentation).
 
-* Peak Frame per Second (FPS)
+Key performance metrics we collect are:
+
 * Peak Concurrent Number of Sessions
+* Peak Frames Per Second (FPS)
 
-There is a bunch of other metrics (like CPU and GPU utilization) we
+There are many other metrics (like CPU and GPU utilization) we
 collect to assist in performance investigations and debug:
 
-* Runtime
-* FPS/session
-* Session#
+* Application run time
 * CPU-utilization%
 * GPU-Utilization%
-* Memory-Footprint/Utilization%
-* Frequency trace
+* Memory footprint and utilization%
+* GPU frequency timeline data
 
-and some more. It is possible to fine-tune the tool to enable/disable
-some metrics collection during the measurement. For details see
-`measure-perf <doc/man/measure-perf.asciidoc>`_ manual page.
+With the `measure-perf <doc/man/measure-perf.asciidoc>` tool it is possible to
+to enable/disable some metrics collection during the measurement.
 
-Multi Streams Performance
--------------------------
+Multi-Stream Performance
+************************
 
 .. image:: pic/MSPerf_automation_flow.png
 
-Above picture illustates Multi Stream Performance measurement flow. This is
+The above picture illustrates multi-stream Performance measurement flow. This is
 iterative process where we run predefined command lines (point [1] on the
 pic.) and increase number of concurent sessions (point [3] on the pic.) if
 all the sessions can be run at realtime on the current iteration.
 
+The goal of the measurement is to obtain data similar to the one showed on
+the below picture:
+
+.. image:: pic/MSPerf_MultiStreamPerformance_example.png
+
+Here we can compare achieved number of cuncurent sessions (density) for
+different resulutions and different setups where setups could be different
+different machines, different encoding seetings, different encoders, etc.
+
+Single-Stream Performance
+*************************
+
+Looking into single stream performance we evaluate performance if individual
+workload. The key metric to collect here is workload FPS. Effectively, the
+single stream performance data always accomponies multi-stream performance
+measurements. The picture below illustrates what we are looking for
+single stream.
+
+.. image:: pic/MSPerf_SingleStreamPerformance_example.png
+
+Performance Monitoring and Debug Data
+*************************************
+
+There are a number of metrics which are highly useful for performance
+monitoring and debug. The below picture gives a good example summary:
+
+.. image:: pic/MSPerf_CPU_GPU_Utilization_example.png
+
+These metrics allow to check whether workload bottleneck is related to CPU
+or particular GPU engine. If this data does not highlight the bottleneck,
+but gives a hint of GPU under utilization, try to look into further details.
+One of the pinpoints might be memory. We are evaluating memory footprint for
+this reason - see below example.
+
+.. image:: pic/MSPerf_MemoryFootprint_example.png
+
+Eventually all the above data is useful in comparison for different
+workloads settings and system setups.
+
 Bitrates
 --------
 
-Coding bitrates for H.264/AVC video performance assessment:
+Coding bitrates for video performance assessment are selected as a
+subset of bitrates used in `quality measuring methodology <quality.rst>`_.
+For H.264/AVC we use:
 
 +------------+---------------+-----------------+
 | Resolution | Setting       | Bitrates (Mb/s) |
@@ -74,7 +120,7 @@ Coding bitrates for H.265/HEVC video performance assessment:
 |            +---------------+-----------------+
 |            | High          | 7.5             |
 +------------+---------------+-----------------+
-	
+
 
 Command Lines
 -------------
@@ -82,7 +128,7 @@ Command Lines
 In the following sections you can find command lines used for high quality H.264/AVC and H.265/HEVC video
 transccoding with Intel® Media SDK `Sample Multi Transcode (SMT) <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
 and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration
-into FFmpeg).
+into FFmpeg) which we use in performance assessments.
 
 Intel Media SDK sample-multi-transcode
 --------------------------------------
