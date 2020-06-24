@@ -93,7 +93,7 @@ def main():
     parser.add_argument('--skip-perf', '--skip_perf', action='store_true', default=False, help='skipping linux perf stat Utilization, such as VD0/VD1/RCS/etc')
     parser.add_argument('--skip-perf-trace', '--skip_perf_trace', action='store_true', default=False, help='skipping linux perf stat additional Traces, such as GT-Freq/BW-Rd/BW-Wr/etc')
     parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', default=False, help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
-    parser.add_argument('--enable-decode', '--enable_decode', action='store_true', default=False, help='Enabling Multi Stream Decode support, Decode-HEVC')
+    parser.add_argument('--density-decode', '--density_decode', action='store_true', default=False, help='Enabling Density Decode support, HEVC')
     parser.add_argument('-c', '--codec', help='To choose Encoder Codec type, AVC or HEVC, Default will execute all')
     parser.add_argument('-s', '--startStreams', help='To set starting of multi stream performance measurement, e.g. --startStreams 720p:8,1080p:5,2160p:2 or all:2, Default=all:1')
     parser.add_argument('-e', '--endStreams', help='To set ending number of multi stream performance measurement, e.g. --endStreams 5, Default=NoLimit')
@@ -139,7 +139,7 @@ def main():
     enable_debugfs                  = ARGS.enable_debugfs
     skip_ffmpeg                     = ARGS.skip_ffmpeg
     skip_msdk                       = ARGS.skip_msdk
-    enable_decode                   = ARGS.enable_decode
+    density_decode                   = ARGS.density_decode
     encode_codec                    = str(ARGS.codec).lower() if ARGS.codec else "all"
     fps_target                      = float(ARGS.fps_target) if ARGS.fps_target else 0
     overwrite_content_resolution    = str(ARGS.overwrite_content_resolution) if ARGS.overwrite_content_resolution else "unavailable"
@@ -203,9 +203,6 @@ def main():
         init_stream_2160p = 1
         if starting_streamnumber != "all:1":
             starting_streamnumber_split = starting_streamnumber.split(',')
-            init_stream_720p = 0
-            init_stream_1080p = 0
-            init_stream_2160p = 0
             for resolution_mode in starting_streamnumber_split:
                 resolution_mode_split = resolution_mode.split(':')
                 if resolution_mode_split[1].isdigit():
@@ -389,7 +386,7 @@ def main():
             elif performance_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_avc2hevc_exist:
                 performance_tag = "AVC-HEVC"
                 sequence_mode = "TRANSCODE"
-            elif performance_sequence == 4 and enable_decode and cmdline_config_decode_hevc_exist:
+            elif performance_sequence == 4 and density_decode and cmdline_config_decode_hevc_exist:
                 performance_tag = "DECODE-HEVC"
                 sequence_mode = "DECODE"
             else:
@@ -672,6 +669,8 @@ def main():
                         printLog(output_log_handle, "\n")
                         printLog(output_log_handle, '#' * 69)
                         print_performance_label = "PNP MEDIA " + performance_app_tag + " " + performance_tag + ": " + "MULTISTREAM: " + str(streamnumber) + " & ITERATION: " + str(j)
+                        if (debug_verbose):
+                            print_performance_label += " - " + clip_name
                         printLog(output_log_handle, print_performance_label)
                         printLog(output_log_handle, '#' * 69)
 

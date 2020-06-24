@@ -234,7 +234,7 @@ function get_perf_opts() {
 @test "measure perf -decode --skip-ffmpeg raw h265" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
-    $(get_test_body "$rawh265" "measure perf --enable-decode --skip-ffmpeg /tmp/WAR.hevc")"
+    $(get_test_body "$rawh265" "measure perf --density-decode --skip-ffmpeg /tmp/WAR.hevc")"
   print_output
   if ! kernel_ge_4_16; then
     [ $status -ne 0 ]
