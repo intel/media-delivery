@@ -278,6 +278,12 @@ PREFIX
   Path prefix inside the container to install custom build target and sample
   assets.
 
+DEVEL
+  Possible values: `yes|no`. Default value: ``yes``
+
+  Switches on/off development build type with which container user is
+  created with sudo privileges.
+
 SAMPLE
   Possible values: ``<path>``. Default value: ``cdn``
 

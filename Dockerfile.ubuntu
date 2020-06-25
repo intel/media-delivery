@@ -49,11 +49,7 @@ RUN { \
 RUN /tmp/scripts/setup-base-image.sh
 
 # Let's create a user 'user'
-RUN groupadd -r user && useradd -lrm -s /bin/bash -g user -G sudo \
-    -p $(echo "user" | openssl passwd -stdin) user
-
-# Set 'sudo' to NOPASSWD for all container users
-RUN sed -i -e 's,%sudo.*,%sudo ALL=(ALL) NOPASSWD:ALL,g' /etc/sudoers
+RUN groupadd -r user && useradd -lrm -s /bin/bash -g user user
 
 FROM base AS content
 
@@ -67,6 +63,10 @@ RUN mkdir /embedded && cd /embedded && \
   wget --progress=bar:force https://repositories.intel.com/media/WAR_TRAILER_HiQ_10_withAudio.mp4
 
 FROM base AS build-prerequisites
+
+# For the build layers: add user to sudo group and set 'sudo' to NOPASSWD
+RUN usermod -aG sudo user
+RUN sed -i -e 's,%sudo.*,%sudo ALL=(ALL) NOPASSWD:ALL,g' /etc/sudoers
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     asciidoc-base \
@@ -278,6 +278,15 @@ RUN chown -R user /var/lib/nginx
 # Setting up sample
 ARG SAMPLE=cdn
 RUN cd $PREFIX/src/intel-media-delivery/samples/$SAMPLE && ./setup.sh $PREFIX
+
+# Adjust settings for development type of build
+ARG DEVEL=yes
+RUN { \
+  if [ "$DEVEL" = "yes" ]; then \
+    usermod -aG sudo user; \
+    sed -i -e 's,%sudo.*,%sudo ALL=(ALL) NOPASSWD:ALL,g' /etc/sudoers; \
+  fi; \
+  }
 
 # Setting up 'user' environment common for all samples
 USER user
