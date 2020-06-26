@@ -6,21 +6,47 @@ Media Delivery Software Stack
 Overview
 --------
 
-Media Delivery Software Stack provides samples demonstrating the use of Intel GPU
-in simplified modelled real-life scenarios involving media streams delivery. Samples
-focus on the key aspects of the proper Intel software setup and integration with other
-popular tools you will likely use in your final product. We try to do our best to
-provide a configuration which will demonstrate the best quality and performance for
-Intel media stack.
+This project provides samples to demonstrate the use of Intel GPU in
+simplified real-life scenarios involving media streams delivery. It
+leverages a Software Stack which consists of the following ingredients:
+
+* `Intel Media SDK <https://github.com/Intel-Media-SDK/MediaSDK>`_
+* `Intel Media Driver <https://github.com/intel/media-driver>`_
+* `FFmpeg <http://ffmpeg.org/>`_ w/ enabled `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
+  plugins
+
+Provided samples focus on the key aspects of the proper Intel software
+setup and integration with other popular tools you will likely use in
+your final product. We try to do our best to provide a configuration which
+will demonstrate the best quality and performance for Intel GPU media stack.
 
 Key topcis we are covering:
 
-* Content Delivery Network (CDN) samples showcasing of Video On Demand (VOD)
-  streaming under Nginx server
+* Samples which demonstrate operations typical for Content Delivery Network (CDN)
+  applications such as Video On Demand (VOD) streaming under Nginx server
 * Reference command lines (for ffmpeg-qsv and mediasdk native samples) tuned
   for the optimal quality and performance (for the showcasing scenario)
 * Quality and Performance measuring infrastructure for data collection
 * Intel GPU Performance monitoring
+
+Host requirements
+-----------------
+
+To run these samples you need to:
+
+1. Have a system with enabled Intel GPU card supported by Intel media driver
+   (refer to https://github.com/intel/media-driver documentation for the list of
+   supported GPUs)
+2. Run Linux OS with up-to-date Linux kernel supporting underlying Intel GPU
+3. Have installed and configured Docker (see `instructions <https://docs.docker.com/install/>`_)
+
+Other than that you might wish to install some tools on your host (or some other
+system capable of reaching the container over network) to be able to interact with the
+service(s) running inside the container. Consider having on a host the following:
+
+1. `VLC player <https://www.videolan.org/vlc/index.html>`_ to be able to play streaming
+   videos
+2. `ffmpeg <http://ffmpeg.org/>`_ to be able to receive and save streaming videos
 
 How to get?
 -----------
@@ -40,25 +66,6 @@ sample to build.
 **Hint:** to install a docker refer to Docker install
 `instructions <https://docs.docker.com/install/>`_.
 
-Host requirements
------------------
-
-To run these samples you need to:
-
-1. Have a system with enabled Intel GPU card supported by Intel media driver
-   (refer to https://github.com/intel/media-driver documentation for the list of
-   supported GPUs)
-2. Run Linux OS with up-to-date Linux kernel supporting underlying Intel GPU
-3. Have installed and configured Docker
-
-Other than that you might wish to install some tools on your host (or some other
-system capable of reaching the container over network) to be able to interact with the
-service(s) running inside the container. Consider having on a host the following:
-
-1. `VLC player <https://www.videolan.org/vlc/index.html>`_ to be able to play streaming
-   videos
-2. `ffmpeg <http://ffmpeg.org/>`_ to be able to receive and save streaming videos
-
 How to run?
 -----------
 
@@ -69,21 +76,8 @@ Each sample contains few entrypoints:
    ``man measure``)
 
 To be able to run container successfully you need to start it with certain
-permissions allowing access to GPU device(s), file system, etc. So, when container
-starts it checks that prerequisites are met and guides you toward correct
-startup command line. For example::
-
-  # docker run intel-media-delivery
-  error: device not available: /dev/dri/renderD128
-  error:   if you run under docker add host device(s) with:
-  error:     --device=/dev/dri/renderD128 (preferred)
-  error:     --device=/dev/dri/
-  error:     --privileged
-  error:   you can change device you want to use with:
-  error:     -e DEVICE=/dev/dri/renderD128
-  error: failed to setup demo
-
-The minimal set of arguments to start the container looks as follows::
+permissions allowing access to GPU device(s), file system, etc. The minimal
+set of arguments to start a container looks as follows::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
   DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
@@ -93,12 +87,6 @@ The minimal set of arguments to start the container looks as follows::
     --cap-add SYS_ADMIN \
     -p 8080:8080 \
     intel-media-delivery
-
-Effectively you need to allow container access to the host GPU device
-(``--device`` and ``--group-add``), grant ``SYS_ADMIN`` capabilities for the
-container user to be able to collect GPU metrics (``--cap-add``) and publish a
-network port to be able to reach container streaming from outside the
-container (``-p``).
 
 Mind that ``-e DEVICE=$DEVICE`` option allows to adjust the host GPU device
 to be used under the demo.
@@ -111,8 +99,8 @@ which you might review::
   # man demo
   # man measure
 
-Please, refer to `Samples HowTo <doc/howto.rst>`_ for the more advanced
-topics like which host folders you can map and how to do that coorectly.
+Please, refer to `Samples HowTo <doc/howto.rst>`_ for the advanced topics like which
+host folders you can map and how to do that correctly.
 
 Content Delivery Network (CDN) Samples
 --------------------------------------
@@ -264,8 +252,8 @@ Furthermore, each transcoding might be done on the dedicated GPU-capbale system
 (a node). Typically, such tools like kafka and zookeeper are being used to
 manage these many nodes and orchestration server. This sample however intentionally
 avoids scaling examples and focuses on streaming configuration basics and key aspects
-of GPU accelerated offloads. For bigger scale CDN sample, please, take a look on
-`Open Visual Cloud Samples <https://01.org/openvisualcloud>`_.
+of GPU accelerated offloads. For the bigger scale CDN sample, please, take a look on
+Open Visual Cloud `CDN Transcode Sample <https://github.com/OpenVisualCloud/CDN-Transcode-Sample>`_.
 
 Edge
 ~~~~
@@ -298,22 +286,8 @@ For example::
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-3/index.m3u8
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-4/index.m3u8
 
-Tips for best performance
--------------------------
-
-Recommended command lines
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Throughout the project we suggest ffmpeg-qsv (and Media SDK samples) command
-lines tuned for the quality and performance. Please, refere to the following
-documents to find them and see underlying quality and performance evaluation
-methodologies used to select optimal setting:
-
-* `Video Quality Command Lines and Measuring Methodology <doc/quality.rst>`_
-* `Video Performance Command Linux and Measuring Methodology <doc/performance.rst>`_
-
 How to run measuring tools?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 This project comes with `performance <measure/performance/MSPerf.py>`_ and
 `quality <measure/quality/measure-quality>`_ measuring tools which implement
@@ -351,7 +325,7 @@ For detailed tools usage refer to the manual pages for
 `quality <doc/man/measure-quality.asciidoc>`_.
 
 Known limitations
-+++++++++++++++++
+~~~~~~~~~~~~~~~~~
 
 * `measure-quality <doc/man/measure-quality.asciidoc>`_ does not support
   transcoding of input streams in raw video formats w/ Media SDK sample
@@ -367,6 +341,17 @@ Known limitations
 * Intel Media SDK samples don't support input streams in container formats
   (i.e. .mp4, .ts, etc.), hence both measure-quality and measure-perf will
   run measurement for ffmpeg-qsv path only for such streams.
+
+Tips for best performance
+-------------------------
+
+Throughout the project we suggest ffmpeg-qsv (and Media SDK samples) command
+lines tuned for the quality and performance. Please, refere to the following
+documents to find them and see underlying quality and performance evaluation
+methodologies used to select optimal setting:
+
+* `Video Quality Command Lines and Measuring Methodology <doc/quality.rst>`_
+* `Video Performance Command Linux and Measuring Methodology <doc/performance.rst>`_
 
 Further reading
 ---------------
@@ -385,6 +370,17 @@ Further reading
 * `HowTo <doc/howto.rst>`_
 * `Tests <tests/readme.rst>`_
 
+* `Intel Media SDK <https://github.com/Intel-Media-SDK/MediaSDK>`_
+* `Intel Media Driver <https://github.com/intel/media-driver>`_
+* `Open Visual Cloud <https://01.org/openvisualcloud>`_
+
+  * `CDN Transcode Sample <https://github.com/OpenVisualCloud/CDN-Transcode-Sample>`_
+
+* `Docker <https://docker.com>`_
+* `FFmpeg <http://ffmpeg.org/>`_
+* `VLC player <https://www.videolan.org/vlc/index.html>`_
+* `NGinx <http://nginx.org>`_
+
 Content Attribution
 -------------------
 
@@ -396,13 +392,3 @@ Container image comes with some embedded content attributed as follows::
 Inside the container, please, refer to the following file::
 
   cat /opt/data/embedded/usage.txt
-
-Links
------
-
-* `Docker <https://docker.com>`_
-* `FFmpeg <http://ffmpeg.org/>`_
-* `VLC player <https://www.videolan.org/vlc/index.html>`_
-* `NGinx <http://nginx.org>`_
-* `Intel Media SDK <https://github.com/Intel-Media-SDK/MediaSDK>`_
-* `Intel Media Driver <https://github.com/intel/media-driver>`_
