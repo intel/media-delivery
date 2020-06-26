@@ -55,6 +55,12 @@ pwd_home_test=(/bin/bash -c "set -ex; res=\$(pwd); [[ "\$res" = "/home/user" ]];
   grep_for "user" ${lines[@]}
 }
 
+@test "demo-bash no such device" {
+  run docker_run_opts "-e DEVICE=/dev/dri/nodevice" whoami
+  print_output
+  [ $status -eq 255 ]
+}
+
 @test "demo-bash map all" {
   tmp_content=`mktemp -p $_TMP -d -t content-XXXX`
   tmp_artifacts=`mktemp -p $_TMP -d -t artifacts-XXXX`

@@ -11,9 +11,6 @@ Demo manual pages
 
 * `demo <demo.asciidoc>`_
 * `demo-alive <demo-alive.asciidoc>`_
-* `demo-ffmpeg <demo-ffmpeg.asciidoc>`_
-* `demo-help <demo-help.asciidoc>`_
-* `demo-streams <demo-streams.asciidoc>`_
 
 Measure manual pages
 ====================

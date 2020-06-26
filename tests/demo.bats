@@ -24,49 +24,10 @@ load utils
 ####################
 # generic demo tests
 ####################
-@test "demo unknown command" {
-  run docker_run demo unknown
-  print_output
-  [ $status -eq 255 ]
-}
-
-@test "demo no such device" {
-  run docker_run_opts "-e DEVICE=/dev/dri/nodevice" whoami
-  print_output
-  [ $status -eq 255 ]
-}
-
-#################
-# demo help tests
-#################
 @test "demo --help" {
   run docker_run demo --help
   print_output
   [ $status -eq 0 ]
-}
-
-@test "demo help" {
-  run docker_run demo help
-  print_output
-  [ $status -eq 0 ]
-}
-
-@test "demo help ffmpeg" {
-  run docker_run demo help ffmpeg
-  print_output
-  [ $status -eq 0 ]
-}
-
-@test "demo help streams" {
-  run docker_run demo help streams
-  print_output
-  [ $status -eq 0 ]
-}
-
-@test "demo help unknown topic" {
-  run docker_run demo help unknown
-  print_output
-  [ $status -eq 255 ]
 }
 
 ####################
@@ -157,21 +118,14 @@ load utils
   [ $status -eq 255 ]
 }
 
-###################
-# demo ffmpeg tests
-###################
-@test "demo ffmpeg no streams" {
-  run docker_run demo ffmpeg
+#########################
+# default demo mode tests
+#########################
+@test "demo unknown stream" {
+  run docker_run demo unknown-stream
   print_output
   [ $status -eq 255 ]
 }
-
-@test "demo ffmpeg unknown stream" {
-  run docker_run demo ffmpeg unknown
-  print_output
-  [ $status -eq 255 ]
-}
-
 
 function get_report_line_from_ffmpeg_log() {
   cat $1 | sed 's/\r/\n/g' | grep frame= | tail -1
@@ -201,7 +155,7 @@ function test_ffmpeg_capture() {
   opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" \
-    demo ffmpeg --exit $type/WAR_TRAILER_HiQ_10_withAudio
+    demo --exit $type/WAR_TRAILER_HiQ_10_withAudio
   [ $status -eq 0 ]
 
   # checking artifacts in an order of appearence
@@ -226,18 +180,18 @@ function test_ffmpeg_capture() {
   [ "$frames" -eq 3443 ]
 }
 
-@test "demo ffmpeg vod/avc capture" {
+@test "demo vod/avc capture" {
   test_ffmpeg_capture "vod/avc"
 }
 
-@test "demo ffmpeg vod/hevc capture" {
+@test "demo vod/hevc capture" {
   if [ $MDS_DEMO != "cdn" ]; then
     skip "note: mode not supported for '$MDS_DEMO' demo"
   fi
   test_ffmpeg_capture "vod/hevc"
 }
 
-@test "demo ffmpeg vod/abr capture" {
+@test "demo vod/abr capture" {
   if [ $MDS_DEMO != "cdn" ]; then
     skip "note: mode not supported for '$MDS_DEMO' demo"
   fi

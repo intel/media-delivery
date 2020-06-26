@@ -8,34 +8,52 @@ demo - run media delivery demo
 SYNOPSIS
 --------
 [verse]
-'demo' [<options>] [<command> [<args>]]
+'demo' [<options>] streams
+'demo' [<options>] [<stream1> [<stream2>...]]
 
 DESCRIPTION
 -----------
 `demo` is a helper script to operate media delivery demo.
 
-If <command> is not specified, it starts nginx server and awaits external incoming
-client requests. Issue the one requesting playback via vlc from the host or some other
-system on the network:
+'demo streams' prints streams available in the demo for streaming. Copy 
+one of the stream names and supply it as an input to the client. You can add
+your own content to the demo placing it in the `/opt/data/content` folder
+(using docker mount host folder with `-v` option).
 
+'demo <stream1> [<stream2>...]' will trigger default demo mode. Demo
+will start both nginx server and client(s) under container. This is the
+simplest demo mode since it does not require any interaction from the host
+other than to start or stop a container. Clients would be ffmpeg commands to
+get HLS stream and save it on the disk.
+
+Running just 'demo' will trigger interactive demo mode. Nginx server will be
+started, but it will be awaiting for the incoming client requests. You need
+to start client somewhere, for example on a host. Starting client on a host,
+supply stream names given by 'demo streams'. Starting client on some other
+system other than host, substituite `localhost` in the stream name with host
+IP address.
+
+Example clients:
 ------------
-   vlc http://localhost:8080/<stream>/index.m3u8
+   vlc http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 ------------
 or capturing via ffmpeg:
 ------------
-   ffmpeg -i http://localhost:8080/<stream>/index.m3u8 -c copy /tmp/output.mkv
+   ffmpeg -i http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8 -c copy /tmp/output.mkv
 ------------
 
-'streams' command returns list of streams available for playback and exits.
+`-<n>` option is useful for demo purposes. With it demo pretends to have <n>
+copies of each input stream. Execute 'demo -4 streams' to see the difference.
 
-'ffmpeg' command toggles ffmpeg demo mode which runs ffmpeg client within the container.
-No interaction from host or other system is required. Example:
-------------
-   $ demo ffmpeg <stream>
-------------
+If demo script is run under tty, it will provide monitoring data to track:
 
-`-<n>` option is useful for demo purposes. With it demo pretends to have <n> copies of
-each input stream. Execute 'demo -4 streams' to explore the difference.
+* Client progress (if applicable). See link:ffmpeg-capture-hls.asciidoc[ffmpeg-capture-hls]
+* Server progress. See link:monitor-nginx-server.asciidoc[monitor-nginx-server]
+* CPU and memory utilization (via 'top')
+* GPU utilization  (via 'intel_gpu_top')
+
+To check whether demo is alive, you can use link:demo-alive.asciidoc[demo-alive]
+script which is available as a health check command under docker.
 
 NETWORK PORTS
 -------------
@@ -61,19 +79,12 @@ OPTIONS
 --help::
 	Print help
 
+--exit::
+	Exit from the demo once all streams will be completed on client side.
+	This option requires default demo mode.
+
 -<n>::
 	Pretend to have <n> additional copies of each input stream (n <= 50)
-
-COMMANDS
--------
-ffmpeg::
-	Toggle ffmpeg demo mode
-
-help::
-	Print help on specified topic. Try 'demo help <command>'.
-
-streams::
-	Print available streams
 
 ENVIRONMENT VARIABLES
 ---------------------
@@ -85,6 +96,5 @@ DEVICE::
 SEE ALSO
 --------
 link:demo-alive.asciidoc[demo-alive]
-link:demo-ffmpeg.asciidoc[demo-ffmpeg]
-link:demo-help.asciidoc[demo-help]
-link:demo-streams.asciidoc[demo-streams]
+link:ffmpeg-capture-hls.asciidoc[ffmpeg-capture-hls]
+link:monitor-nginx-server.asciidoc[monitor-nginx-server]

@@ -23,72 +23,42 @@
 n_pretend_max=50
 
 function print_help() {
-  echo "Usage: demo [<options>] [<command> [<args>]]"
+  echo "Usage: demo [<options>] streams"
+  echo "   or: demo [<options>] [<stream1> [<stream2>...]]"
   echo ""
   echo "Options:"
   echo "  --help      Print this help"
+  echo "  --exit      Exit from the demo once all streams will be completed on client side."
+  echo "              This option requires <stream>(s) passed on the command line, i.e. it"
+  echo "              works only if client is started by the demo script under container."
   echo "  -<n>        Pretend to have <n> additional copies of each input stream (n <= $n_pretend_max)"
   echo ""
-  echo "Commands:"
-  echo "  ffmpeg      Toggle ffmpeg demo mode"
-  echo "  help        Print help on specified topic"
-  echo "  streams     Print available streams"
+  echo "Examples:"
   echo ""
-  echo "See 'demo help <command>' to read about specific command."
+  echo ">> demo http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8"
+  echo "Starts nginx server and runs client inside the container. That's the simplest way"
+  echo "to run the demo. Client is an ffmpeg which gets the stream and saves it to the disk."
   echo ""
-  echo "Description:"
-  echo "If command is not specified, it starts nginx server and awaits external incoming client"
-  echo "requests. Issue the one requesting playback via vlc from the host or some other"
-  echo "system on the network:"
-  echo "   $ vlc http://localhost:8080/<stream>/index.m3u8"
-  echo "or capturing via ffmpeg:"
-  echo "   $ ffmpeg -i http://localhost:8080/<stream>/index.m3u8 -c copy /tmp/output.mkv"
+  echo ">> demo"
+  echo "Starts nginx server and awaits for external incoming client requests. Issue the one"
+  echo "requesting playback via vlc from the host (or some other system on the network):"
+  echo "   # vlc http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8"
+  echo "   # ffmpeg -i http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8 -c copy /tmp/output.mkv"
   echo ""
-  echo "'streams' command returns list of streams available for playback and exits."
+  echo ">> demo streams"
+  echo "Returns list of streams available for playback and exits. Use one of the"
+  echo "reported streams in demo run examples given above."
   echo ""
-  echo "'ffmpeg' command toggles ffmpeg demo mode which runs ffmpeg client within the container."
-  echo "No interaction from host or other system is required. Example:"
-  echo "   $ demo ffmpeg <stream>"
+  echo ">> demo -2 streams"
+  echo ">> demo -2"
+  echo ">> demo http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-1/index.m3u8 \\"
+  echo "        http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-2/index.m3u8"
+  echo "With '-2' option demo pretends to have 2 copies of each input stream."
   echo ""
-  echo "'-<n>' option is useful for demo purposes. With it demo pretends to have <n> copies of"
-  echo "each input stream. Execute 'demo -4 streams' to explore the difference."
-}
-
-function print_help__streams() {
-  echo "Usage: demo streams"
-}
-
-function print_help__ffmpeg() {
-  echo "Usage: demo ffmpeg [<options>] <stream> [<stream>]"
-  echo ""
-  echo "Options"
-  echo "  --exit Exit from the demo once all streams will be completed on client side"
-  echo ""
-  echo "Description:"
-  echo "Request streaming from within the container by ffmpeg. ffmpeg will catch"
-  echo "streaming video and dump it to the disk."
-}
-
-function print_command_help() {
-  if [ $# -eq 0 ]; then
-    print_help
-    exit 0
-  fi
-  topic=$1
-  if [ "$topic" = "streams" ]; then
-    print_help__streams
-  elif [ "$topic" = "ffmpeg" ]; then
-    print_help__ffmpeg
-  else
-    echo "error: unknown command: '$topic'"
-    print_help
-    exit -1
-  fi
-  exit 0
+  echo "For more details see 'man demo'."
 }
 
 command=$1
-shift;
 
 n_pretend=0
 
@@ -102,8 +72,8 @@ elif [[ "$command" =~ ^-([0-9]+)$ ]]; then
     exit -1
   fi
 
+  shift
   command=$1
-  shift;
 fi
 
 if [ $n_pretend -gt 0 ]; then
@@ -129,13 +99,11 @@ fi
 
 _exit=0
 
-if [ "$command" = "help" ]; then
-  print_command_help $@
-  exit 0
-elif [ "$command" = "streams" ]; then
+if [ "$command" = "streams" ]; then
+  shift
   if [ $# -gt 0 ]; then
     echo "error: too many arguments: $@"
-    print_help__streams
+    print_help
     exit -1
   fi
 
@@ -143,7 +111,7 @@ elif [ "$command" = "streams" ]; then
     name=$1
     types=$(echo $DEMO_STREAM_TYPES | sed 's/:/ /g')
     for type in $types; do
-      echo "http://$(hostname -i):8080/$type/$name/index.m3u8"
+      echo "http://localhost:8080/$type/$name/index.m3u8"
     done
   }
 
@@ -176,15 +144,15 @@ elif [ "$command" = "streams" ]; then
     done
   fi
   exit 0
-elif [ "$command" = "ffmpeg" ]; then
-  if [ "$1" = "--exit" ]; then
+elif [ "$command" != "" ]; then
+  if [ "$command" = "--exit" ]; then
     shift
     _exit=1
     _opts="--exit"
   fi
   if [ $# -eq 0 ]; then
     echo "error: no streams specified"
-    print_help__ffmpeg
+    print_help
     exit -1
   fi
   streams=($@)
@@ -212,10 +180,6 @@ elif [ "$command" = "ffmpeg" ]; then
     fi
   done
   client="ffmpeg-capture-hls.sh $_opts ${streams[@]}";
-elif [ "$command" != "" ]; then
-  echo "error: unknown command or option: '$command'"
-  print_help
-  exit -1
 fi
 
 function start_nginx() {

@@ -136,35 +136,33 @@ To get list of streams you will be able to play, execute::
     -p 8080:8080 \
     intel-media-delivery demo streams
 
-On the output you should get list of streams in a format::
+On the output you should get list of streams similar to the following::
 
-  http://172.17.0.2:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
+  http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
+  http://localhost:8080/vod/hevc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 
-``172.17.0.2`` stands for the container IP address (locally you might see
-some other value). Mind that since we've published container port to the
-host port, streams will also be available via links like::
+These streams can be supplied as an input to the demo command lines
+described below. Mind however that HEVC streaming miпht not be supported by
+some client applications, for example, web browsers.
+
+If you want to run a client on some other system rather than host, make sure
+to substituite ``localhost`` with the host IP address::
 
   http://<host-ip>:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 
 Above example just lists content embedded in the container on the build stage.
-See `Content Attribution`_ for the copyright info for the above video. See
+See `Content Attribution`_ for the copyright info of the embedded video. See
 `Container volumes (adding your content, access logs, etc.) <doc/howto.rst#container-volumes-adding-your-content-access-logs-etc>`_
 for how to add your own content to the demo.
 
-**Hint:** if you work under proxy and have any issues with the demo playing
-on the same system (client and server both running locally), then try to
-access streaming with just::
-
-  http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
-
-You can run samples in a differnt modes depending on where client is
-located. These modes comes with slightly differnt levels of complexity - see
+You can run samples in different modes depending on where client is
+located. These modes comes with slightly different levels of complexity - see
 below paragraphs for mode details.
 
-ffmpeg demo mode
-~~~~~~~~~~~~~~~~
+Default demo mode
+~~~~~~~~~~~~~~~~~
 
-With ``ffmpeg`` demo mode client is ran inside the container. As such, you don't need
+In a default demo mode client is ran inside the container. As such, you don't need
 to interact with the container in any other way rather than to start and stop it.
 This is the simplest demo mode. To run it, execute::
 
@@ -176,7 +174,7 @@ This is the simplest demo mode. To run it, execute::
     --cap-add SYS_ADMIN \
     -p 8080:8080 \
     intel-media-delivery \
-    demo ffmpeg http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
+    demo http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 
 Upon successful launch you will see output similar to the below one.
 
@@ -195,12 +193,11 @@ its documentation if you wish to navigate and play around with the demo. To
 terminate, just press CTRL+C and CTRL+D repreatedly to stop and exit each
 script and/or monitoring process.
 
-Interactive demo mode (aka vlc mode)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Interactive demo mode
+~~~~~~~~~~~~~~~~~~~~~
 
 With "interactive" demo mode container runs all the services required for streaming, but
-awaits for the user interaction to trigger the streaming. To start demo in this mode,
-execute::
+awaits for the user interaction to trigger it. To start demo in this mode, execute::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
   DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' \
@@ -218,13 +215,10 @@ container. For example, from the host::
   # or
   ffmpeg -i http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8 -c copy WAR_TRAILER_HiQ_10_withAudio.mkv
 
-Or from some other machine in the network::
+**Note**: use ``<host-ip>`` instead of ``loсalhost`` starting client on a
+system other than host.
 
-  vlc http://<host-ip>:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
-  # or
-  ffmpeg -i http://<host-ip>:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8 -c copy WAR_TRAILER_HiQ_10_withAudio.mkv
-
-Similar to `ffmpeg demo mode`_ described above, container will start few
+Similar to `default demo mode`_ described above, container will start few
 terminals, but eventually no client statistics will be available since client
 is running elsewhere.
   
@@ -258,7 +252,7 @@ option to emulate multiple streams available for streaming::
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \
     -p 8080:8080 \
-    intel-media-delivery demo -4 ffmpeg \
+    intel-media-delivery demo -4 \
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-1/index.m3u8
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-2/index.m3u8
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-3/index.m3u8
@@ -298,7 +292,7 @@ For example::
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \
     -p 8080:8080 \
-    intel-media-delivery demo -4 ffmpeg \
+    intel-media-delivery demo -4 \
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-1/index.m3u8
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-2/index.m3u8
       http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-3/index.m3u8
