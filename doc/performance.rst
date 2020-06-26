@@ -16,7 +16,7 @@ provided for allowing users to evaluate video quality (see `quality methodology 
 
 Key performance metrics we collect are:
 
-* Peak Concurrent Number of Sessions
+* Peak Concurrent Number of Sessions Running in Realtime (Density)
 * Peak Frames Per Second (FPS)
 
 There are many other metrics (like CPU and GPU utilization) we
@@ -38,26 +38,29 @@ Multi-Stream Performance
 
 The above picture illustrates multi-stream Performance measurement flow. This is
 iterative process where we run predefined command lines (point [1] on the
-pic.) and increase number of concurent sessions (point [3] on the pic.) if
-all the sessions can be run at realtime on the current iteration.
+pic.) and increase number of concurrent sessions (point [3] on the pic.) if
+all the sessions can be run at realtime on the current iteration.  "Realtime" 
+means we are encoding at the same speed as the output clip's playback framerate.
 
-The goal of the measurement is to obtain data similar to the one showed on
-the below picture:
+The goal of the measurement is to obtain data similar to what is shown in
+the below chart:
 
 .. image:: pic/MSPerf_MultiStreamPerformance_example.png
 
-Here we can compare achieved number of cuncurent sessions (density) for
-different resulutions and different setups where setups could be different
-different machines, different encoding seetings, different encoders, etc.
+Here we can compare achieved number of cuncurrent sessions (density) for
+different resulutions and across different setups.
 
 Single-Stream Performance
 *************************
 
-Looking into single stream performance we evaluate performance if individual
-workload. The key metric to collect here is workload FPS. Effectively, the
-single stream performance data always accomponies multi-stream performance
-measurements. The picture below illustrates what we are looking for
-single stream.
+For single-stream performance, we evaluate performance of individual
+workloads. The key metric to collect here is transcoding speed in FPS. 
+Single-stream performance FPS can sometimes be used to sanity-check multi-stream
+density measurements (e.g. a single-stream measurement of 180FPS indicates you 
+can expect a density of around 6x 30fps streams running real-time), however care 
+must be taken to understand the utilization and concurrency of the video 
+engines, video enhancment engine and render engine.  The picture 
+below illustrates an example of single-stream performance measurement.
 
 .. image:: pic/MSPerf_SingleStreamPerformance_example.png
 
@@ -69,16 +72,15 @@ monitoring and debug. The below picture gives a good example summary:
 
 .. image:: pic/MSPerf_CPU_GPU_Utilization_example.png
 
-These metrics allow to check whether workload bottleneck is related to CPU
-or particular GPU engine. If this data does not highlight the bottleneck,
-but gives a hint of GPU under utilization, try to look into further details.
-One of the pinpoints might be memory. We are evaluating memory footprint for
-this reason - see below example.
+These metrics allow users to check whether workload bottleneck is related to CPU
+or a particular GPU engine. If this data does not highlight the bottleneck,
+but gives a hint of GPU under utilization, the user can look into further details, 
+such as memory footprint - see below example.
 
 .. image:: pic/MSPerf_MemoryFootprint_example.png
 
-Eventually all the above data is useful in comparison for different
-workloads settings and system setups.
+Eventually all of the above data is useful evaluating and analyzing performance 
+for different workload settings and system setups.
 
 Bitrates
 --------
