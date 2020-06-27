@@ -121,6 +121,8 @@ function run() {
   echo "$pid:$type/$stream:$ARTIFACTS/$type/$stream.log:$?" >> $ARTIFACTS/done
 }
 
+hls_time=4 # 4 seconds HLS fragment
+
 if [ "$type" = "vod/avc" ]; then
   bitrate=3000000
   maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
@@ -131,7 +133,7 @@ if [ "$type" = "vod/avc" ]; then
     -c:v h264_qsv -profile:v high -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
       -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256
-    -f hls -hls_time 10 -hls_playlist_type event
+    -f hls -hls_time $hls_time -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
     -use_localtime_mkdir 1
@@ -146,7 +148,7 @@ elif [ "$type" = "vod/hevc" ]; then
     -c:v hevc_qsv -profile:v main -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
       -extbrc 1 -bf 7 -refs 5 -g 256
-    -f hls -hls_time 10 -hls_playlist_type event
+    -f hls -hls_time $hls_time -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
     -use_localtime_mkdir 1
@@ -160,7 +162,7 @@ elif [ "$type" = "vod/abr" ]; then
     -map [o1] -c:v h264_qsv -b:v 5M
     -map [o2] -c:v h264_qsv -b:v 1M
     -map a:0 -map a:0 -c:a copy
-    -f hls -hls_time 10 -hls_playlist_type event
+    -f hls -hls_time $hls_time -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
     -use_localtime_mkdir 1
@@ -173,14 +175,14 @@ addlog "scheduling: ${cmd[@]}"
 run "${cmd[@]}" </dev/null >/dev/null 2>&1 &
 pid=$!
 
-TIMEOUT=20
+TIMEOUT=$((3 * $hls_time))
 addlog "$0 $@: waiting for $TIMEOUT seconds for index file to appear"
 
 indexfile="/var/www/hls/$type/$stream/index.m3u8"
 
 # Timeout should be selected longer than HLS fragment length since index
 # file is published by ffmpeg when first fragment becomes available.
-end=$(( $(date +%s) + 20 ))
+end=$(( $(date +%s) + $TIMEOUT ))
 while ps -p $pid > /dev/null &&
       [ $(date +%s) -lt $end ] &&
       [ ! -f $indexfile ]; do

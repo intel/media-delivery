@@ -137,14 +137,15 @@ addlog "scheduling: ${cmd[@]}"
 run "${cmd[@]}" </dev/null >/dev/null 2>&1 &
 pid=$!
 
-TIMEOUT=20
+hls_time=4 # should match hls_fragment time in nginx.conf
+TIMEOUT=$(( 3 * $hls_time ))
 addlog "$0 $@: waiting for $TIMEOUT seconds for index file to appear"
 
 indexfile="/var/www/hls/$type/$stream/index.m3u8"
 
 # Timeout should be selected longer than HLS fragment length since index
 # file is published by RTMP HLS server when first fragment becomes available.
-end=$(( $(date +%s) + 20 ))
+end=$(( $(date +%s) + $TIMEOUT ))
 while ps -p $pid > /dev/null &&
       [ $(date +%s) -lt $end ] &&
       [ ! -f $indexfile ]; do
