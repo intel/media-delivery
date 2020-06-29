@@ -296,7 +296,8 @@ and `quality <doc/quality.rst>`_ methodology documents.
 
 Running these tools is as simply as the following examples.
 
-* For encoding quality measurement of some YUV file:
+* For encoding quality measurement of some YUV file (currently tool accepts
+  only 8-bit I420 YUV input):
 
 ::
 
@@ -326,6 +327,9 @@ For detailed tools usage refer to the manual pages for
 
 Known limitations
 ~~~~~~~~~~~~~~~~~
+
+* `measure-quality <doc/man/measure-quality.asciidoc>`_ supports only 8-bit
+  I420 input YUV streams
 
 * `measure-quality <doc/man/measure-quality.asciidoc>`_ does not support
   transcoding of input streams in raw video formats w/ Media SDK sample

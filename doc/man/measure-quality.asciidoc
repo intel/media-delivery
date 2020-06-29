@@ -27,11 +27,13 @@ Search is done in the root `<folder>` and all subfolders.
 2. Run quality measurement for the specified stream
 +
 ------------
-    measure quality <stream>
+    measure quality <stream.mp4>
+    measure quality -w <width> -h <height> -f <framerate> <stream.yuv>
 ------------
 +
-In this case quality measure is run only for the specified stream. If stream is YUV you need to
-specify its characteristics via command line optins (`-w`, `-h`, `-f`, etc.). Mind that YUV 
+In this case quality measure is run only for the specified stream. If stream is YUV
+you need to specify its characteristics via command line optins (`-w`, `-h`, `-f`,
+etc.). Tool accepts only 8-bit I420 YUV input streams. Mind that YUV
 stream will be measured both via ffmpeg-qsv and Media SDK Sample Encode, but a stream 
 encapsulated in a containers (e.g. MP4, TS, etc.) will be measured only via
 ffmpeg-qsv (since Sample Encode does not support container streams).
@@ -39,7 +41,7 @@ ffmpeg-qsv (since Sample Encode does not support container streams).
 3. Run quality measure for the pre-defined stream
 +
 ------------
-    measure quality <stream>
+    measure quality <pre-defined-stream.yuv>
 ------------
 +
 This is a simplified variant of the previous mode. If the stream name matches one of the
