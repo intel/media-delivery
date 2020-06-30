@@ -1,0 +1,100 @@
+demo(1)
+=======
+
+NAME
+----
+demo - run media delivery demo
+
+SYNOPSIS
+--------
+[verse]
+'demo' [<options>] streams
+'demo' [<options>] [<stream1> [<stream2>...]]
+
+DESCRIPTION
+-----------
+`demo` is a helper script to operate media delivery demo.
+
+'demo streams' prints streams available in the demo for streaming. Copy 
+one of the stream names and supply it as an input to the client. You can add
+your own content to the demo placing it in the `/opt/data/content` folder
+(using docker mount host folder with `-v` option).
+
+'demo <stream1> [<stream2>...]' will trigger default demo mode. Demo
+will start both nginx server and client(s) under container. This is the
+simplest demo mode since it does not require any interaction from the host
+other than to start or stop a container. Clients would be ffmpeg commands to
+get HLS stream and save it on the disk.
+
+Running just 'demo' will trigger interactive demo mode. Nginx server will be
+started, but it will be awaiting for the incoming client requests. You need
+to start client somewhere, for example on a host. Starting client on a host,
+supply stream names given by 'demo streams'. Starting client on some other
+system other than host, substituite `localhost` in the stream name with host
+IP address.
+
+Example clients:
+------------
+   vlc http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
+------------
+or capturing via ffmpeg:
+------------
+   ffmpeg -i http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8 -c copy /tmp/output.mkv
+------------
+
+`-<n>` option is useful for demo purposes. With it demo pretends to have <n>
+copies of each input stream. Execute 'demo -4 streams' to see the difference.
+
+If demo script is run under tty, it will provide monitoring data to track:
+
+* Client progress (if applicable). See link:ffmpeg-capture-hls.asciidoc[ffmpeg-capture-hls]
+* Server progress. See link:monitor-nginx-server.asciidoc[monitor-nginx-server]
+* CPU and memory utilization (via 'top')
+* GPU utilization  (via 'intel_gpu_top')
+
+To check whether demo is alive, you can use link:demo-alive.asciidoc[demo-alive]
+script which is available as a health check command under docker.
+
+NETWORK PORTS
+-------------
+8080::
+	Port used by nginx server to expose HLS streams. You might wish to
+	publish this port out of docker container to be able to connect
+	external clients to get HLS server. Use `-p 8080:8080` option for
+	`docker run`.
+
+1234::
+	Port used by simple socat server capable to execute incoming bash
+	scripts. Nginx uses this server to schedule transcoding tasks for
+	the incoming HLS requests. For this demo this is internal port and
+	there is no need to publish it out of container. However, in real
+	deployments you will likely wish to scale the sample and move
+	socat server (or some other server with the same purpose) to a
+	separate container (which likely will run on separate GPU-capbable
+	machine). In such a case you eventually will need to publish the
+	port.
+
+OPTIONS
+-------
+--help::
+	Print help
+
+--exit::
+	Exit from the demo once all streams will be completed on client side.
+	This option requires default demo mode.
+
+-<n>::
+	Pretend to have <n> additional copies of each input stream (n <= 50)
+
+ENVIRONMENT VARIABLES
+---------------------
+
+DEVICE::
+	GPU device to run the demo on. Default device is '/dev/dri/renderD128'.
+	Can be overwritten by externally set environment variable.
+
+SEE ALSO
+--------
+link:demo-alive.asciidoc[demo-alive]
+link:ffmpeg-capture-hls.asciidoc[ffmpeg-capture-hls]
+link:monitor-nginx-server.asciidoc[monitor-nginx-server]

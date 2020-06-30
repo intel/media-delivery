@@ -1,0 +1,23 @@
+#!/bin/bash
+
+commands=(
+  "lsb_release -rdi"
+  "uname -a"
+  "cat /proc/cmdline"
+  "cat /proc/cpuinfo | grep \"model name\" | uniq"
+  "lspci -nn | grep VGA"
+  "cat /proc/sys/kernel/perf_event_paranoid")
+
+res=0
+  
+for c in "${commands[@]}"; do
+  echo "#############################################################"
+  echo "Exec: $c"
+  echo "#############################################################"
+  eval "$c"
+  tmp=$?
+  [ $res -eq 0 ] && res=$tmp
+  echo
+done
+
+exit $res

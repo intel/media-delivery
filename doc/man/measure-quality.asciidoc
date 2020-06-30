@@ -1,0 +1,287 @@
+measure-quality(1)
+==================
+
+NAME
+----
+measure-quality - run media delivery quality measure
+
+SYNOPSIS
+--------
+[verse]
+'measure quality' [<options>] [--] <folder>|<stream>
+
+DESCRIPTION
+-----------
+Run quality measure via ffmpeg-qsv and/or Intel Media SDK Sample Encode.
+There are 3 modes of operation to highlight.
+
+1. Run quality measurement on the pre-defined set of workloads
++
+------------
+    measure quality <folder>
+------------
++
+In this case `<folder>` sets the root folder to search for the pre-defined set of streams.
+Search is done in the root `<folder>` and all subfolders.
+
+2. Run quality measurement for the specified stream
++
+------------
+    measure quality <stream.mp4>
+    measure quality -w <width> -h <height> -f <framerate> <stream.yuv>
+------------
++
+In this case quality measure is run only for the specified stream. If stream is YUV
+you need to specify its characteristics via command line optins (`-w`, `-h`, `-f`,
+etc.). Tool accepts only 8-bit I420 YUV input streams. Mind that YUV
+stream will be measured both via ffmpeg-qsv and Media SDK Sample Encode, but a stream 
+encapsulated in a containers (e.g. MP4, TS, etc.) will be measured only via
+ffmpeg-qsv (since Sample Encode does not support container streams).
+
+3. Run quality measure for the pre-defined stream
++
+------------
+    measure quality <pre-defined-stream.yuv>
+------------
++
+This is a simplified variant of the previous mode. If the stream name matches one of the
+pre-defined streams (which are YUV streams) you may skip specifying its characteristics.
+
+Script checks whether the input stream is YUV by the following file
+extensions: '.yuv', '.YUV'. Any other file is considered to be in a container
+format.
+
+Script checks input stream resolution to identify list of bitrates to use
+for encoding. This behaviour can be overwritten with `--bitrate` option which
+permits to specify a list of desired bitrates. Script default bitrates are
+given in the following tables:
+
+* AVC encoding bitrates
++
+|===
+| Resolution | Bitrates (Mbps)
+
+| `width > 1920 && height > 1088` | 6, 9, 15, 24, 40
+| `width > 1280 && height > 720` | 2, 3, 6, 12, 24
+| other | 1, 1.5, 3, 6, 12
+|===
+
+* HEVC encoding bitrates
++
+|===
+| Resolution | Bitrates (Mbps)
+
+| `width > 1920 && height > 1088` | 6, 9, 15, 24, 40
+| `width > 1280 && height > 720` | 2, 3, 6, 9, 15
+| other | 1, 1.5, 3, 4.5, 7.5
+|===
+
+OUTPUT ARTIFACTS
+----------------
+The script outputs data in the `--outdir` folder. Artifacts are encoded (transcoded)
+streams and text files with the calculated metrics. Consider an example below
+(`--nframes=10` is given just for the simplicity).
+
+------------
+# measure quality --nframes=10 /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4
+<...>
+
+# ls -1
+WAR_TRAILER_HiQ_10_withAudio.mp4.cbr.ffmpeg-qsv.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4.cbr.sample-encode.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4.vbr.ffmpeg-qsv.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4.vbr.sample-encode.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4_12Mbps_CBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_12Mbps_VBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_24Mbps_CBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_24Mbps_VBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_2Mbps_CBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_2Mbps_VBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_3Mbps_CBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_3Mbps_VBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_6Mbps_CBR_QSV.h264
+WAR_TRAILER_HiQ_10_withAudio.mp4_6Mbps_VBR_QSV.h264
+
+# cat WAR_TRAILER_HiQ_10_withAudio.mp4.cbr.ffmpeg-qsv.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4_12Mbps_CBR_QSV.h264:33712:99.73896508146471:56.57106818620179:0.9998045802116394:0.9996079494435991
+WAR_TRAILER_HiQ_10_withAudio.mp4_24Mbps_CBR_QSV.h264:28605:99.73896508146471:55.73372554473565:0.9997134983539582:0.9994766423998278
+WAR_TRAILER_HiQ_10_withAudio.mp4_2Mbps_CBR_QSV.h264:4681:98.18199953840941:49.40211511795687:0.9973068058490753:0.9969961779084621
+WAR_TRAILER_HiQ_10_withAudio.mp4_3Mbps_CBR_QSV.h264:6927:99.14454456499617:50.71396113566765:0.9983673691749573:0.9979530665346188
+WAR_TRAILER_HiQ_10_withAudio.mp4_6Mbps_CBR_QSV.h264:14923:99.68411421582299:53.147407625088:0.9992096841335296:0.9988773328701932
+------------
+
+`*.metrics` files contain calculated metrics. File names contain 4 parts:
+`<outprefix>.<codec>.<mode>.<application>.metrics`. `<outprefix>` is
+`--outprefix` specified on the command line (running pre-defined set of streams
+default one is always used). `<codec>` is the video compression standard used
+in quality measurement (AVC or HEVC), which can be specified on the command line with
+`--codec` option. `<mode>` is a bitrate mode like `cbr` (constant bitrate) or
+`vbr` (variable bitrate). `application` is the application being measured for video 
+quality: ffmpeg or Intel Media SDK Sample Encode. In addition, when BD-rate calculation 
+is enabled, `application` is set to `ref` indicating metrics files obtained from a 
+reference (e.g. x264 or x265) used for BD-rate calculation. Metrics data is in
+CSV format with colon `:` separator. The first field is a stream name, the second
+is the bitrate, and the remaining fields are the metrics. Metrics are published in
+the following order: VMAF, PSNR-Y, SSIM, MS-SSIM. If any of the `--skip-*` metrics
+options are specified, then the corresponding metrics are represented with an empty
+string between the separators in the output report.
+
+`*bdrate` files contain calculated BD-rates. Bjøntegaard-Delta bitrate (BD-rate)
+compares video quality between test and reference codecs by taking into account
+bitrates and corresponding quality metrics (e.g. PSNR, VMAF, etc.). At least 4
+(bitrate, metric) pairs (vector points) are needed for BD-rate calculation. The
+BD-rate is a percentage indicating how much the bitrate is reduced (negative
+percent values) or how much the bitrate is increased (positive percent values)
+for the *same* value of a quality metric. The script supports 2 different BD-rate 
+modes:
+
+ . _Single BD-rate per sequence mode_ where a single BD-rate is computed from
+all available (bitrate, metric) vector points, for all enabled metrics. Minimum 
+number of points required for BD-rate computation is 4.
+ . _Dual BD-rate per sequence mode_ where 2 BD-rates are computed per sequence:
+one from 4 points corresponding to the 4 highest bitrates (High Bitrates BD-rate),
+and one from 4 points corresponding to the 4 lowest bitrates (Low Bitrates
+BD-rate).
+
+Dual mode is used by default. However, users can force Single BD-rate mode with 
+`--single-bdrate` option. In addition, users are able to override default 
+bitrates with `--bitrates` option.  When overriding default bitrates, at least 4 
+distinct bitrates need to be specified. If N bitrates are specified (N >= 4) with 
+Dual BD-rate mode, then smallest 4 out of N bitrates are set as Low Bitrates, and 
+the highest 4 out of N bitrates are set as High Bitrates. Setting N < 8 is allowed 
+in which case there will be an overlap between Low and High bitrates. Also,setting 
+N > 8 is allowed, in which case mid-range bitrates will be ignored. On the other 
+hand, if Single BD-rate mode is used, then all N >= 4 bitrates are utilized. 
+
+`*bdrate` file names contain 5 parts:
+`<outprefix>.<codec>.<mode>.<application>.<extension>`. The first 4 parts are
+the same as in `*.metrics` files. `<extension>` can be one of the following:
+
+ . `bdrate` for Single BD-rate per sequence mode output
+ . `hi-bdrate` for High Bitrates BD-rate mode output
+ . `lo-bdrate` for Low Bitrates BD-rate mode output
+
+After `*bdrate` output files per sequence are generated, the script generates an
+additional set of output files containing BD-rate averages. This set of output
+files has the filename structure `Average.<codec>.<mode>.<application>.<extension>`.
+Additionally, the grand total average output file is generated for each enabled
+`application` and has the filename structure `Average.<codec>.<application>.bdrate`.
+
+In each `*bdrate` file, the data is in CSV format with colon `:` separator. The
+first field is a stream name, followed by the BD-rate values for available metrics
+published in the following order: VMAF BD-rate, PSNR-Y BD-rate, SSIM BD-rate,
+MS-SSIM BD-rate. If any of the `--skip-*` metrics options are specified, then the
+BD-rates corresponding these metrics are represented with an empty string between
+the separators in the output report.
+
+
+ENCODING OPTIONS
+----------------
+--codec AVC|HEVC::
+	Sets encoder to use (default: `AVC`).
+
+--preset default|best::
+	Sets quality preset options (default: `best`).
+
+--bitrates <float>[:<float>...]::
+	Sets list of bitrates in Mbps to use (default: use hardcoded bitrates which
+	depend on stream resolution and codec). A minimum of 4 distinct bitrates are 
+        needed for calculating BD-rate.
+
+--tu veryslow|slower|slow|medium|fast|faster|veryfast::
+        Sets target usage preset (default: `medium`).
+
+WORKING MODE OPTIONS
+--------------------
+--skip-metrics::
+	Do not calculate any metrics.
+
+--skip-psnr::
+	Do not calculate psnr.
+
+--skip-ssim::
+	Do not calculate ssim.
+
+--skip-ms-ssim::
+	Do not calculate msssim.
+
+--skip-vmaf::
+	Do not calculate vmaf.
+
+--skip-encoding::
+	Do not encode anything.
+
+--skip-ffmpeg::
+	Do not run ffmpeg-qsv quality measurement.
+
+--skip-msdk::
+	Do not run Intel Media SDK Sample Encode quality measurement.
+
+--skip-cbr::
+	Do not execute Constant Bitrate (CBR) encoding cases.
+
+--skip-vbr::
+	Do not execute Variable Bitrate (VBR) encoding cases.
+
+--skip-reference::
+	Do not run reference codec used for BD-rate calculation.
+
+--skip-bdrate::
+	Do not calculate BD-rate.
+
+--single-bdrate::
+	Force Single BD-rate per sequence mode (default is Dual, i.e. calculate BD-rates for lo- and hi-bitrate ranges).
+
+--use-vdenc::
+	Force using low power VDEnc hardware mode (disabled by default).
+
+PROCESSING OPTIONS
+------------------
+--nframes|-n <uint>::
+	Process (encode, calculate metrics) this number of frames and stop.
+
+--dry-run::
+	Do not execute any commands, but dump them to `stdout`.
+
+--outdir|-o /path/to/artifacts::
+	Produce output in the specified folder (default:
+	`/opt/data/artifacts/measure/quality` if ran under docker,
+	`$HOME/measure/quality` otherwise)
+
+--outprefix::
+	File prefix to append to output artifacts (default: `$(basename $inputfile)`).
+	Not applicable in `<folder>` mode.
+
+
+INPUT STREAM OPTIONS
+--------------------
+Only valid for YUV input stream.
+
+--width|-w <uint>::
+	Stream width
+
+--height|-h <uint>::
+	Stream height
+
+--framerate|-f <uint>::
+	Stream framerate
+
+PREREQUISITES
+-------------
+ffmpeg::
+	Used for quality measurement of ffmpeg-qsv (`--enable-libmfx`) and calculation of quality metrics
+	(`--enable-libvmaf`).
+
+ffprobe::
+	Used for getting information on the input/output stream(s).
+
+sample_encode::
+	Used for direct quality measurement of Intel Media SDK library (YUV input
+	streams).
+
+python3::
+	Used for generic script purposes.
+
+SEE ALSO
+--------
+link:measure.asciidoc[measure]

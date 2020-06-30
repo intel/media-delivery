@@ -1,0 +1,26 @@
+demo-alive(1)
+=============
+
+NAME
+----
+demo-alive - run a healthcheck
+
+SYNOPSIS
+--------
+[verse]
+'demo-alive'
+
+DESCRIPTION
+-----------
+`demo-alive` performs a healthcheck of the running demo. It verifies that
+nginx and socat servers are actually up and running. Under docker container
+scripts is connected to the docker HEALTHCHECK command. With that you can
+check container health status with:
+
+------------
+docker inspect --format='{{json .State.Health}}' <container-id>
+------------
+
+SEE ALSO
+--------
+link:demo.asciidoc[demo]

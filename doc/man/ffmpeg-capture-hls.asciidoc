@@ -1,0 +1,80 @@
+ffmpeg-capture-hls(1)
+=====================
+
+NAME
+----
+ffmpeg-capture-hls - capture HLS stream(s) to the file(s)
+
+SYNOPSIS
+--------
+[verse]
+'ffmpeg-capture-hls.sh' [<options>] <stream> [<stream>]
+
+DESCRIPTION
+-----------
+Helper script to trigger HLS streaming and capture it to the file.
+Script recognizes the following stream specifications:
+
+* http://localhost:8080/<stream>/index.m3u8
+* <stream> aka http://localhost:8080/<stream>/index.m3u8
+
+Script starts capture in the background process and enters monitoring
+loop. If terminal is attached you can exit from it with CTRL^C. Upon
+exit script will enter bash shell for you to wander about. If
+'--exit' option was specified, script will exit automatically
+upon capturing all the streams. If terminal is not attached monitoring
+loop will produce outpout to `stdout`.
+
+If the script was called as
+------------
+ffmpeg-capture-hls.sh vod/avc/WAR_TRAILER_HiQ_10_withAudio
+------------
+or as
+------------
+ffmpeg-capture-hls.sh http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
+------------
+which is the same, then you should see the following output from the
+monitoring loop:
+
+------------
+ffmpeg streaming clients monitor
+================================
+Output and logs path: /opt/data/artifacts/ffmpeg-hls-client
+Total clients: 1
+Running clients: 1
+  vod/avc/WAR_TRAILER_HiQ_10_withAudio: size=8.0M, frames=250, fps=24
+Completed clients: 0
+------------
+
+It says that there is a single client being monitored (`Total clients`).
+It is currently running (`Running clients`) and its running status is as
+follows: file being capured is `vod/avc/WAR_TRAILER_HiQ_10_withAudio`,
+currently 8.0M were received which is around 250 frames and average receiving
+speed is 24 fps.
+
+Upon completion you will see something similar to the following:
+------------
+ffmpeg streaming clients monitor
+================================
+Output and logs path: /opt/data/artifacts/ffmpeg-hls-client
+Total clients: 1
+Running clients: 0
+Completed clients: 1
+  vod/avc/WAR_TRAILER_HiQ_10_withAudio: size=54M, frames=3443, fps=24, status=0
+------------
+Pay attention that monitoring loop report status of the completed ffmpeg
+capturing.
+
+Mind that monitoring loop relies on ffmpeg output reporting number of
+received frames and speed (in fps). ffmpeg reports this data with some
+delay, so be patient. As of now there is no way to control ffmpeg reporting
+frequency.
+
+OPTIONS
+-------
+--exit::
+	Exit from the demo once all streams will be completed on client side.
+
+SEE ALSO
+--------
+link:demo-ffmpeg.asciidoc[demo-ffmpeg]

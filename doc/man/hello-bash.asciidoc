@@ -1,0 +1,23 @@
+hello-bash(1)
+=============
+
+NAME
+----
+hello-bash - default media delivery containers entrypoint
+
+SYNOPSIS
+--------
+[verse]
+'hello-bash'
+
+DESCRIPTION
+-----------
+Default and trivial media delivery containers entrypoint which gets executed
+if you started container without any command. It just prints welcome message
+where it gives some advice to run some demo commands and enters bash shell.
+If you run container in interactive mode you can wander about and check
+what's going on.
+
+SEE ALSO
+--------
+link:demo-bash.asciidoc[demo-bash]

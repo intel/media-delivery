@@ -1,0 +1,56 @@
+demo-setup(1)
+=============
+
+NAME
+----
+demo-setup - script which setups a demo
+
+SYNOPSIS
+--------
+[verse]
+'demo-setup'
+
+DESCRIPTION
+-----------
+`demo setup` is a script which helps to setup a demo on a container launch.
+It cheks for a various issues which might prevent successful demo and
+returns non-zero exit status if any detected. Script also might adjust some
+access permissions, for example to allow access GPU under specific user
+accounts.
+
+USER ACCOUNTS
+-------------
+user::
+	This is a user account used to:
+	* Run nginx server
+	* Run ffmpeg transcoding scheduled by nginx server
+	* Run demo client(s) under the container (if that's the case)
+	* Run demo monitoring tools like Intel GPU Top, Top or server monitoring
+	scripts
+
+PATHS
+-----
+/opt/data/artifacts::
+	Location for various demo output artifacts. For example, from running
+	server side ffmpeg transcoding and monitoring scripts and/or client
+	side player and monitoring scripts. 'user' needs 'rw' permissions for
+	this location.
+
+/opt/data/content::
+	Location where you can put your own content for the demo to see.
+	'user' needs 'r' permission for this location.
+
+/var/www/hls::
+	Location where HLS stream is produced to. 'user' needs 'rw'
+	permissions for this location.
+
+EXIT STATUS
+-----------
+0 - setup was successful
+
+255 - setup failed
+
+SEE ALSO
+--------
+link:demo-bash.asciidoc[demo-bash]
+link:demo-setup.asciidoc[demo-setup]

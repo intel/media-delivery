@@ -1,0 +1,229 @@
+#!/bin/bash
+#
+# Copyright (c) 2020 Intel Corporation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+n_pretend_max=50
+
+function print_help() {
+  echo "Usage: demo [<options>] streams"
+  echo "   or: demo [<options>] [<stream1> [<stream2>...]]"
+  echo ""
+  echo "Options:"
+  echo "  --help      Print this help"
+  echo "  --exit      Exit from the demo once all streams will be completed on client side."
+  echo "              This option requires <stream>(s) passed on the command line, i.e. it"
+  echo "              works only if client is started by the demo script under container."
+  echo "  -<n>        Pretend to have <n> additional copies of each input stream (n <= $n_pretend_max)"
+  echo ""
+  echo "Examples:"
+  echo ""
+  echo ">> demo http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8"
+  echo "Starts nginx server and runs client inside the container. That's the simplest way"
+  echo "to run the demo. Client is an ffmpeg which gets the stream and saves it to the disk."
+  echo ""
+  echo ">> demo"
+  echo "Starts nginx server and awaits for external incoming client requests. Issue the one"
+  echo "requesting playback via vlc from the host (or some other system on the network):"
+  echo "   # vlc http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8"
+  echo "   # ffmpeg -i http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8 -c copy /tmp/output.mkv"
+  echo ""
+  echo ">> demo streams"
+  echo "Returns list of streams available for playback and exits. Use one of the"
+  echo "reported streams in demo run examples given above."
+  echo ""
+  echo ">> demo -2 streams"
+  echo ">> demo -2"
+  echo ">> demo http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-1/index.m3u8 \\"
+  echo "        http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-2/index.m3u8"
+  echo "With '-2' option demo pretends to have 2 copies of each input stream."
+  echo ""
+  echo "For more details see 'man demo'."
+}
+
+command=$1
+
+n_pretend=0
+
+if [ "$command" = "--help" ]; then
+  print_help
+  exit 0
+elif [[ "$command" =~ ^-([0-9]+)$ ]]; then
+  n_pretend=${BASH_REMATCH[1]}
+  if [ $n_pretend -gt $n_pretend_max ]; then
+    echo "error: '-n' option: too big value: $n_pretend"
+    exit -1
+  fi
+
+  shift
+  command=$1
+fi
+
+if [ $n_pretend -gt 0 ]; then
+  for stream in `ls -1 /opt/data/content/*.mp4 2>/dev/null`; do
+    name=$(basename -- "$stream")
+    extension="${name##*.}"
+    name="${name%.*}"
+    for n in `seq 1 $n_pretend`; do
+      ln -s $stream /opt/data/duplicates/$name-$n.$extension
+    done
+  done
+  for stream in `ls -1 /opt/data/embedded/*.mp4 2>/dev/null`; do
+    name=$(basename -- "$stream")
+    extension="${name##*.}"
+    name="${name%.*}"
+    for n in `seq 1 $n_pretend`; do
+      if [ ! -e $name-$n.$extension ]; then
+        ln -s $stream /opt/data/duplicates/$name-$n.$extension
+      fi
+    done
+  done
+fi
+
+_exit=0
+
+if [ "$command" = "streams" ]; then
+  shift
+  if [ $# -gt 0 ]; then
+    echo "error: too many arguments: $@"
+    print_help
+    exit -1
+  fi
+
+  function print_streams() {
+    name=$1
+    types=$(echo $DEMO_STREAM_TYPES | sed 's/:/ /g')
+    for type in $types; do
+      echo "http://localhost:8080/$type/$name/index.m3u8"
+    done
+  }
+
+  echo "Your content (has preference over embedded content):"
+  your_content=`ls -1 /opt/data/content/*.mp4 2>/dev/null`
+  if [ "$your_content" = "" ]; then
+    echo "  none"
+  else
+    for stream in $your_content; do
+      name=$(basename -- "$stream")
+      name="${name%.*}"
+      print_streams $name
+    done
+  fi
+  echo
+  echo "Container embedded content:"
+  for stream in `ls -1 /opt/data/embedded/*.mp4`; do
+    name=$(basename -- "$stream")
+    name="${name%.*}"
+    print_streams $name
+  done
+  echo
+  duplicates=`ls -1 /opt/data/duplicates/*.mp4 2>/dev/null`
+  if [ "$duplicates" != "" ]; then
+    echo "Stream duplicates:"
+    for stream in $duplicates; do
+      name=$(basename -- "$stream")
+      name="${name%.*}"
+      print_streams $name
+    done
+  fi
+  exit 0
+elif [ "$command" != "" ]; then
+  if [ "$command" = "--exit" ]; then
+    shift
+    _exit=1
+    _opts="--exit"
+  fi
+  if [ $# -eq 0 ]; then
+    echo "error: no streams specified"
+    print_help
+    exit -1
+  fi
+  streams=($@)
+
+  function get_stream_name() {
+    local stream=$1
+    if echo $stream | grep http; then
+      # dealing with "http://localhost:8080/$stream/index.m3u8" beast
+      # and we need to get $stream from it
+      stream=${stream%/*}        # remove "/index.m3u8"
+      stream=${stream#http://*/} # remove "http://<ip>:<port>/"
+    fi
+    echo $stream
+  }
+
+  for stream in ${streams[@]}; do
+    # we have streams specified in a from <type>/<name>
+    name=$(get_stream_name $stream)
+    name=${name##*/}
+    if [ ! -f /opt/data/content/$name.mp4 -a \
+         ! -f /opt/data/embedded/$name.mp4 -a \
+         ! -f /opt/data/duplicates/$name.mp4 ]; then
+      echo "error: no such file to play: '$name'"
+      exit -1
+    fi
+  done
+  client="ffmpeg-capture-hls.sh $_opts ${streams[@]}";
+fi
+
+function start_nginx() {
+  if ! nginx "$@"; then
+    echo "error: failed to start nginx (specified options: $@)" >&2
+    exit -1
+  fi
+}
+
+socat -t 20 TCP-LISTEN:1234,fork EXEC:/bin/bash </dev/null >/dev/null 2>&1 &
+echo "$!" >/tmp/socat.pid
+
+if tty -s; then
+  {
+    if [ $_exit -eq 1 ]; then
+      echo "new-session /usr/bin/bash -c \"$client; tmux kill-session\""
+    else
+      echo "new-session /usr/bin/bash -c \"$client\""
+    fi
+    echo "split-window -v intel_gpu_top"
+    echo "split-window -v top"
+    echo "split-window -v monitor-nginx-server.sh"
+    echo "select-layout tiled"
+  } >> /tmp/tmux.conf
+
+  start_nginx
+  tmux -f /tmp/tmux.conf attach
+else
+  echo "note: not running under tty"
+  goto_tty_note="note:   if you run under docker, consider restarting with '-it' option\n"
+  goto_tty_note+="note:   if you will need to terminate demo earlier, lookup for the\n"
+  goto_tty_note+="note:   running container with 'docker container ls' followed up by\n"
+  goto_tty_note+="note:   'docker container stop <container-id>'\n"
+
+  if [ -n "$client" ]; then
+    echo "note: starting up nginx server and specified client"
+    echo "note:   full-scale demo mode requires access to terminal"
+    echo -ne "$goto_tty_note"
+    start_nginx
+    $client
+  else
+    echo "note: starting up nginx server"
+    echo "note:   request streaming from host or other system in the network"
+    echo -ne "$goto_tty_note"
+    start_nginx -g "daemon off;"
+  fi
+fi

@@ -1,0 +1,123 @@
+#!/bin/bash
+#
+# Copyright (c) 2020 Intel Corporation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+if [[ ! ( -n "$DEVICE" && "$DEVICE" =~ /dev/dri/ && -e $DEVICE ) ]]; then
+  echo "error: device not available: $DEVICE"
+  echo "error:   if you run under docker add host device(s) with:" >&2
+  echo "error:     --device=$DEVICE (preferred)" >&2
+  echo "error:     --device=/dev/dri/" >&2
+  echo "error:     --privileged" >&2
+  echo "error:   you can change device you want to use with:" >&2
+  echo "error:     -e DEVICE=${DEVICE:-/dev/dri/renderD128}" >&2
+  exit -1
+fi
+
+function get_gid()
+{
+  local grp=$1
+  local gid=$(grep "^$grp:" /etc/group | cut -d: -f3)
+  if [ -n "$gid" ]; then
+    echo "$gid"
+  else
+    echo "$grp" # $grp _is_ GID which does not have group name
+  fi
+}
+
+device_grp=$(ls -g $DEVICE | awk '{print $3}' | uniq)
+device_gid=$(get_gid $device_grp)
+
+# groups might output some error message if there is no group name for the
+# GID. That's common case for the docker container and we just need to
+# ignore the error.
+if ! groups 2>/dev/null | grep -q "$device_grp"; then
+  echo "error: user (UID=`id -u`) is not a member of GID=$device_gid" >&2
+  echo "error:   if you run under docker rerun with:" >&2
+  echo "error:     --group-add=$device_gid" >&2
+  echo "error:   if you run on bare metal add user to group (see 'man 8 usermod')" >&2
+  exit -1
+fi
+
+if ! capsh --print | grep Current | grep -q cap_sys_admin; then
+  echo "error: no CAP_SYS_ADMIN capability (required to get GPU% metrics)" >&2
+  echo "error:   if you run under docker, rerun with:" >&2
+  echo "error:     --cap-add SYS_ADMIN" >&2
+  exit -1
+fi
+
+content=/opt/data/content
+artifacts=/opt/data/artifacts
+hls=/var/www/hls
+
+function get_perm() {
+  if [ "$1" = "r" ]; then
+    echo "reading"
+  elif [ "$1" = "w" ]; then
+    echo "writing"
+  else
+    echo "bug: script does not support specified permission: $1" >&2
+  fi
+}
+
+function print_error() {
+  folder=$1
+  perm=$2
+  user=$3
+  echo "error: can't access $folder for $(get_perm $perm) (UID=$(id -u))" >&2
+  echo "error:   if you attempt to map a host folder under docker" >&2
+  echo "error:   you might need to adjust its access permissions on a host side" >&2
+  echo "error:   if you attempt to change docker user with" >&2
+  echo "error:     docker run -u \$(id -u):\$(id -g)" >&2
+  echo "error:   then you actually must mount a number of folders" >&2
+  echo "error:   since by default they are owned by internal container user" >&2
+}
+
+function check_access() {
+  folder=$1
+  perm=$2
+  if ! test -$perm $folder; then
+    print_error $folder $perm $u
+    exit -1
+  fi
+}
+
+# verifying access rights to input/output folders
+check_access $content "r"
+# demo scripts write logs and some output files (captured streaming
+# video) to $artifacts folder, and scripts also read and parse logs
+# to display monitoring statistics
+check_access $artifacts "r"
+check_access $artifacts "w"
+
+# cleaning up any prev. artifacts
+if find $artifacts -mindepth 1 | read; then
+  echo "error: artifacts folder is not empty: $artifacts" >&2
+  echo "error:   if you run under docker, please, make sure to map" >&2
+  echo "error:   empty folder for output artifacts" >&2
+  exit -1
+fi
+
+# demo writes streaming video to $hls folder
+check_access $hls "r"
+check_access $hls "w"
+
+check_access /var/log/nginx "w"
+check_access /var/lib/nginx "w"

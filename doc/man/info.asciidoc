@@ -1,0 +1,32 @@
+info(1)
+=======
+
+NAME
+----
+info - print essential info about the system
+
+SYNOPSIS
+--------
+[verse]
+'info'
+
+DESCRIPTION
+-----------
+`info` is a helper script to print essential information about the system
+relevant to the media delivery software stack like OS type and version,
+kernel version, available GPUs, etc.
+
+This script might be helpful for both the container and the host system
+considering that GPU access comes from the host, i.e. kernel version is
+critically important.
+
+EXIT STATUS
+-----------
+0 - all info was queried successfully
+
+non-zero - error code from the first failed query command
+
+PREREQUISITES
+-------------
+pciutils::
+	Used to get GPU device name and ID (`lspci`).
