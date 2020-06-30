@@ -349,10 +349,53 @@ Known limitations
 Tips for best performance
 -------------------------
 
-Throughout the project we suggest ffmpeg-qsv (and Media SDK samples) command
-lines tuned for the quality and performance. Please, refere to the following
-documents to find them and see underlying quality and performance evaluation
-methodologies used to select optimal setting:
+Ffmpeg is easy to use and flexible in supporting many video transcode pipelines. The
+ffmpeg command lines below illustrate good practices in using
+`ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel Quick Sync Video
+- Intel Media SDK integration into ffmpeg. The use of "extbrc" demonstrates the use
+of developer configurable bitrate control, in these examples the defaults generate
+streams using pyramid coding and other quality optimizations.
+
+**Example 1: AVC VBR Encode**::
+
+  ffmpeg -hwaccel qsv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v h264_qsv -preset medium -profile:v high \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
+    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+
+**Example 2: AVC CBR Encode**::
+
+  ffmpeg -hwaccel qsv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v h264_qsv -preset medium -profile:v high \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
+    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+
+**Example 3: HEVC VBR Encode**::
+
+  ffmpeg -hwaccel qsv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v hevc_qsv -preset medium -profile:v main \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
+    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+
+
+**Example 4: HEVC CBR Encode**::
+
+  ffmpeg -hwaccel qsv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v hevc_qsv -preset medium -profile:v main \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
+    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+
+The noted good practices are used throughout the project within demo
+examples and quality and performance measuring tools. See the following
+document on the further details:
 
 * `Video Quality Command Lines and Measuring Methodology <doc/quality.rst>`_
 * `Video Performance Command Linux and Measuring Methodology <doc/performance.rst>`_
