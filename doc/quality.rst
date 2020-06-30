@@ -119,11 +119,8 @@ ffmpeg-qsv VBR
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
     -i $inputyuv -vframes $numframes -y \
     -c:v h264_qsv -preset medium -profile:v high \
-    -b:v $bitrate -maxrate $maxrate -bufsize $bufsize \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
-
-Here ``$bitrate`` represents target bitrate in bits, ``$maxrate`` represents maximum allowed bitrate in bits for VBR and it is set to 2 sec 
-(i.e. ``bitrate*2``), and ``$bufsize`` represents buffer size in bits and it is set to 4 sec (i.e. ``bitrate*4``).
 
 ffmpeg-qsv CBR
 **************
@@ -134,11 +131,8 @@ ffmpeg-qsv CBR
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
     -i $inputyuv -vframes $numframes -y \
     -c:v h264_qsv -preset medium -profile:v high \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $bufsize \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
-
-Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in bits and it is set to 2 sec (i.e. ``bitrate*2``).
-
 
 Intel Media SDK sample-encode VBR
 *********************************
@@ -148,11 +142,9 @@ Intel Media SDK sample-encode VBR
     -i $input -w $width -h $height -n $numframes -f $framerate \
     -o $output \
     -u medium -vbr -b $bitrate \
-    -BufferSizeInKB $bufsize \
+    -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 2))') \
     -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 \
     -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
-
-Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in KB and it is set to 4 sec (i.e. ``bitrate/2``).
 
 Intel Media SDK sample-encode CBR
 *********************************
@@ -162,11 +154,9 @@ Intel Media SDK sample-encode CBR
     -i $input -w $width -h $height -n $numframes -f $framerate \
     -o $output \
     -u medium -cbr -b $bitrate \
-    -BufferSizeInKB $bufsize \
+    -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 4))') \
     -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 \
     -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
-
-Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in KB and it is set to 2 sec (i.e. ``bitrate/4``).
 
 H.265/HEVC Command Lines
 ------------------------
@@ -180,11 +170,8 @@ ffmpeg-qsv VBR
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
     -i $inputyuv -vframes $numframes -y \
     -c:v hevc_qsv -preset medium -profile:v main \
-    -b:v $bitrate -maxrate $maxrate -bufsize $bufsize \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
-
-Here ``$bitrate`` represents target bitrate in bits, ``$maxrate`` represents maximum allowed bitrate in bits for VBR and it is set to 2 sec 
-(i.e. ``bitrate*2``), and ``$bufsize`` represents buffer size in bits and it is set to 4 sec (i.e. ``bitrate*4``).
 
 ffmpeg-qsv CBR
 **************
@@ -195,10 +182,8 @@ ffmpeg-qsv CBR
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
     -i $inputyuv -vframes $numframes -y \
     -c:v hevc_qsv -preset medium -profile:v main \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $bufsize \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
-
-Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in bits and it is set to 2 sec (i.e. ``bitrate*2``).
 
 Intel Media SDK sample-encode VBR
 *********************************
@@ -209,11 +194,9 @@ Intel Media SDK sample-encode VBR
     -i $input -w $width -h $height -n $numframes -f $framerate \
     -o $output \
     -u medium -vbr -b $bitrate \
-    -BufferSizeInKB $bufsize \
+    -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 2))') \
     -extbrc:implicit -x 5 \
     -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
-
-Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in KB and it is set to 4 sec (i.e. ``bitrate/2``).
 
 Intel Media SDK sample-encode CBR
 *********************************
@@ -224,11 +207,9 @@ Intel Media SDK sample-encode CBR
     -i $input -w $width -h $height -n $numframes -f $framerate \
     -o $output \
     -u medium -cbr -b $bitrate \
-    -BufferSizeInKB $bufsize \
+    -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 4))') \
     -extbrc:implicit -x 5 \
     -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
-
-Here ``$bitrate`` represents target bitrate in bits, and ``$bufsize`` represents buffer size in KB and it is set to 2 sec (i.e. ``bitrate/4``).
 
 Reference Codecs
 ----------------
