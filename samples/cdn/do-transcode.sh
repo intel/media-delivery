@@ -175,7 +175,7 @@ addlog "scheduling: ${cmd[@]}"
 run "${cmd[@]}" </dev/null >/dev/null 2>&1 &
 pid=$!
 
-TIMEOUT=$((3 * $hls_time))
+TIMEOUT=$((5 * $hls_time))
 addlog "$0 $@: waiting for $TIMEOUT seconds for index file to appear"
 
 indexfile="/var/www/hls/$type/$stream/index.m3u8"

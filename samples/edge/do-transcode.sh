@@ -138,7 +138,7 @@ run "${cmd[@]}" </dev/null >/dev/null 2>&1 &
 pid=$!
 
 hls_time=4 # should match hls_fragment time in nginx.conf
-TIMEOUT=$(( 3 * $hls_time ))
+TIMEOUT=$(( 5 * $hls_time ))
 addlog "$0 $@: waiting for $TIMEOUT seconds for index file to appear"
 
 indexfile="/var/www/hls/$type/$stream/index.m3u8"
