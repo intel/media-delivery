@@ -514,10 +514,10 @@ def main():
                 performance_cpu_ipc = 0
                 performance_rc6_u = 0
                 performance_avg_freq = 0
-                performance_avg_vm_mem = 0
-                performance_avg_shr_mem = 0
                 performance_avg_res_mem = 0
                 performance_total_res_mem = 0
+                performance_avg_mem_percentage = 0
+                performance_avg_cpu_percentage = 0
                 performance_max_cpu_percentage = 0
                 performance_max_physical_mem = 0
                 performance_avg_res_gpumem = 0
@@ -694,12 +694,15 @@ def main():
 
                         linux_perf_cmdlines = os.path.dirname(os.path.realpath(__file__)) + "/MSGo.py"
                         if tool_linux_perf:
-                            linux_perf_cmdlines = "perf stat -a -e {} -o " + linux_perf_dump + " " + linux_perf_cmdlines
-                            linux_perf_cmdlines = linux_perf_cmdlines.format(metrics)
-                            linux_perf_cmdlines = "perf stat -I 100 -a -e {} -o " + linux_perf_gpu_freq_trace_dump + " " + linux_perf_cmdlines
-                            linux_perf_cmdlines = linux_perf_cmdlines.format(gpu_freq_traces)
-                            linux_perf_cmdlines = "perf stat -I 100 -a -e {} -o " + linux_perf_mem_bw_trace_dump + " " + linux_perf_cmdlines
-                            linux_perf_cmdlines = linux_perf_cmdlines.format(mem_bw_traces)
+                            if metrics != "":
+                                linux_perf_cmdlines = "perf stat -a -e {} -o " + linux_perf_dump + " " + linux_perf_cmdlines
+                                linux_perf_cmdlines = linux_perf_cmdlines.format(metrics)
+                            if gpu_freq_traces != "":
+                                linux_perf_cmdlines = "perf stat -I 100 -a -e {} -o " + linux_perf_gpu_freq_trace_dump + " " + linux_perf_cmdlines
+                                linux_perf_cmdlines = linux_perf_cmdlines.format(gpu_freq_traces)
+                            if mem_bw_traces != "":
+                                linux_perf_cmdlines = "perf stat -I 100 -a -e {} -o " + linux_perf_mem_bw_trace_dump + " " + linux_perf_cmdlines
+                                linux_perf_cmdlines = linux_perf_cmdlines.format(mem_bw_traces)
 
                         performance_object_list[curContent].linux_perf_cmdlines = linux_perf_cmdlines
                         p = subprocess.Popen(linux_perf_cmdlines, shell=True, stderr=subprocess.PIPE)
@@ -773,8 +776,6 @@ def main():
                         performance_cpu_ipc     = cpu_ipc
                         performance_rc6_u     = rc6_u
                         performance_avg_freq  = avg_freq
-                        performance_avg_vm_mem = avg_vm_mem
-                        performance_avg_shr_mem = avg_shr_mem
                         performance_avg_res_mem = avg_res_mem
                         performance_total_res_mem = total_res_mem
                         performance_avg_mem_percentage =  avg_mem_utilization
@@ -1270,85 +1271,85 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
             ##################################################################################
             # Post Process Linux Perf for GPU Analysis Traces - GT Freq
             ##################################################################################
-            y_axis = []
+            if os.path.isfile(performance_object.linux_perf_gpu_freq_trace_dump):
+                y_axis = []
+                with open(performance_object.linux_perf_gpu_freq_trace_dump, 'r') as lp_traces:
+                    for sampling_line in lp_traces:
+                        sampling_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", sampling_line).split("_")
+                        if len(sampling_line_split) < 3:
+                            continue
 
-            with open(performance_object.linux_perf_gpu_freq_trace_dump, 'r') as lp_traces:
-                for sampling_line in lp_traces:
-                    sampling_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", sampling_line).split("_")
-                    if len(sampling_line_split) < 3:
-                        continue
+                        if (sampling_line_split[1] == "Performance"):
+                            break
 
-                    if (sampling_line_split[1] == "Performance"):
-                        break
-
-                    if re.search(r'actual-frequency', sampling_line):
-                        freq_trace = round(float(int(sampling_line_split[2]) / 100), 2)
-                        y_axis.append(freq_trace)
+                        if re.search(r'actual-frequency', sampling_line):
+                            freq_trace = round(float(int(sampling_line_split[2]) / 100), 2)
+                            y_axis.append(freq_trace)
 
 
-            x_axis = np.arange(len(y_axis))
-            plot_output = plt.figure()
-            subplot_output = plt.subplot()
-            subplot_output.plot(x_axis, y_axis, label='GT-Freq(GHz)')
-            trace_title = "MSPerf Trace - " + performance_object.filename_gpu_freq_trace
-            plt.title(trace_title)
-            subplot_output.legend()
-            # plt.show()
+                x_axis = np.arange(len(y_axis))
+                plot_output = plt.figure()
+                subplot_output = plt.subplot()
+                subplot_output.plot(x_axis, y_axis, label='GT-Freq(GHz)')
+                trace_title = "MSPerf Trace - " + performance_object.filename_gpu_freq_trace
+                plt.title(trace_title)
+                subplot_output.legend()
+                # plt.show()
 
-            plot_filename = performance_object.temp_path + performance_object.filename_gpu_freq_trace + ".png"
-            plot_output.savefig(plot_filename)
-            printLog(output_log_handle, "\tGPU-Freq-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
+                plot_filename = performance_object.temp_path + performance_object.filename_gpu_freq_trace + ".png"
+                plot_output.savefig(plot_filename)
+                printLog(output_log_handle, "\tGPU-Freq-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
 
             ##################################################################################
             # Post Process Linux Perf for GPU Analysis Traces - Mem BW
             ##################################################################################
-            mem_bw_rd = []
-            mem_bw_wr = []
+            if os.path.isfile(performance_object.linux_perf_mem_bw_trace_dump):
+                mem_bw_rd = []
+                mem_bw_wr = []
+                with open(performance_object.linux_perf_mem_bw_trace_dump, 'r') as lp_gpubw_traces:
+                    for membw_line in lp_gpubw_traces:
+                        membw_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", membw_line).split("_")
 
-            with open(performance_object.linux_perf_mem_bw_trace_dump, 'r') as lp_gpubw_traces:
-                for membw_line in lp_gpubw_traces:
-                    membw_line_split = re.sub('[^0-9a-zA-Z\.]+', "_", membw_line).split("_")
+                        if len(membw_line_split) < 3:
+                            continue
 
-                    if len(membw_line_split) < 3:
-                        continue
+                        if (membw_line_split[1] == "Performance"):
+                            break
 
-                    if (membw_line_split[1] == "Performance"):
-                        break
+                        if re.search(r'data_reads', membw_line) and type(membw_line_split[2]) == "float":
+                            read_trace = round((float(membw_line_split[2]) * 1.024 / 100), 2)
+                            mem_bw_rd.append(read_trace)
+                        elif re.search(r'data_writes', membw_line) and type(membw_line_split[2]) == "float":
+                            write_trace = round((float(membw_line_split[2]) * 1.024 / 100), 2)
+                            mem_bw_wr.append(write_trace)
+                        else:
+                            continue
 
-                    if re.search(r'data_reads', membw_line) and type(membw_line_split[2]) == "float":
-                        read_trace = round((float(membw_line_split[2]) * 1.024 / 100), 2)
-                        mem_bw_rd.append(read_trace)
-                    elif re.search(r'data_writes', membw_line) and type(membw_line_split[2]) == "float":
-                        write_trace = round((float(membw_line_split[2]) * 1.024 / 100), 2)
-                        mem_bw_wr.append(write_trace)
-                    else:
-                        continue
+                r = np.arange(len(mem_bw_rd))
+                plot_output = plt.figure()
+                subplot_output = plt.subplot()
+                subplot_output.plot(r, mem_bw_rd, label='MEMORY-Read-BW-Traces(MB/s)')
+                trace_title = "MSPerf Trace - " + performance_object.filename_mem_bw_trace
+                plt.title(trace_title)
+                subplot_output.legend()
+                # plt.show()
 
-            r = np.arange(len(mem_bw_rd))
-            plot_output = plt.figure()
-            subplot_output = plt.subplot()
-            subplot_output.plot(r, mem_bw_rd, label='MEMORY-Read-BW-Traces(MB/s)')
-            trace_title = "MSPerf Trace - " + performance_object.filename_mem_bw_trace
-            plt.title(trace_title)
-            subplot_output.legend()
-            # plt.show()
+                plot_filename = performance_object.temp_path + performance_object.filename_mem_bw_trace + "_read.png"
+                plot_output.savefig(plot_filename)
+                #printLog(output_log_handle, "\tMEM-RD-BW-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
 
-            plot_filename = performance_object.temp_path + performance_object.filename_mem_bw_trace + "_read.png"
-            plot_output.savefig(plot_filename)
-            #printLog(output_log_handle, "\tMEM-RD-BW-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
+                w = np.arange(len(mem_bw_wr))
+                plot_output = plt.figure()
+                subplot_output = plt.subplot()
+                subplot_output.plot(w, mem_bw_wr, label='MEMORY-Write-BW-Traces(MB/s)')
+                trace_title = "MSPerf Trace - " + performance_object.filename_mem_bw_trace
+                plt.title(trace_title)
+                subplot_output.legend()
+                # plt.show()
 
-            w = np.arange(len(mem_bw_wr))
-            plot_output = plt.figure()
-            subplot_output = plt.subplot()
-            subplot_output.plot(w, mem_bw_wr, label='MEMORY-Write-BW-Traces(MB/s)')
-            trace_title = "MSPerf Trace - " + performance_object.filename_mem_bw_trace
-            plt.title(trace_title)
-            subplot_output.legend()
-            # plt.show()
-
-            plot_filename = performance_object.temp_path + performance_object.filename_mem_bw_trace + "_write.png"
-            plot_output.savefig(plot_filename)
-            #printLog(output_log_handle, "\tMEM-WR-BW-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
+                plot_filename = performance_object.temp_path + performance_object.filename_mem_bw_trace + "_write.png"
+                plot_output.savefig(plot_filename)
+                #printLog(output_log_handle, "\tMEM-WR-BW-Trace\t:", re.sub(r'.*\/',"" , plot_filename))
 
             ###################################
             # myplotlib
