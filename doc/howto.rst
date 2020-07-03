@@ -193,8 +193,9 @@ This section talks about requirements demos imply for the content.
 Bascially demos look for the media files with ``*.mp4`` extension right in the
 ``/opt/data/content``. They don't look into subfolders.
 
-Video track should be encoded as H.264 video. Audio track can be encoded as any format
-which would recognize by ffmpeg version available in the container. AAC or MP3 are
+Video and audio tracks could be encoded with any codecs supported by ffmpeg
+decoders. If video codec matches the one supported by Media SDK, then
+appropriate ffmpeg-qsv decoder plugin will be used. For audio AAC or MP3 are
 recommended.
 
 Managing access rights for container user
