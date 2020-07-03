@@ -59,6 +59,7 @@ function get_mounts() {
   local mnts=""
   local dirs=" \
     /opt/data/artifacts \
+    /opt/data/content \
     /opt/data/duplicates \
     /var/www/hls \
     /var/log/nginx \

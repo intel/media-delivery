@@ -144,8 +144,35 @@ function check_done_status() {
   done <$_done
 }
 
+function test_expect() {
+  local type=$1
+  local stream=$2
+  local stream_frames=$3
+
+  # checking artifacts in an order of appearence
+  [ -f $tmp/ffmpeg-hls-client/scheduled ]
+  [ -f $tmp/ffmpeg-hls-client/$type/$stream.log ]
+  [ -f $tmp/ffmpeg-hls-server/lua-client-requests.log ]
+  [ -f $tmp/ffmpeg-hls-server/scheduled ]
+  [ -f $tmp/ffmpeg-hls-server/$type/$stream.log ]
+  [ -f $tmp/ffmpeg-hls-client/$type/$stream.mkv ]
+  [ -f $tmp/ffmpeg-hls-server/done ]
+  [ -f $tmp/ffmpeg-hls-client/done ]
+
+  check_done_status $tmp/ffmpeg-hls-server/done
+  check_done_status $tmp/ffmpeg-hls-client/done
+
+  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-server/$type/$stream.log)
+  echo "# server: frames=$frames" >&3
+
+  [ "$frames" -eq "$stream_frames" ]
+  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-client/$type/$stream.log)
+  echo "# client: frames=$frames" >&3
+  [ "$frames" -eq "$stream_frames" ]
+}
+
 function test_ffmpeg_capture() {
-  type=$1
+  local type=$1
   echo "# type=$type" >&3
 
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
@@ -158,26 +185,7 @@ function test_ffmpeg_capture() {
     demo --exit $type/WAR_TRAILER_HiQ_10_withAudio
   [ $status -eq 0 ]
 
-  # checking artifacts in an order of appearence
-  [ -f $tmp/ffmpeg-hls-client/scheduled ]
-  [ -f $tmp/ffmpeg-hls-client/$type/WAR_TRAILER_HiQ_10_withAudio.log ]
-  [ -f $tmp/ffmpeg-hls-server/lua-client-requests.log ]
-  [ -f $tmp/ffmpeg-hls-server/scheduled ]
-  [ -f $tmp/ffmpeg-hls-server/$type/WAR_TRAILER_HiQ_10_withAudio.log ]
-  [ -f $tmp/ffmpeg-hls-client/$type/WAR_TRAILER_HiQ_10_withAudio.mkv ]
-  [ -f $tmp/ffmpeg-hls-server/done ]
-  [ -f $tmp/ffmpeg-hls-client/done ]
-
-  check_done_status $tmp/ffmpeg-hls-server/done
-  check_done_status $tmp/ffmpeg-hls-client/done
-
-  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-server/$type/WAR_TRAILER_HiQ_10_withAudio.log)
-  echo "# server: frames=$frames" >&3
-
-  [ "$frames" -eq 3443 ]
-  frames=$(get_frames_from_ffmpeg_log $tmp/ffmpeg-hls-client/$type/WAR_TRAILER_HiQ_10_withAudio.log)
-  echo "# client: frames=$frames" >&3
-  [ "$frames" -eq 3443 ]
+  test_expect $type WAR_TRAILER_HiQ_10_withAudio 3443
 }
 
 @test "demo vod/avc capture" {
@@ -189,4 +197,22 @@ function test_ffmpeg_capture() {
     skip "note: mode not supported for '$MDS_DEMO' demo"
   fi
   test_ffmpeg_capture "vod/hevc"
+}
+
+h265="ffmpeg -hwaccel qsv \
+  -c:v h264_qsv -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
+  -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 20 \
+  -y /tmp/WAR.mp4"
+
+@test "demo vod/avc from mp4/h265" {
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $h265; ln -s /tmp/WAR.mp4 /opt/data/content/; \
+    demo --exit vod/avc/WAR;"
+  [ $status -eq 0 ]
+
+  test_expect vod/avc WAR 20
 }
