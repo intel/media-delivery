@@ -111,6 +111,23 @@ if [ "$to_play" = "" ]; then
   exit 0
 fi
 
+function get_param() {
+  local file=$1
+  local param=$2
+  ffprobe -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 \
+    -show_entries stream=$param $file
+}
+
+dec_codec="$(get_param $to_play codec_name)"
+dec_plugin=""
+if [ "$dec_codec" = "h264" ]; then
+  dec_plugin="-c:v h264_qsv"
+elif [ "$dec_codec" = "hevc" ]; then
+  dec_plugin="-c:v hevc_qsv"
+fi
+
+addlog "stream: dec_codec=$dec_codec, dec_plugin=$dec_plugin"
+
 function run() {
   mkdir -p $ARTIFACTS/$type
   echo "$@" >$ARTIFACTS/$type/$stream.log
@@ -129,7 +146,7 @@ if [ "$type" = "vod/avc" ]; then
   bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
   cmd=(ffmpeg
     -hwaccel qsv -hwaccel_device $DEVICE
-    -c:v h264_qsv -re -i $to_play -c:a copy
+    $dec_plugin -re -i $to_play -c:a copy
     -c:v h264_qsv -profile:v high -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
       -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256
@@ -144,7 +161,7 @@ elif [ "$type" = "vod/hevc" ]; then
   bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
   cmd=(ffmpeg
     -hwaccel qsv -hwaccel_device $DEVICE
-    -c:v h264_qsv -re -i $to_play -c:a copy
+    $dec_plugin -re -i $to_play -c:a copy
     -c:v hevc_qsv -profile:v main -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
       -extbrc 1 -bf 7 -refs 5 -g 256
@@ -157,7 +174,7 @@ elif [ "$type" = "vod/abr" ]; then
   # This is not tuned placeholder for ABR transcoding
   cmd=(ffmpeg
     -hwaccel qsv -hwaccel_device $DEVICE
-    -c:v h264_qsv -re -i $to_play
+    $dec_plugin -re -i $to_play
     -filter_complex '[v:0]split=2[o1][s2];[s2]scale_qsv=w=640:h=-1[o2]'
     -map [o1] -c:v h264_qsv -b:v 5M
     -map [o2] -c:v h264_qsv -b:v 1M
