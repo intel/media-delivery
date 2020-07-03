@@ -148,7 +148,7 @@ RUN { \
     && { ls -1 | sed 's|^|./|g' | sudo tee easy-install.pth; }; \
 }
 
-ARG FFMPEG_VERSION=master
+ARG FFMPEG_VERSION=n4.3
 RUN git clone --depth 1 --branch $FFMPEG_VERSION https://github.com/ffmpeg/ffmpeg /home/user/ffmpeg
 RUN { \
   set -ex; \
