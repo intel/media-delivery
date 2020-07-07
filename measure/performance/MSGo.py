@@ -65,7 +65,7 @@ os.system("killall top") # Kill Top Application.
 
 for p in processes:
     if p.returncode != 0:
-        exit(1)
+        exit(p.returncode)
 
 top_cpu_mem_process.wait()
 gem_gpu_mem_process.kill()  # stop the watch command everytime multistreams process has finished
