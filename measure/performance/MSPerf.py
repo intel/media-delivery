@@ -23,16 +23,24 @@
 ##################################################################################
 
 ##################################################################################
+# By default script attempts to run all possible scenarios for the input clip.
+# For example, if HEVC input it will run HEVC-AVC, HEVC-HEVC, etc. If encoder
+# does not support input video (typically - resolution), we need to skip scenario
+# and avoid error to let other scenarios execute.
+##################################################################################
+
+##################################################################################
 # Performance automation flow: (by intel pnp silicon lab)
 ##################################################################################
 import subprocess, sys, os, re, argparse, time, statistics, signal, getpass
 
-
 ########### James.Iwan@intel.com MSPerf ######################################
 class MediaContent:
-    width = height = fps_target = performance_stream = performance_fps = init_stream_number = linux_perf_cmdlines = 0
+    width = encode_bitrate = fps_target = performance_stream = performance_fps = init_stream_number = linux_perf_cmdlines = 0
     def name (self, name):
         self.name = name
+    def encode_bitrate (self, encode_bitrate):
+        self.encode_bitrate = encode_bitrate
     def height (self, height):
         self.height = height
     def fps_target (self, fps_target):
@@ -100,7 +108,6 @@ def main():
     parser.add_argument('-n', '--numbers_of_iteration', help='Custom limit the number of iteration of each same execution (max is 4), Default=1')
     parser.add_argument('--no-fps-limit', '--no_fps_limit', action='store_true', default=False, help='to run workload unconstraint, or as fast as possible')
     parser.add_argument('--fps-target', '--fps_target', help='to overwrite fps limit, Default=input-fps')
-    parser.add_argument('-content_resolution', '--overwrite_content_resolution', help='Only for -w <file> , to overwrite content_resolution choices target e.g. (-w ../content.hevc -content_fps_list 50 -content_resolution 1080p )')
     parser.add_argument('-w_max', '--numbers_of_Workloads', help='Custom limit the number of total workloads to be executed')
     parser.add_argument('-o', '--outdir', help='output directory for any artifacts')
     parser.add_argument('-log', '--output_log_file', help='print any run-log into this file onto main directory, Default=msperf.txt')
@@ -142,7 +149,6 @@ def main():
     density_decode                   = ARGS.density_decode
     encode_codec                    = str(ARGS.codec).lower() if ARGS.codec else "all"
     fps_target                      = float(ARGS.fps_target) if ARGS.fps_target else 0
-    overwrite_content_resolution    = str(ARGS.overwrite_content_resolution) if ARGS.overwrite_content_resolution else "unavailable"
     script_root_path                = os.path.dirname(os.path.realpath(__file__))
     output_log_filename             = str(ARGS.output_log_file) if str(ARGS.output_log_file) != "None" else "msperf.txt"
     temp_path                       = "/tmp/perf/"
@@ -234,9 +240,6 @@ def main():
         isFile = os.path.isfile(ARGS.workloads_path)
 
         performance_sweeping_table = {}
-        content_fps_list    = {}
-        content_height_list = {}
-        content_codec_list  = {}
         performance_object_list = {}
         printLog(output_log_handle, "\n")
         printLog(output_log_handle, '#' * 69)
@@ -259,18 +262,12 @@ def main():
 
                     printLog (output_log_handle, " Profiling: " + content_filename)
 
-                    if ffmpegffprobeCheck(output_log_handle, content_path, content_filename, temp_path, debug_verbose, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list, performance_object_list):
+                    if ffmpegffprobeCheck(output_log_handle, content_path, content_filename, temp_path, debug_verbose, performance_sweeping_table, performance_object_list):
                         if debug_verbose:
                             printLog(output_log_handle, " PASS: via FFMPEG/FFPROBE")
-                            printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_target,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
-
-                    elif ContentNamingCheck(output_log_handle, content_filename, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list):
-                        if debug_verbose:
-                            printLog(output_log_handle, " PASS: via File-Naming-Format")
-                            printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_target,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
+                            printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_target,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, "\n")
 
                     if (float(fps_target) > 0):
-                        content_fps_list[content_filename] = float(fps_target)
                         performance_object_list[content_filename].fps_target = float(fps_target)
 
             content_list_temp_fh.close()
@@ -280,18 +277,12 @@ def main():
             content_path = content_path + "/" # required because the extraction dir/filename above doesn't include the "/" character.
             printLog(output_log_handle, " Profiling: " + content_filename)
             content_filename = content_filename.rstrip()
-            if ffmpegffprobeCheck(output_log_handle, content_path, content_filename, temp_path, debug_verbose, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list, performance_object_list):
+            if ffmpegffprobeCheck(output_log_handle, content_path, content_filename, temp_path, debug_verbose, performance_sweeping_table, performance_object_list):
                 if debug_verbose:
                     printLog(output_log_handle, " PASS: via FFMPEG/FFPROBE")
-                    printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_target,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
-
-            elif ContentNamingCheck(output_log_handle, content_filename, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list):
-                if debug_verbose:
-                    printLog(output_log_handle, " PASS: via File-Naming-Format")
-                    printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_target,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, ", initialized_performance =",performance_sweeping_table[content_filename], "\n")
+                    printLog(output_log_handle, " content_fps =", performance_object_list[content_filename].fps_target,", content_height =", performance_object_list[content_filename].height, ", content_codec =",performance_object_list[content_filename].codec, "\n")
 
             if (float(fps_target) > 0):
-                content_fps_list[content_filename] = float(fps_target)
                 performance_object_list[content_filename].fps_target = float(fps_target)
 
         else:
@@ -365,28 +356,30 @@ def main():
         # 4th AVC-HEVC
         # 5th DECODE-HEVC
         # 6th TBD/continue..
+
+        Workloads = ["HEVC-AVC",
+                     "AVC-AVC",
+                     "HEVC-HEVC",
+                     "AVC-HEVC",
+                     "DECODE-HEVC"]
+
         ##################################################################################
         startTime_sequence = time.time()
-        for performance_sequence in range(5):
+        for performance_tag in Workloads:
             ##################################################################################
             # Initiate outputfile measure result as per last best stream# and fps#
             # Initiate outputfile measure table sweep as per last best stream# and fps#
             ##################################################################################
 
-            if performance_sequence == 0 and (encode_codec == "all" or encode_codec == "avc") and cmdline_config_hevc2avc_exist:
-                performance_tag = "HEVC-AVC"
+            if performance_tag == "HEVC-AVC" and (encode_codec == "all" or encode_codec == "avc") and cmdline_config_hevc2avc_exist:
                 sequence_mode = "TRANSCODE"
-            elif performance_sequence == 1 and (encode_codec == "all" or encode_codec == "avc") and cmdline_config_avc2avc_exist:
-                performance_tag = "AVC-AVC"
+            elif performance_tag == "AVC-AVC" and (encode_codec == "all" or encode_codec == "avc") and cmdline_config_avc2avc_exist:
                 sequence_mode = "TRANSCODE"
-            elif performance_sequence == 2 and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_hevc2hevc_exist:
-                performance_tag = "HEVC-HEVC"
+            elif performance_tag == "HEVC-HEVC" and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_hevc2hevc_exist:
                 sequence_mode = "TRANSCODE"
-            elif performance_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_avc2hevc_exist:
-                performance_tag = "AVC-HEVC"
+            elif performance_tag == "AVC-HEVC" and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_avc2hevc_exist:
                 sequence_mode = "TRANSCODE"
-            elif performance_sequence == 4 and density_decode and cmdline_config_decode_hevc_exist:
-                performance_tag = "DECODE-HEVC"
+            elif performance_tag == "DECODE-HEVC" and density_decode and cmdline_config_decode_hevc_exist:
                 sequence_mode = "DECODE"
             else:
                 continue
@@ -443,59 +436,54 @@ def main():
             performance_table_sweep = output_log_file_performance_sweep
             bt_output_handle = open(performance_table_sweep, 'w')
 
-            ########### James.Iwan@intel.com Multi Streams Perf ######################################
+            ########### James.Iwan@intel.com Multi Streams Perf ##############################
             # ITERATION/WORKLOADS/etc START HERE
             ##################################################################################
-            for key in content_fps_list:
+            for key in performance_object_list:
                 curContent = key.rstrip()
 
                 if curContent == "":
                     printLog(output_log_handle, "SCRIPT ERROR: empty content") # exit.
                     exit(1)
                 elif (re.search(r'.*.mp4$', curContent)) and (performance_app_tag == "SMT"):
-                    printLog(output_log_handle, "MSDK SKIP: .mp4 file unsupported by msdk currently: ", curContent) # skip
+                    printLog(output_log_handle, "\n")
+                    printLog(output_log_handle, "[SKIPPED]: files in container formats (.mp4, .mkv, etc.) are not supported by MSDK samples ", curContent) # skip
                     continue
-
 
                 performance_sweeping_table[curContent] = []
 
-                if (performance_sequence == 0) and (encode_codec == "all" or encode_codec == "avc"):  # HEVC-AVC measure sequence
+                if (performance_tag == "HEVC-AVC") and (encode_codec == "all" or encode_codec == "avc") and (performance_object_list[curContent].height <= 2160):  # HEVC-AVC measure sequence
+                    if performance_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip, or if output Encode AVC tried height higher from 2160
+                        continue
+                elif (performance_tag == "AVC-AVC") and (encode_codec == "all" or encode_codec == "avc") and (performance_object_list[curContent].height <= 2160):  # AVC-AVC measure sequence
+                    if performance_object_list[curContent].codec != "h264":  # skip if its not h264 input clip, or if output Encode AVC tried height higher from 2160
+                        continue
+                elif (performance_tag == "HEVC-HEVC") and (encode_codec == "all" or encode_codec == "hevc"):  # HEVC-HEVC measure sequence
                     if performance_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
                         continue
-                elif (performance_sequence == 1) and (encode_codec == "all" or encode_codec == "avc"):  # AVC-AVC measure sequence
+                elif (performance_tag == "AVC-HEVC") and (encode_codec == "all" or encode_codec == "hevc"):  # AVC-HEVC measure sequence
                     if performance_object_list[curContent].codec != "h264":  # skip if its not h264 input clip
                         continue
-                elif (performance_sequence == 2) and (encode_codec == "all" or encode_codec == "hevc"):  # HEVC-HEVC measure sequence
-                    if performance_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
-                        continue
-                elif (performance_sequence == 3) and (encode_codec == "all" or encode_codec == "hevc"):  # AVC-HEVC measure sequence
-                    if performance_object_list[curContent].codec != "h264":  # skip if its not h264 input clip
-                        continue
-                elif (performance_sequence == 4): # Decode-HEVC measure sequence
+                elif (performance_tag == "DECODE-HEVC"): # Decode-HEVC measure sequence
                     if performance_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
                         continue
                 else:
-                    continue
-                ##################################################################################
-                # UNSUPPORTED checks and skips
-                ##################################################################################
-                if  (performance_object_list[curContent].height != 720 and
-                    performance_object_list[curContent].height != 1080 and
-                    performance_object_list[curContent].height != 2160):
-
-                    printLog(output_log_handle, "Content height is not supported: ", curContent, ":", performance_object_list[curContent].height)
+                    printLog(output_log_handle, "\n")
+                    printLog(output_log_handle, '#' * 69)
+                    printLog(output_log_handle, "[SKIPPED]: ", performance_app_tag, " ", performance_tag, " ", curContent)  # skip
+                    printLog(output_log_handle, '#' * 69)
                     continue
 
                 ##################################################################################
                 # Create initialize streamnumber for each resolution
                 ##################################################################################
-                if performance_object_list[curContent].height == 720:
+                if performance_object_list[curContent].encode_bitrate == "sd_bitrate":
                     streamnumber = init_stream_720p
                     performance_object_list[curContent].init_stream_number = init_stream_720p
-                elif performance_object_list[curContent].height == 1080:
+                elif performance_object_list[curContent].encode_bitrate == "hd_bitrate":
                     streamnumber = init_stream_1080p
                     performance_object_list[curContent].init_stream_number = init_stream_1080p
-                elif performance_object_list[curContent].height == 2160:
+                elif performance_object_list[curContent].encode_bitrate == "4k_bitrate":
                     streamnumber = init_stream_2160p
                     performance_object_list[curContent].init_stream_number = init_stream_2160p
                 else:
@@ -542,41 +530,43 @@ def main():
                         # Construct 720p/1080p/2160p Command lines for
                         ##################################################################################
                         dispatch_cmdline = transcode_input_clip = "N/A"
-                        if performance_sequence == 0 and (encode_codec == "all" or encode_codec == "avc"): # HEVC-AVC measure sequence
-                            if performance_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                        if performance_tag == "HEVC-AVC" and (encode_codec == "all" or encode_codec == "avc"): # HEVC-AVC measure sequence
+                            if performance_object_list[curContent].encode_bitrate == "sd_bitrate":
                                 dispatch_cmdline = performance_cmdline_720p_hevc2avc
-                            elif performance_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                            elif performance_object_list[curContent].encode_bitrate == "hd_bitrate":
                                 dispatch_cmdline = performance_cmdline_1080p_hevc2avc
-                            elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                            elif performance_object_list[curContent].encode_bitrate == "4k_bitrate":
                                 dispatch_cmdline = performance_cmdline_2160p_hevc2avc
-                        elif performance_sequence == 1 and (encode_codec == "all" or encode_codec == "avc"): # AVC-AVC measure sequence
-                            if performance_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                        elif performance_tag == "AVC-AVC" and (encode_codec == "all" or encode_codec == "avc"): # AVC-AVC measure sequence
+                            if performance_object_list[curContent].encode_bitrate == "sd_bitrate":
                                 dispatch_cmdline = performance_cmdline_720p_avc2avc
-                            elif performance_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                            elif performance_object_list[curContent].encode_bitrate == "hd_bitrate":
                                 dispatch_cmdline = performance_cmdline_1080p_avc2avc
-                            elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                            elif performance_object_list[curContent].encode_bitrate == "4k_bitrate":
                                 dispatch_cmdline = performance_cmdline_2160p_avc2avc
-                        elif performance_sequence == 2 and (encode_codec == "all" or encode_codec == "hevc"): # HEVC-HEVC measure sequence
-                            if performance_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                        elif performance_tag == "HEVC-HEVC" and (encode_codec == "all" or encode_codec == "hevc"): # HEVC-HEVC measure sequence
+                            if performance_object_list[curContent].encode_bitrate == "sd_bitrate":
                                 dispatch_cmdline = performance_cmdline_720p_hevc2hevc
-                            elif performance_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                            elif performance_object_list[curContent].encode_bitrate == "hd_bitrate":
                                 dispatch_cmdline = performance_cmdline_1080p_hevc2hevc
-                            elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                            elif performance_object_list[curContent].encode_bitrate == "4k_bitrate":
                                 dispatch_cmdline = performance_cmdline_2160p_hevc2hevc
-                        elif performance_sequence == 3 and (encode_codec == "all" or encode_codec == "hevc"): # AVC-HEVC measure sequence
-                            if performance_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                        elif performance_tag == "AVC-HEVC" and (encode_codec == "all" or encode_codec == "hevc"): # AVC-HEVC measure sequence
+                            if performance_object_list[curContent].encode_bitrate == "sd_bitrate":
                                 dispatch_cmdline = performance_cmdline_720p_avc2hevc
-                            elif performance_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                            elif performance_object_list[curContent].encode_bitrate == "hd_bitrate":
                                 dispatch_cmdline = performance_cmdline_1080p_avc2hevc
-                            elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                            elif performance_object_list[curContent].encode_bitrate == "4k_bitrate":
                                 dispatch_cmdline = performance_cmdline_2160p_avc2hevc
-                        elif performance_sequence == 4: # DECODE HEVC
-                            if performance_object_list[curContent].height == 720 or re.search(r"720p", overwrite_content_resolution):
+                        elif performance_tag == "DECODE-HEVC": # DECODE HEVC
+                            if performance_object_list[curContent].encode_bitrate == "sd_bitrate":
                                 dispatch_cmdline = performance_cmdline_720p_decode_hevc
-                            elif performance_object_list[curContent].height == 1080 or re.search(r"1080p", overwrite_content_resolution):
+                            elif performance_object_list[curContent].encode_bitrate == "hd_bitrate":
                                 dispatch_cmdline = performance_cmdline_1080p_decode_hevc
-                            elif performance_object_list[curContent].height == 2160 or re.search(r"2160p", overwrite_content_resolution):
+                            elif performance_object_list[curContent].encode_bitrate == "4k_bitrate":
                                 dispatch_cmdline = performance_cmdline_2160p_decode_hevc
+                        else:
+                            break
 
                         if (ffmpeg_mode):
                             transcode_input_clip = "-i " + content_path + key
@@ -585,7 +575,7 @@ def main():
 
                             dispatch_cmdline = dispatch_cmdline.replace("-i <>", transcode_input_clip)
 
-                        elif (performance_sequence < 4): # SMT Transcode
+                        elif (sequence_mode == "TRANSCODE"): # SMT Transcode
                             if performance_object_list[curContent].codec == "hevc":
                                 transcode_input_clip = "-i::h265 " + content_path + key
                                 if not no_fps_limit:
@@ -599,7 +589,7 @@ def main():
 
                                 dispatch_cmdline = dispatch_cmdline.replace("-i::h264 <>", transcode_input_clip)
 
-                        elif (performance_sequence >= 4): # SMT Decode
+                        elif (sequence_mode == "DECODE"): # SMT Decode
                             transcode_input_clip = "-i " + content_path + key
                             if not no_fps_limit:
                                 transcode_input_clip = "-f " + str(fps_constraint) + " " + transcode_input_clip
@@ -629,13 +619,13 @@ def main():
                             transcode_output_logfile = ffmpeg_device_knob + transcode_output_logfile
                             dispatch_cmdline = dispatch_cmdline.replace("-report", transcode_output_logfile).rstrip()
 
-                        elif (performance_sequence < 4): # SMT Transcode
+                        elif sequence_mode == "TRANSCODE": # Transcode
                             transcode_output_logfile = " -p " + temp_path + clip_name + "_" + clip_resolution + "_" + str(m) + "_transcode_log.txt"
                             smt_device_knob = " -device " + os_env_DEVICE
                             transcode_output_logfile = smt_device_knob + transcode_output_logfile
                             dispatch_cmdline = dispatch_cmdline.replace("-p <>", transcode_output_logfile).rstrip()
 
-                        elif (performance_sequence >= 4) and not ffmpeg_mode: # SMT DECODE
+                        elif (sequence_mode == "DECODE") and not ffmpeg_mode: # SMT DECODE
                             transcode_output_logfile = " > " + temp_path + clip_name + "_" + clip_resolution + "_" + str(m) + "_transcode_log.txt"
                             smt_device_knob = " -device " + os_env_DEVICE
                             transcode_output_logfile = smt_device_knob + transcode_output_logfile
@@ -647,9 +637,9 @@ def main():
                         if (ffmpeg_mode):
                             dispatch_cmdline = dispatch_cmdline + "\n"
 
-                        elif (performance_sequence < 4): # SMT TRANSCODE
+                        elif (sequence_mode == "TRANSCODE"): # SMT TRANSCODE
                             dispatch_cmdline = dispatch_cmdline + " >> " + temp_path + "console_log.txt 2>&1" + "\n"
-                        elif (performance_sequence >= 4): # SMT DECODE
+                        elif (sequence_mode == "DECODE"): # SMT DECODE
                             dispatch_cmdline = dispatch_cmdline + " 2>&1" + "\n"
 
                         performance_object_list[curContent].dispatch_cmdline = dispatch_cmdline
@@ -716,7 +706,7 @@ def main():
                             else:
                                 printLog(output_log_handle, " Exit early, hang/error in submitted commands:", str(p.returncode), "(please use -v to debug further)")
 
-                            sys.exit(1)
+                            sys.exit(p.returncode)
 
                         os.system('stty sane')
                         ############################################################################################
@@ -783,7 +773,6 @@ def main():
                         performance_max_cpu_percentage =  max_cpu_percentage
                         performance_avg_res_gpumem = avg_res_gpumem
                         performance_total_res_gpumem = total_res_gpumem
-                        #printLog(output_log_handle, "performance_stream: ",performance_stream, "average_fps: ", performance_fps)
                         performance_sweeping_table[key].append(performance_fps)
                         nextStreamNumber = True
                         if int(streamnumber) == 1:
@@ -1423,14 +1412,13 @@ def execution_time(output_log_handle, message, start,end):
     printLog(output_log_handle, message, " - execution time: %d s (%dD:%dhr:%dmin:%dsec)\n" % (total, day, hour, minutes, seconds))
 
 ########### James.Iwan@intel.com MSPerf ######################################
-def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, debug_verbose, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list, performance_object_list):
+def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, debug_verbose, performance_sweeping_table, performance_object_list):
     status = True
     filename_split = filename.replace('.', '_').split('_')
     ffprobe_dump        = out_temp_path + "/ffprobe_" + filename_split[0] + ".txt"
-    ffprobe_cmd         = "ffprobe -hide_banner -loglevel panic -show_streams -i " + filepath + filename.rstrip() + " | grep -e ^height= -e ^r_frame_rate= -e ^codec_name= " + " > " + ffprobe_dump
+    ffprobe_cmd         = "ffprobe -hide_banner -loglevel panic -show_streams -i " + filepath + filename.rstrip() + " | grep -E '^height=|^r_frame_rate=|^codec_name=' " + " > " + ffprobe_dump
     os.system(ffprobe_cmd)
-    ffprobe_height = ffprobe_frame_rate = ffprobe_codec_name = 0
-    content_supported_height    = [720,1080,2160]
+    height = encode_bitrate = ffprobe_frame_rate = ffprobe_codec_name = 0
     content_supported_codec     = ["h264", "hevc"]
     with open(ffprobe_dump, "r") as ffprobedump_fh:
         for content_profile_line in ffprobedump_fh:
@@ -1439,8 +1427,13 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
             value                       = content_profile_line_split[1]
 
             if (attribute == "height"):
-                if (int(value) in content_supported_height):
-                    ffprobe_height          = int(value)
+                height   = int(value)
+                if (height > 1088):
+                    encode_bitrate = "4k_bitrate" # 4K and above to set at same bitrate
+                elif (height > 720 ):
+                    encode_bitrate = "hd_bitrate" # 2K content to set at same bitrate
+                else:
+                    encode_bitrate = "sd_bitrate" # others to set at same bitrate
             elif (attribute == "r_frame_rate"):
                 any_frame_rates_found   = re.sub(r'/.*', "", str(value))
                 if any_frame_rates_found != "0":
@@ -1455,58 +1448,19 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
     filename_only_without_extension = re.sub(r'\..*', "", filename.rstrip())
     duplicate_filename_status = False
 
-    if (ffprobe_height ==0) | (ffprobe_frame_rate == 0) | (ffprobe_codec_name ==0):
+    if (encode_bitrate ==0) | (ffprobe_frame_rate == 0) | (ffprobe_codec_name ==0):
         if debug_verbose:
-            printLog(output_log_handle, " FAIL: via FFMPEG/FFPROBE: content is not supported")
+            printLog(output_log_handle, " FAIL: via FFMPEG/FFPROBE: content is not supported, Please reconfirm content height/frame_rate/codec")
         status = False
 
     if status:
-        performance_object_list[filename.rstrip()]            = MediaContent()
-        performance_object_list[filename.rstrip()].name       = filename_only_without_extension
-        performance_object_list[filename.rstrip()].fps_target  = ffprobe_frame_rate
-        performance_object_list[filename.rstrip()].height     = ffprobe_height
-        performance_object_list[filename.rstrip()].codec      = ffprobe_codec_name
-        content_fps_list[filename.rstrip()]                 = ffprobe_frame_rate
-        content_height_list[filename.rstrip()]              = ffprobe_height
-        content_codec_list[filename.rstrip()]               = ffprobe_codec_name
-        performance_sweeping_table[filename.rstrip()]         = []
-
-    return status
-
-########### James.Iwan@intel.com MSPerf ######################################
-# Contentlist
-# Naming convention for each measure workload
-# 0 - content name
-# 1 - content resolution
-# 2 - content bitrate
-# 3 - content fps
-# 4 - content total_frames
-# 5 - content codec type
-##################################################################################
-def ContentNamingCheck(output_log_handle, filename, performance_sweeping_table, content_fps_list, content_height_list, content_codec_list):
-    status = True
-    filename_split      = filename.rstrip().replace('.', '_').split('_')
-    for profile in filename_split:
-        #rint (profile)
-        if re.search(r'1080|2160|720',profile):
-            filename_height = re.sub(r'.*x', '', profile)
-            filename_height = int(re.sub(r'p', '', filename_height))
-        elif re.search(r'fps', profile):
-            filename_fps = int(re.sub(r'fps', '', profile))
-        elif re.search(r'hevc|h264|h265', profile):
-            filename_codec = profile
-
-
-    #printLog(output_log_handle, filename_fps, " ", filename_height, " ", filename_codec)
-    if (filename_fps != 0) or (filename_height != 0):
-        content_fps_list[filename] = filename_fps
-        performance_sweeping_table[filename] = []
-        content_height_list[filename] = filename_height
-        content_codec_list[filename] = filename_codec
-        status = True
-    else:
-        status = False
-        printLog(output_log_handle, " Found incorrect content naming convention: " + filename + " Please rename with the following pattern <clipname>_<width>x<height>p_<bitrate>_<content_fps_list>_<total_frames>.<codec>")
+        performance_object_list[filename.rstrip()]                  = MediaContent()
+        performance_object_list[filename.rstrip()].name             = filename_only_without_extension
+        performance_object_list[filename.rstrip()].fps_target       = ffprobe_frame_rate
+        performance_object_list[filename.rstrip()].encode_bitrate   = encode_bitrate
+        performance_object_list[filename.rstrip()].height           = height
+        performance_object_list[filename.rstrip()].codec            = ffprobe_codec_name
+        performance_sweeping_table[filename.rstrip()]               = []
 
     return status
 
