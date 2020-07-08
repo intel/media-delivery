@@ -250,7 +250,7 @@ def main():
             # jiwan
             ##################################################################################
             content_list_filename = temp_path + "content.list"
-            cmd_generate_content_list = "ls " + content_path + " | grep -E '\.h264|\.hevc|\.h265' > " + content_list_filename # Add more content container support into the grep list.
+            cmd_generate_content_list = "ls " + content_path + " | grep -E '\.h264|\.hevc|\.h265|\.mp4' > " + content_list_filename # Add more content container support into the grep list.
             generate_list_status = os.system(cmd_generate_content_list)
 
             with open(content_list_filename, "r") as content_list_temp_fh:
@@ -337,7 +337,6 @@ def main():
                         if (re.search(r"hevc-hevc:", str(workloadline))):  cmdline_config_hevc2hevc_exist = True
                         if (re.search(r"avc-hevc:", str(workloadline))):  cmdline_config_avc2hevc_exist = True
                         if (re.search(r"decode-hevc:", str(workloadline))):  cmdline_config_decode_hevc_exist = True
-
                         if (re.search(r"^720p_hevc-avc:\s", str(workloadline))): performance_cmdline_720p_hevc2avc = workloadline.replace("720p_hevc-avc: ", "")
                         if (re.search(r"^1080p_hevc-avc:\s", str(workloadline))): performance_cmdline_1080p_hevc2avc = workloadline.replace("1080p_hevc-avc: ", "")
                         if (re.search(r"^2160p_hevc-avc:\s", str(workloadline))): performance_cmdline_2160p_hevc2avc = workloadline.replace("2160p_hevc-avc: ", "")
@@ -1031,7 +1030,8 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                 ##################################################################################
                 # Post Process Multistream FPS/stream against Content FPS limit target
                 ##################################################################################
-                next = True if fps_per_stream > fps_target else False
+                if fps_per_stream < fps_target:
+                    next = False
 
                 ##################################################################################
                 # Post Process Multistream FPS/stream is within 2% margin among its own average
@@ -1442,7 +1442,7 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
                 if (int(value) in content_supported_height):
                     ffprobe_height          = int(value)
             elif (attribute == "r_frame_rate"):
-                any_frame_rates_found   = re.sub(r'/1', "", str(value))
+                any_frame_rates_found   = re.sub(r'/.*', "", str(value))
                 if any_frame_rates_found != "0":
                     ffprobe_frame_rate  = any_frame_rates_found
             elif (attribute == "codec_name"):
