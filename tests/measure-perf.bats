@@ -44,6 +44,11 @@ rawh265="ffmpeg -an -hwaccel qsv \
   -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 20 \
   -y /tmp/WAR.hevc"
 
+# add mp4 file for mp4 check out
+submp4="ffmpeg -i \
+  /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
+  -vframes 20 /tmp/WAR_20fr.mp4"
+
 # Container creates artifacts under container user and host user (if not
 # 'root'), can't delete them. We change permissions to the artifacts to
 # allow full access to anyone.
@@ -256,3 +261,24 @@ function get_perf_opts() {
     [ "$npng" -ge 4 ] # we should have at least one picture for each performance
   fi
 }
+
+@test "measure perf --skip-perf raw mp4" {
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$submp4" "measure perf -v -e 3 --skip-perf /tmp/WAR_20fr.mp4")"
+  print_output
+  [ $status -eq 0 ]
+
+  ptmp=$tmp/measure/perf
+  nout=$(find $ptmp/output_FFMPEG -name "*.h264" | wc -l)
+  [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+  nout=$(find $ptmp/output_FFMPEG -name "*.h265" | wc -l)
+  [ "$nout" -gt 0 ]
+  nlines=$(cat $ptmp/msperf_FFMPEG_AVC-AVC_performance.csv | wc -l)
+  [ "$nlines" -eq 2 ] # we expect header and result lines
+  nlines=$(cat $ptmp/msperf_FFMPEG_AVC-HEVC_performance.csv | wc -l)
+  [ "$nlines" -eq 2 ]
+  npng=$(find $ptmp -name *.png | wc -l)
+  [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
+}
+
