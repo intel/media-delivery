@@ -109,19 +109,22 @@ if [ "$to_play" = "" ]; then
 fi
 
 function get_param() {
-  local file=$1
-  local param=$2
-  ffprobe -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 \
+  local stream=$1
+  local file=$2
+  local param=$3
+  ffprobe -v error -select_streams $stream -of default=noprint_wrappers=1:nokey=1 \
     -show_entries stream=$param $file
 }
 
-dec_codec="$(get_param $to_play codec_name)"
+dec_codec="$(get_param v $to_play codec_name)"
 dec_plugin=""
 if [ "$dec_codec" = "h264" ]; then
   dec_plugin="-c:v h264_qsv"
 elif [ "$dec_codec" = "hevc" ]; then
   dec_plugin="-c:v hevc_qsv"
 fi
+
+audio="$(get_param a $to_play codec_name)"
 
 function run() {
   mkdir -p $ARTIFACTS/$type
@@ -134,6 +137,9 @@ function run() {
 }
 
 if [ "$type" = "vod/avc" ]; then
+  if [ -n "$audio" ]; then
+    as="-c:a copy"
+  fi
   bitrate=3000000
   maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
   bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
@@ -143,7 +149,7 @@ if [ "$type" = "vod/avc" ]; then
     -c:v h264_qsv -profile:v high -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
       -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256
-    -c:a copy -f flv rtmp://localhost:1935/$type/$stream)
+    $as -f flv rtmp://localhost:1935/$type/$stream)
 else
   cmd=(bash -c 'echo "bug: unsupported streaming type: $type"; exit 1;')
 fi
