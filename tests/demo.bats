@@ -216,3 +216,51 @@ h265="ffmpeg -hwaccel qsv \
 
   test_expect vod/avc WAR 20
 }
+
+noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
+  -c:v copy -vframes 20 -an -y /tmp/WAR_noaudio.mp4"
+
+@test "demo vod/avc from noaudio" {
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
+    demo --exit vod/avc/WAR_noaudio;"
+  [ $status -eq 0 ]
+
+  test_expect vod/avc WAR_noaudio 20
+}
+
+@test "demo vod/hevc from noaudio" {
+  if [ $MDS_DEMO != "cdn" ]; then
+    skip "note: mode not supported for '$MDS_DEMO' demo"
+  fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
+    demo --exit vod/hevc/WAR_noaudio;"
+  [ $status -eq 0 ]
+
+  test_expect vod/hevc WAR_noaudio 20
+}
+
+@test "demo vod/abr from noaudio" {
+  if [ $MDS_DEMO != "cdn" ]; then
+    skip "note: mode not supported for '$MDS_DEMO' demo"
+  fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
+    demo --exit vod/abr/WAR_noaudio;"
+  [ $status -eq 0 ]
+
+  test_expect vod/abr WAR_noaudio 20
+}
