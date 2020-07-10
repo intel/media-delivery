@@ -84,12 +84,16 @@ on_merge:
   - tagname=$(cat tagname)
   - echo "Testing $tagname docker image"
   - docker pull $tagname
-  - mkdir _logs
+  - docker pull ubuntu:20.04
+  - docker run --rm -v $(pwd):/opt/tmp ubuntu:20.04 rm -rf /opt/tmp/_logs
+  - docker run --rm -v $(pwd):/opt/tmp ubuntu:20.04 rm -rf /opt/tmp/mds_bats
   - export MDS_IMAGE=$tagname
   - export MDS_LOGS=`pwd`/_logs
   - export MDS_DEMO=$SAMPLE
   - test_status=0
   - bats tests/*.bats || test_status=$?
+  - docker run --rm -v $(pwd):/opt/tmp ubuntu:20.04 rm -rf /opt/tmp/_logs
+  - docker run --rm -v $(pwd):/opt/tmp ubuntu:20.04 rm -rf /opt/tmp/mds_bats
   - docker rmi --force $(docker images -q $tagname | uniq)
   - if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
   artifacts:
