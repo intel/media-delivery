@@ -112,13 +112,14 @@ if [ "$to_play" = "" ]; then
 fi
 
 function get_param() {
-  local file=$1
-  local param=$2
-  ffprobe -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 \
+  local stream=$1
+  local file=$2
+  local param=$3
+  ffprobe -v error -select_streams $stream -of default=noprint_wrappers=1:nokey=1 \
     -show_entries stream=$param $file
 }
 
-dec_codec="$(get_param $to_play codec_name)"
+dec_codec="$(get_param v $to_play codec_name)"
 dec_plugin=""
 if [ "$dec_codec" = "h264" ]; then
   dec_plugin="-c:v h264_qsv"
@@ -126,7 +127,9 @@ elif [ "$dec_codec" = "hevc" ]; then
   dec_plugin="-c:v hevc_qsv"
 fi
 
-addlog "stream: dec_codec=$dec_codec, dec_plugin=$dec_plugin"
+audio="$(get_param a $to_play codec_name)"
+
+addlog "stream: dec_codec=$dec_codec, dec_plugin=$dec_plugin, audio=$audio"
 
 function run() {
   mkdir -p $ARTIFACTS/$type
@@ -144,9 +147,13 @@ if [ "$type" = "vod/avc" ]; then
   bitrate=3000000
   maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
   bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
+  if [ -n "$audio" ]; then
+    as="-c:a copy"
+    a0=",a:0"
+  fi
   cmd=(ffmpeg
     -hwaccel qsv -hwaccel_device $DEVICE
-    $dec_plugin -re -i $to_play -c:a copy
+    $dec_plugin -re -i $to_play $as
     -c:v h264_qsv -profile:v high -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
       -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256
@@ -154,14 +161,18 @@ if [ "$type" = "vod/avc" ]; then
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
     -use_localtime_mkdir 1
-    -var_stream_map 'v:0,a:0' stream_%v.m3u8)
+    -var_stream_map "v:0$a0" stream_%v.m3u8)
 elif [ "$type" = "vod/hevc" ]; then
   bitrate=3000000
   maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
   bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
+  if [ -n "$audio" ]; then
+    as="-c:a copy"
+    a0=",a:0"
+  fi
   cmd=(ffmpeg
     -hwaccel qsv -hwaccel_device $DEVICE
-    $dec_plugin -re -i $to_play -c:a copy
+    $dec_plugin -re -i $to_play $as
     -c:v hevc_qsv -profile:v main -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
       -extbrc 1 -bf 7 -refs 5 -g 256
@@ -169,21 +180,26 @@ elif [ "$type" = "vod/hevc" ]; then
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
     -use_localtime_mkdir 1
-    -var_stream_map 'v:0,a:0' stream_%v.m3u8)
+    -var_stream_map "v:0$a0" stream_%v.m3u8)
 elif [ "$type" = "vod/abr" ]; then
   # This is not tuned placeholder for ABR transcoding
+  if [ -n "$audio" ]; then
+    as="-map a:0 -map a:0 -c:a copy"
+    a0=",a:0"
+    a1=",a:1"
+  fi
   cmd=(ffmpeg
     -hwaccel qsv -hwaccel_device $DEVICE
     $dec_plugin -re -i $to_play
     -filter_complex '[v:0]split=2[o1][s2];[s2]scale_qsv=w=640:h=-1[o2]'
     -map [o1] -c:v h264_qsv -b:v 5M
     -map [o2] -c:v h264_qsv -b:v 1M
-    -map a:0 -map a:0 -c:a copy
+    $as
     -f hls -hls_time $hls_time -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
     -use_localtime_mkdir 1
-    -var_stream_map 'v:0,a:0 v:1,a:1' stream_%v.m3u8)
+    -var_stream_map "v:0$a0 v:1$a1" stream_%v.m3u8)
 else
   cmd=(bash -c 'echo "bug: unsupported streaming type: $type"; exit 1;')
 fi
