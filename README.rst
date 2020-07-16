@@ -313,7 +313,7 @@ Running these tools is as simply as the following examples.
 
 ::
 
-  measure performance InputVideo.h264
+  measure perf InputVideo.h264
 
 By default measuring tools will encode with H.264/AVC, to change a codec,
 use a ``--codec`` option::
@@ -335,16 +335,9 @@ Known limitations
   transcoding of input streams in raw video formats w/ Media SDK sample
   applications (i.e. you will get results for ffmpeg-qsv only)
 
-* `measure-perf <doc/man/measure-perf.asciidoc>`_ does not support input
-  streams in container formats (i.e. .mp4, .ts files won't be accepted - feed
-  the tool with raw video streams like .h264, .h265, etc.)
-
-* `measure-perf <doc/man/measure-perf.asciidoc>`_ supports input streams
-  with specific resolutions only: 720p, 1080p, 2160p
-
 * Intel Media SDK samples don't support input streams in container formats
   (i.e. .mp4, .ts, etc.), hence both measure-quality and measure-perf will
-  run measurement for ffmpeg-qsv path only for such streams.
+  run measurements only with ffmpeg-qsv path for such streams.
 
 Tips for best performance
 -------------------------
