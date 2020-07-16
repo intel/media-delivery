@@ -32,12 +32,33 @@ Being launched with the specific input `<stream>` the tool will measure
 performance for this stream used in the multi-stream 1:1 transcoding use
 case. Use '--scenario' command line option to specify another use case.
 
-'measure-perf' accepts raw H.264/AVC and H.265/HEVC input streams of the
-following resolutions only:
+'measure-perf' accepts H.264/AVC and H.265/HEVC input streams both in raw
+and container (.mp4) formats. However, if input stream is in container
+format (.mp4), only ffmpeg-qsv path will be executed since Media SDK samples
+don't support such input.
 
-* 720p
-* 1080p
-* 2160p
+'measure-perf' selects encoding bitrates relative to input stream
+resolution:
+
+* AVC encoding bitrates
++
+|===
+| Resolution | Bitrates (Mbps)
+
+| `height > 1088` | 10
+| `height > 720` | 3
+| other | 2
+|===
+
+* HEVC encoding bitrates
++
+|===
+| Resolution | Bitrates (Mbps)
+
+| `height > 1088` | 9
+| `height > 720` | 3
+| other | 1.5
+|===
 
 If `<folder>` is specified, the script processes all streams found in that
 folder matching criteria (see above). Sub-folders are not analyzed.
