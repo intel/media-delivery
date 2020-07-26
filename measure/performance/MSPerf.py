@@ -101,7 +101,7 @@ def main():
     parser.add_argument('--skip-perf', '--skip_perf', action='store_true', default=False, help='skipping linux perf stat Utilization, such as VD0/VD1/RCS/etc')
     parser.add_argument('--skip-perf-trace', '--skip_perf_trace', action='store_true', default=False, help='skipping linux perf stat additional Traces, such as GT-Freq/BW-Rd/BW-Wr/etc')
     parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', default=False, help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
-    parser.add_argument('--density-decode', '--density_decode', action='store_true', default=False, help='Enabling Density Decode support, HEVC')
+    parser.add_argument('--density-decode', '--density_decode', action='store_true', default=False, help='Enabling Density Decode support, HEVC and AVC')
     parser.add_argument('-c', '--codec', help='To choose Encoder Codec type, AVC or HEVC, Default will execute all')
     parser.add_argument('-s', '--startStreams', help='To set starting of multi stream performance measurement, e.g. --startStreams 720p:8,1080p:5,2160p:2 or all:2, Default=all:1')
     parser.add_argument('-e', '--endStreams', help='To set ending number of multi stream performance measurement, e.g. --endStreams 5, Default=NoLimit')
@@ -319,7 +319,7 @@ def main():
         # command line based on resolution
         ######################################################################################################
         try:
-            cmdline_config_hevc2avc_exist = cmdline_config_avc2avc_exist = cmdline_config_hevc2hevc_exist = cmdline_config_avc2hevc_exist = cmdline_config_decode_hevc_exist = False
+            cmdline_config_hevc2avc_exist = cmdline_config_avc2avc_exist = cmdline_config_hevc2hevc_exist = cmdline_config_avc2hevc_exist = cmdline_config_decode_hevc_exist = cmdline_config_decode_avc_exist = False
             with open(required_information_file, 'r') as configfile:
                 for workloadline in configfile:
                     if (not re.search("^#", str(workloadline))):
@@ -328,6 +328,7 @@ def main():
                         if (re.search(r"hevc-hevc:", str(workloadline))):  cmdline_config_hevc2hevc_exist = True
                         if (re.search(r"avc-hevc:", str(workloadline))):  cmdline_config_avc2hevc_exist = True
                         if (re.search(r"decode-hevc:", str(workloadline))):  cmdline_config_decode_hevc_exist = True
+                        if (re.search(r"decode-avc:", str(workloadline))):  cmdline_config_decode_avc_exist = True
                         if (re.search(r"^720p_hevc-avc:\s", str(workloadline))): performance_cmdline_720p_hevc2avc = workloadline.replace("720p_hevc-avc: ", "")
                         if (re.search(r"^1080p_hevc-avc:\s", str(workloadline))): performance_cmdline_1080p_hevc2avc = workloadline.replace("1080p_hevc-avc: ", "")
                         if (re.search(r"^2160p_hevc-avc:\s", str(workloadline))): performance_cmdline_2160p_hevc2avc = workloadline.replace("2160p_hevc-avc: ", "")
@@ -340,9 +341,8 @@ def main():
                         if (re.search(r"^720p_avc-hevc:\s", str(workloadline))): performance_cmdline_720p_avc2hevc = workloadline.replace("720p_avc-hevc: ", "")
                         if (re.search(r"^1080p_avc-hevc:\s", str(workloadline))): performance_cmdline_1080p_avc2hevc = workloadline.replace("1080p_avc-hevc: ", "")
                         if (re.search(r"^2160p_avc-hevc:\s", str(workloadline))): performance_cmdline_2160p_avc2hevc = workloadline.replace("2160p_avc-hevc: ", "")
-                        if (re.search(r"^720p_decode-hevc:\s",str(workloadline))): performance_cmdline_720p_decode_hevc = workloadline.replace("720p_decode-hevc: ", "")
-                        if (re.search(r"^1080p_decode-hevc:\s",str(workloadline))): performance_cmdline_1080p_decode_hevc = workloadline.replace("1080p_decode-hevc: ", "")
-                        if (re.search(r"^2160p_decode-hevc:\s",str(workloadline))): performance_cmdline_2160p_decode_hevc = workloadline.replace("2160p_decode-hevc: ", "")
+                        if (re.search(r"decode-hevc:\s",str(workloadline))): performance_cmdline_decode_hevc = workloadline.replace("decode-hevc: ", "")
+                        if (re.search(r"decode-avc:\s",str(workloadline))): performance_cmdline_decode_avc = workloadline.replace("decode-avc: ", "")
         except:
             message_block(output_log_handle,'red', 'Unable to locate required file: ' + ARGS.required_information_file)
             raise sys.exit(1)
@@ -350,18 +350,13 @@ def main():
 
         ##################################################################################
         # Iterating measure sequence
-        # 1st HEVC-AVC
-        # 2nd AVC-AVC
-        # 3rd HEVC-HEVC
-        # 4th AVC-HEVC
-        # 5th DECODE-HEVC
-        # 6th TBD/continue..
-
+        ##################################################################################
         Workloads = ["HEVC-AVC",
                      "AVC-AVC",
                      "HEVC-HEVC",
                      "AVC-HEVC",
-                     "DECODE-HEVC"]
+                     "DECODE-HEVC",
+                     "DECODE-AVC"]
 
         ##################################################################################
         startTime_sequence = time.time()
@@ -380,6 +375,8 @@ def main():
             elif performance_tag == "AVC-HEVC" and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_avc2hevc_exist:
                 sequence_mode = "TRANSCODE"
             elif performance_tag == "DECODE-HEVC" and density_decode and cmdline_config_decode_hevc_exist:
+                sequence_mode = "DECODE"
+            elif performance_tag == "DECODE-AVC" and density_decode and cmdline_config_decode_avc_exist:
                 sequence_mode = "DECODE"
             else:
                 continue
@@ -466,6 +463,9 @@ def main():
                         continue
                 elif (performance_tag == "DECODE-HEVC"): # Decode-HEVC measure sequence
                     if performance_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
+                        continue
+                elif (performance_tag == "DECODE-AVC"): # Decode-AVC measure sequence
+                    if performance_object_list[curContent].codec != "h264":  # skip if its not H264 input clip
                         continue
                 else:
                     printLog(output_log_handle, "\n")
@@ -559,12 +559,10 @@ def main():
                             elif performance_object_list[curContent].encode_bitrate == "4k_bitrate":
                                 dispatch_cmdline = performance_cmdline_2160p_avc2hevc
                         elif performance_tag == "DECODE-HEVC": # DECODE HEVC
-                            if performance_object_list[curContent].encode_bitrate == "sd_bitrate":
-                                dispatch_cmdline = performance_cmdline_720p_decode_hevc
-                            elif performance_object_list[curContent].encode_bitrate == "hd_bitrate":
-                                dispatch_cmdline = performance_cmdline_1080p_decode_hevc
-                            elif performance_object_list[curContent].encode_bitrate == "4k_bitrate":
-                                dispatch_cmdline = performance_cmdline_2160p_decode_hevc
+                            dispatch_cmdline = performance_cmdline_decode_hevc
+                        elif performance_tag == "DECODE-AVC": # DECODE AVC
+                            dispatch_cmdline = performance_cmdline_decode_avc
+
                         else:
                             break
 
