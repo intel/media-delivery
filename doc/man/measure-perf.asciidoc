@@ -41,9 +41,9 @@ resolution:
 |===
 | Resolution | Bitrates (Mbps)
 
-| `height > 1088` | 10
+| `height > 1088` | 9
 | `height > 720` | 3
-| other | 2
+| other | 1.5
 |===
 
 * HEVC encoding bitrates
