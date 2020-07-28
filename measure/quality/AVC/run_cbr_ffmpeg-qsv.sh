@@ -53,10 +53,13 @@ shift
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000000))')
 bufsize=$(python3 -c 'print(int('$bitrate' * 2))')
 
+vframes="-frames:v $nframes"
+[[ "$nframes" = "0" ]] && vframes=""
+
 DEVICE=${DEVICE:-/dev/dri/renderD128}
 
 cmd=(ffmpeg -hwaccel qsv -hwaccel_device $DEVICE -an \
-  $rawvideo -i $file -vframes $nframes \
+  $rawvideo -i $file $vframes \
   -c:v h264_qsv -preset $preset -profile:v high -b:v $bitrate -maxrate $bitrate -minrate $bitrate \
   -bufsize $bufsize \
   $options \

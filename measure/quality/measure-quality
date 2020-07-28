@@ -772,6 +772,7 @@ options_ref=$(get_coding_commandline_options $codec $preset "ref" $use_vdenc)
 options_qsv=$(get_coding_commandline_options $codec $preset "qsv" $use_vdenc)
 options_senc=$(get_coding_commandline_options $codec $preset "senc" $use_vdenc)
 vmaf_model_path=$(get_vmaf_model $resolution)
+path=$(dirname $(readlink -f $0))
 
 mkdir -p $outdir && cd $outdir
 if [[ $? -ne 0 ]]; then
@@ -780,7 +781,6 @@ if [[ $? -ne 0 ]]; then
 fi
 
 if [ "$skip_encoding" = "no" ]; then
-  path=$(dirname $(readlink -f $0))
   for b in ${bitrates[@]}; do
     if [ "$is_yuv" = "no" ]; then
       if [ "$skip_reference" = "no" ]; then
