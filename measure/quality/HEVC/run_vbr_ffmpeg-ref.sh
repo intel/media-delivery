@@ -52,8 +52,11 @@ bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000000))')
 maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
 bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
 
+vframes="-frames:v $nframes"
+[[ "$nframes" = "0" ]] && vframes=""
+
 cmd=(ffmpeg -an \
-  $rawvideo -i $file -vframes $nframes \
+  $rawvideo -i $file $vframes \
   -c:v libx265 $options -b:v $bitrate -maxrate $maxrate -bufsize $bufsize -tune psnr \
   -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_VBR_REF.h265)
 

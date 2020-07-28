@@ -239,6 +239,7 @@ PROCESSING OPTIONS
 ------------------
 --nframes|-n <uint>::
 	Process (encode, calculate metrics) this number of frames and stop.
+        If omitted or set to 0, all frames will be processed (default: 0).
 
 --dry-run::
 	Do not execute any commands, but dump them to `stdout`.

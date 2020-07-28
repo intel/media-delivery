@@ -51,8 +51,11 @@ shift
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000000))')
 bufsize=$(python3 -c 'print(int('$bitrate' * 2))')
 
+vframes="-frames:v $nframes"
+[[ "$nframes" = "0" ]] && vframes=""
+
 cmd=(ffmpeg -an \
-  $rawvideo -i $file -vframes $nframes \
+  $rawvideo -i $file $vframes \
   -c:v libx264 $options -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $bufsize -tune psnr \
   -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_CBR_REF.h264)
 
