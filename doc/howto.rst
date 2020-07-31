@@ -266,8 +266,10 @@ Container build time customizations
 Dockerfiles support a number of arguments to customize the final image. Pass these
 arguments as ``docker --build-arg ARGUMENT=VALUE``.
 
-ENABLE_INTEL_REPO
-  Possible values: ``yes|no``. Default value: ``yes``
+APT_GRAPHICS_REPO
+  Possible values: ``<repo-link> <distro> <component>...``.
+
+  Default value: ``https://repositories.intel.com/graphics/ubuntu focal main``
 
   Enables Intel Graphics Repository packages.
 

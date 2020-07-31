@@ -50,13 +50,14 @@ on_merge:
   stage: "build"
   script:
   - tagname="$MDS_REGISTRY/intel-media-delivery/$SAMPLE/"
-  - if [ -n "$CI_COMMIT_BRANCH" ]; then tagname+="$CI_COMMIT_BRANCH/stash:$CI_PIPELINE_ID"; fi
+  - if [ -n "$CI_COMMIT_BRANCH" ]; then tagname+="$CI_COMMIT_BRANCH/stash/$CI_PIPELINE_ID:$FLAVOR"; fi
   - if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then tagname+="$CI_MERGE_REQUEST_TARGET_BRANCH_NAME/"; fi
-  - if [ -n "$CI_MERGE_REQUEST_IID" ]; then tagname+="mr:$CI_MERGE_REQUEST_IID"; fi
+  - if [ -n "$CI_MERGE_REQUEST_IID" ]; then tagname+="mr/$CI_MERGE_REQUEST_IID:$FLAVOR"; fi
   - echo "Building $tagname docker image"
   - docker build
       $(env | grep -E '_proxy=' | sed 's/^/--build-arg /')
       --build-arg SAMPLE=$SAMPLE
+      --build-arg APT_GRAPHICS_REPO="$APT_GRAPHICS_REPO"
       --no-cache
       --force-rm
       --file Dockerfile.ubuntu
@@ -115,8 +116,8 @@ on_merge:
       version=$(docker run -e MDS_IGNORE_ERRORS=yes --rm $tagname apt-cache show libmfx1 2>/dev/null | grep Version);
       version=${version#Version:};
       version=$(echo $version | sed 's/ //g' | sed 's/[^a-z|A-Z|0-9|.|-]/./g');
-      deploytag1="${tagname%/stash*}/agama:$CI_PIPELINE_ID-$CI_COMMIT_SHORT_SHA-$version";
-      deploytag2="${tagname%/stash*}/agama:latest";
+      deploytag1="${tagname%/stash*}/$FLAVOR:$CI_PIPELINE_ID-$CI_COMMIT_SHORT_SHA-$version";
+      deploytag2="${tagname%/stash*}/$FLAVOR:latest";
       echo "Deploying $tagname as $deploytag1 and $deploytag2";
       docker tag $tagname $deploytag1;
       docker tag $tagname $deploytag2;
@@ -133,22 +134,39 @@ on_merge:
   - builder
   - ubuntu
 
-build:cdn:
+build:cdn-agama:
   extends: .build_image
   variables:
     SAMPLE: cdn
+    FLAVOR: agama
+    APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal main"
+
+build:cdn-agama-devel:
+  extends: .build_image
+  variables:
+    SAMPLE: cdn
+    FLAVOR: agama-devel
+    APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal-devel main"
 
 build:edge:
   extends: .build_image
   variables:
     SAMPLE: edge
+    FLAVOR: agama
 
-test:cdn:
+test:cdn-agama:
   extends: .test_image
   variables:
     SAMPLE: cdn
   dependencies:
-  - build:cdn
+  - build:cdn-agama
+
+test:cdn-agama-devel:
+  extends: .test_image
+  variables:
+    SAMPLE: cdn
+  dependencies:
+  - build:cdn-agama-devel
 
 test:edge:
   extends: .test_image
@@ -157,16 +175,26 @@ test:edge:
   dependencies:
   - build:edge
 
-deploy:cdn:
+deploy:cdn-agama:
   extends: .deploy_image
   variables:
     SAMPLE: cdn
+    FLAVOR: agama
   dependencies:
-  - build:cdn
+  - build:cdn-agama
+
+deploy:cdn-agama-devel:
+  extends: .deploy_image
+  variables:
+    SAMPLE: cdn
+    FLAVOR: agama-devel
+  dependencies:
+  - build:cdn-agama-devel
 
 deploy:edge:
   extends: .deploy_image
   variables:
     SAMPLE: edge
+    FLAVOR: agama
   dependencies:
   - build:edge
