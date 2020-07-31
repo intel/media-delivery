@@ -33,6 +33,16 @@ RUN apt-get update && \
    apt-get install --no-install-recommends -y sudo ca-certificates \
    && rm -rf /var/lib/apt/lists/*
 
+ARG APT_GRAPHICS_REPO="https://repositories.intel.com/graphics/ubuntu focal main"
+RUN { \
+  echo "Specified graphics repo: $APT_GRAPHICS_REPO"; \
+  if [ -n "$APT_GRAPHICS_REPO" ]; then \
+    repo="deb [trusted=yes arch=amd64] $APT_GRAPHICS_REPO"; \
+    echo "$repo" > /etc/apt/sources.list.d/intel-graphics.list; \
+    cat /etc/apt/sources.list.d/intel-graphics.list; \
+  fi; \
+}
+
 # This script is a placeholder to further setup the base image.
 RUN /tmp/scripts/setup-base-image.sh
 
