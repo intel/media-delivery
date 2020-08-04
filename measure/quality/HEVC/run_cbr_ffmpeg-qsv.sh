@@ -40,8 +40,6 @@ if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
 else
   nframes=$1
   shift
-  framerate=$1
-  shift
 fi
 bitrate_Mbps=$1
 shift
