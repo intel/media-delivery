@@ -217,14 +217,15 @@ check_for sample_encode
 
 function get_param() {
   local file=$1
-  local param=$2
-  ffprobe -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 \
-    -show_entries stream=$param $file
+  local section=$2
+  local param=$3
+  ffprobe -v error -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 \
+    -show_entries $section=$param $file
 }
 
 function count_frames() {
   local file=$1
-  ffprobe -v error -count_frames -select_streams v -of default=noprint_wrappers=1:nokey=1 \
+  ffprobe -v error -count_frames -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 \
     -show_entries stream=nb_read_frames $file
 }
 
@@ -380,17 +381,20 @@ function get_coding_commandline_options() {
   local use_vdenc=$4
   local options_qsv=""
   local options_senc=""
+  local options_smt=""
   local options_ref=""
 
   if [ "$use_vdenc" = "yes" ]; then
       options_qsv+="-low_power true "
       options_senc+="-lowpower:on "
+      options_smt+="-lowpower:on "
   fi
 
   if [ "$codec" = "AVC" ]; then
     if [ "$preset" = "best" ]; then
       options_qsv+="-extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256"
       options_senc+="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+      options_smt+="-extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
@@ -400,6 +404,7 @@ function get_coding_commandline_options() {
     if [ "$preset" = "best" ]; then
       options_qsv+="-extbrc 1 -bf 7 -refs 5 -g 256"
       options_senc+="-extbrc:implicit -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+      options_smt+="-extbrc::implicit -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
@@ -414,6 +419,8 @@ function get_coding_commandline_options() {
     echo "$options_qsv"
   elif [ $app = "senc" ]; then
     echo "$options_senc"
+  elif [ $app = "smt" ]; then
+    echo "$options_smt"
   elif [ $app = "ref" ]; then
     echo "$options_ref"
   else
@@ -695,6 +702,27 @@ function is_preset_stream() {
   echo "no"
 }
 
+function get_raw_stream_info() {
+  local file=$1
+  local raw=""
+  local supported=""
+  # check if file is a raw video stream
+  raw=$(get_param $file "format" "format_long_name" | grep ^raw)
+  if [ -z "$raw" ]; then
+    echo ""
+    return
+  fi
+  # get raw video format
+  raw=$(get_param $file "stream" "codec_name" | sed 's/hevc/h265/g')
+  # check if video format is supported by MSDK SMT
+  supported="no"
+  case $raw in
+    h265|h264|mpeg2|vc1|mvc|vp9) supported="yes";;
+  esac
+  [[ "$supported" = "no" ]] && raw=""
+  echo $raw
+}
+
 err=0
 is_yuv=no
 file=$(realpath $1)
@@ -702,9 +730,9 @@ if [[ ! -d "$file" ]]; then
   if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
     is_yuv=yes
   else
-    framerate=$(($(get_param $file "r_frame_rate")))
-    width=$(get_param $file "width")
-    height=$(get_param $file "height")
+    framerate=$(($(get_param $file "stream" "r_frame_rate")))
+    width=$(get_param $file "stream" "width")
+    height=$(get_param $file "stream" "height")
   fi
 fi
 
@@ -770,6 +798,7 @@ else # use predefined bitrates
 fi
 options_ref=$(get_coding_commandline_options $codec $preset "ref" $use_vdenc)
 options_qsv=$(get_coding_commandline_options $codec $preset "qsv" $use_vdenc)
+options_smt=$(get_coding_commandline_options $codec $preset "smt" $use_vdenc)
 options_senc=$(get_coding_commandline_options $codec $preset "senc" $use_vdenc)
 vmaf_model_path=$(get_vmaf_model $resolution)
 path=$(dirname $(readlink -f $0))
@@ -780,6 +809,7 @@ if [[ $? -ne 0 ]]; then
   exit -1
 fi
 
+# encoding
 if [ "$skip_encoding" = "no" ]; then
   for b in ${bitrates[@]}; do
     if [ "$is_yuv" = "no" ]; then
@@ -790,6 +820,13 @@ if [ "$skip_encoding" = "no" ]; then
       if [ "$skip_ffmpeg" = "no" ]; then
         [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $b $tu $options_qsv
         [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $b $tu $options_qsv
+      fi
+      if [ "$skip_msdk" = "no" ]; then
+        raw=$(get_raw_stream_info $file)
+        if [ -n "$raw" ]; then
+          [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $b $tu $raw $options_smt
+          [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $b $tu $raw $options_smt
+        fi
       fi
     else
       if [ "$skip_reference" = "no" ]; then
@@ -808,6 +845,7 @@ if [ "$skip_encoding" = "no" ]; then
   done
 fi
 
+# metrics calculation
 if [ "$skip_metrics" = "no" ]; then
   if [ -f $DEMO_PREFIX/share/model/$vmaf_model_path ]; then
     # that's the location where media delivery demo installs vmaf models
@@ -878,15 +916,18 @@ if [ "$skip_metrics" = "no" ]; then
       [[ "$skip_msim" = "no" ]] && msim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["MS-SSIM score"])')
       metrics+=":$msim"
 
-      out=$(echo "$metrics" | grep CBR_QSV); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-qsv.metrics
-      out=$(echo "$metrics" | grep VBR_QSV); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-qsv.metrics
+      out=$(echo "$metrics" | grep CBR_QSV); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-qsv.metrics
+      out=$(echo "$metrics" | grep VBR_QSV); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-qsv.metrics
       if [ "$is_yuv" = "yes" ]; then
-        out=$(echo "$metrics" | grep CBR_SENC); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.sample-encode.metrics
-        out=$(echo "$metrics" | grep VBR_SENC); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.sample-encode.metrics
+        out=$(echo "$metrics" | grep CBR_SENC); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.sample-encode.metrics
+        out=$(echo "$metrics" | grep VBR_SENC); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.sample-encode.metrics
+      elif [ -n "$raw" ]; then
+        out=$(echo "$metrics" | grep CBR_SMT); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.sample-multi-transcode.metrics
+        out=$(echo "$metrics" | grep VBR_SMT); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.sample-multi-transcode.metrics
       fi
       if [ "$skip_reference" = "no" ]; then
-        out=$(echo "$metrics" | grep CBR_REF); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-ref.metrics
-        out=$(echo "$metrics" | grep VBR_REF); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-ref.metrics
+        out=$(echo "$metrics" | grep CBR_REF); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-ref.metrics
+        out=$(echo "$metrics" | grep VBR_REF); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-ref.metrics
       fi
     fi
   done
