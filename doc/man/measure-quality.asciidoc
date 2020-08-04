@@ -24,7 +24,7 @@ There are 3 modes of operation to highlight.
 In this case `<folder>` sets the root folder to search for the pre-defined set of streams.
 Search is done in the root `<folder>` and all subfolders.
 
-2. Run quality measurement for the specified stream
+2. Run quality measurement for a specified stream
 +
 ------------
     measure quality <stream.mp4>
@@ -33,10 +33,12 @@ Search is done in the root `<folder>` and all subfolders.
 +
 In this case quality measure is run only for the specified stream. If stream is YUV
 you need to specify its characteristics via command line optins (`-w`, `-h`, `-f`,
-etc.). Tool accepts only 8-bit I420 YUV input streams. Mind that YUV
-stream will be measured both via ffmpeg-qsv and Media SDK Sample Encode, but a stream 
-encapsulated in a containers (e.g. MP4, TS, etc.) will be measured only via
-ffmpeg-qsv (since Sample Encode does not support container streams).
+etc.). The script accepts only 8-bit I420 YUV input streams. Mind that YUV
+stream will be measured using both ffmpeg-qsv and Media SDK Sample Encode, but a stream
+encapsulated in a container (e.g. MP4, TS, etc.) will be measured only using
+ffmpeg-qsv (since Sample Encode does not support compressed streams). On the other hand,
+a raw compressed bitstream (e.g. standard compliant h264) will be measured using both
+ffmpeg-qsv and Media SDK Sample Multi Transcode.
 
 3. Run quality measure for the pre-defined stream
 +
@@ -178,18 +180,18 @@ the separators in the output report.
 ENCODING OPTIONS
 ----------------
 --codec AVC|HEVC::
-	Sets encoder to use (default: `AVC`).
+	Sets an encoder to use (default: `AVC`).
 
 --preset default|best::
-	Sets quality preset options (default: `best`).
+	Sets a quality preset option (default: `best`).
 
 --bitrates <float>[:<float>...]::
-	Sets list of bitrates in Mbps to use (default: use hardcoded bitrates which
+	Sets a list of bitrates in Mbps to use (default: use hardcoded bitrates which
 	depend on stream resolution and codec). A minimum of 4 distinct bitrates are 
         needed for calculating BD-rate.
 
 --tu veryslow|slower|slow|medium|fast|faster|veryfast::
-        Sets target usage preset (default: `medium`).
+        Sets a target usage preset (default: `medium`).
 
 WORKING MODE OPTIONS
 --------------------
@@ -245,7 +247,7 @@ PROCESSING OPTIONS
 	Do not execute any commands, but dump them to `stdout`.
 
 --outdir|-o /path/to/artifacts::
-	Produce output in the specified folder (default:
+	Generate output in the specified folder (default:
 	`/opt/data/artifacts/measure/quality` if ran under docker,
 	`$HOME/measure/quality` otherwise)
 

@@ -96,7 +96,7 @@ H.264 Bitstream Quality Measure Example
 
   measure quality InputVideo.h264
 
-Only ffmpeg-based quality results will be computed for pre-encoded input content.
+Both ffmpeg and sample-multi-transcode quality results will be computed for pre-encoded input content.
 
 MP4 Container Quality Measure Example
 *************************************
@@ -118,7 +118,7 @@ ffmpeg-qsv VBR
   ffmpeg -hwaccel qsv \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
     -i $inputyuv -vframes $numframes -y \
-    -c:v h264_qsv -preset medium -profile:v high \
+    -c:v h264_qsv -preset $preset -profile:v high \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
 
@@ -130,7 +130,7 @@ ffmpeg-qsv CBR
   ffmpeg -hwaccel qsv \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
     -i $inputyuv -vframes $numframes -y \
-    -c:v h264_qsv -preset medium -profile:v high \
+    -c:v h264_qsv -preset $preset -profile:v high \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
 
@@ -141,7 +141,7 @@ Intel Media SDK sample-encode VBR
   sample_encode h264 -hw \
     -i $input -w $width -h $height -n $numframes -f $framerate \
     -o $output \
-    -u medium -vbr -b $bitrate \
+    -u $preset -vbr -b $bitrate \
     -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 2))') \
     -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 \
     -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
@@ -153,10 +153,32 @@ Intel Media SDK sample-encode CBR
   sample_encode h264 -hw \
     -i $input -w $width -h $height -n $numframes -f $framerate \
     -o $output \
-    -u medium -cbr -b $bitrate \
+    -u $preset -cbr -b $bitrate \
     -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 4))') \
     -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 \
     -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
+
+Intel Media SDK sample-multi-transcode VBR
+******************************************
+::
+
+  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
+    -u $preset -b $bitrate -vbr -n $nframes \
+    -hrd $(python3 -c 'print(int('$bitrate' / 2))') \
+    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 \
+    -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -o::h264 $output
+
+Intel Media SDK sample-multi-transcode CBR
+******************************************
+::
+
+  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
+    -u $preset -b $bitrate -cbr -n $nframes \
+    -hrd $(python3 -c 'print(int('$bitrate' / 4))') \
+    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 \
+    -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -o::h264 $output
 
 H.265/HEVC Command Lines
 ------------------------
@@ -210,6 +232,28 @@ Intel Media SDK sample-encode CBR
     -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 4))') \
     -extbrc:implicit -x 5 \
     -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
+
+Intel Media SDK sample-multi-transcode VBR
+******************************************
+::
+
+  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
+    -u $preset -b $bitrate -vbr -n $nframes \
+    -hrd $(python3 -c 'print(int('$bitrate' / 2))') \
+    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 \
+    -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -o::h265 $output
+
+Intel Media SDK sample-multi-transcode CBR
+******************************************
+::
+
+  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
+    -u $preset -b $bitrate -cbr -n $nframes \
+    -hrd $(python3 -c 'print(int('$bitrate' / 4))') \
+    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 \
+    -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -o::h265 $output
 
 Reference Codecs
 ----------------
