@@ -331,10 +331,6 @@ Known limitations
 * `measure-quality <doc/man/measure-quality.asciidoc>`_ supports only 8-bit
   I420 input YUV streams
 
-* `measure-quality <doc/man/measure-quality.asciidoc>`_ does not support
-  transcoding of input streams in raw video formats w/ Media SDK sample
-  applications (i.e. you will get results for ffmpeg-qsv only)
-
 * Intel Media SDK samples don't support input streams in container formats
   (i.e. .mp4, .ts, etc.), hence both measure-quality and measure-perf will
   run measurements only with ffmpeg-qsv path for such streams.
