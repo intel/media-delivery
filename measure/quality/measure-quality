@@ -837,10 +837,12 @@ if [ "$skip_metrics" = "no" ]; then
     fi
 
     # get number of really encoded frames from the stream rather than relying on the user input
-    nframes=$(count_frames $out)
-    if [[ -z "$nframes" || "$nframes" = "N/A" || "$nframes" -eq 0 ]]; then
-      echo "error: no frames in the stream: $out" >&2
-      continue
+    if [ "$dry_run" = "no" ]; then
+      nframes=$(count_frames $out)
+      if [[ -z "$nframes" || "$nframes" = "N/A" || "$nframes" -eq 0 ]]; then
+        echo "error: no frames in the stream: $out" >&2
+        continue
+      fi
     fi
 
     cmd=(ffmpeg -an
@@ -858,32 +860,34 @@ if [ "$skip_metrics" = "no" ]; then
       echo "${cmd[@]}"
     fi
 
-    # calculate bitrate in kbps
-    b=$(stat -c %s $out)                         # filesize
-    b=$(python3 -c 'print('$b' * 8)')            # filesize in bits
-    b=$(python3 -c 'print('$b' / '$nframes')')   # bits per frame
-    b=$(python3 -c 'print('$b' * '$framerate')') # bps
-    b=$(python3 -c 'print('$b' / 1000)')         # kbps
+    if [ "$dry_run" = "no" ]; then
+      # calculate bitrate in kbps
+      b=$(stat -c %s $out)                         # filesize
+      b=$(python3 -c 'print('$b' * 8)')            # filesize in bits
+      b=$(python3 -c 'print('$b' / '$nframes')')   # bits per frame
+      b=$(python3 -c 'print('$b' * '$framerate')') # bps
+      b=$(python3 -c 'print('$b' / 1000)')         # kbps
 
-    metrics="$out:$b"
-    [[ "$skip_vmaf" = "no" ]] && vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["VMAF score"])')
-    metrics+=":$vmaf"
-    [[ "$skip_psnr" = "no" ]] && psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["PSNR score"])')
-    metrics+=":$psnr"
-    [[ "$skip_ssim" = "no" ]] && ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["SSIM score"])')
-    metrics+=":$ssim"
-    [[ "$skip_msim" = "no" ]] && msim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["MS-SSIM score"])')
-    metrics+=":$msim"
+      metrics="$out:$b"
+      [[ "$skip_vmaf" = "no" ]] && vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["VMAF score"])')
+      metrics+=":$vmaf"
+      [[ "$skip_psnr" = "no" ]] && psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["PSNR score"])')
+      metrics+=":$psnr"
+      [[ "$skip_ssim" = "no" ]] && ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["SSIM score"])')
+      metrics+=":$ssim"
+      [[ "$skip_msim" = "no" ]] && msim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["MS-SSIM score"])')
+      metrics+=":$msim"
 
-    out=$(echo "$metrics" | grep CBR_QSV); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-qsv.metrics
-    out=$(echo "$metrics" | grep VBR_QSV); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-qsv.metrics
-    if [ "$is_yuv" = "yes" ]; then
-      out=$(echo "$metrics" | grep CBR_SENC); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.sample-encode.metrics
-      out=$(echo "$metrics" | grep VBR_SENC); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.sample-encode.metrics
-    fi
-    if [ "$skip_reference" = "no" ]; then
-      out=$(echo "$metrics" | grep CBR_REF); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-ref.metrics
-      out=$(echo "$metrics" | grep VBR_REF); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-ref.metrics
+      out=$(echo "$metrics" | grep CBR_QSV); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-qsv.metrics
+      out=$(echo "$metrics" | grep VBR_QSV); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-qsv.metrics
+      if [ "$is_yuv" = "yes" ]; then
+        out=$(echo "$metrics" | grep CBR_SENC); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.sample-encode.metrics
+        out=$(echo "$metrics" | grep VBR_SENC); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.sample-encode.metrics
+      fi
+      if [ "$skip_reference" = "no" ]; then
+        out=$(echo "$metrics" | grep CBR_REF); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-ref.metrics
+        out=$(echo "$metrics" | grep VBR_REF); [ ! -z "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-ref.metrics
+      fi
     fi
   done
 fi
