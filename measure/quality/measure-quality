@@ -659,7 +659,7 @@ function get_preset_stream() {
   elif [[ $ind = 10 ]]; then echo "BasketballDrive_1920x1080_50.yuv" "BasketballDrive_1080p" 1920 1080 50 500
   elif [[ $ind = 11 ]]; then echo "bq_terrace_1920x1080p_600_60.yuv" "BQTerrace_1080p" 1920 1080 60 600
   elif [[ $ind = 12 ]]; then echo "Cactus_1920x1080_50.yuv" "Cactus_1080p" 1920 1080 50 500
-  elif [[ $ind = 13 ]]; then echo "crowd_run_1920x1080p_500_50.yuv" "CrowdRun_1080p" 1920 1080 60 600
+  elif [[ $ind = 13 ]]; then echo "crowd_run_1920x1080p_500_50.yuv" "CrowdRun_1080p" 1920 1080 50 500
   elif [[ $ind = 14 ]]; then echo "DinnerScene_1920x1080_60.yuv" "DinnerScene_1080p" 1920 1080 60 600
   elif [[ $ind = 15 ]]; then echo "park_joy_1920x1080_500_50.yuv" "ParkJoy_1080p" 1920 1080 50 500
   elif [[ $ind = 16 ]]; then echo "Kimono1_1920x1080_24.yuv" "Kimono_1080p" 1920 1080 24 240
@@ -670,7 +670,7 @@ function get_preset_stream() {
   elif [[ $ind = 21 ]]; then echo "DOTA2_1920x1080_60_600.yuv" "DOTA2_1080p" 1920 1080 60 600
   elif [[ $ind = 22 ]]; then echo "GTAV_1920x1080_60_600.yuv" "GTAV_1080p" 1920 1080 60 600
   elif [[ $ind = 23 ]]; then echo "Hearthstone_1920x1080_60.yuv" "Hearthstone_1080p" 1920 1080 60 600
-  elif [[ $ind = 24 ]]; then echo "MINECRAFT_1920x1080_60_600.yuv" "MINECRAFT_1080p" 1920 1080 600 60
+  elif [[ $ind = 24 ]]; then echo "MINECRAFT_1920x1080_60_600.yuv" "MINECRAFT_1080p" 1920 1080 60 600
   elif [[ $ind = 25 ]]; then echo "MrFox_BlueBird_1920x1080_30.yuv" "MrFox_BlueBird_1080p" 1920 1080 30 300
   elif [[ $ind = 26 ]]; then echo "Sintel_trailer_o537n480_1920x1080_24.yuv" "Sintel_trailer_1080p" 1920 1080 24 480
   elif [[ $ind = 27 ]]; then echo "WITCHER3_1920x1080_60.yuv" "WITCHER3_1080p" 1920 1080 60 600
@@ -820,7 +820,7 @@ if [ "$skip_metrics" = "no" ]; then
     exit -1
   fi
 
-  for out in $(ls -1t $outprefix* | grep -v \.metrics); do
+  for out in $(ls -1t $outprefix* | grep -v '\.metrics\|\.*bdrate'); do
     if [ "$is_yuv" = "yes" ]; then
       rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
     fi
