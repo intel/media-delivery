@@ -717,7 +717,7 @@ function get_raw_stream_info() {
   # check if video format is supported by MSDK SMT
   supported="no"
   case $raw in
-    h265|h264|mpeg2|vc1|mvc|vp9) supported="yes";;
+    h265|h264|mpeg2|vc1|vp9) supported="yes";;
   esac
   [[ "$supported" = "no" ]] && raw=""
   echo $raw
