@@ -54,7 +54,7 @@ vframes="-frames:v $nframes"
 
 cmd=(ffmpeg -an \
   $rawvideo -i $file $vframes \
-  -c:v libx264 $options -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $bufsize -tune psnr \
+  -c:v libx264 $options -b:v $bitrate -x264opts no-sliced-threads:nal-hrd=cbr -tune psnr -threads 12 \
   -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_CBR_REF.h264)
 
 if [ "$dry_run" = "no" ]; then
