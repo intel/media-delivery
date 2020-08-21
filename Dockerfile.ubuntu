@@ -133,20 +133,8 @@ RUN cd /home/user/vmaf/libvmaf \
 # reduce the footprint taking only vmaf module itself and minimal set of
 # dependencies which we really need. Thus, some vmaf python module usage
 # scenarious in our final image might not work due to missing dependencies.
-RUN { \
-  set -ex; \
-  srcsite=$(python3 -m site --user-site); \
-  mkdir -p $srcsite; \
-  cd /home/user/vmaf/python \
-    && python3 setup.py build \
-    && python3 setup.py install --user; \
-  export PYTHONUSERBASE=$PREFIX; \
-  dstsite=$(python3 -m site --user-site); \
-  sudo mkdir -p $dstsite; \
-  cd $dstsite \
-    && sudo cp -rd $srcsite/vmaf*.egg . \
-    && { ls -1 | sed 's|^|./|g' | sudo tee easy-install.pth; }; \
-}
+RUN cd /home/user/vmaf/python \
+    && sudo python3 setup.py bdist_wheel --dist-dir=/opt/wheel
 
 ARG FFMPEG_VERSION=n4.3
 RUN git clone --depth 1 --branch $FFMPEG_VERSION https://github.com/ffmpeg/ffmpeg /home/user/ffmpeg
@@ -176,7 +164,7 @@ RUN cd /home/user/ffmpeg && \
 # Cleanin up...
 RUN rm -rf /home/user/ffmpeg && \
     rm -rf /home/user/patches && \
-    rm -rf /home/user/vmaf
+    sudo rm -rf /home/user/vmaf
 
 FROM build-prerequisites AS build-man
 
@@ -211,6 +199,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-matplotlib \
     python3-numpy \
+    python3-pip \
     socat \
     tmux \
     vainfo \
@@ -247,8 +236,11 @@ RUN rm -rf /tmp/assets
 ARG PREFIX=/opt/intel/samples
 COPY --from=build-man $PREFIX $PREFIX
 COPY --from=build-all $PREFIX $PREFIX
+COPY --from=build-all /opt/wheel /opt/wheel
 RUN echo "$PREFIX/lib" > /etc/ld.so.conf.d/intel-media-delivery.conf
 RUN ldconfig
+RUN python3 -m pip install --no-deps --prefix $PREFIX /opt/wheel/* \
+  && rm -rf /opt/wheel
 
 # Installing entrypoint helper scripts
 COPY assets/demo-alive /usr/bin/
