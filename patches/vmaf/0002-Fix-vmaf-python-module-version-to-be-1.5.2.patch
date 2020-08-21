@@ -1,0 +1,26 @@
+From 6b445dee8db308803e574242eaf9303299bba700 Mon Sep 17 00:00:00 2001
+From: Dmitry Rogozhkin <dmitry.v.rogozhkin@intel.com>
+Date: Fri, 21 Aug 2020 12:30:46 -0700
+Subject: [PATCH 2/3] Fix vmaf python module version to be 1.5.2
+
+Signed-off-by: Dmitry Rogozhkin <dmitry.v.rogozhkin@intel.com>
+---
+ python/vmaf/__init__.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/python/vmaf/__init__.py b/python/vmaf/__init__.py
+index a49eba1..bd316c1 100644
+--- a/python/vmaf/__init__.py
++++ b/python/vmaf/__init__.py
+@@ -3,7 +3,7 @@ import subprocess
+ 
+ __copyright__ = "Copyright 2016-2020, Netflix, Inc."
+ __license__ = "BSD+Patent"
+-__version__ = "1.5.1"
++__version__ = "1.5.2"
+ 
+ try:
+     from matplotlib import pyplot as plt
+-- 
+1.8.3.1
+
