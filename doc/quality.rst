@@ -258,9 +258,54 @@ Intel Media SDK sample-multi-transcode CBR
 Reference Codecs
 ----------------
 
-For assessing the quality of Intel's H.264 Advanced Video Coding (AVC) and H.265 High Efficiency Video Coding (HEVC) codecs we are using 
-ffmpeg-x264 and ffmpeg-x265 in ``veryslow`` preset as reference codecs for the BD-rate measure. For both reference codecs we are using default 
-coding options along with ``-tune psnr`` option. 
+For assessing the quality of Intel's H.264 Advanced Video Coding (AVC) and H.265 High Efficiency Video Coding (HEVC) codecs we are
+using ffmpeg-x264 and ffmpeg-x265 as reference codecs in ``veryslow`` preset for the BD-rate measure. The reference codecs are ran
+with 12 threads and ``-tune psnr`` option. 
+
+ffmpeg-x264 VBR reference
+*************************
+
+::
+
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v libx264 -preset veryslow -profile:v high \
+    -b:v $bitrate -bufsize $((2 * bitrate)) -maxrate $((2 * bitrate)) \
+    -tune psnr -threads 12 -vsync 0 $output
+
+ffmpeg-x264 CBR reference
+*************************
+
+::
+
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v libx264 -preset veryslow -profile:v high \
+    -b:v $bitrate -x264opts no-sliced-threads:nal-hrd=cbr \
+    -tune psnr -threads 12 -vsync 0 $output
+
+ffmpeg-x265 VBR reference
+*************************
+
+::
+
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v libx265 -preset veryslow \
+    -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((2 * bitrate)) \
+    -tune psnr -threads 12 -vsync 0 $output
+
+ffmpeg-x265 CBR reference
+*************************
+
+::
+
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v libx265 -preset veryslow \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
+    -tune psnr -threads 12 -vsync 0 $output
+
 
 Links
 -----
