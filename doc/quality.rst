@@ -1,4 +1,4 @@
-gVideo Quality
+Video Quality
 =============
 
 .. contents::
