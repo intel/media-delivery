@@ -49,16 +49,6 @@ load utils
   [ $status -eq 0 ]
 }
 
-# this test is indirect check that ffmpeg patches were actually applied
-# and user did not forget to rebuild image with --no-cache
-@test "ffmpeg patches were applied" {
-  run docker_run diff \
-    /opt/intel/samples/patches \
-    /opt/intel/samples/src/intel-media-delivery/patches
-  print_output
-  [ $status -eq 0 ]
-}
-
 @test "vmaf python tools are importable" {
   run docker_run python3 -c "import vmaf; help(vmaf)"
   print_output
