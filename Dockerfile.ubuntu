@@ -240,10 +240,6 @@ COPY assets/demo-bash /usr/bin/
 COPY assets/hello-bash /usr/bin/
 
 FROM runtime
-ARG PREFIX=/opt/intel/samples
-
-# Making sample sources available in the final container
-COPY . $PREFIX/src/intel-media-delivery
 
 # Making content available in the container
 COPY --from=content /embedded /opt/data/embedded
@@ -260,8 +256,10 @@ RUN chown -R user /var/log/nginx
 RUN chown -R user /var/lib/nginx
 
 # Setting up sample
+ARG PREFIX=/opt/intel/samples
 ARG SAMPLE=cdn
-RUN cd $PREFIX/src/intel-media-delivery/samples/$SAMPLE && ./setup.sh $PREFIX
+COPY . /tmp/src
+RUN cd /tmp/src/samples/$SAMPLE && ./setup.sh $PREFIX && rm -rf /tmp/src
 
 # Adjust settings for development type of build
 ARG DEVEL=yes
