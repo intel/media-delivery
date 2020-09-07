@@ -58,7 +58,8 @@ DEVICE=${DEVICE:-/dev/dri/renderD128}
 
 cmd=(ffmpeg -hwaccel qsv -hwaccel_device $DEVICE -an \
   $rawvideo -i $file $vframes \
-  -c:v hevc_qsv -preset $preset -profile:v main -b:v $bitrate -maxrate $bitrate -minrate $bitrate \
+  -c:v hevc_qsv -preset $preset -profile:v main \
+  -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 \
   -bufsize $bufsize \
   $options \
   -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_CBR_QSV.h265)
