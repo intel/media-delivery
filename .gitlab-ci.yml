@@ -153,6 +153,7 @@ build:edge:
   variables:
     SAMPLE: edge
     FLAVOR: agama
+    APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal main"
 
 test:cdn-agama:
   extends: .test_image
