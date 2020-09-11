@@ -30,18 +30,17 @@ RUN /tmp/scripts/setup-apt-proxy
 
 # Now let's setup Intel Graphics repository
 RUN apt-get update && \
-   apt-get install --no-install-recommends -y sudo ca-certificates \
+   apt-get install --no-install-recommends -y \
+     ca-certificates \
+     curl \
+     gpg-agent \
+     software-properties-common \
+     sudo \
    && rm -rf /var/lib/apt/lists/*
 
 ARG APT_GRAPHICS_REPO="https://repositories.intel.com/graphics/ubuntu focal main"
-RUN { \
-  echo "Specified graphics repo: $APT_GRAPHICS_REPO"; \
-  if [ -n "$APT_GRAPHICS_REPO" ]; then \
-    repo="deb [trusted=yes arch=amd64] $APT_GRAPHICS_REPO"; \
-    echo "$repo" > /etc/apt/sources.list.d/intel-graphics.list; \
-    cat /etc/apt/sources.list.d/intel-graphics.list; \
-  fi; \
-}
+RUN curl -fsSL https://repositories.intel.com/graphics/intel-graphics.key | apt-key add -
+RUN apt-add-repository "deb $APT_GRAPHICS_REPO"
 
 # This script is a placeholder to further setup the base image.
 RUN /tmp/scripts/setup-base-image.sh
