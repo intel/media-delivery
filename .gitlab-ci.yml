@@ -141,12 +141,12 @@ build:cdn-agama:
     FLAVOR: agama
     APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal main"
 
-build:cdn-agama-devel:
-  extends: .build_image
-  variables:
-    SAMPLE: cdn
-    FLAVOR: agama-devel
-    APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal-devel main"
+#build:cdn-agama-devel:
+#  extends: .build_image
+#  variables:
+#    SAMPLE: cdn
+#    FLAVOR: agama-devel
+#    APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal-devel main"
 
 build:edge:
   extends: .build_image
@@ -161,12 +161,12 @@ test:cdn-agama:
   dependencies:
   - build:cdn-agama
 
-test:cdn-agama-devel:
-  extends: .test_image
-  variables:
-    SAMPLE: cdn
-  dependencies:
-  - build:cdn-agama-devel
+#test:cdn-agama-devel:
+#  extends: .test_image
+#  variables:
+#    SAMPLE: cdn
+#  dependencies:
+#  - build:cdn-agama-devel
 
 test:edge:
   extends: .test_image
@@ -183,13 +183,13 @@ deploy:cdn-agama:
   dependencies:
   - build:cdn-agama
 
-deploy:cdn-agama-devel:
-  extends: .deploy_image
-  variables:
-    SAMPLE: cdn
-    FLAVOR: agama-devel
-  dependencies:
-  - build:cdn-agama-devel
+#deploy:cdn-agama-devel:
+#  extends: .deploy_image
+#  variables:
+#    SAMPLE: cdn
+#    FLAVOR: agama-devel
+#  dependencies:
+#  - build:cdn-agama-devel
 
 deploy:edge:
   extends: .deploy_image
