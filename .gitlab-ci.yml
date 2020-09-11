@@ -57,10 +57,9 @@ on_merge:
   - docker build
       $(env | grep -E '_proxy=' | sed 's/^/--build-arg /')
       --build-arg SAMPLE=$SAMPLE
-      --build-arg APT_GRAPHICS_REPO="$APT_GRAPHICS_REPO"
       --no-cache
       --force-rm
-      --file Dockerfile.ubuntu
+      --file $DOCKERFILE
       -t $tagname
       .
   - docker run -e MDS_IGNORE_ERRORS=yes --rm $tagname dpkg -l >packages 2>/dev/null
@@ -137,13 +136,14 @@ on_merge:
 build:cdn-agama:
   extends: .build_image
   variables:
+    DOCKERFILE: docker/ubuntu20.04/intel-gfx/Dockerfile
     SAMPLE: cdn
     FLAVOR: agama
-    APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal main"
 
 #build:cdn-agama-devel:
 #  extends: .build_image
 #  variables:
+#    DOCKERFILE: docker/ubuntu20.04/intel-gfx-devel/Dockerfile
 #    SAMPLE: cdn
 #    FLAVOR: agama-devel
 #    APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal-devel main"
@@ -151,6 +151,7 @@ build:cdn-agama:
 build:edge:
   extends: .build_image
   variables:
+    DOCKERFILE: docker/ubuntu20.04/intel-gfx/Dockerfile
     SAMPLE: edge
     FLAVOR: agama
     APT_GRAPHICS_REPO: "https://repositories.intel.com/graphics/ubuntu focal main"

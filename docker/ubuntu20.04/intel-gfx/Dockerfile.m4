@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright (c) 2020 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,12 +18,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-export http_proxy=http://proxy-chain.intel.com:911
-export https_proxy=http://proxy-chain.intel.com:911
-unset no_proxy
+divert(-1)
+define(`ECHO_SEP',` \
+    ')
+define(`BUILD_PREFIX',/opt/intel/samples)
 
-docker build \
-  $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
-  --file docker/ubuntu20.04/intel-gfx/Dockerfile \
-  -t intel-media-delivery \
-  .
+include(intel-gfx.m4)
+include(content.m4)
+include(vmaf.m4)
+include(ffmpeg.m4)
+include(manuals.m4)
+include(samples.m4)
+divert(0)dnl
+PREAMBLE
+
+FROM OS_NAME:OS_VERSION AS base
+
+ENABLE_INTEL_GFX_REPO
+
+FROM base as content
+
+GET_CONTENT
+
+FROM base as build
+
+BUILD_ALL
+
+# Ok, here goes the final image end-user will actually see
+FROM base
+
+LABEL vendor="Intel Corporation"
+
+INSTALL_CONTENT(content)
+
+INSTALL_ALL(runtime,build)
+
+USER user
+WORKDIR /home/user

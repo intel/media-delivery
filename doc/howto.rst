@@ -117,9 +117,6 @@ These proxy settings will be used to:
 1. Access network to fetch OS packages (via ``apt-get`` or similar package manager)
 2. Access network to clone some git repositories or download other content
 
-Samples use the `setup-apt-proxy.sh <../assets/setup-apt-proxy>`_ to configure
-``apt`` package manager.
-
 Mind that **final image will NOT contain any pre-configured proxy configuration**. This
 applies to package manager configuration as well. This is done for the reason that
 generated image might run under different network settings comparing to where it
@@ -135,9 +132,9 @@ can be done by passing proxy host envronment variables as follows::
     <...rest-of-arguments...>
 
 If you are going to play around with the container and install additional packages,
-configure proxy for package manager. For that you can use the same
-`setup-apt-proxy.sh <../assets/setup-apt-proxy>`_ script which actually is included
-as one of the assets to the image (at ``$PREFIX/bin`` location, see PREFIX_)::
+configure proxy for package manager. For that you can use
+`setup-apt-proxy.sh <../assets/setup-apt-proxy>`_ script  included as one of
+the image assets::
 
   sudo -E $(which setup-apt-proxy)
 
@@ -263,44 +260,10 @@ privileges::
 Container build time customizations
 -----------------------------------
 
-Dockerfiles support a number of arguments to customize the final image. Pass these
-arguments as ``docker --build-arg ARGUMENT=VALUE``.
-
-APT_GRAPHICS_REPO
-  Possible values: ``<repo-link> <distro> <component>...``.
-
-  Default value: ``https://repositories.intel.com/graphics/ubuntu focal main``
-
-  Enables Intel Graphics Repository packages.
-
-.. _PREFIX:
-
-PREFIX
-  Possible values: ``<path>``. Default value: ``/opt/intel/samples``
-
-  Path prefix inside the container to install custom build target and sample
-  assets.
-
-DEVEL
-  Possible values: `yes|no`. Default value: ``yes``
-
-  Switches on/off development build type with which container user is
-  created with sudo privileges.
+The following arguments are supported by Dockerfiles to customize the final image.
+Pass these arguments as ``docker --build-arg ARGUMENT=VALUE``.
 
 SAMPLE
   Possible values: ``<path>``. Default value: ``cdn``
 
   Selects sample to build and install inside the container.
-
-FFMPEG_VERSION
-  Possible values: ``<version tag>``. Default value: ``n4.3``
-
-  FFMPEG version to build. Use one of the FFMPEG release tags from https://github.com/FFmpeg/FFmpeg/releases
-  or branch name or commit id.
-
-VMAF_VERSION
-  Possible values: ``<version tag>``. Default value: ``v1.5.1``
-
-  VMAF version to build. Use one of the VMAF release tags from https://github.com/Netflix/vmaf/releases
-  or branch name or commit id.
-

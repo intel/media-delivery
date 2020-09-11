@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright (c) 2020 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,12 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-export http_proxy=http://proxy-chain.intel.com:911
-export https_proxy=http://proxy-chain.intel.com:911
-unset no_proxy
+cmake_minimum_required (VERSION 3.12)
 
-docker build \
-  $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
-  --file docker/ubuntu20.04/intel-gfx/Dockerfile \
-  -t intel-media-delivery \
-  .
+project(intel-media-delivery VERSION 1.0.0 LANGUAGES NONE)
+
+find_program(M4 m4 REQUIRED)
+
+add_subdirectory(docker)

@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright (c) 2020 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,6 +18,35 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-apt-get update && apt-get install -y --no-install-recommends \
-    curl joe less vim wget \
-  && rm -rf /var/lib/apt/lists/*
+divert(-1)
+define(`ECHO_SEP',` \
+    ')
+define(`BUILD_PREFIX',/opt/intel/samples)
+
+include(content.m4)
+include(vmaf.m4)
+include(ffmpeg.m4)
+include(manuals.m4)
+include(samples.m4)
+divert(0)dnl
+PREAMBLE
+
+FROM OS_NAME:OS_VERSION AS content
+
+GET_CONTENT
+
+FROM OS_NAME:OS_VERSION as build
+
+BUILD_ALL
+
+# Ok, here goes the final image end-user will actually see
+FROM OS_NAME:OS_VERSION
+
+LABEL vendor="Intel Corporation"
+
+INSTALL_CONTENT(content)
+
+INSTALL_ALL(runtime,build)
+
+USER user
+WORKDIR /home/user

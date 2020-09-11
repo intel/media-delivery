@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright (c) 2020 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,3 +17,30 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
+file(GLOB srcs ${CMAKE_SOURCE_DIR}/templates/*.m4)
+
+set(M4FLAGS ${M4FLAGS} -E
+  -I ${CMAKE_SOURCE_DIR}/templates
+  -D BUILD_PATCHES=patches)
+
+add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/native/Dockerfile
+  DEPENDS ${srcs}
+    ${CMAKE_CURRENT_SOURCE_DIR}/native/Dockerfile.m4
+  COMMAND ${M4} ${M4FLAGS} -D OS_NAME=ubuntu -D OS_VERSION=20.04
+    ${CMAKE_CURRENT_SOURCE_DIR}/native/Dockerfile.m4 > ${CMAKE_CURRENT_SOURCE_DIR}/native/Dockerfile
+  VERBATIM
+  )
+
+add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
+  DEPENDS ${srcs}
+    ${CMAKE_SOURCE_DIR}/templates/intel-gfx.m4
+    ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile.m4
+  COMMAND ${M4} ${M4FLAGS} -D OS_NAME=ubuntu -D OS_VERSION=20.04
+    ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile.m4 > ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
+  VERBATIM
+  )
+
+add_custom_target(ubuntu20.04-dockerfiles ALL DEPENDS
+  ${CMAKE_CURRENT_SOURCE_DIR}/native/Dockerfile
+  ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile)
