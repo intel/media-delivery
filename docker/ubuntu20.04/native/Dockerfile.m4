@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright (c) 2020 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,3 +17,34 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
+include(defs.m4)dnl
+include(begin.m4)
+include(content.m4)
+include(vmaf.m4)
+include(ffmpeg.m4)
+include(manuals.m4)
+include(samples.m4)
+include(end.m4)
+PREAMBLE
+
+ARG IMAGE=OS_NAME:OS_VERSION
+FROM $IMAGE AS content
+
+GET_CONTENT
+
+FROM OS_NAME:OS_VERSION as build
+
+BUILD_ALL
+
+# Ok, here goes the final image end-user will actually see
+FROM OS_NAME:OS_VERSION
+
+LABEL vendor="Intel Corporation"
+
+INSTALL_CONTENT(content)
+
+INSTALL_ALL(runtime,build)
+
+USER user
+WORKDIR /home/user

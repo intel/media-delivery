@@ -41,7 +41,7 @@ To run these samples you need to:
    (refer to https://github.com/intel/media-driver documentation for the list of
    supported GPUs)
 2. Run Linux OS with up-to-date Linux kernel supporting underlying Intel GPU
-3. Have installed and configured Docker (see `instructions <https://docs.docker.com/install/>`_)
+3. Have installed and configured Docker version 17.05 or later (see `instructions <https://docs.docker.com/install/>`_)
 
 You might need to follow specific system setup instruction if you use newer
 graphics processors such as `Intel® Iris® Xe MAX Graphics <https://www.intel.com/content/www/us/en/products/discrete-gpus/iris-xe-max.html>`_.
@@ -62,20 +62,36 @@ service(s) running inside the container. Consider having on a host the following
 How to get?
 -----------
 
+**Hint:** to install a docker refer to Docker install
+`instructions <https://docs.docker.com/install/>`_.
+
 Each sample is available in a form of `Docker <https://docker.com>`_ container
 which you need to build locally. To build default sample (`CDN`_) run::
 
   docker build \
     $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
-    --file Dockerfile.ubuntu \
+    --file docker/ubuntu20.04/intel-gfx/Dockerfile \
     --tag intel-media-delivery \
     .
 
 Use ``--build-arg SAMPLE=$SAMPLE`` docker build argument to specify other
 sample to build.
 
-**Hint:** to install a docker refer to Docker install
-`instructions <https://docs.docker.com/install/>`_.
+There are few dockerfiles you can use to build the same sample. They differ
+by origin of some components included into the docker image.
+
+* `docker/ubuntu20.04/native/Dockerfile <docker/ubuntu20.04/native/Dockerfile>`_ - Intel media stack
+  is installed from Ubuntu distro packages
+
+* `docker/ubuntu20.04/intel-gfx/Dockerfile <docker/ubuntu20.04/intel-gfx/Dockerfile>`_ - Intel media stack
+  is installed from `Intel Graphics Package Repository <https://dgpu-docs.intel.com/>`_
+
+Going with `Intel Graphics Package Repository <https://dgpu-docs.intel.com/>`_ would
+usually allow to fetch the most recent package versions.
+
+Above dockerfiles are being generated from `m4 <https://www.gnu.org/software/m4/>`_
+templates via `cmake <https://cmake.org/>`_ build system. Refer to
+`generating dockerfiles <doc/docker.rst>`_ document for further details.
 
 How to run?
 -----------
@@ -414,9 +430,12 @@ Further reading
   * `performance <doc/performance.rst>`_
   * `quality <doc/quality.rst>`_
 
+* `Generating Dockerfiles <doc/docker.rst>`_
 * `HowTo <doc/howto.rst>`_
 * `Tests <tests/readme.rst>`_
 
+* `General Purpose GPU Drivers for Linux* Operating Systems <https://intel.com/linux-graphics-drivers>`_
+* `GPGPU Documentation <https://dgpu-docs.intel.com/>`_
 * `Intel Media SDK <https://github.com/Intel-Media-SDK/MediaSDK>`_
 * `Intel Media Driver <https://github.com/intel/media-driver>`_
 
@@ -426,6 +445,7 @@ Further reading
   * `CDN Transcode Sample <https://github.com/OpenVisualCloud/CDN-Transcode-Sample>`_
 
 * `Intel® oneContainer Portal <https://software.intel.com/containers>`_
+* `One Container Templates <https://github.com/intel/oneContainer-Templates>`_
 
 * `Docker <https://docker.com>`_
 * `FFmpeg <http://ffmpeg.org/>`_
