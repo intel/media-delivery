@@ -22,7 +22,6 @@ Top level Dockerfile templates are located in the subfolders of
 
 * `docker/ubuntu20.04/native/Dockerfile.m4 <../docker/ubuntu20.04/native/Dockerfile>`_
 * `docker/ubuntu20.04/intel-gfx/Dockerfile.m4 <../docker/ubuntu20.04/intel-gfx/Dockerfile>`_
-* `docker/ubuntu20.04/intel-gfx-devel/Dockerfile.m4 <../docker/ubuntu20.04/intel-gfx-devel/Dockerfile>`_
 
 These templates include component ingredients defined in the .m4 files
 stored in `templates <../templates>`_ folder.

@@ -75,9 +75,6 @@ by origin of some components included into the docker image.
 * `docker/ubuntu20.04/intel-gfx/Dockerfile <docker/ubuntu20.04/intel-gfx/Dockerfile>`_ - Intel media stack
   is installed from `Intel Graphics Package Repository <https://dgpu-docs.intel.com/>`_
 
-* `docker/ubuntu20.04/intel-gfx-devel/Dockerfile <docker/ubuntu20.04/intel-gfx-devel/Dockerfile>`_ - Intel media stack
-  is installed from `Intel Graphics Package Repository <https://dgpu-docs.intel.com/>`_ (development packages channel)
-
 Going with `Intel Graphics Package Repository <https://dgpu-docs.intel.com/>`_ would
 usually allow to fetch the most recent package versions.
 
