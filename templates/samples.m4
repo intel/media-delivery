@@ -24,7 +24,7 @@ HIDE
 define(`SAMPLES_INSTALL_DEPS',`dnl
   intel-gpu-tools libmfx-tools dnl
   libnginx-mod-http-lua libnginx-mod-rtmp dnl
-  linux-tools-generic nginx pciutils dnl
+  linux-tools-generic nginx pciutils psmisc dnl
   python3 python3-matplotlib python3-numpy dnl
   socat tmux vainfo dnl
   ifdef(`DEVEL',`curl sudo vim wget')')

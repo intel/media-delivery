@@ -167,6 +167,7 @@ RUN apt-get update && \
     linux-tools-generic \
     nginx \
     pciutils \
+    psmisc \
     python3-matplotlib \
     python3-numpy \
     socat \

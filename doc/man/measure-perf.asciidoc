@@ -232,8 +232,9 @@ ffmpeg::
 ffprobe::
 	Used for getting information on the input/output stream(s).
 
-sample_multi_transcode::
-	Used for direct performance measurement of Intel Media SDK library.
+killall::
+	Used to terminate helper monitoring tools on finishing the
+	measurement.
 
 perf::
 	Linux perf is used to collect a range of CPU and GPU metrics,
@@ -243,6 +244,9 @@ python3::
 	Used for generic script purposes. The following Python modules are
 	required for all the features to work: `numpy`, `matplotlib`. Specifically,
 	these tools are used to generate charts.
+
+sample_multi_transcode::
+	Used for direct performance measurement of Intel Media SDK library.
 
 SEE ALSO
 --------
