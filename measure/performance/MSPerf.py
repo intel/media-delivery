@@ -291,8 +291,7 @@ def main():
 
 
     except:
-        message_block(output_log_handle,'red', 'Unable to locate required workload path: ' + ARGS.workloads_path + " OR ")
-        message_block(output_log_handle,'white', "Install FFMPEG/FFPROBE OR Rename content to the following format <clipname>_<width>x<height>p_<bitrate>_<content_fps>_<total_frames>.<codec>")
+        message_block(output_log_handle,'red', 'Unable to profile required workload path: ' + ARGS.workloads_path)
         raise sys.exit(1)
 
     ##################################################################################
@@ -1435,9 +1434,9 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
                 else:
                     encode_bitrate = "sd_bitrate" # others to set at same bitrate
             elif (attribute == "r_frame_rate"):
-                any_frame_rates_found   = re.sub(r'/.*', "", str(value))
+                any_frame_rates_found = eval(value)
                 if any_frame_rates_found != "0":
-                    ffprobe_frame_rate  = any_frame_rates_found
+                    ffprobe_frame_rate  = round(float(any_frame_rates_found), 2)
             elif (attribute == "codec_name"):
                 if (str(value) in content_supported_codec):
                     ffprobe_codec_name  = str(value)
