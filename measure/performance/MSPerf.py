@@ -1412,8 +1412,9 @@ def execution_time(output_log_handle, message, start,end):
 def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, debug_verbose, performance_sweeping_table, performance_object_list):
     status = True
     filename_split = filename.replace('.', '_').split('_')
-    ffprobe_dump        = out_temp_path + "/ffprobe_" + filename_split[0] + ".txt"
-    ffprobe_cmd         = "ffprobe -hide_banner -loglevel panic -show_streams -i " + filepath + filename.rstrip() + " | grep -E '^height=|^r_frame_rate=|^codec_name=' " + " > " + ffprobe_dump
+    ffprobe_dump   = out_temp_path + "/ffprobe_" + filename_split[0] + ".txt"
+    ffprobe_cmd    = "ffprobe -v error -hide_banner -loglevel panic -select_streams v:0 -show_streams "
+    ffprobe_cmd   += "-of default=noprint_wrappers=1 -i " + filepath + filename.rstrip() + " | grep -E '^height=|^r_frame_rate=|^codec_name=' " + " > " + ffprobe_dump
     os.system(ffprobe_cmd)
     height = encode_bitrate = ffprobe_frame_rate = ffprobe_codec_name = 0
     content_supported_codec     = ["h264", "hevc"]
