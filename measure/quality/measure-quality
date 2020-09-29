@@ -37,6 +37,7 @@ fi
 
 eval set -- "$PARSED"
 
+bdr_limit=1000000
 width=0
 height=0
 fourcc=I420
@@ -504,10 +505,17 @@ function process_bdrates() {
   if [ "$skip_vmaf" = "no" ]; then
     bdrate=$(get_bdrate $ref_file $test_file $coin $npts $vmaf_metrics_ind)
     if ! [ -z "$bdrate" ]; then
-      bdr+="$bdrate"
-      printf -v b '%.4f' $bdrate
-      echo -n $ofile": "
-      echo "VMAF BD-Rate = $b%"
+      out_of_bounds=$(python3 -c 'print(abs('$bdrate') >= '$bdr_limit')')
+      if [ "$out_of_bounds" = "True" ]; then
+        bdr+="N/A"
+        echo -n $ofile": "
+        echo "VMAF BD-Rate = N/A"
+      else
+        bdr+="$bdrate"
+        printf -v b '%.4f' $bdrate
+        echo -n $ofile": "
+        echo "VMAF BD-Rate = $b%"
+      fi
     else
       echo "warning: VMAF BD-rate metric not found: skipping VMAF BD-rate calculation for '$test_file'" >&2
     fi
@@ -516,10 +524,17 @@ function process_bdrates() {
   if [ "$skip_psnr" = "no" ]; then
     bdrate=$(get_bdrate $ref_file $test_file $coin $npts $psnr_metrics_ind)
     if ! [ -z "$bdrate" ]; then
-      bdr+="$bdrate"
-      printf -v b '%.4f' $bdrate
-      echo -n $ofile": "
-      echo "PSNR-Y BD-Rate = $b%"
+      out_of_bounds=$(python3 -c 'print(abs('$bdrate') >= '$bdr_limit')')
+      if [ "$out_of_bounds" = "True" ]; then
+        bdr+="N/A"
+        echo -n $ofile": "
+        echo "PSNR-Y BD-Rate = N/A"
+      else
+        bdr+="$bdrate"
+        printf -v b '%.4f' $bdrate
+        echo -n $ofile": "
+        echo "PSNR-Y BD-Rate = $b%"
+      fi
     else
       echo "warning: PSNR BD-rate metric not found: skipping PSNR-Y BD-rate calculation for '$test_file'" >&2
     fi
@@ -528,10 +543,17 @@ function process_bdrates() {
   if [ "$skip_ssim" = "no" ]; then
     bdrate=$(get_bdrate $ref_file $test_file $coin $npts $ssim_metrics_ind);
     if ! [ -z "$bdrate" ]; then
-      bdr+="$bdrate"
-      printf -v b '%.4f' $bdrate
-      echo -n $ofile": "
-      echo "SSIM BD-Rate = $b%"
+      out_of_bounds=$(python3 -c 'print(abs('$bdrate') >= '$bdr_limit')')
+      if [ "$out_of_bounds" = "True" ]; then
+        bdr+="N/A"
+        echo -n $ofile": "
+        echo "SSIM BD-Rate = N/A"
+      else
+        bdr+="$bdrate"
+        printf -v b '%.4f' $bdrate
+        echo -n $ofile": "
+        echo "SSIM BD-Rate = $b%"
+      fi
     else
       echo "warning: SSIM BD-rate metric not found: skipping SSIM BD-rate calculation for '$test_file'" >&2
     fi
@@ -540,10 +562,17 @@ function process_bdrates() {
   if [ "$skip_msim" = "no" ]; then
     bdrate=$(get_bdrate $ref_file $test_file $coin $npts $msim_metrics_ind);
     if ! [ -z "$bdrate" ]; then
-      bdr+="$bdrate"
-      printf -v b '%.4f' $bdrate
-      echo -n $ofile": "
-      echo "MS-SSIM BD-Rate = $b%"
+      out_of_bounds=$(python3 -c 'print(abs('$bdrate') >= '$bdr_limit')')
+      if [ "$out_of_bounds" = "True" ]; then
+        bdr+="N/A"
+        echo -n $ofile": "
+        echo "MS-SSIM BD-Rate = N/A"
+      else
+        bdr+="$bdrate"
+        printf -v b '%.4f' $bdrate
+        echo -n $ofile": "
+        echo "MS-SSIM BD-Rate = $b%"
+      fi
     else
       echo "warning: MS-SSIM BD-rate metric not found: skipping MS-SIM BD-rate calculation for '$test_file'" >&2
     fi
@@ -600,18 +629,19 @@ function get_avg_bdrate() {
   local mode=$2
   local app=$3
   local ext=$4
-  local count=0
+  local count=( 0 0 0 0 )
   for i in {0..3}; do avg_bdrate[$i]=0; done
   for file in $(ls -1t *.$codec.$mode.$app.$ext | grep -v ^Average); do
     for i in {0..3}; do
       bdrate=$(head -1 $file | sed '1q;d' | awk -F: '{print $'$(($i + 2))'}')
-      [[ -z "$bdrate" ]] && bdrate=0
-      avg_bdrate[$i]=$(python3 -c 'print('${avg_bdrate[$i]}' + '$bdrate')')
+      if [ -n "$bdrate" ] && [ "$bdrate" != "N/A" ]; then
+        avg_bdrate[$i]=$(python3 -c 'print('${avg_bdrate[$i]}' + '$bdrate')')
+        count[$i]=$((${count[$i]} + 1))
+      fi
     done
-    count=$(($count + 1))
   done
   for i in {0..3}; do
-    avg_bdrate[$i]=$(python3 -c 'print('${avg_bdrate[$i]}' / '$count')')
+    avg_bdrate[$i]=$(python3 -c 'print('${avg_bdrate[$i]}' / '${count[$i]}')')
     tot_avg_bdrate[$i]=$(python3 -c 'print('${tot_avg_bdrate[$i]}' + '${avg_bdrate[$i]}')')
   done
   write_avg_bdrate "Average."$codec"."$mode"."$app"."$ext ${avg_bdrate[@]}
@@ -704,6 +734,7 @@ function is_preset_stream() {
   local file=$1
   local stream=""
   local i=1
+
   while :
   do
     stream=$(get_preset_stream $i | cut -d " " -f1)
