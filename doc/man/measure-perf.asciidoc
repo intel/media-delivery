@@ -224,6 +224,9 @@ PROCESSING OPTIONS
 	Be verbose. Print additional info. Useful for debugging to understand
 	which command lines actually got executed.
 
+--use-vdenc::
+	Run each workload by using fixed function video encode.
+
 PREREQUISITES
 -------------
 ffmpeg::
