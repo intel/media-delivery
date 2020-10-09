@@ -35,10 +35,11 @@ if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
   shift
   framerate=$1
   shift
-
   rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
 else
   nframes=$1
+  shift
+  std=$1
   shift
 fi
 bitrate_Mbps=$1
@@ -55,8 +56,13 @@ vframes="-frames:v $nframes"
 [[ "$nframes" = "0" ]] && vframes=""
 
 DEVICE=${DEVICE:-/dev/dri/renderD128}
+if [ -z "$rawvideo" ] && [ "$std" != "UNSUPPORTED" ]; then
+  dev="-hwaccel qsv -qsv_device $DEVICE -c:v ${std}_qsv"
+else
+  dev="-init_hw_device vaapi=va:$DEVICE -init_hw_device qsv=hw@va"
+fi
 
-cmd=(ffmpeg -hwaccel qsv -hwaccel_device $DEVICE -an \
+cmd=(ffmpeg $dev -an \
   $rawvideo -i $file $vframes \
   -c:v h264_qsv -preset $preset -profile:v high \
   -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 \
