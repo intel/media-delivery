@@ -104,7 +104,7 @@ def main():
     parser.add_argument('--density-decode', '--density_decode', action='store_true', default=False, help='Enabling Density Decode support, HEVC')
     parser.add_argument('-c', '--codec', help='To choose Encoder Codec type, AVC or HEVC, Default will execute all')
     parser.add_argument('-s', '--startStreams', help='To set starting of multi stream performance measurement, e.g. --startStreams 720p:8,1080p:5,2160p:2 or all:2, Default=all:1')
-    parser.add_argument('-e', '--endStreams', help='To set ending number of multi stream performance measurement, e.g. --endStreams 5, Default=NoLimit')
+    parser.add_argument('-e', '--endStreams', default=999999, help='To set ending number of multi stream performance measurement')
     parser.add_argument('-n', '--numbers_of_iteration', help='Custom limit the number of iteration of each same execution (max is 4), Default=1')
     parser.add_argument('--no-fps-limit', '--no_fps_limit', action='store_true', default=False, help='to run workload unconstraint, or as fast as possible')
     parser.add_argument('--fps-target', '--fps_target', help='to overwrite fps limit, Default=input-fps')
@@ -137,7 +137,7 @@ def main():
     ################################# Variable Assignment #################################################
     starting_streamnumber           = str(ARGS.startStreams) if ARGS.startStreams else "all:1"
     maximum_iteration               = int(ARGS.numbers_of_iteration) if ARGS.numbers_of_iteration else 1
-    endStreams             = int(ARGS.endStreams) if ARGS.endStreams else 99
+    endStreams                      = ARGS.endStreams
     maximum_workloads               = int(ARGS.numbers_of_Workloads) if ARGS.numbers_of_Workloads else 20
     debug_verbose                   = ARGS.verbose
     no_fps_limit                    = ARGS.no_fps_limit
