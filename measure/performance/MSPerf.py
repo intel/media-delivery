@@ -102,6 +102,7 @@ def main():
     parser.add_argument('--skip-perf-trace', '--skip_perf_trace', action='store_true', default=False, help='skipping linux perf stat additional Traces, such as GT-Freq/BW-Rd/BW-Wr/etc')
     parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', default=False, help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
     parser.add_argument('--density-decode', '--density_decode', action='store_true', default=False, help='Enabling Density Decode support, HEVC')
+    parser.add_argument('--use-vdenc', '--use_vdenc', action='store_true', default=False,help='Enabling Fixed Function VDENC and LowPower mode')
     parser.add_argument('-c', '--codec', help='To choose Encoder Codec type, AVC or HEVC, Default will execute all')
     parser.add_argument('-s', '--startStreams', help='To set starting of multi stream performance measurement, e.g. --startStreams 720p:8,1080p:5,2160p:2 or all:2, Default=all:1')
     parser.add_argument('-e', '--endStreams', help='To set ending number of multi stream performance measurement, e.g. --endStreams 5, Default=NoLimit')
@@ -147,6 +148,7 @@ def main():
     skip_ffmpeg                     = ARGS.skip_ffmpeg
     skip_msdk                       = ARGS.skip_msdk
     density_decode                   = ARGS.density_decode
+    use_vdenc                       = ARGS.use_vdenc
     encode_codec                    = str(ARGS.codec).lower() if ARGS.codec else "all"
     fps_target                      = float(ARGS.fps_target) if ARGS.fps_target else 0
     script_root_path                = os.path.dirname(os.path.realpath(__file__))
@@ -171,6 +173,18 @@ def main():
         printLog(output_log_handle, '#' * 69)
         printLog(output_log_handle, 'MSPERF (MULTI STREAMS PERFORMANCE) v0.20.06.03')
         printLog(output_log_handle, '#' * 69 + '\n')
+
+    if use_vdenc:
+        isSupported_vdenc_h264high = subprocess.Popen([os.path.dirname(os.path.realpath(__file__)) + '/isVdenc.sh', 'H264High'])
+        isSupported_vdenc_hevcmain = subprocess.Popen([os.path.dirname(os.path.realpath(__file__)) + '/isVdenc.sh', 'HEVCMain'])
+        if (isSupported_vdenc_h264high.returncode=="None") and (isSupported_vdenc_hevcmain.returncode=="None") :
+            printLog(output_log_handle, "VDENC supports has a problem", isSupported_vdenc_h264high.returncode, isSupported_vdenc_hevcmain.returncode)
+            exit(1)
+        elif isSupported_vdenc_h264high.returncode == 0:
+            printLog(output_log_handle, "VDENC supports H264High")
+        elif isSupported_vdenc_hevcmain.returncode == 0:
+            printLog(output_log_handle, "VDENC supports HEVCMain")
+
     ######################################################################################################
     # Linux Perf pre-req
     ######################################################################################################
@@ -604,6 +618,8 @@ def main():
                         # Adding Constraint and UnConstraint FPS
                         if (ffmpeg_mode):
                             transcode_output_clip = local_output_path + clip_name + "_" + clip_resolution + "_" + str(m)
+                            if use_vdenc:
+                                transcode_output_clip = " -low_power true " + transcode_output_clip
                             dispatch_cmdline = dispatch_cmdline.replace("-y <>", "-y " + transcode_output_clip)
 
                         else: # SMT section (DEFAULT)
@@ -622,6 +638,8 @@ def main():
                             transcode_output_logfile = " -p " + temp_path + clip_name + "_" + clip_resolution + "_" + str(m) + "_transcode_log.txt"
                             smt_device_knob = " -device " + os_env_DEVICE
                             transcode_output_logfile = smt_device_knob + transcode_output_logfile
+                            if use_vdenc:
+                                transcode_output_logfile = " -lowpower:on " + transcode_output_logfile
                             dispatch_cmdline = dispatch_cmdline.replace("-p <>", transcode_output_logfile).rstrip()
 
                         elif (sequence_mode == "DECODE") and not ffmpeg_mode: # SMT DECODE
