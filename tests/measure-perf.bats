@@ -162,6 +162,52 @@ function get_perf_opts() {
   [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
 }
 
+@test "measure perf --skip-perf --use-vdenc --codec AVC raw h264" {
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run vdenc_support H264High
+  if [ $status -eq 0 ]; then skip; fi  
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$rawh264" "measure perf --skip-perf --use-vdenc --codec AVC /tmp/WAR.h264")"
+  print_output
+  [ $status -eq 0 ]
+
+  ptmp=$tmp/measure/perf
+  nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
+  [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+  nout=$(find $ptmp/output_FFMPEG -name "*.h264" | wc -l)
+  [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+  nlines=$(cat $ptmp/msperf_SMT_AVC-AVC_performance.csv | wc -l)
+  [ "$nlines" -eq 2 ]
+  nlines=$(cat $ptmp/msperf_FFMPEG_AVC-AVC_performance.csv | wc -l)
+  [ "$nlines" -eq 2 ]
+  npng=$(find $ptmp -name "*.png" | wc -l)
+  [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
+}
+
+@test "measure perf --skip-perf --use-vdenc --codec HEVC raw h264" {
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run vdenc_support HEVCMain
+  if [ $status -eq 0 ]; then skip; fi
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$rawh264" "measure perf --skip-perf --use-vdenc --codec HEVC /tmp/WAR.h264")"
+  print_output
+  [ $status -eq 0 ]
+
+  ptmp=$tmp/measure/perf
+  nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
+  [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+  nout=$(find $ptmp/output_FFMPEG -name "*.h264" | wc -l)
+  [ "$nout" -gt 0 ]
+  nlines=$(cat $ptmp/msperf_SMT_AVC-HEVC_performance.csv | wc -l)
+  [ "$nlines" -eq 2 ]
+  nlines=$(cat $ptmp/msperf_FFMPEG_AVC-HEVC_performance.csv | wc -l)
+  [ "$nlines" -eq 2 ]
+  npng=$(find $ptmp -name "*.png" | wc -l)
+  [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
+}
+
+
+
 @test "measure perf --skip-perf raw h265" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
@@ -189,6 +235,52 @@ function get_perf_opts() {
   npng=$(find $ptmp -name "*.png" | wc -l)
   [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
 }
+
+@test "measure perf --skip-perf --use-vdenc --codec AVC raw h265" {
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run vdenc_support H264High
+  if [ $status -eq 0 ]; then skip; fi
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$rawh265" "measure perf --skip-perf --use-vdenc --codec AVC /tmp/WAR.hevc")"
+  print_output
+  [ $status -eq 0 ]
+
+  ptmp=$tmp/measure/perf
+  nout=$(find $ptmp/output_SMT -name "*.h265" | wc -l)
+  [ "$nout" -gt 0 ]
+  nout=$(find $ptmp/output_FFMPEG -name "*.h265" | wc -l)
+  [ "$nout" -gt 0 ]
+  nlines=$(cat $ptmp/msperf_SMT_HEVC-AVC_performance.csv | wc -l)
+  [ "$nlines" -eq 2 ]
+  nlines=$(cat $ptmp/msperf_FFMPEG_HEVC-AVC_performance.csv | wc -l)
+  [ "$nlines" -eq 2 ]
+  npng=$(find $ptmp -name "*.png" | wc -l)
+  [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
+}
+
+@test "measure perf --skip-perf --use-vdenc --codec HEVC raw h265" {
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run vdenc_support HEVCMain
+  if [ $status -eq 0 ]; then skip; fi
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$rawh265" "measure perf --skip-perf --use-vdenc --codec HEVC /tmp/WAR.hevc")"
+  print_output
+  [ $status -eq 0 ]
+
+  ptmp=$tmp/measure/perf
+  nout=$(find $ptmp/output_SMT -name "*.h265" | wc -l)
+  [ "$nout" -gt 0 ]
+  nout=$(find $ptmp/output_FFMPEG -name "*.h265" | wc -l)
+  [ "$nout" -gt 0 ]
+  nlines=$(cat $ptmp/msperf_SMT_HEVC-HEVC_performance.csv | wc -l)
+  [ "$nlines" -eq 2 ]
+  nlines=$(cat $ptmp/msperf_FFMPEG_HEVC-HEVC_performance.csv | wc -l)
+  [ "$nlines" -eq 2 ]
+  npng=$(find $ptmp -name "*.png" | wc -l)
+  [ "$npng" -eq 0 ] # no detailed charts because of --skip-perf
+}
+
+
 
 @test "measure perf --skip-perf --skip-msdk raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
