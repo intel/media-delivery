@@ -612,7 +612,7 @@ def main():
                         # Adding Transcode_Output_Log file and Multiple Device knobs
                         if (ffmpeg_mode):
                             transcode_output_logfile = " 2> " + temp_path + clip_name + "_" + clip_resolution + "_" + str(streamnumber) + "_" + str(m) + "_transcode_log.txt"
-                            ffmpeg_device_knob = " -hwaccel_device " + os_env_DEVICE
+                            ffmpeg_device_knob = " -qsv_device " + os_env_DEVICE
                             transcode_output_logfile = ffmpeg_device_knob + transcode_output_logfile
                             dispatch_cmdline = dispatch_cmdline.replace("-report", transcode_output_logfile).rstrip()
 
