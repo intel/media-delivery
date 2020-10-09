@@ -864,8 +864,10 @@ if [ "$skip_encoding" = "no" ]; then
         [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $b $options_ref
       fi
       if [ "$skip_ffmpeg" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $b $tu $options_qsv
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $b $tu $options_qsv
+        std=$(get_param $file "stream" "codec_name")
+        case $std in h264|hevc|mpeg2|vc1);; *) std=UNSUPPORTED;; esac
+        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $b $tu $options_qsv
+        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $b $tu $options_qsv
       fi
       if [ "$skip_msdk" = "no" ]; then
         raw=$(get_raw_stream_info $file)

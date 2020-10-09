@@ -39,6 +39,8 @@ if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
 else
   nframes=$1
   shift
+  std=$1
+  shift
 fi
 bitrate_Mbps=$1
 shift
@@ -54,8 +56,8 @@ vframes="-frames:v $nframes"
 [[ "$nframes" = "0" ]] && vframes=""
 
 DEVICE=${DEVICE:-/dev/dri/renderD128}
-if [ -z $rawvideo ]; then
-  dev="-hwaccel qsv -qsv_device $DEVICE -c:v h264_qsv"
+if [ -z "$rawvideo" ] && [ "$std" != "UNSUPPORTED" ]; then
+  dev="-hwaccel qsv -qsv_device $DEVICE -c:v ${std}_qsv"
 else
   dev="-init_hw_device vaapi=va:$DEVICE -init_hw_device qsv=hw@va"
 fi
