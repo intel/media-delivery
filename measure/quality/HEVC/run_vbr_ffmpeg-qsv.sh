@@ -35,7 +35,6 @@ if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
   shift
   framerate=$1
   shift
-
   rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
 else
   nframes=$1
@@ -56,8 +55,13 @@ vframes="-frames:v $nframes"
 [[ "$nframes" = "0" ]] && vframes=""
 
 DEVICE=${DEVICE:-/dev/dri/renderD128}
+if [ -z $rawvideo ]; then
+  dev="-hwaccel qsv -qsv_device $DEVICE -c:v h264_qsv"
+else
+  dev="-init_hw_device vaapi=va:$DEVICE -init_hw_device qsv=hw@va"
+fi
 
-cmd=(ffmpeg -hwaccel qsv -hwaccel_device $DEVICE -an \
+cmd=(ffmpeg $dev -an \
   $rawvideo -i $file $vframes \
   -c:v hevc_qsv -preset $preset -profile:v main \
   -b:v $bitrate -maxrate $maxrate -bitrate_limit 0 \
