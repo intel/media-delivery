@@ -199,7 +199,7 @@ function test_ffmpeg_capture() {
   test_ffmpeg_capture "vod/hevc"
 }
 
-h265="ffmpeg -hwaccel qsv \
+h265="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
   -c:v h264_qsv -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 20 \
   -y /tmp/WAR.mp4"
