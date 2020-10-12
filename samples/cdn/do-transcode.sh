@@ -121,10 +121,17 @@ function get_param() {
 
 dec_codec="$(get_param v $to_play codec_name)"
 dec_plugin=""
+accel=""
 if [ "$dec_codec" = "h264" ]; then
   dec_plugin="-c:v h264_qsv"
 elif [ "$dec_codec" = "hevc" ]; then
   dec_plugin="-c:v hevc_qsv"
+fi
+
+if [ -n "$dec_plugin" ]; then
+  accel="-hwaccel qsv -qsv_device ${DEVICE}"
+else
+  accel="-init_hw_device vaapi=va:${DEVICE} -init_hw_device qsv=hw@va"
 fi
 
 audio="$(get_param a $to_play codec_name)"
@@ -152,8 +159,7 @@ if [ "$type" = "vod/avc" ]; then
     a0=",a:0"
   fi
   cmd=(ffmpeg
-    -hwaccel qsv -hwaccel_device $DEVICE
-    $dec_plugin -re -i $to_play $as
+    $accel $dec_plugin -re -i $to_play $as
     -c:v h264_qsv -profile:v high -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
       -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256
@@ -171,8 +177,7 @@ elif [ "$type" = "vod/hevc" ]; then
     a0=",a:0"
   fi
   cmd=(ffmpeg
-    -hwaccel qsv -hwaccel_device $DEVICE
-    $dec_plugin -re -i $to_play $as
+    $accel $dec_plugin -re -i $to_play $as
     -c:v hevc_qsv -profile:v main -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
       -extbrc 1 -bf 7 -refs 5 -g 256
@@ -189,8 +194,7 @@ elif [ "$type" = "vod/abr" ]; then
     a1=",a:1"
   fi
   cmd=(ffmpeg
-    -hwaccel qsv -hwaccel_device $DEVICE
-    $dec_plugin -re -i $to_play
+    $accel $dec_plugin -re -i $to_play
     -filter_complex '[v:0]split=2[o1][s2];[s2]scale_qsv=w=640:h=-1[o2]'
     -map [o1] -c:v h264_qsv -b:v 5M
     -map [o2] -c:v h264_qsv -b:v 1M

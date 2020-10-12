@@ -118,10 +118,17 @@ function get_param() {
 
 dec_codec="$(get_param v $to_play codec_name)"
 dec_plugin=""
+accel=""
 if [ "$dec_codec" = "h264" ]; then
   dec_plugin="-c:v h264_qsv"
 elif [ "$dec_codec" = "hevc" ]; then
   dec_plugin="-c:v hevc_qsv"
+fi
+
+if [ -n "$dec_plugin" ]; then
+  accel="-hwaccel qsv -qsv_device ${DEVICE}"
+else
+  accel="-init_hw_device vaapi=va:${DEVICE} -init_hw_device qsv=hw@va"
 fi
 
 audio="$(get_param a $to_play codec_name)"
@@ -144,8 +151,7 @@ if [ "$type" = "vod/avc" ]; then
   maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
   bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
   cmd=(ffmpeg
-    -hwaccel qsv -hwaccel_device $DEVICE
-    $dec_plugin -re -i $to_play
+    $accel $dec_plugin -re -i $to_play
     -c:v h264_qsv -profile:v high -preset medium
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
       -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256
