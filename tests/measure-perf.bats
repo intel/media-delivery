@@ -30,7 +30,7 @@ load utils
 
 # prepare raw 2160p h264 file, high resolution and fps=60 is needed to
 # reduce test time
-rawh264="ffmpeg -an -hwaccel qsv \
+rawh264="ffmpeg -an -hwaccel qsv -qsv_device $DEVICE \
   -c:v h264_qsv -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -vf scale_qsv=w=-1:h=2160,vpp_qsv=framerate=60 \
   -c:v h264_qsv -preset medium -profile:v high -b:v 1000000 -vframes 20 \
@@ -38,7 +38,7 @@ rawh264="ffmpeg -an -hwaccel qsv \
 
 # prepare raw 2160p h264 file, high resolution and fps=60 is needed to
 # reduce test time
-rawh265="ffmpeg -an -hwaccel qsv \
+rawh265="ffmpeg -an -hwaccel qsv -qsv_device $DEVICE \
   -c:v h264_qsv -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -vf scale_qsv=w=-1:h=2160,vpp_qsv=framerate=60 \
   -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 20 \

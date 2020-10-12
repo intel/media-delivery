@@ -29,9 +29,16 @@ if ! which docker >/dev/null 2>&1; then
   exit 1
 fi
 
+DEVICE=${DEVICE:-/dev/dri/renderD128}
+if [ ! -e $DEVICE ]; then
+  echo "error: no such device: $DEVICE" >&2
+  exit 1
+fi
+
 if [ -z "${MDS_DEMO}" ]; then
   MDS_DEMO="cdn"
 fi
+
 
 _TMP=`pwd`/mds_bats
 
@@ -86,7 +93,6 @@ function docker_run_opts() {
   local opts=$1
   shift
 
-  local DEVICE=/dev/dri/renderD128
   local DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
     xargs getent group | awk -F: '{print $3}')
 
