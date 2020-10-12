@@ -24,6 +24,19 @@ files. For example::
 
 Will execute only `demo` script related tests.
 
+Environment Variables
+---------------------
+
++---------------+--------------------------+------------------------------------------------+
+| Variable      | Default                  | Notes                                          |
++===============+==========================+================================================+
+| ``DEVICE``    | ``/dev/dri/renderD128``  | Sets GPU device to use                         |
++---------------+--------------------------+------------------------------------------------+
+| ``MDS_IMAGE`` | <must be set explicitly> | Sets docker image to run                       |
++---------------+--------------------------+------------------------------------------------+
+| ``MDS_DEMO``  | ``cdn``                  | Sets demo name to verify (``cdn`` or ``edge``) |
++---------------+--------------------------+------------------------------------------------+
+
 Links
 -----
 * `BATS (Bash Automated Testing System) <https://github.com/bats-core/bats-core>`_

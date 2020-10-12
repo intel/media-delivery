@@ -32,7 +32,7 @@ load utils
 }
 
 @test "vainfo is ready" {
-  run docker_run vainfo
+  run docker_run vainfo --display drm --device $DEVICE
   print_output
   [ $status -eq 0 ]
 }
