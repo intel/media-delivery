@@ -336,6 +336,25 @@ function run() {
   fi
 }
 
+function is_vdenc_supported() {
+  local std=$1
+  # we get seg in the form of: seg="200 300", where 200 and 300 are line numbers in vainfo output:
+  #  200 VAProfileH264/VAEntrypointEncSliceLP
+  #  ...
+  #  300 VAProfile<next-item>/VAEntrypoint<next-item>
+  local seg=$(vainfo -a --display drm --device $DEVICE 2> /dev/null | \
+    grep -n VAProfile | grep -A1 VAProfile${std}/VAEntrypointEncSliceLP | awk -F: '{ print $1 }')
+  seg=(${seg// / })
+  # now we produce segment variable as an input to sed in a form: segment="200,300p", or segment="200,$p"
+  # if there is no profile entry after the one we searched for ($ indicates EOF and p stands for "print" for sed)
+  local segment=${seg[0]}
+  [ ${#seg[@]} -eq 1 ] && segment+=',$p' || segment+=','${seg[1]}'p'
+  local vdenc="yes"
+  [ -z "$(vainfo -a --display drm --device $DEVICE 2> /dev/null | sed -n $segment | grep VA_RC_CBR)" ] && vdenc="no"
+  [ -z "$(vainfo -a --display drm --device $DEVICE 2> /dev/null | sed -n $segment | grep VA_RC_VBR)" ] && vdenc="no"
+  echo $vdenc
+}
+
 function can_process_yuv() {
   local width=$1
   local height=$2
@@ -813,6 +832,22 @@ fi
 if [[ "$is_yuv" = "yes" && "$(can_process_yuv $width $height $framerate)" = "no" ]]; then
   echo "error: yuv description is incomplete (missing -w, -h or -f)" >&2
   exit -1
+fi
+
+if [ "$use_vdenc" = "yes" ]; then
+  if [ "$codec" = "AVC" ]; then
+    lpmode="H264High"
+  elif [ "$codec" = "HEVC" ]; then
+    lpmode="HEVCMain"
+  else
+    echo "error: invalid codec (AVC|HEVC): $codec" >&2
+    exit -1
+  fi
+  vdenc=$(is_vdenc_supported $lpmode)
+  if [ "$vdenc" = "no" ]; then
+    echo "error: low power (VDENC) $lpmode CBR/VBR mode is NOT supported on ${DEVICE}" >&2
+    exit -1
+  fi
 fi
 
 if [ -z "$outprefix" ]; then
