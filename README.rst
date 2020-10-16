@@ -29,6 +29,9 @@ Key topcis we are covering:
 * Quality and Performance measuring infrastructure for data collection
 * Intel GPU Performance monitoring
 
+Explore more containers, models and more on the
+`Intel® oneContainer Portal <https://software.intel.com/containers>`_.
+
 Host requirements
 -----------------
 
@@ -411,6 +414,8 @@ Further reading
 * `Open Visual Cloud <https://01.org/openvisualcloud>`_
 
   * `CDN Transcode Sample <https://github.com/OpenVisualCloud/CDN-Transcode-Sample>`_
+
+* `Intel® oneContainer Portal <https://software.intel.com/containers>`_
 
 * `Docker <https://docker.com>`_
 * `FFmpeg <http://ffmpeg.org/>`_
