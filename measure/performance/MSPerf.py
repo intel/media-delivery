@@ -171,6 +171,18 @@ def main():
         printLog(output_log_handle, '#' * 69)
         printLog(output_log_handle, 'MSPERF (MULTI STREAMS PERFORMANCE) v0.20.06.03')
         printLog(output_log_handle, '#' * 69 + '\n')
+
+    if use_vdenc:
+        isSupported_vdenc_h264high = subprocess.Popen(['bash', '-c', './isVdenc.bash H264High'])
+        isSupported_vdenc_hevcmain = subprocess.Popen(['bash', '-c', './isVdenc.bash HEVCMain'])
+        if (isSupported_vdenc_h264high.returncode=="None") and (isSupported_vdenc_hevcmain.returncode=="None") :
+            printLog(output_log_handle, "VDENC supports has a problem", isSupported_vdenc_h264high.returncode, isSupported_vdenc_hevcmain.returncode)
+            exit(1)
+        elif isSupported_vdenc_h264high.returncode == 0:
+            printLog(output_log_handle, "VDENC supports H264High")
+        elif isSupported_vdenc_hevcmain.returncode == 0:
+            printLog(output_log_handle, "VDENC supports HEVCMain")
+
     ######################################################################################################
     # Linux Perf pre-req
     ######################################################################################################
