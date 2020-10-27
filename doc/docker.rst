@@ -33,7 +33,7 @@ It is possible to customize dockerfile setup passing some parameters during
 Dockerfile generation from templates.
 
 DEVEL
-  Possible values: `n/a` (just defined or not defined). Default value: not defined
+  Possible values: yes|no. Default value: ``yes``
 
   Switches on/off development build type with which container user is
   created with sudo privileges.

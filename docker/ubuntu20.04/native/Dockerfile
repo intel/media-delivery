@@ -162,6 +162,10 @@ RUN apt-get update && \
     socat \
     tmux \
     vainfo \
+    curl \
+    sudo \
+    vim \
+    wget \
      && \
   rm -rf /var/lib/apt/lists/*
 
@@ -197,6 +201,8 @@ COPY assets/hello-bash /usr/bin/
 
 # Create default container user <user>
 RUN groupadd -r user && useradd -lrm -s /bin/bash -g user user
+RUN usermod -aG sudo user && \
+  sed -i -e "s/%sudo.*/%sudo ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers
 
 # Creating locations sample will need and giving permissions
 # to the default user

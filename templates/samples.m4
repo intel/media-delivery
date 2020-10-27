@@ -21,13 +21,15 @@ dnl #
 include(envs.m4)
 HIDE
 
+DECLARE(`DEVEL',yes)
+
 define(`SAMPLES_INSTALL_DEPS',`dnl
   intel-gpu-tools libmfx-tools dnl
   libnginx-mod-http-lua libnginx-mod-rtmp dnl
   linux-tools-generic nginx pciutils psmisc dnl
   python3 python3-matplotlib python3-numpy dnl
   socat tmux vainfo dnl
-  ifdef(`DEVEL',`curl sudo vim wget')')
+  ifelse(DEVEL,yes,`curl sudo vim wget')')
 
 define(`INSTALL_SAMPLES',`dnl
 # perf is tight to particular kernel version per old WA which will never
@@ -52,9 +54,9 @@ COPY assets/hello-bash /usr/bin/
 
 # Create default container user <user>
 RUN groupadd -r user && useradd -lrm -s /bin/bash -g user user
-ifdef(`DEVEL',`dnl
-RUN usermod -aG sudo user
-RUN sed -i -e "s/%sudo.*/%sudo ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers'
+ifelse(DEVEL,yes,`dnl
+RUN usermod -aG sudo user && \
+  sed -i -e "s/%sudo.*/%sudo ALL=(ALL) NOPASSWD:ALL/g" /etc/sudoers'
 )
 # Creating locations sample will need and giving permissions
 # to the default user
