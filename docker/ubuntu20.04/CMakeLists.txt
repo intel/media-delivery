@@ -34,7 +34,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/native/Dockerfile
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
   DEPENDS ${srcs}
-    ${CMAKE_SOURCE_DIR}/templates/intel-gfx.m4
     ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile.m4
   COMMAND ${M4} ${M4FLAGS} -D OS_NAME=ubuntu -D OS_VERSION=20.04
     ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile.m4 > ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
