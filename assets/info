@@ -5,15 +5,14 @@ commands=(
   "uname -a"
   "cat /proc/cmdline"
   "cat /proc/cpuinfo | grep \"model name\" | uniq"
+  "ls /dev/dri/"
   "lspci -nn | grep VGA"
   "cat /proc/sys/kernel/perf_event_paranoid")
 
 res=0
   
 for c in "${commands[@]}"; do
-  echo "#############################################################"
-  echo "Exec: $c"
-  echo "#############################################################"
+  echo "$ $c"
   eval "$c"
   tmp=$?
   [ $res -eq 0 ] && res=$tmp
