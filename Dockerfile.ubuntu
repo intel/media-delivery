@@ -67,12 +67,22 @@ RUN sed -i -e 's,%sudo.*,%sudo ALL=(ALL) NOPASSWD:ALL,g' /etc/sudoers
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     asciidoc-base \
+    bison \
     cython3 \
     docbook-xsl \
+    flex \
     gcc \
     g++ \
     git \
+    libcairo-dev \
+    libdrm-dev \
+    libdw-dev \
+    libkmod-dev \
     libmfx-dev \
+    libpciaccess-dev \
+    libpixman-1-dev \
+    libprocps-dev \
+    libudev-dev \
     libva-dev \
     libx264-dev \
     libx265-dev \
@@ -152,8 +162,42 @@ RUN cd /home/user/ffmpeg && \
   && make -j $(nproc --all) \
   && sudo make install
 
+# We need igt older than the following commit to be able to select desired device
+# for intel_gpu_top on multi-gpu systems:
+#
+# commit a627439eb5e39d927306055b1e540ef5940d7396
+# Author: Ayaz A Siddiqui <ayaz.siddiqui@intel.com>
+# Date:   Fri Oct 23 23:21:58 2020 +0530
+#
+#    lib/igt_device_scan: Select intel as default vendor for intel_gpu_top
+#
+#    intel_gpu_top is selecting first discrete device as default drm subsystem.
+#    In case of multi-gpu system if the first device is not intel gpu
+#    then it will lead to an error while running intel_gpu_top.
+#
+#    Signed-off-by: Ayaz A Siddiqui <ayaz.siddiqui@intel.com>
+#    Cc: Petri Latvala <petri.latvala@intel.com>
+#    Cc: Zbigniew Kempczynski <zbigniew.kempczynski@intel.com>
+#    Cc: Dixit Ashutosh <ashutosh.dixit@intel.com>
+#    Reviewed-by: Zbigniew Kempczyński <zbigniew.kempczynski@intel.com>
+#
+ARG IGT_VERSION=db972bdaab8ada43b742bc9621bb0fc9d56a6fc6
+ARG IGT_REPO=https://gitlab.freedesktop.org/drm/igt-gpu-tools.git
+RUN git clone $IGT_REPO /home/user/igt
+RUN cd /home/user/igt \
+  && git checkout $IGT_VERSION \
+  && meson build \
+  --buildtype=release \
+  --prefix=$PREFIX \
+  --libdir=$LIBDIR \
+  -Ddocs=disabled -Dman=disabled -Dlibdrm_drivers=intel \
+  -Doverlay=disabled -Drunner=disabled -Dtests=disabled \
+  && ninja -j $(nproc --all) -C build \
+  && sudo ninja -C build install
+
 # Cleanin up...
 RUN rm -rf /home/user/ffmpeg && \
+    rm -rf /home/user/igt && \
     rm -rf /home/user/patches && \
     sudo rm -rf /home/user/vmaf
 
@@ -174,7 +218,6 @@ LABEL vendor="Intel Corporation"
 
 # Install runtime environment available in apt repositories
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    intel-gpu-tools \
     intel-media-va-driver-non-free \
     libigfxcmrt7 \
     libmfx1 \
@@ -183,6 +226,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnginx-mod-rtmp \
     libva-drm2 \
     libva-x11-2 \
+    libxcb-shm0 \
     linux-tools-generic \
     man-db \
     nginx \
@@ -215,7 +259,7 @@ RUN ln -fs `find /usr/lib/linux-tools -name perf` /usr/bin/perf;
 # then you need to adjust /proc/sys/kernel/perf_event_paranoid on a host to have
 # value <=0
 RUN setcap cap_sys_admin+ep $(readlink -f $(which perf))
-RUN setcap cap_sys_admin+ep $(readlink -f $(which intel_gpu_top))
+#RUN setcap cap_sys_admin+ep $(readlink -f $(which intel_gpu_top))
 
 # This script is a placeholder to further setup the final runtime image.
 RUN /tmp/scripts/setup-runtime-image.sh
@@ -233,6 +277,7 @@ RUN echo "$PREFIX/lib" > /etc/ld.so.conf.d/intel-media-delivery.conf
 RUN ldconfig
 RUN python3 -m pip install --no-deps --prefix $PREFIX /opt/wheel/* \
   && rm -rf /opt/wheel
+RUN setcap cap_sys_admin+ep $(find /opt -name intel_gpu_top)
 
 # Installing entrypoint helper scripts
 COPY assets/demo-alive /usr/bin/
