@@ -344,6 +344,7 @@ function is_vdenc_supported() {
   #  300 VAProfile<next-item>/VAEntrypoint<next-item>
   local seg=$(vainfo -a --display drm --device $DEVICE 2> /dev/null | \
     grep -n VAProfile | grep -A1 VAProfile${std}/VAEntrypointEncSliceLP | awk -F: '{ print $1 }')
+  [ -z "${seg}" ] && echo "no" && return # profile does not exist
   seg=(${seg// / })
   # now we produce segment variable as an input to sed in a form: segment="200,300p", or segment="200,$p"
   # if there is no profile entry after the one we searched for ($ indicates EOF and p stands for "print" for sed)
