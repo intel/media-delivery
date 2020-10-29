@@ -61,6 +61,16 @@ RUN apt-get update && \
     asciidoc-base \
     docbook-xsl \
     xsltproc \
+    bison \
+    flex \
+    libcairo-dev \
+    libdrm-dev \
+    libdw-dev \
+    libkmod-dev \
+    libpciaccess-dev \
+    libpixman-1-dev \
+    libprocps-dev \
+    libudev-dev \
      && \
   rm -rf /var/lib/apt/lists/*
 
@@ -129,6 +139,20 @@ RUN cd /opt/build/manuals && make -j $(nproc --all) && \
   DESTDIR=/opt/dist make prefix=/opt/intel/samples install
 RUN rm -rf /opt/build/manuals
 
+ARG IGT_REPO=https://gitlab.freedesktop.org/drm/igt-gpu-tools.git
+RUN git clone $IGT_REPO /opt/build/igt
+RUN cd /opt/build/igt \
+  && git checkout db972bdaab8ada43b742bc9621bb0fc9d56a6fc6 \
+  && meson build \
+  --buildtype=release \
+  --prefix=/opt/intel/samples \
+  --libdir=/opt/intel/samples/lib \
+  -Ddocs=disabled -Dman=disabled -Dlibdrm_drivers=intel \
+  -Doverlay=disabled -Drunner=disabled -Dtests=disabled \
+  && ninja -j $(nproc --all) -C build \
+  && DESTDIR=/opt/dist ninja -C build install \
+  && ninja -C build install
+
 
 
 # Ok, here goes the final image end-user will actually see
@@ -148,9 +172,9 @@ RUN apt-get update && \
     libva-drm2 \
     libx264-155 \
     libx265-179 \
+    libxcb-shm0 \
     less \
     man-db \
-    intel-gpu-tools \
     libmfx-tools \
     libnginx-mod-http-lua \
     libnginx-mod-rtmp \
@@ -180,6 +204,8 @@ RUN rm -rf /opt/wheel
 
 # Restoring man which is excluded from the minimal ubuntu image
 RUN rm -f /usr/bin/man && dpkg-divert --quiet --remove --rename /usr/bin/man
+RUN setcap cap_sys_admin+ep $(find /opt -name intel_gpu_top)
+
 # perf is tight to particular kernel version per old WA which will never
 # be fixed, we just need to use some version
 RUN ln -fs $(find /usr/lib/linux-tools -name perf) /usr/bin/perf;
@@ -193,7 +219,7 @@ RUN ln -fs $(find /usr/lib/linux-tools -name perf) /usr/bin/perf;
 # then you need to adjust /proc/sys/kernel/perf_event_paranoid on a host to have
 # value <=0
 RUN setcap cap_sys_admin+ep $(readlink -f $(which perf))
-RUN setcap cap_sys_admin+ep $(readlink -f $(which intel_gpu_top))
+#RUN setcap cap_sys_admin+ep $(readlink -f $(which intel_gpu_top))
 
 # Installing entrypoint helper scripts
 COPY assets/demo-alive /usr/bin/

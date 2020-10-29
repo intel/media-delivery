@@ -21,10 +21,12 @@ dnl #
 include(envs.m4)
 HIDE
 
+include(intel-gpu-tools.m4)
+
 DECLARE(`DEVEL',yes)
 
 define(`SAMPLES_INSTALL_DEPS',`dnl
-  intel-gpu-tools libmfx-tools dnl
+  libmfx-tools dnl
   libnginx-mod-http-lua libnginx-mod-rtmp dnl
   linux-tools-generic nginx pciutils psmisc dnl
   python3 python3-matplotlib python3-numpy dnl
@@ -45,7 +47,7 @@ RUN ln -fs $(find /usr/lib/linux-tools -name perf) /usr/bin/perf;
 # then you need to adjust /proc/sys/kernel/perf_event_paranoid on a host to have
 # value <=0
 RUN setcap cap_sys_admin+ep $(readlink -f $(which perf))
-RUN setcap cap_sys_admin+ep $(readlink -f $(which intel_gpu_top))
+#RUN setcap cap_sys_admin+ep $(readlink -f $(which intel_gpu_top))
 
 # Installing entrypoint helper scripts
 COPY assets/demo-alive /usr/bin/
