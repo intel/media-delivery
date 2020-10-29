@@ -153,6 +153,7 @@ function vdenc_support() {
   local seg=$(vainfo -a --display drm --device $DEVICE 2> /dev/null | \
     grep -n VAProfile | grep -A1 VAProfile${std}/VAEntrypointEncSliceLP | awk -F: '{ print $1 }')
   seg=(${seg// / })
+  [ -z "${seg}" ] && return 0 # profile does not exist
   # now we produce segment variable as an input to sed in a form: segment="200,300p", or segment="200,$p"
   # if there is no profile entry after the one we searched for ($ indicates EOF and p stands for "print" for sed)
   local segment=${seg[0]}
