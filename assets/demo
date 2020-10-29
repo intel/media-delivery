@@ -199,7 +199,7 @@ if tty -s; then
     else
       echo "new-session /usr/bin/bash -c \"$client\""
     fi
-    echo "split-window -v intel_gpu_top"
+    echo "split-window -v intel_gpu_top -d drm:$DEVICE"
     echo "split-window -v top"
     echo "split-window -v monitor-nginx-server.sh"
     echo "select-layout tiled"
