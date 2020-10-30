@@ -30,6 +30,6 @@ DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
 
 docker run \
   --rm -it -p 8080:8080 \
-  --device=$DEVICE --group-add $DEVICE_GRP --cap-add SYS_ADMIN \
+  -e DEVICE=$DEVICE --device=$DEVICE --group-add $DEVICE_GRP --cap-add SYS_ADMIN \
   $(env | grep -E '_proxy=' | sed 's/^/-e /') \
   intel-media-delivery "$@"
