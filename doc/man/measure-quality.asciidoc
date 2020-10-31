@@ -237,6 +237,9 @@ WORKING MODE OPTIONS
 --use-vdenc::
 	Force using low power VDEnc hardware mode (disabled by default).
 
+--use-gold-ref::
+	Use precomputed golden references for BD-rate computation (disabled by default).
+
 PROCESSING OPTIONS
 ------------------
 --nframes|-n <uint>::
