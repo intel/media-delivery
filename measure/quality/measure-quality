@@ -27,7 +27,7 @@ LONGOPTIONS="codec:,preset:,bitrates:,tu:"
 LONGOPTIONS+=",width:,height:,fourcc:,framerate:,progressive,interlaced"
 LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-ms-ssim,skip-vmaf"
 LONGOPTIONS+=",skip-encoding,skip-ffmpeg,skip-msdk,skip-cbr,skip-vbr"
-LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate,use-vdenc"
+LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate,use-vdenc,use-gold-ref"
 LONGOPTIONS+=",nframes:,dry-run,outdir:,outprefix:"
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
@@ -73,6 +73,7 @@ skip_reference=no
 skip_bdrate=no
 single_bdrate=no
 use_vdenc=no
+use_gold_ref=no
 
 while true; do
     case "$1" in
@@ -188,6 +189,10 @@ while true; do
             use_vdenc=yes
             shift
             ;;
+        --use-gold-ref)
+            use_gold_ref=yes
+            shift
+            ;;
         --)
             shift
             break
@@ -282,7 +287,7 @@ function run() {
     stream=$(find_stream $file $stream)
   elif [ "${file##*/}" = "$stream" ]; then
     stream=$file
-    _exit=yes
+    _exit=no
   else
     return 0 # no match, just return
   fi
@@ -326,6 +331,7 @@ function run() {
       $(if_yes $skip_bdrate "--skip-bdrate") \
       $(if_yes $single_bdrate "--single-bdrate") \
       $(if_yes $use_vdenc "--use-vdenc") \
+      $(if_yes $use_gold_ref "--use-gold-ref") \
       -- \
       $stream
     set_err $?
@@ -661,8 +667,10 @@ function get_avg_bdrate() {
     done
   done
   for i in {0..3}; do
-    avg_bdrate[$i]=$(python3 -c 'print('${avg_bdrate[$i]}' / '${count[$i]}')')
-    tot_avg_bdrate[$i]=$(python3 -c 'print('${tot_avg_bdrate[$i]}' + '${avg_bdrate[$i]}')')
+    if [ ${count[$i]} -gt 0 ]; then
+      avg_bdrate[$i]=$(python3 -c 'print('${avg_bdrate[$i]}' / '${count[$i]}')')
+      tot_avg_bdrate[$i]=$(python3 -c 'print('${tot_avg_bdrate[$i]}' + '${avg_bdrate[$i]}')')
+    fi
   done
   write_avg_bdrate "Average."$codec"."$mode"."$app"."$ext ${avg_bdrate[@]}
 }
@@ -895,7 +903,7 @@ fi
 if [ "$skip_encoding" = "no" ]; then
   for b in ${bitrates[@]}; do
     if [ "$is_yuv" = "no" ]; then
-      if [ "$skip_reference" = "no" ]; then
+      if [ "$skip_reference" = "no" ] && [ "$use_gold_ref" = "no" ]; then
         [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $b $options_ref
         [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $b $options_ref
       fi
@@ -913,7 +921,7 @@ if [ "$skip_encoding" = "no" ]; then
         fi
       fi
     else
-      if [ "$skip_reference" = "no" ]; then
+      if [ "$skip_reference" = "no" ] && [ "$use_gold_ref" = "no" ]; then
         [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $options_ref
         [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $options_ref
       fi
@@ -1009,7 +1017,7 @@ if [ "$skip_metrics" = "no" ]; then
         out=$(echo "$metrics" | grep CBR_SMT); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.sample-multi-transcode.metrics
         out=$(echo "$metrics" | grep VBR_SMT); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.sample-multi-transcode.metrics
       fi
-      if [ "$skip_reference" = "no" ]; then
+      if [ "$skip_reference" = "no" ] && [ "$use_gold_ref" = "no" ]; then
         out=$(echo "$metrics" | grep CBR_REF); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-ref.metrics
         out=$(echo "$metrics" | grep VBR_REF); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-ref.metrics
       fi
@@ -1026,6 +1034,7 @@ if [[ "$skip_bdrate" = "no" ]]; then
     else
       ref_file=$outprefix.$codec.vbr.ffmpeg-ref.metrics
     fi
+    [[ "$use_gold_ref" = "yes" ]] && ref_file=$path/REF/$codec/$ref_file
 
     # check requirements for bd-rate calculation
     if [[ ! -f "$ref_file" ]]; then
