@@ -26,6 +26,7 @@ unset no_proxy
 
 docker build \
   $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
+  --build-arg IMAGE=amr-registry.caas.intel.com/vtt-osgc/os/ubuntu:focal \
   --file docker/ubuntu20.04/intel-gfx/Dockerfile \
   -t intel-media-delivery \
   .

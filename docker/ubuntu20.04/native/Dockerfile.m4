@@ -31,7 +31,8 @@ include(samples.m4)
 divert(0)dnl
 PREAMBLE
 
-FROM OS_NAME:OS_VERSION AS content
+ARG IMAGE=OS_NAME:OS_VERSION
+FROM $IMAGE AS content
 
 GET_CONTENT
 

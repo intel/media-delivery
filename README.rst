@@ -38,7 +38,7 @@ To run these samples you need to:
    (refer to https://github.com/intel/media-driver documentation for the list of
    supported GPUs)
 2. Run Linux OS with up-to-date Linux kernel supporting underlying Intel GPU
-3. Have installed and configured Docker (see `instructions <https://docs.docker.com/install/>`_)
+3. Have installed and configured Docker version 17.05 or later (see `instructions <https://docs.docker.com/install/>`_)
 
 Other than that you might wish to install some tools on your host (or some other
 system capable of reaching the container over network) to be able to interact with the
