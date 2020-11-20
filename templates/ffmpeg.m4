@@ -24,7 +24,7 @@ HIDE
 define(`FFMPEG_BUILD_DEPS',`ca-certificates gcc g++ git libmfx-dev libva-dev libx264-dev libx265-dev make patch pkg-config yasm')
 define(`FFMPEG_INSTALL_DEPS',`intel-media-va-driver-non-free libigfxcmrt7 libmfx1 libva-drm2 libx264-155 libx265-179')
 
-DECLARE(`FFMPEG_VER',`n4.3')
+DECLARE(`FFMPEG_VER',`n4.3.1')
 
 define(`BUILD_FFMPEG',
 RUN git clone --depth 1 --branch FFMPEG_VER https://github.com/ffmpeg/ffmpeg BUILD_HOME/ffmpeg

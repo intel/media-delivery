@@ -105,7 +105,7 @@ RUN cd /opt/build/vmaf/python \
     && python3 setup.py build \
     && python3 setup.py bdist_wheel --dist-dir=/opt/wheel
 
-RUN git clone --depth 1 --branch n4.3 https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg
+RUN git clone --depth 1 --branch n4.3.1 https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg
 RUN { \
   set -ex; \
   cd /opt/build/ffmpeg; \
