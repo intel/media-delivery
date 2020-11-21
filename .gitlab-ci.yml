@@ -159,13 +159,13 @@ build:cdn-agama-devel:
     FLAVOR: focal-devel-untested
     ORIGIN: embargo
 
-#build:cdn-agama-embargo:
-#  extends: .build_image
-#  variables:
-#    DOCKERFILE: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile
-#    SAMPLE: cdn
-#    FLAVOR: focal-embargo-untested
-#    ORIGIN: embargo
+build:cdn-agama-embargo:
+  extends: .build_image
+  variables:
+    DOCKERFILE: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile
+    SAMPLE: cdn
+    FLAVOR: focal-embargo-untested
+    ORIGIN: embargo
 
 build:edge:
   extends: .build_image
@@ -221,14 +221,14 @@ test:cdn-agama-devel-dg1:
   tags:
   - dg1
 
-#test:cdn-agama-embargo-dg1:
-#  extends: .test_image
-#  variables:
-#    SAMPLE: cdn
-#  dependencies:
-#  - build:cdn-agama-embargo
-#  tags:
-#  - dg1
+test:cdn-agama-embargo-dg1:
+  extends: .test_image
+  variables:
+    SAMPLE: cdn
+  dependencies:
+  - build:cdn-agama-embargo
+  tags:
+  - dg1
 
 test:edge-gen11:
   extends: .test_image
@@ -263,13 +263,13 @@ deploy:cdn-agama-devel:
   dependencies:
   - build:cdn-agama-devel
 
-#deploy:cdn-agama-embargo:
-#  extends: .deploy_image
-#  variables:
-#    SAMPLE: cdn
-#    FLAVOR: agama
-#  dependencies:
-#  - build:cdn-agama-embargo
+deploy:cdn-agama-embargo:
+  extends: .deploy_image
+  variables:
+    SAMPLE: cdn
+    FLAVOR: agama
+  dependencies:
+  - build:cdn-agama-embargo
 
 deploy:edge:
   extends: .deploy_image
