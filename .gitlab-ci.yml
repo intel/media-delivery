@@ -185,14 +185,14 @@ test:cdn-agama-public-gen9:
   tags:
   - gen9
 
-#test:cdn-agama-public-dg1:
-#  extends: .test_image
-#  variables:
-#    SAMPLE: cdn
-#  dependencies:
-#  - build:cdn-agama-public
-#  tags:
-#  - dg1
+test:cdn-agama-public-dg1:
+  extends: .test_image
+  variables:
+    SAMPLE: cdn
+  dependencies:
+  - build:cdn-agama-public
+  tags:
+  - dg1
 
 test:cdn-agama-master-gen9:
   extends: .test_image
