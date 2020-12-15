@@ -293,7 +293,7 @@ SAMPLE
   Selects sample to build and install inside the container.
 
 FFMPEG_VERSION
-  Possible values: ``<version tag>``. Default value: ``n4.3``
+  Possible values: ``<version tag>``. Default value: ``n4.3.1``
 
   FFMPEG version to build. Use one of the FFMPEG release tags from https://github.com/FFmpeg/FFmpeg/releases
   or branch name or commit id.

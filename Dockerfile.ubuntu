@@ -137,7 +137,7 @@ RUN cd /home/user/vmaf/libvmaf \
 RUN cd /home/user/vmaf/python \
     && sudo python3 setup.py bdist_wheel --dist-dir=/opt/wheel
 
-ARG FFMPEG_VERSION=n4.3
+ARG FFMPEG_VERSION=n4.3.1
 RUN git clone --depth 1 --branch $FFMPEG_VERSION https://github.com/ffmpeg/ffmpeg /home/user/ffmpeg
 RUN { \
   set -ex; \
