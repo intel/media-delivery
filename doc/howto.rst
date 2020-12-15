@@ -299,7 +299,7 @@ FFMPEG_VERSION
   or branch name or commit id.
 
 VMAF_VERSION
-  Possible values: ``<version tag>``. Default value: ``v1.5.1``
+  Possible values: ``<version tag>``. Default value: ``v1.5.2``
 
   VMAF version to build. Use one of the VMAF release tags from https://github.com/Netflix/vmaf/releases
   or branch name or commit id.
