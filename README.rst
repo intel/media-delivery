@@ -43,6 +43,14 @@ To run these samples you need to:
 2. Run Linux OS with up-to-date Linux kernel supporting underlying Intel GPU
 3. Have installed and configured Docker (see `instructions <https://docs.docker.com/install/>`_)
 
+You might need to follow specific system setup instruction if you use newer
+graphics processors such as `Intel® Iris® Xe MAX Graphics <https://www.intel.com/content/www/us/en/products/discrete-gpus/iris-xe-max.html>`_.
+Visit `this page <https://dgpu-docs.intel.com/devices/index.html>`_ to find appropriate
+instruction for your device if your out of the box Linux distro does not support
+it. In particular:
+
+* Intel® Iris® Xe MAX Graphics (formerly DG1) setup insruction is `here <https://dgpu-docs.intel.com/devices/iris-xe-max-graphics/index.html>`_
+
 Other than that you might wish to install some tools on your host (or some other
 system capable of reaching the container over network) to be able to interact with the
 service(s) running inside the container. Consider having on a host the following:
@@ -411,6 +419,8 @@ Further reading
 
 * `Intel Media SDK <https://github.com/Intel-Media-SDK/MediaSDK>`_
 * `Intel Media Driver <https://github.com/intel/media-driver>`_
+
+* `Intel Linux Graphics Drivers <https://intel.com/linux-graphics-drivers>`_
 * `Open Visual Cloud <https://01.org/openvisualcloud>`_
 
   * `CDN Transcode Sample <https://github.com/OpenVisualCloud/CDN-Transcode-Sample>`_
