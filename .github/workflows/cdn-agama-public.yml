@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
     - master
+  schedule:
+    - cron: "0 4 * * *"
 
 env:
   IMAGE: amr-registry.caas.intel.com/vtt-osgc/os/ubuntu:focal
@@ -81,7 +83,7 @@ jobs:
         if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
 
   deploy:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'schedule'
     needs: [build, test-gen9, test-dg1]
     runs-on: [self-hosted, osgc-solutions, builders]
     steps:
