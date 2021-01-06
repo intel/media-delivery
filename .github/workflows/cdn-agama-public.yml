@@ -94,12 +94,14 @@ jobs:
         version=${version#Version:}
         version=$(echo $version | sed 's/ //g' | sed 's/[^a-z|A-Z|0-9|.|-]/./g')
         commit=$(git rev-parse --short $GITHUB_SHA)
-        deploytag1="${tagname%/stash*}/agama:$GITHUB_RUN_ID-$commit-$version"
-        deploytag2="${tagname%/stash*}/agama:latest"
+        deploytag1="${image%/stash*}/agama:$GITHUB_RUN_ID-$commit-$version"
+        deploytag2="${image%/stash*}/agama:latest"
         echo "... as $deploytag1..."
         docker tag $image $deploytag1
+        docker push $deploytag1
         echo "... and as $deploytag2..."
         docker tag $image $deploytag2
+        docker push $deploytag2
         docker rmi --force \
           $(docker images -q $image | uniq) \
           $(docker images -q $deploytag1 | uniq) \

@@ -82,8 +82,10 @@ jobs:
         deploytag2="${image%/stash*}/agama:latest"
         echo "... as $deploytag1 ..."
         docker tag $image $deploytag1
+        docker push $deploytag1
         echo "... and as $deploytag2 ..."
         docker tag $image $deploytag2
+        docker push $deploytag2
         docker rmi --force \
           $(docker images -q $image | uniq) \
           $(docker images -q $deploytag1 | uniq) \
