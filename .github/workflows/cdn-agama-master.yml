@@ -1,0 +1,107 @@
+name: cdn-agama-master
+
+on: 
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+env:
+  BASE_IMAGE: amr-registry.caas.intel.com/vtt-osgc/os/ubuntu:focal
+  REGISTRY: dockerv2-gsae-fm.gfx-assets.fm.intel.com/solutions
+  FLAVOR: focal-untested
+  http_proxy: http://proxy-chain.intel.com:911
+  https_proxy: http://proxy-chain.intel.com:911
+  no_proxy:
+
+jobs:
+  build:
+    runs-on: [self-hosted, osgc-solutions, ubuntu-builder]
+    outputs:
+      tagname: ${{steps.build.outputs.tagname}}
+    steps:
+    - uses: actions/checkout@v2
+    - id: build
+      run: |
+        tagname="$REGISTRY/intel-media-delivery/cdn/"
+        if [ ${{github.event_name}} = "pull_request" ]; then \
+          tagname+=master/mr/${{github.event.pull_request.number}}
+        else
+          tagname+=embargo/stash/$GITHUB_RUN_ID
+        fi
+        image=$tagname:$FLAVOR
+        echo "Building $image ..."
+        docker build \
+          $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
+          --build-arg IMAGE=$BASE_IMAGE \
+          --build-arg SAMPLE=cdn \
+          --build-arg FLAVOR=$FLAVOR \
+          --no-cache \
+          --force-rm \
+          --file docker/ubuntu20.04/intel-gfx-embargo/Dockerfile \
+          -t $image \
+          .
+        docker push $image
+        docker rmi --force $(docker images -q $image | uniq)
+        echo "::set-output name=tagname::$tagname"
+
+  test-gen9:
+    needs: build
+    runs-on: [self-hosted, osgc-solutions, ubuntu-gen9]
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        image=${{needs.build.outputs.tagname}}:$FLAVOR
+        echo "Testing $image ..."
+        docker pull $image
+        export MDS_IMAGE=$image
+        export MDS_LOGS=$(pwd)/_logs
+        export MDS_DEMO=cdn
+        test_status=0
+        bats tests/*.bats || test_status=$?
+        docker rmi --force $(docker images -q $image | uniq)
+        if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
+
+  test-dg1:
+    needs: build
+    runs-on: [self-hosted, osgc-solutions, ubuntu-gen12-dg1]
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        image=${{needs.build.outputs.tagname}}:$FLAVOR
+        echo "Testing $image ..."
+        docker pull $image
+        export MDS_IMAGE=$image
+        export MDS_LOGS=$(pwd)/_logs
+        export MDS_DEMO=cdn
+        test_status=0
+        bats tests/*.bats || test_status=$?
+        docker rmi --force $(docker images -q $image | uniq)
+        if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: [build, test-gen9, test-dg1]
+    runs-on: [self-hosted, osgc-solutions, builders]
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        image=${{needs.build.outputs.tagname}}:$FLAVOR
+        echo "Deploying $image ..."
+        docker pull $image
+        version=$(docker run --rm -e MDS_IGNORE_ERRORS=yes $image apt-cache show libmfx1 2>/dev/null | grep Version)
+        version=${version#Version:}
+        version=$(echo $version | sed 's/ //g' | sed 's/[^a-z|A-Z|0-9|.|-]/./g')
+        commit=$(git rev-parse --short $GITHUB_SHA)
+        deploytag1="${image%/stash*}/agama-master:$GITHUB_RUN_ID-$commit-$version"
+        deploytag2="${image%/stash*}/agama-master:latest"
+        echo "... as $deploytag1 ..."
+        docker tag $image $deploytag1
+        echo "... and as $deploytag2 ..."
+        docker tag $image $deploytag2
+        docker rmi --force \
+          $(docker images -q $image | uniq) \
+          $(docker images -q $deploytag1 | uniq) \
+          $(docker images -q $deploytag2 | uniq)
