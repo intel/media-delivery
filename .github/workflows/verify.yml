@@ -1,0 +1,19 @@
+name: verify
+
+on:
+  pull_request:
+    branches:
+    - master
+    paths-ignore:
+    - '.github/workflows/**'
+    - '!.github/workflows/verify.yml'
+
+jobs:
+  cmake:
+    runs-on: [self-hosted, osgc-solutions, builders]
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        cmake .
+        make -j$(nproc)
+        git diff --exit-code
