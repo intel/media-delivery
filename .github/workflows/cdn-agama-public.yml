@@ -4,9 +4,15 @@ on:
   push:
     branches:
     - master
+    paths-ignore:
+    - '.github/workflows/**'
+    - '!.github/workflows/cdn-agama-public.yml'
   pull_request:
     branches:
     - master
+    paths-ignore:
+    - '.github/workflows/**'
+    - '!.github/workflows/cdn-agama-public.yml'
   schedule:
     - cron: "0 4 * * *"
 
