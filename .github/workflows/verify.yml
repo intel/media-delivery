@@ -1,6 +1,12 @@
 name: verify
 
 on:
+  push:
+    branches:
+    - master
+    paths-ignore:
+    - '.github/workflows/**'
+    - '!.github/workflows/verify.yml'
   pull_request:
     branches:
     - master
