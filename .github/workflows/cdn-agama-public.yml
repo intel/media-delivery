@@ -19,6 +19,8 @@ on:
 env:
   IMAGE: amr-registry.caas.intel.com/vtt-osgc/os/ubuntu:focal
   REGISTRY: dockerv2-gsae-fm.gfx-assets.fm.intel.com/solutions
+  ARTIFACTORY: https://gfx-assets.fm.intel.com/artifactory
+  ARTI_PATH: gfx-media-assets/media_solution/intel-media-delivery/cdn/master
   FLAVOR: public
   http_proxy: http://proxy-chain.intel.com:911
   https_proxy: http://proxy-chain.intel.com:911
@@ -102,7 +104,8 @@ jobs:
         version=${version#Version:}
         version=$(echo $version | sed 's/ //g' | sed 's/[^a-z|A-Z|0-9|.|-]/./g')
         commit=$(git rev-parse --short $GITHUB_SHA)
-        deploytag1="${image%/stash*}/agama:$GITHUB_RUN_ID-$commit-$version"
+        tag=$GITHUB_RUN_ID-$commit-$version
+        deploytag1="${image%/stash*}/agama:$tag"
         deploytag2="${image%/stash*}/agama:latest"
         echo "... as $deploytag1..."
         docker tag $image $deploytag1
@@ -114,3 +117,13 @@ jobs:
           $(docker images -q $image | uniq) \
           $(docker images -q $deploytag1 | uniq) \
           $(docker images -q $deploytag2 | uniq)
+        echo "Posting artifactory asset ..."
+        { \
+          echo "{"; \
+          echo "    \"pipeline\":\"${GITHUB_RUN_ID}\","; \
+          echo "    \"commit_id\":\"${commit}\","; \
+          echo "    \"docker_image\":\"${deploytag1}\""; \
+          echo "}"; \
+        } > docker_image_info.json
+        cat docker_image_info.json
+        gta-asset push --no-archive --root-url $ARTIFACTORY $ARTI_PATH agama-public $tag docker_image_info.json
