@@ -43,8 +43,11 @@ jobs:
         fi
         image=$tagname:$FLAVOR
         echo "Building $image ..."
+        export HTTP_PROXY=$http_proxy
+        export HTTPS_PROXY=$https_proxy
+        export NO_PROXY=$no_proxy
         docker build \
-          $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
+          $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
           --build-arg IMAGE=$IMAGE \
           --build-arg SAMPLE=cdn \
           --no-cache \
