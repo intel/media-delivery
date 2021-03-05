@@ -74,9 +74,26 @@ jobs:
         docker rmi --force $(docker images -q $image | uniq)
         if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
 
+  test-dg2:
+    needs: build
+    runs-on: [self-hosted, osgc-solutions, ubuntu-dg2]
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        image=${{needs.build.outputs.tagname}}:$FLAVOR
+        echo "Testing $image ..."
+        docker pull $image
+        export MDS_IMAGE=$image
+        export MDS_LOGS=$(pwd)/_logs
+        export MDS_DEMO=cdn
+        test_status=0
+        bats tests/*.bats || test_status=$?
+        docker rmi --force $(docker images -q $image | uniq)
+        if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
+
   deploy:
     if: github.event_name == 'push' || github.event_name == 'schedule'
-    needs: [build, test-dg1]
+    needs: [build, test-dg1, test-dg2]
     runs-on: [self-hosted, osgc-solutions, builders]
     steps:
     - uses: actions/checkout@v2

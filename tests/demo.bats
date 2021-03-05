@@ -203,6 +203,9 @@ function test_ffmpeg_capture() {
   if [ $MDS_DEMO != "cdn" ]; then
     skip "note: mode not supported for '$MDS_DEMO' demo"
   fi
+  if fgrep -iq 4f80 /sys/class/drm/$(get_devid)/device/device; then
+    skip "note: temporary skip test for DG2"
+  fi
   test_ffmpeg_capture "vod/abr"
 }
 
