@@ -39,6 +39,11 @@ if [ -z "${MDS_DEMO}" ]; then
   MDS_DEMO="cdn"
 fi
 
+if [ -z "${TIMEOUT}" ]; then
+TIMEOUT=300
+fi
+
+CONTAINER_NAME=media-delivery-killme
 
 _TMP=`pwd`/mds_bats
 
@@ -99,10 +104,30 @@ function docker_run_opts() {
   local cmd=(docker run --rm -p 8080:8080 \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \
+    --name $CONTAINER_NAME \
     $opts ${MDS_IMAGE} "$@")
   echo "# RUN: ${cmd[@]}" >>$_TMP/cmd.txt
+  echo "# ${cmd[@]}" >&3
+
+  "${cmd[@]}" &
+  local pid=$!
+
+  end=$(( $(date +%s) + $TIMEOUT ))
+  while ps -p $pid > /dev/null &&
+      [ $(date +%s) -lt $end ]; do
+    sleep 1;
+  done
+
   local res=0
-  "${cmd[@]}" || res=$?
+  if ps -p $pid > /dev/null; then
+    echo "# test timeout, killing..." >&3
+    docker stop $CONTAINER_NAME
+    echo "# $(dmesg | grep \'GPU HANG\')" >&3
+    res=1
+  else
+    wait $pid || res=$?
+  fi
+
   echo "# STS: $res" >>$_TMP/cmd.txt
   return $res
 }
