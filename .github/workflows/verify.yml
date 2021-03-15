@@ -16,7 +16,7 @@ on:
 
 jobs:
   cmake:
-    runs-on: [self-hosted, osgc-solutions, builders]
+    runs-on: [self-hosted, osgc-solutions, ubuntu-builder]
     steps:
     - uses: actions/checkout@v2
     - run: |
