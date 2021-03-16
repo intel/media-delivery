@@ -18,8 +18,7 @@ dnl # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FR
 dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 dnl # SOFTWARE.
 dnl #
-include(envs.m4)
-HIDE
+include(begin.m4)
 
 define(`MANUALS_BUILD_DEPS',`asciidoc-base docbook-xsl make xsltproc')
 define(`MANUALS_INSTALL_DEPS',`less man-db')
@@ -32,10 +31,11 @@ RUN cd BUILD_HOME/manuals && make -j $(nproc --all) && \
 RUN rm -rf BUILD_HOME/manuals
 )
 
-define(`INSTALL_MANUALS',
+define(`INSTALL_MANUALS',`
 # Restoring man which is excluded from the minimal ubuntu image
-``RUN rm -f /usr/bin/man && dpkg-divert --quiet --remove --rename /usr/bin/man'')
+`RUN rm -f /usr/bin/man && dpkg-divert --quiet --remove --rename /usr/bin/man'
+')
 
 REG(MANUALS)
 
-UNHIDE
+include(end.m4)

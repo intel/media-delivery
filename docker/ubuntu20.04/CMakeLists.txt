@@ -18,13 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-file(GLOB_RECURSE srcs ${CMAKE_SOURCE_DIR}/templates/*.m4)
+file(GLOB_RECURSE srcs
+  ${CMAKE_SOURCE_DIR}/templates/*.m4
+  ${CMAKE_CURRENT_SOURCE_DIR}/defs.m4)
 
 set(M4FLAGS ${M4FLAGS} -E
   -I ${CMAKE_SOURCE_DIR}/templates
   -I ${CMAKE_SOURCE_DIR}/templates/m4docker/system
   -I ${CMAKE_SOURCE_DIR}/templates/m4docker/components
-  -D BUILD_PATCHES=patches)
+  -I ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/native/Dockerfile
   DEPENDS ${srcs}

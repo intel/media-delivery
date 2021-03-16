@@ -28,7 +28,21 @@ dnl CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY
 dnl OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-define(`UBUNTU_CODENAME',`ifelse(
-$1,18.04,bionic,
-$1,20.04,focal,
-`ERROR(`ubuntu codename not known for the $1 version')')')dnl
+define(`ENABLE_CENTOS_REPO',`dnl
+RUN sed -i "s/enabled=0/enabled=1/g" /etc/yum.repos.d/CentOS-$1.repo
+')
+
+define(`INSTALL_CENTOS_REPO',`dnl
+RUN yum install -y -q $1
+')
+
+define(`INSTALL_CENTOS_RPMFUSION_REPO',
+RUN dnf install -y https://download1.rpmfusion.org/free/el/rpmfusion-free-release-$1.noarch.rpm && \
+    dnf install -y https://download1.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$1.noarch.rpm)
+
+define(`INSTALL_CENTOS_OKEY_REPO',
+RUN dnf install -y http://repo.okay.com.mx/centos/$1/x86_64/release/okay-release-1-2.el$1.noarch.rpm)
+
+define(`INSTALL_CENTOS_RAVEN_RELEASE_REPO',
+RUN dnf install -y https://pkgs.dyn.su/el$1/base/x86_64/raven-release-1.0-1.el$1.noarch.rpm
+RUN sed -i "s/enabled=0/enabled=1/g" /etc/yum.repos.d/raven.repo)dnl

@@ -18,8 +18,7 @@ dnl # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FR
 dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 dnl # SOFTWARE.
 dnl #
-include(envs.m4)
-HIDE
+include(begin.m4)
 
 include(intel-gpu-tools.m4)
 
@@ -108,4 +107,4 @@ ENTRYPOINT ["/usr/bin/demo-bash"]') # define(INSTALL_SAMPLES)
 
 REG(SAMPLES)
 
-UNHIDE
+include(end.m4)

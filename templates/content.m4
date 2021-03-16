@@ -18,8 +18,7 @@ dnl # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FR
 dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 dnl # SOFTWARE.
 dnl #
-include(envs.m4)
-HIDE
+include(begin.m4)
 
 define(`GET_CONTENT',`dnl
 INSTALL_PKGS(`ca-certificates wget')
@@ -32,4 +31,4 @@ RUN mkdir -p /downloads && cd /downloads && \
 define(`INSTALL_CONTENT',`dnl
 COPY --from=$1 /downloads /opt/data/embedded')
 
-UNHIDE
+include(end.m4)

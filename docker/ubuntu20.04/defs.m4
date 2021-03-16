@@ -18,27 +18,16 @@ dnl # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FR
 dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 dnl # SOFTWARE.
 dnl #
-include(envs.m4)
-include(ubuntu.m4)
-HIDE
+divert(-1)
 
-define(`INTEL_GFX_URL',https://osgc.jf.intel.com/internal)
+define(`BUILD_PREFIX',/opt/intel/samples)
+define(`BUILD_WHEEL',/opt/wheel)
+define(`CLEANUP_MAN',no)
 
-pushdef(`_install_ubuntu',`dnl
-INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent libnss3-tools software-properties-common unzip wget))
+define(`ECHO_SEP',` \
+    ')
 
-COPY assets/embargo/setup-certs.sh /tmp/
-RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
-RUN curl -fsSL INTEL_GFX_URL/intel-graphics.key | apt-key add -
+define(`VMAF_PATCH_PATH',patches/vmaf)
+#define(`FFMPEF_PATCH_PATH',patches/ffmpeg)
 
-ARG FLAVOR=focal-embargo-untested
-RUN apt-add-repository "deb INTEL_GFX_URL/ubuntu $FLAVOR main"')
-
-ifelse(OS_NAME,ubuntu,ifelse(OS_VERSION,20.04,
-`define(`ENABLE_INTEL_GFX_REPO',defn(`_install_ubuntu'))'))
-
-popdef(`_install_ubuntu')
-
-ifdef(`ENABLE_INTEL_GFX_REPO',,dnl
-  `ERROR(`Intel Graphics Repositories don't support OS_NAME:OS_VERSION')')
-UNHIDE
+divert(0)dnl

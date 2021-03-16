@@ -18,8 +18,7 @@ dnl # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FR
 dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 dnl # SOFTWARE.
 dnl #
-include(envs.m4)
-HIDE
+include(begin.m4)
 
 DECLARE(`VMAF_VER',`v1.5.2')
 DECLARE(`ENABLE_VMAF_PYTHON',`yes')
@@ -35,14 +34,8 @@ define(`BUILD_VMAF',dnl
 # As of now we need 2 things from VMAF: libvmaf library against which we will link
 # ffmpeg and model *.pkl files to be able to calculate VMAF.
 RUN git clone --depth 1 --branch VMAF_VER https://github.com/Netflix/vmaf.git BUILD_HOME/vmaf
-ifelse(BUILD_PATCHES,`',,
-RUN { \
-  set -ex; \
-  cd BUILD_HOME/vmaf; \
-  while read p; do \
-    patch -p1 < /opt/patches/vmaf/$p; \
-  done </opt/patches/vmaf/series; \
-})
+ifdef(`VMAF_PATCH_PATH',`PATCH(BUILD_HOME/vmaf,VMAF_PATCH_PATH)')dnl
+
 RUN cd BUILD_HOME/vmaf/libvmaf \
   && meson build \
   --buildtype=release \
@@ -57,6 +50,11 @@ RUN cd BUILD_HOME/vmaf/python \
     && python3 setup.py bdist_wheel --dist-dir=BUILD_WHEEL')
 ) # define(BUILD_VMAF)
 
+define(`INSTALL_VMAF',dnl
+COPY --from=$2 BUILD_WHEEL BUILD_WHEEL
+RUN python3 -m pip install --no-deps --prefix=BUILD_PREFIX BUILD_WHEEL/* && rm -rf /opt/wheel
+)
+
 REG(VMAF)
 
-UNHIDE
+include(end.m4)

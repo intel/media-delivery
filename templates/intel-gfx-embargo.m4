@@ -18,9 +18,8 @@ dnl # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FR
 dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 dnl # SOFTWARE.
 dnl #
-include(envs.m4)
+include(begin.m4)
 include(ubuntu.m4)
-HIDE
 
 define(`INTEL_GFX_URL',https://osgc.jf.intel.com/internal)
 
@@ -41,4 +40,5 @@ popdef(`_install_ubuntu')
 
 ifdef(`ENABLE_INTEL_GFX_REPO',,dnl
   `ERROR(`Intel Graphics Repositories don't support OS_NAME:OS_VERSION')')
-UNHIDE
+
+include(end.m4)

@@ -18,18 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-divert(-1)
-define(`ECHO_SEP',` \
-    ')
-define(`BUILD_PREFIX',/opt/intel/samples)
-
+include(defs.m4)dnl
+include(begin.m4)
 include(intel-gfx-embargo.m4)
 include(content.m4)
 include(vmaf.m4)
 include(ffmpeg.m4)
 include(manuals.m4)
 include(samples.m4)
-divert(0)dnl
+include(end.m4)
 PREAMBLE
 
 ARG IMAGE=OS_NAME:OS_VERSION

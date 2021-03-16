@@ -18,8 +18,7 @@ dnl # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FR
 dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 dnl # SOFTWARE.
 dnl #
-include(envs.m4)
-HIDE
+include(begin.m4)
 
 # We need igt older than the following commit to have be able to select desired device
 # for intel_gpu_top on multi-gpu systems:
@@ -68,4 +67,4 @@ RUN setcap cap_sys_admin+ep $(find /opt -name intel_gpu_top)
 
 REG(IGT)
 
-UNHIDE
+include(end.m4)

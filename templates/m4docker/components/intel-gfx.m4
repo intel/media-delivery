@@ -1,26 +1,36 @@
-dnl # Copyright (c) 2020 Intel Corporation
-dnl #
-dnl # Permission is hereby granted, free of charge, to any person obtaining a copy
-dnl # of this software and associated documentation files (the "Software"), to deal
-dnl # in the Software without restriction, including without limitation the rights
-dnl # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-dnl # copies of the Software, and to permit persons to whom the Software is
-dnl # furnished to do so, subject to the following conditions:
-dnl #
-dnl # The above copyright notice and this permission notice shall be included in all
-dnl # copies or substantial portions of the Software.
-dnl #
-dnl # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-dnl # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-dnl # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-dnl # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-dnl # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-dnl # SOFTWARE.
-dnl #
-include(envs.m4)
+dnl BSD 3-Clause License
+dnl
+dnl Copyright (c) 2020, Intel Corporation
+dnl All rights reserved.
+dnl
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions are met:
+dnl
+dnl * Redistributions of source code must retain the above copyright notice, this
+dnl   list of conditions and the following disclaimer.
+dnl
+dnl * Redistributions in binary form must reproduce the above copyright notice,
+dnl   this list of conditions and the following disclaimer in the documentation
+dnl   and/or other materials provided with the distribution.
+dnl
+dnl * Neither the name of the copyright holder nor the names of its
+dnl   contributors may be used to endorse or promote products derived from
+dnl   this software without specific prior written permission.
+dnl
+dnl THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+dnl AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+dnl IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+dnl DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+dnl FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+dnl DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+dnl SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+dnl CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+dnl OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+dnl
+include(begin.m4)
+
 include(ubuntu.m4)
-HIDE
 
 define(`INTEL_GFX_URL',https://repositories.intel.com/graphics)
 
@@ -39,4 +49,5 @@ popdef(`_install_ubuntu')
 
 ifdef(`ENABLE_INTEL_GFX_REPO',,dnl
   `ERROR(`Intel Graphics Repositories don't support OS_NAME:OS_VERSION')')
-UNHIDE
+
+include(end.m4)dnl

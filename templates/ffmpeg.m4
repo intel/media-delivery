@@ -18,8 +18,7 @@ dnl # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FR
 dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 dnl # SOFTWARE.
 dnl #
-include(envs.m4)
-HIDE
+include(begin.m4)
 
 define(`FFMPEG_BUILD_DEPS',`ca-certificates gcc g++ git libmfx-dev libva-dev libx264-dev libx265-dev make patch pkg-config yasm')
 define(`FFMPEG_INSTALL_DEPS',`intel-media-va-driver-non-free libigfxcmrt7 libmfx1 libva-drm2 libx264-155 libx265-179 libxcb-shm0')
@@ -28,14 +27,8 @@ DECLARE(`FFMPEG_VER',`n4.3.1')
 
 define(`BUILD_FFMPEG',
 RUN git clone --depth 1 --branch FFMPEG_VER https://github.com/ffmpeg/ffmpeg BUILD_HOME/ffmpeg
-ifelse(BUILD_PATCHES,`',,
-RUN { \
-  set -ex; \
-  cd BUILD_HOME/ffmpeg; \
-  while read p; do \
-    patch -p1 < /opt/patches/ffmpeg/$p; \
-  done </opt/patches/ffmpeg/series; \
-})
+ifdef(`FFMPEG_PATCH_PATH',`PATCH(BUILD_HOME/ffmpeg,FFMPEG_PATCH_PATH)')dnl
+
 RUN cd BUILD_HOME/ffmpeg && \
   ./configure \
   --prefix=BUILD_PREFIX \
@@ -60,4 +53,4 @@ RUN rm -rf BUILD_HOME/ffmpeg
 
 REG(FFMPEG)
 
-UNHIDE
+include(end.m4)
