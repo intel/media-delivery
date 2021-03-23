@@ -51,6 +51,11 @@ RUN cd BUILD_HOME/ffmpeg && \
 RUN rm -rf BUILD_HOME/ffmpeg
 ) # define(BUILD_FFMPEG)
 
+define(`INSTALL_FFMPEG',
+ARG FLAVOR
+RUN if [ "$FLAVOR" = focal-embargo-untested ]; then ifelse(OS_NAME,ubuntu,APT_INSTALL(libmfxgen1)); fi
+)
+
 REG(FFMPEG)
 
 include(end.m4)

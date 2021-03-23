@@ -223,6 +223,11 @@ RUN echo "/opt/intel/samples/lib" >> /etc/ld.so.conf.d/all-libs.conf && ldconfig
 
 COPY --from=build /opt/wheel /opt/wheel
 RUN python3 -m pip install --no-deps --prefix=/opt/intel/samples /opt/wheel/* && rm -rf /opt/wheel
+ARG FLAVOR
+RUN if [ "$FLAVOR" = focal-embargo-untested ]; then apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libmfxgen1 && \
+  rm -rf /var/lib/apt/lists/*; fi
 
 # Restoring man which is excluded from the minimal ubuntu image
 RUN rm -f /usr/bin/man && dpkg-divert --quiet --remove --rename /usr/bin/man

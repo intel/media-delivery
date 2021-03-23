@@ -193,17 +193,17 @@ DECLARE(`ECHO_SEP',`` '')
 # Echoes given arguments separating them with ``ECHO_SEP`` (defaults to `` `` space).
 define(`ECHO',`ifelse($#,0,,$#,1,$1,`$1`'ECHO_SEP`'ECHO(shift($@))')')
 
-define(`APT_INSTALL',`RUN apt-get update && \
+define(`APT_INSTALL',`apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ECHO($@) && \
   rm -rf /var/lib/apt/lists/*')
-define(`YUM_INSTALL',`RUN yum install -y ECHO($@)')
+define(`YUM_INSTALL',`yum install -y ECHO($@)')
 
 # Expands into distro packages install command(s) for the packages specified
 # in arguments.
 define(`INSTALL_PKGS',`ifelse(
-OS_NAME,ubuntu,APT_INSTALL($@),
-OS_NAME,centos,YUM_INSTALL($@),
+OS_NAME,ubuntu,RUN APT_INSTALL($@),
+OS_NAME,centos,RUN YUM_INSTALL($@),
 `ERROR(unsupported OS: OS_NAME)')')
 
 # Expands into list of rules for the components listed in ``COMPONENTS_LIST``.
