@@ -28,7 +28,7 @@ env:
 
 jobs:
   build:
-    runs-on: [self-hosted, osgc-solutions, ubuntu-builder]
+    runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
     outputs:
       tagname: ${{steps.build.outputs.tagname}}
     steps:
@@ -59,7 +59,7 @@ jobs:
 
   test-gen9:
     needs: build
-    runs-on: [self-hosted, osgc-solutions, ubuntu-gen9]
+    runs-on: [self-hosted, osgc-solutions, ubuntu, gen9]
     steps:
     - uses: actions/checkout@v2
     - run: |
@@ -94,7 +94,7 @@ jobs:
   deploy:
     if: github.event_name == 'push' || github.event_name == 'schedule'
     needs: [build, test-gen9, test-dg1]
-    runs-on: [self-hosted, osgc-solutions, ubuntu-builder]
+    runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
     steps:
     - uses: actions/checkout@v2
     - run: |
