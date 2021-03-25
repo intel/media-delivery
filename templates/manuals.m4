@@ -20,7 +20,7 @@ dnl # SOFTWARE.
 dnl #
 include(begin.m4)
 
-define(`MANUALS_BUILD_DEPS',`asciidoc-base docbook-xsl make xsltproc')
+define(`MANUALS_BUILD_DEPS',`asciidoc-base docbook-utils docbook-xsl make xmlto xsltproc')
 define(`MANUALS_INSTALL_DEPS',`less man-db')
 
 define(`BUILD_MANUALS',

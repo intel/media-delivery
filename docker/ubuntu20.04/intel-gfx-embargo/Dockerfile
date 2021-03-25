@@ -134,8 +134,10 @@ RUN rm -rf /opt/build/ffmpeg
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     asciidoc-base \
+    docbook-utils \
     docbook-xsl \
     make \
+    xmlto \
     xsltproc && \
   rm -rf /var/lib/apt/lists/*
 # Building some manual pages for the sample
