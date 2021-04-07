@@ -603,7 +603,7 @@ def main():
                         elif (sequence_mode == "DECODE"): # SMT Decode
                             transcode_input_clip = "-i " + content_path + key
                             if not no_fps_limit:
-                                transcode_input_clip = "-f " + str(fps_constraint) + " " + transcode_input_clip
+                                transcode_input_clip = "-fps " + str(fps_constraint) + " " + transcode_input_clip
                             dispatch_cmdline = dispatch_cmdline.replace("-i <>", transcode_input_clip)
 
                         ######################################################################################################
