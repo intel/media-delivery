@@ -20,13 +20,20 @@ dnl # SOFTWARE.
 dnl #
 include(begin.m4)
 
-define(`FFMPEG_BUILD_DEPS',`ca-certificates gcc g++ git libmfx-dev libva-dev libx264-dev libx265-dev make patch pkg-config yasm')
-define(`FFMPEG_INSTALL_DEPS',`intel-media-va-driver-non-free libigfxcmrt7 libmfx1 libva-drm2 libx264-155 libx265-179 libxcb-shm0')
+DECLARE(`FFMPEG_VER',`b2538ce')
+DECLARE(`FFMPEG_ENABLE_MFX',`1.x')
 
-DECLARE(`FFMPEG_VER',`n4.3.1')
+define(`FFMPEG_BUILD_DEPS',`ca-certificates gcc g++ git dnl
+  ifelse(FFMPEG_ENABLE_MFX,1.x,libmfx-dev,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl-dev)) dnl
+  libva-dev libx264-dev libx265-dev make patch pkg-config yasm')
+define(`FFMPEG_INSTALL_DEPS',`intel-media-va-driver-non-free libigfxcmrt7 libmfx1 dnl
+  ifelse(FFMPEG_ENABLE_MFX,2.x,libmfxgen1 libvpl2) dnl
+  libva-drm2 libx264-155 libx265-179 libxcb-shm0')
 
 define(`BUILD_FFMPEG',
-RUN git clone --depth 1 --branch FFMPEG_VER https://github.com/ffmpeg/ffmpeg BUILD_HOME/ffmpeg
+RUN git clone https://github.com/ffmpeg/ffmpeg BUILD_HOME/ffmpeg && \
+  cd BUILD_HOME/ffmpeg && \
+  git checkout FFMPEG_VER
 ifdef(`FFMPEG_PATCH_PATH',`PATCH(BUILD_HOME/ffmpeg,FFMPEG_PATCH_PATH)')dnl
 
 RUN cd BUILD_HOME/ffmpeg && \
@@ -37,7 +44,11 @@ RUN cd BUILD_HOME/ffmpeg && \
   --disable-doc \
   --enable-shared \
   --enable-vaapi \
+ifelse(FFMPEG_ENABLE_MFX,1.x,`dnl
   --enable-libmfx \
+',ifelse(FFMPEG_ENABLE_MFX,2.x,`dnl
+  --enable-libvpl \
+'))dnl
   --enable-gpl \
   --enable-libx264 \
   --enable-libx265 \

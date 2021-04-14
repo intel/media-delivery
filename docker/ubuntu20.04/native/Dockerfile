@@ -64,8 +64,11 @@ RUN apt-get update && \
 RUN git clone --depth 1 --branch v2.2.1 https://github.com/Netflix/vmaf.git /opt/build/vmaf
 
 COPY patches/vmaf /opt/build/vmaf
-RUN cd /opt/build/vmaf && \
-    for patch_file in $(find -iname "*.patch"); do patch -p1 < ${patch_file}; done || true
+RUN cd /opt/build/vmaf && { set -e; \
+  for patch_file in $(find -iname "*.patch" | sort -n); do \
+    echo "Applying: ${patch_file}"; \
+    patch -p1 < ${patch_file}; \
+  done; }
 
 RUN cd /opt/build/vmaf/libvmaf \
   && meson build \
@@ -95,7 +98,9 @@ RUN apt-get update && \
     pkg-config \
     yasm && \
   rm -rf /var/lib/apt/lists/*
-RUN git clone --depth 1 --branch n4.3.1 https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg
+RUN git clone https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg && \
+  cd /opt/build/ffmpeg && \
+  git checkout b2538ce
 
 RUN cd /opt/build/ffmpeg && \
   ./configure \
