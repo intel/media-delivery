@@ -108,7 +108,7 @@ RUN apt-get update && \
     pkg-config \
     yasm && \
   rm -rf /var/lib/apt/lists/*
-RUN git clone --depth 1 --branch n4.3.1 https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg
+RUN git clone --depth 1 --branch n4.4 https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg
 
 RUN cd /opt/build/ffmpeg && \
   ./configure \
