@@ -1,0 +1,78 @@
+From d37b5bb0869503a0c1e6950a0695805b896d5587 Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Wed, 3 Feb 2021 14:49:46 +0800
+Subject: [PATCH 10/13] configure: add --enable-libvpl option
+
+This allows user to build FFmpeg against Intel oneVPL. oneVPL 2.2
+is the required minimum version when building Intel oneVPL code.
+
+It will fail to run configure script if both libmfx and libvpl are
+enabled.
+---
+ configure | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/configure b/configure
+index 9655a5823e..e9d2564819 100755
+--- a/configure
++++ b/configure
+@@ -337,6 +337,7 @@ External library support:
+   --disable-ffnvcodec      disable dynamically linked Nvidia code [autodetect]
+   --enable-libdrm          enable DRM code (Linux) [no]
+   --enable-libmfx          enable Intel MediaSDK (AKA Quick Sync Video) code via libmfx [no]
++  --enable-libvpl          enable Intel oneVPL code via libvpl if libmfx is not used [no]
+   --enable-libnpp          enable Nvidia Performance Primitives-based code [no]
+   --enable-mmal            enable Broadcom Multi-Media Abstraction Layer (Raspberry Pi) via MMAL [no]
+   --disable-nvdec          disable Nvidia video decoding acceleration (via hwaccel) [autodetect]
+@@ -1895,6 +1896,7 @@ HWACCEL_LIBRARY_NONFREE_LIST="
+ HWACCEL_LIBRARY_LIST="
+     $HWACCEL_LIBRARY_NONFREE_LIST
+     libmfx
++    libvpl
+     mmal
+     omx
+     opencl
+@@ -6428,22 +6430,34 @@ enabled libilbc           && require libilbc ilbc.h WebRtcIlbcfix_InitDecode -li
+ enabled libklvanc         && require libklvanc libklvanc/vanc.h klvanc_context_create -lklvanc
+ enabled libkvazaar        && require_pkg_config libkvazaar "kvazaar >= 0.8.1" kvazaar.h kvz_api_get
+ enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_db_new
++
++if enabled libmfx && enabled libvpl; then
++   die "ERROR: can not use libmfx and libvpl together"
+ # While it may appear that require is being used as a pkg-config
+ # fallback for libmfx, it is actually being used to detect a different
+ # installation route altogether.  If libmfx is installed via the Intel
+ # Media SDK or Intel Media Server Studio, these don't come with
+ # pkg-config support.  Instead, users should make sure that the build
+ # can find the libraries and headers through other means.
+-
+-enabled libmfx            && { { check_pkg_config libmfx "libmfx < 2.0" "mfxvideo.h" MFXInit ||
++elif enabled libmfx; then
++    { check_pkg_config libmfx "libmfx < 2.0" "mfxvideo.h" MFXInit || \
+ # Some old versions of libmfx have the following settings in libmfx.pc:
+ #   includedir=/usr/include
+ #   Cflags: -I${includedir}
+ # So add -I${includedir}/mfx to CFLAGS
+-                                 { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit && add_cflags -I$($pkg_config --variable=includedir libmfx)/mfx; } ||
+-                                 { require "libmfx < 2.0" "mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } } &&
+-                               warn "build FFmpeg against libmfx 1.x, obsolete features of libmfx such as OPAQUE memory,\n"\
+-                                    "multi-frame encode, user plugins and LA_EXT rate control mode are enabled"; }
++      { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit && add_cflags -I$($pkg_config --variable=includedir libmfx)/mfx; } ||
++      { require "libmfx < 2.0" "mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } } &&
++    warn "build FFmpeg against libmfx 1.x, obsolete features of libmfx such as OPAQUE memory,\n"\
++         "multi-frame encode, user plugins and LA_EXT rate control mode are enabled"
++elif enabled libvpl; then
++# Consider pkg-config only. The name of libmfx is still used in the following check for --enable-libvpl option
++# because QSV has dependency on libmfx, we can use the same dependency if using libmfx in this check.
++    check_pkg_config libmfx "vpl >= 2.2" "mfxvideo.h mfxdispatcher.h" MFXLoad && \
++        warn "build FFmpeg against oneVPL 2.2+, OPAQUE memory, multi-frame encode, user plugins\n"\
++             "and LA_EXT rate control mode in FFmpeg QSV won't be supported." ||
++            die "ERROR: libvpl >= 2.2 not found"
++fi
++
+ if enabled libmfx; then
+    check_cc MFX_CODEC_VP9 "mfxdefs.h mfxstructures.h" "MFX_CODEC_VP9"
+ fi
+-- 
+2.25.1
+

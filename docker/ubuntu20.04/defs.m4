@@ -28,6 +28,8 @@ define(`ECHO_SEP',` \
     ')
 
 define(`VMAF_PATCH_PATH',patches/vmaf)
-#define(`FFMPEF_PATCH_PATH',patches/ffmpeg)
+
+define(`FFMPEG_ENABLE_MFX',2.x)
+define(`FFMPEG_PATCH_PATH',patches/ffmpeg)
 
 divert(0)dnl

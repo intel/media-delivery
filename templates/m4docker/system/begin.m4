@@ -151,8 +151,11 @@ popdef(`_tmp')')
 #
 define(`PATCH',`
 COPY $2 $1
-RUN cd $1 && \
-    for patch_file in $(find -iname "*.patch"); do patch -p1 < ${patch_file}; done || true
+RUN cd $1 && { set -e; \
+  for patch_file in $(find -iname "*.patch" | sort -n); do \
+    echo "Applying: ${patch_file}"; \
+    patch -p1 < ${patch_file}; \
+  done; }
 ')
 
 # Expands into list of rules for the components specified in the ``$@`` arguments.

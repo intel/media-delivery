@@ -166,7 +166,7 @@ if [ "$type" = "vod/avc" ]; then
     -f hls -hls_time $hls_time -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
-    -use_localtime_mkdir 1
+    -strftime_mkdir 1
     -var_stream_map "v:0$a0" stream_%v.m3u8)
 elif [ "$type" = "vod/hevc" ]; then
   bitrate=3000000
@@ -184,7 +184,7 @@ elif [ "$type" = "vod/hevc" ]; then
     -f hls -hls_time $hls_time -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
-    -use_localtime_mkdir 1
+    -strftime_mkdir 1
     -var_stream_map "v:0$a0" stream_%v.m3u8)
 else
   cmd=(bash -c 'echo "bug: unsupported streaming type: $type"; exit 1;')
