@@ -76,7 +76,7 @@ jobs:
 
   test-dg2:
     needs: build
-    runs-on: [self-hosted, osgc-solutions, ubuntu, dg2]
+    runs-on: [self-hosted, osgc-solutions, ubuntu, dg2, single-gpu]
     steps:
     - uses: actions/checkout@v2
     - run: |
