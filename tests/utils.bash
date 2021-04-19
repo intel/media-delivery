@@ -122,7 +122,7 @@ function docker_run_opts() {
   if ps -p $pid > /dev/null; then
     echo "# test timeout, killing..." >&3
     docker stop $CONTAINER_NAME
-    echo "# $(dmesg | grep \'GPU HANG\')" >&3
+    echo "# $(dmesg | grep GPU | grep HANG)" >&3
     res=1
   else
     wait $pid || res=$?
