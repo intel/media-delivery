@@ -47,7 +47,7 @@ RUN cd BUILD_HOME/ffmpeg && \
 ifelse(FFMPEG_ENABLE_MFX,1.x,`dnl
   --enable-libmfx \
 ',ifelse(FFMPEG_ENABLE_MFX,2.x,`dnl
-  --enable-libmfx \
+  --enable-libvpl \
 '))dnl
   --enable-gpl \
   --enable-libx264 \

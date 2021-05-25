@@ -1,0 +1,40 @@
+From ee0cbc753cca5d7503d5787c5aca025186c648f3 Mon Sep 17 00:00:00 2001
+From: "Chen,Wenbin" <wenbin.chen@intel.com>
+Date: Fri, 9 Apr 2021 14:00:40 +0800
+Subject: [PATCH 13/15] libavcodec/qsvenc: add mbbrc to hevc_qsv
+
+Add mbbrc to hevc_qsv
+For detailed description, please see "mbbrc" part in:
+https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/mediasdk-man.md#mfxextcodingoption2
+
+Signed-off-by: Wenbin Chen <wenbin.chen@intel.com>
+---
+ libavcodec/qsvenc.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
+index 2f29ad6..1161ed2 100644
+--- a/libavcodec/qsvenc.c
++++ b/libavcodec/qsvenc.c
+@@ -695,8 +695,6 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+ 
+             if (q->bitrate_limit >= 0)
+                 q->extco2.BitrateLimit = q->bitrate_limit ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF;
+-            if (q->mbbrc >= 0)
+-                q->extco2.MBBRC = q->mbbrc ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF;
+ 
+             if (q->max_frame_size >= 0)
+                 q->extco2.MaxFrameSize = q->max_frame_size;
+@@ -743,6 +741,9 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+                 q->extco2.MaxQPP = q->extco2.MaxQPB = q->extco2.MaxQPI;
+             }
+ #endif
++            if (q->mbbrc >= 0)
++                q->extco2.MBBRC = q->mbbrc ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF;
++
+             q->extco2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
+             q->extco2.Header.BufferSz = sizeof(q->extco2);
+ 
+-- 
+1.8.3.1
+

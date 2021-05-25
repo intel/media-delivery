@@ -1,0 +1,33 @@
+From e9eb02b0412dc930155b160e2c8f96ac6976d889 Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Fri, 19 Feb 2021 08:51:35 +0800
+Subject: [PATCH 09/15] configure: check mfxdefs.h instead of mfxvp9.h for
+ MFX_CODEC_VP9
+
+The VP9 related definitions in mfxvp9.h were wrapped by the
+MFX_VERSION_NEXT, this means the definitions have never been used in a
+public release. In addition, mfxdefs.h was included in mfxvp9.h, so we
+may check mfxdefs.h directly
+
+This is in preparation for oneVPL support because mfxvp9.h was removed
+from oneVPL
+---
+ configure | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure b/configure
+index 26ee294..6ee8ae9 100755
+--- a/configure
++++ b/configure
+@@ -6422,7 +6422,7 @@ enabled libmfx            && { { { check_pkg_config libmfx "libmfx < 2.0" "mfxvi
+                                     "OPAQUE memory, multi-frame encode and LA_EXT rate control mode are enabled"; } ||
+                                { require libmfx "mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } }
+ if enabled libmfx; then
+-   check_cc MFX_CODEC_VP9 "mfxvp9.h mfxstructures.h" "MFX_CODEC_VP9"
++   check_cc MFX_CODEC_VP9 "mfxdefs.h mfxstructures.h" "MFX_CODEC_VP9"
+ fi
+ 
+ enabled libmodplug        && require_pkg_config libmodplug libmodplug libmodplug/modplug.h ModPlug_Load
+-- 
+1.8.3.1
+

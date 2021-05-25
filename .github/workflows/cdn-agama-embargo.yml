@@ -50,7 +50,7 @@ jobs:
           --build-arg FLAVOR=$FLAVOR \
           --no-cache \
           --force-rm \
-          --file docker/ubuntu20.04/intel-gfx-embargo/Dockerfile \
+          --file docker/ubuntu20.04/intel-gfx-embargo-vpl/Dockerfile \
           -t $image \
           .
         docker push $image

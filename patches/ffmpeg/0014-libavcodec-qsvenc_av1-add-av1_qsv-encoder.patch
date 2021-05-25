@@ -1,0 +1,449 @@
+From f487e939728b25561d99709952cf17135b5bb088 Mon Sep 17 00:00:00 2001
+From: "Chen,Wenbin" <wenbin.chen@intel.com>
+Date: Thu, 8 Apr 2021 13:09:47 +0800
+Subject: [PATCH 14/15] libavcodec/qsvenc_av1: add av1_qsv encoder
+
+sample command:
+ffmpeg -f rawvideo -pix_fmt yuv420p -s 1920x1080 -i input.yuv -c:v
+av1_qsv -async_depth 1 -q 50 -f rawvideo output.ivf
+
+Signed-off-by: Wenbin Chen <wenbin.chen@intel.com>
+---
+ configure               |   1 +
+ libavcodec/Makefile     |   2 +
+ libavcodec/allcodecs.c  |   1 +
+ libavcodec/av1_temp.h   | 120 ++++++++++++++++++++++++++++++++++++++++++++++++
+ libavcodec/qsvenc.c     |  78 +++++++++++++++++++++++++++++--
+ libavcodec/qsvenc.h     |   8 +++-
+ libavcodec/qsvenc_av1.c | 105 ++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 311 insertions(+), 4 deletions(-)
+ create mode 100644 libavcodec/av1_temp.h
+ create mode 100644 libavcodec/qsvenc_av1.c
+
+diff --git a/configure b/configure
+index a32b7b3..1e028ff 100755
+--- a/configure
++++ b/configure
+@@ -3184,6 +3184,7 @@ vp9_qsv_encoder_select="qsvenc"
+ vp9_v4l2m2m_decoder_deps="v4l2_m2m vp9_v4l2_m2m"
+ wmv3_crystalhd_decoder_select="crystalhd"
+ av1_qsv_decoder_select="qsvdec"
++av1_qsv_encoder_select="qsvenc"
+ 
+ # parsers
+ aac_parser_select="adts_header"
+diff --git a/libavcodec/Makefile b/libavcodec/Makefile
+index 4fa8d7a..a227a45 100644
+--- a/libavcodec/Makefile
++++ b/libavcodec/Makefile
+@@ -228,6 +228,8 @@ OBJS-$(CONFIG_AURA_DECODER)            += cyuv.o
+ OBJS-$(CONFIG_AURA2_DECODER)           += aura.o
+ OBJS-$(CONFIG_AV1_DECODER)             += av1dec.o
+ OBJS-$(CONFIG_AV1_CUVID_DECODER)       += cuviddec.o
++OBJS-$(CONFIG_AV1_QSV_DECODER)         += qsvdec.o
++OBJS-$(CONFIG_AV1_QSV_ENCODER)         += qsvenc_av1.o
+ OBJS-$(CONFIG_AVRN_DECODER)            += avrndec.o
+ OBJS-$(CONFIG_AVRP_DECODER)            += r210dec.o
+ OBJS-$(CONFIG_AVRP_ENCODER)            += r210enc.o
+diff --git a/libavcodec/allcodecs.c b/libavcodec/allcodecs.c
+index 623db2a..35bc771 100644
+--- a/libavcodec/allcodecs.c
++++ b/libavcodec/allcodecs.c
+@@ -794,6 +794,7 @@ extern const AVCodec ff_libaom_av1_decoder;
+ extern const AVCodec ff_av1_decoder;
+ extern const AVCodec ff_av1_cuvid_decoder;
+ extern const AVCodec ff_av1_qsv_decoder;
++extern const AVCodec ff_av1_qsv_encoder;
+ extern const AVCodec ff_libopenh264_encoder;
+ extern const AVCodec ff_libopenh264_decoder;
+ extern const AVCodec ff_h264_amf_encoder;
+diff --git a/libavcodec/av1_temp.h b/libavcodec/av1_temp.h
+new file mode 100644
+index 0000000..2f3d99f
+--- /dev/null
++++ b/libavcodec/av1_temp.h
+@@ -0,0 +1,120 @@
++/*############################################################################
++  # Copyright (C) 2018-2021 Intel Corporation
++  #
++  # SPDX-License-Identifier: MIT
++  ############################################################################*/
++
++#ifndef __AV1_TEMP_H__
++#define __AV1_TEMP_H__
++#include <mfxcommon.h>
++
++#if !defined (__GNUC__)
++#pragma warning(disable: 4201)
++#endif
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++#ifndef MFX_VERSION_NEXT
++
++enum {
++    MFX_EXTBUFF_AV1_PARAM                       = MFX_MAKEFOURCC('1', 'P', 'A', 'R'),
++    MFX_EXTBUFF_AV1_AUXDATA                     = MFX_MAKEFOURCC('1', 'A', 'U', 'X')
++};
++
++MFX_PACK_BEGIN_USUAL_STRUCT()
++typedef struct {
++    mfxExtBuffer Header;
++
++    mfxU16  FrameWidth;
++    mfxU16  FrameHeight;
++
++    mfxU8   WriteIVFHeaders;          /* tri-state option */
++    mfxU8   UseAnnexB;                /* tri-state option */
++    mfxU8   PackOBUFrame;             /* tri-state option */
++    mfxU8   InsertTemporalDelimiter;  /* tri-state option */
++
++    mfxU8   UniformTileSpacing;       /* tri-state option */
++    mfxU8   ContextUpdateTileIdPlus1; /* Minus 1 specifies context_update_tile_id */
++    mfxU16  NumTileRows;
++    mfxU16  NumTileColumns;
++    mfxU16  NumTileGroups;
++    mfxU16  NumTilesPerTileGroup[256];
++    mfxU16  TileWidthInSB[128];
++    mfxU16  TileHeightInSB[128];
++
++    mfxU8   EnableCdef;               /* tri-state option */
++    mfxU8   EnableRestoration;        /* tri-state option */
++    mfxU8   LoopFilterSharpness;      /* 0..8, 0 = default, map to bitstream: [1..8] => [0..7] */
++
++    mfxU8   InterpFilter;             /* see enum AV1InterpolationMode */
++
++    mfxU8   SegmentationMode;         /* see enum AV1SegmentMode*/
++
++    mfxU8   DisableCdfUpdate;         /* tri-state option */
++    mfxU8   DisableFrameEndUpdateCdf; /* tri-state option */
++
++    mfxU8   EnableSuperres;           /* tri-state option */
++    mfxU8   SuperresScaleDenominator; /* 9..16, 0 = default */
++
++    mfxU8   StillPictureMode;         /* tri-state option */
++    mfxU16  SwitchInterval;           /* interval, 0 - disabled */
++
++    mfxU8   EnableLoopFilter;         /* tri-state option */
++
++    mfxU8   reserved[63];
++} mfxExtAV1Param;
++MFX_PACK_END()
++
++MFX_PACK_BEGIN_USUAL_STRUCT()
++typedef struct {
++    mfxExtBuffer Header;
++
++    struct {
++        mfxU8  CdefDampingMinus3;   /* 0..3 */
++        mfxU8  CdefBits;            /* 0..3 */
++        mfxU8  CdefYStrengths[8];   /* 0..63 */
++        mfxU8  CdefUVStrengths[8];  /* 0..63 */
++        mfxU8  reserved[14];
++    } Cdef;
++
++    struct {
++        mfxU8  LFLevelYVert;        /* 0..63 */
++        mfxU8  LFLevelYHorz;        /* 0..63 */
++        mfxU8  LFLevelU;            /* 0..63 */
++        mfxU8  LFLevelV;            /* 0..63 */
++        mfxU8  ModeRefDeltaEnabled; /* 0, 1 */
++        mfxU8  ModeRefDeltaUpdate;  /* 0, 1 */
++        mfxI8  RefDeltas[8];        /* -63..63 */
++        mfxI8  ModeDeltas[2];       /* -63..63 */
++        mfxU8  reserved[16];
++    } LoopFilter;
++
++    struct {
++        mfxI8  YDcDeltaQ;           /* -63..63 */
++        mfxI8  UDcDeltaQ;           /* -63..63 */
++        mfxI8  VDcDeltaQ;           /* -63..63 */
++        mfxI8  UAcDeltaQ;           /* -63..63 */
++        mfxI8  VAcDeltaQ;           /* -63..63 */
++        mfxU8  MinBaseQIndex;
++        mfxU8  MaxBaseQIndex;
++        mfxU8  reserved[25];
++    } QP;
++
++    mfxU8  ErrorResilientMode;          /* tri-state option */
++    mfxU8  EnableOrderHint;             /* tri-state option */
++    mfxU8  OrderHintBits;               /* 0..8, 0 = default */
++    mfxU8  DisplayFormatSwizzle;        /* 0, 1 */
++
++    mfxU8  reserved[60];
++} mfxExtAV1AuxData;
++MFX_PACK_END()
++
++#endif
++
++#ifdef __cplusplus
++} // extern "C"
++#endif
++
++#endif
+diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
+index 1161ed2..4b057e7 100644
+--- a/libavcodec/qsvenc.c
++++ b/libavcodec/qsvenc.c
+@@ -623,9 +623,16 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+     case MFX_RATECONTROL_CQP:
+         quant = avctx->global_quality / FF_QP2LAMBDA;
+ 
+-        q->param.mfx.QPI = av_clip(quant * fabs(avctx->i_quant_factor) + avctx->i_quant_offset, 0, 51);
+-        q->param.mfx.QPP = av_clip(quant, 0, 51);
+-        q->param.mfx.QPB = av_clip(quant * fabs(avctx->b_quant_factor) + avctx->b_quant_offset, 0, 51);
++        if (avctx->codec_id == AV_CODEC_ID_AV1) {
++            q->param.mfx.QPI = av_clip(quant * fabs(avctx->i_quant_factor) + avctx->i_quant_offset, 0, 255);
++            q->param.mfx.QPP = av_clip(quant, 0, 255);
++            q->param.mfx.QPB = av_clip(quant * fabs(avctx->b_quant_factor) + avctx->b_quant_offset, 0, 255);
++        } else {
++            q->param.mfx.QPI = av_clip(quant * fabs(avctx->i_quant_factor) + avctx->i_quant_offset, 0, 51);
++            q->param.mfx.QPP = av_clip(quant, 0, 51);
++            q->param.mfx.QPB = av_clip(quant * fabs(avctx->b_quant_factor) + avctx->b_quant_offset, 0, 51);
++        }
++
+ 
+         break;
+ #if QSV_HAVE_AVBR
+@@ -783,6 +790,19 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+     }
+ #endif
+ 
++#if QSV_HAVE_EXT_AV1_PARAM
++    if (avctx->codec_id == AV_CODEC_ID_AV1) {
++        q->extav1param.Header.BufferId = MFX_EXTBUFF_AV1_PARAM;
++        q->extav1param.Header.BufferSz = sizeof(q->extav1param);
++        q->extav1param.FrameWidth = avctx->width;
++        q->extav1param.FrameHeight = avctx->height;
++        q->extav1param.NumTileColumns  = q->tile_cols;
++        q->extav1param.NumTileRows     = q->tile_rows;
++        q->extav1param.PackOBUFrame = MFX_CODINGOPTION_OFF;
++        q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extav1param;
++    }
++#endif
++
+ #if QSV_HAVE_EXT_HEVC_TILES
+     if (avctx->codec_id == AV_CODEC_ID_HEVC) {
+         q->exthevctiles.Header.BufferId = MFX_EXTBUFF_HEVC_TILES;
+@@ -870,6 +890,55 @@ static int qsv_retrieve_enc_vp9_params(AVCodecContext *avctx, QSVEncContext *q)
+     return 0;
+ }
+ 
++static int qsv_retrieve_enc_av1_params(AVCodecContext *avctx, QSVEncContext *q)
++{
++    int ret = 0;
++#if QSV_HAVE_EXT_AV1_PARAM
++    mfxExtAV1Param av1_extend_buf = {
++         .Header.BufferId = MFX_EXTBUFF_AV1_PARAM,
++         .Header.BufferSz = sizeof(av1_extend_buf),
++    };
++#endif
++
++#if QSV_HAVE_CO2
++    mfxExtCodingOption2 co2 = {
++        .Header.BufferId = MFX_EXTBUFF_CODING_OPTION2,
++        .Header.BufferSz = sizeof(co2),
++    };
++#endif
++
++#if QSV_HAVE_CO3
++    mfxExtCodingOption3 co3 = {
++        .Header.BufferId = MFX_EXTBUFF_CODING_OPTION3,
++        .Header.BufferSz = sizeof(co3),
++    };
++#endif
++
++    mfxExtBuffer *ext_buffers[] = {
++#if QSV_HAVE_EXT_AV1_PARAM
++        (mfxExtBuffer*)&av1_extend_buf,
++#endif
++#if QSV_HAVE_CO2
++        (mfxExtBuffer*)&co2,
++#endif
++#if QSV_HAVE_CO3
++        (mfxExtBuffer*)&co3,
++#endif
++    };
++
++    q->param.ExtParam    = ext_buffers;
++    q->param.NumExtParam = FF_ARRAY_ELEMS(ext_buffers);
++
++    ret = MFXVideoENCODE_GetVideoParam(q->session, &q->param);
++    if (ret < 0)
++        return ff_qsv_print_error(avctx, ret,
++                                  "Error calling GetVideoParam");
++
++    q->packet_size = q->param.mfx.BufferSizeInKB * q->param.mfx.BRCParamMultiplier * 1000;
++
++    return 0;
++}
++
+ static int qsv_retrieve_enc_params(AVCodecContext *avctx, QSVEncContext *q)
+ {
+     AVCPBProperties *cpb_props;
+@@ -1227,6 +1296,9 @@ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q)
+     case AV_CODEC_ID_VP9:
+         ret = qsv_retrieve_enc_vp9_params(avctx, q);
+         break;
++    case AV_CODEC_ID_AV1:
++        ret = qsv_retrieve_enc_av1_params(avctx, q);
++        break;
+     default:
+         ret = qsv_retrieve_enc_params(avctx, q);
+         break;
+diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
+index 4d0d3fa..db417f5 100644
+--- a/libavcodec/qsvenc.h
++++ b/libavcodec/qsvenc.h
+@@ -26,6 +26,7 @@
+ #include <stdint.h>
+ #include <sys/types.h>
+ 
++#include "av1_temp.h"
+ #include <mfxvideo.h>
+ 
+ #include "libavutil/common.h"
+@@ -44,6 +45,7 @@
+ 
+ #define QSV_HAVE_EXT_HEVC_TILES QSV_VERSION_ATLEAST(1, 13)
+ #define QSV_HAVE_EXT_VP9_PARAM QSV_VERSION_ATLEAST(1, 26)
++#define QSV_HAVE_EXT_AV1_PARAM QSV_ONEVPL
+ 
+ #define QSV_HAVE_TRELLIS QSV_VERSION_ATLEAST(1, 8)
+ #define QSV_HAVE_MAX_SLICE_SIZE QSV_VERSION_ATLEAST(1, 9)
+@@ -137,6 +139,10 @@ typedef struct QSVEncContext {
+ #if QSV_HAVE_EXT_VP9_PARAM
+     mfxExtVP9Param  extvp9param;
+ #endif
++#if QSV_HAVE_EXT_AV1_PARAM
++    mfxExtAV1Param extav1param;
++    mfxExtAV1AuxData extav1auxdata;
++#endif
+ 
+ #if QSV_HAVE_OPAQUE
+     mfxExtOpaqueSurfaceAlloc opaque_alloc;
+@@ -144,7 +150,7 @@ typedef struct QSVEncContext {
+     AVBufferRef             *opaque_alloc_buf;
+ #endif
+ 
+-    mfxExtBuffer  *extparam_internal[2 + QSV_HAVE_CO2 + QSV_HAVE_CO3 + (QSV_HAVE_MF * 2)];
++    mfxExtBuffer  *extparam_internal[2 + QSV_HAVE_CO2 + QSV_HAVE_CO3 + (QSV_HAVE_MF * 2)+QSV_HAVE_EXT_AV1_PARAM*2];
+     int         nb_extparam_internal;
+ 
+     mfxExtBuffer **extparam;
+diff --git a/libavcodec/qsvenc_av1.c b/libavcodec/qsvenc_av1.c
+new file mode 100644
+index 0000000..17528be
+--- /dev/null
++++ b/libavcodec/qsvenc_av1.c
+@@ -0,0 +1,105 @@
++/*
++ * Intel MediaSDK QSV based AV1 encoder
++ *
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++
++#include <stdint.h>
++#include <sys/types.h>
++
++#include <mfxvideo.h>
++
++#include "libavutil/common.h"
++#include "libavutil/opt.h"
++
++#include "avcodec.h"
++#include "internal.h"
++#include "qsv.h"
++#include "qsvenc.h"
++
++typedef struct QSVAV1EncContext {
++    AVClass *class;
++    QSVEncContext qsv;
++    int load_plugin;
++} QSVAV1EncContext;
++
++static av_cold int qsv_enc_init(AVCodecContext *avctx)
++{
++    QSVAV1EncContext *q = avctx->priv_data;
++
++    return ff_qsv_enc_init(avctx, &q->qsv);
++}
++
++static int qsv_enc_frame(AVCodecContext *avctx, AVPacket *pkt,
++                         const AVFrame *frame, int *got_packet)
++{
++    QSVAV1EncContext *q = avctx->priv_data;
++
++    return ff_qsv_encode(avctx, &q->qsv, pkt, frame, got_packet);
++}
++
++static av_cold int qsv_enc_close(AVCodecContext *avctx)
++{
++    QSVAV1EncContext *q = avctx->priv_data;
++
++    return ff_qsv_enc_close(avctx, &q->qsv);
++}
++
++#define OFFSET(x) offsetof(QSVAV1EncContext, x)
++#define VE AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM
++static const AVOption options[] = {
++    QSV_COMMON_OPTS
++    { "profile", NULL, OFFSET(qsv.profile), AV_OPT_TYPE_INT, { .i64 = MFX_PROFILE_UNKNOWN }, 0, INT_MAX, VE, "profile" },
++        { "unknown" , NULL, 0, AV_OPT_TYPE_CONST, { .i64 = MFX_PROFILE_UNKNOWN      }, INT_MIN, INT_MAX,     VE, "profile" },
++        { "main"    , NULL, 0, AV_OPT_TYPE_CONST, { .i64 = MFX_PROFILE_AV1_MAIN     }, INT_MIN, INT_MAX,     VE, "profile" },
++    { "tile_cols",  "Number of columns for tiled encoding",   OFFSET(qsv.tile_cols),    AV_OPT_TYPE_INT, { .i64 = 0 }, 0, UINT16_MAX, VE },
++    { "tile_rows",  "Number of rows for tiled encoding",      OFFSET(qsv.tile_rows),    AV_OPT_TYPE_INT, { .i64 = 0 }, 0, UINT16_MAX, VE },
++    { NULL },
++};
++
++static const AVClass class = {
++    .class_name = "av1_qsv encoder",
++    .item_name  = av_default_item_name,
++    .option     = options,
++    .version    = LIBAVUTIL_VERSION_INT,
++};
++
++static const AVCodecDefault qsv_enc_defaults[] = {
++    { NULL },
++};
++
++AVCodec ff_av1_qsv_encoder = {
++    .name           = "av1_qsv",
++    .long_name      = NULL_IF_CONFIG_SMALL("AV1 (Intel Quick Sync Video acceleration)"),
++    .priv_data_size = sizeof(QSVAV1EncContext),
++    .type           = AVMEDIA_TYPE_VIDEO,
++    .id             = AV_CODEC_ID_AV1,
++    .init           = qsv_enc_init,
++    .encode2        = qsv_enc_frame,
++    .close          = qsv_enc_close,
++    .capabilities   = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_HYBRID,
++    .pix_fmts       = (const enum AVPixelFormat[]){ AV_PIX_FMT_NV12,
++                                                    AV_PIX_FMT_P010,
++                                                    AV_PIX_FMT_QSV,
++                                                    AV_PIX_FMT_NONE },
++    .priv_class     = &class,
++    .defaults       = qsv_enc_defaults,
++    .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
++    .wrapper_name   = "qsv",
++    .hw_configs     = ff_qsv_enc_hw_configs,
++};
+-- 
+1.8.3.1
+

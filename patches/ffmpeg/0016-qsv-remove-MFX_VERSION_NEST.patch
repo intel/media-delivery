@@ -1,0 +1,35 @@
+From 14526b3b4bb83033e6af93f9d5acfb897a41ff98 Mon Sep 17 00:00:00 2001
+From: Dmitry Rogozhkin <dmitry.v.rogozhkin@intel.com>
+Date: Tue, 25 May 2021 14:28:29 -0700
+Subject: [PATCH 16/16] qsv: remove MFX_VERSION_NEST
+
+Signed-off-by: Dmitry Rogozhkin <dmitry.v.rogozhkin@intel.com>
+---
+ libavcodec/av1_temp.h | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/libavcodec/av1_temp.h b/libavcodec/av1_temp.h
+index 2f3d99f..1e2343e 100644
+--- a/libavcodec/av1_temp.h
++++ b/libavcodec/av1_temp.h
+@@ -16,8 +16,6 @@
+ extern "C" {
+ #endif
+ 
+-#ifndef MFX_VERSION_NEXT
+-
+ enum {
+     MFX_EXTBUFF_AV1_PARAM                       = MFX_MAKEFOURCC('1', 'P', 'A', 'R'),
+     MFX_EXTBUFF_AV1_AUXDATA                     = MFX_MAKEFOURCC('1', 'A', 'U', 'X')
+@@ -111,8 +109,6 @@ typedef struct {
+ } mfxExtAV1AuxData;
+ MFX_PACK_END()
+ 
+-#endif
+-
+ #ifdef __cplusplus
+ } // extern "C"
+ #endif
+-- 
+1.8.3.1
+
