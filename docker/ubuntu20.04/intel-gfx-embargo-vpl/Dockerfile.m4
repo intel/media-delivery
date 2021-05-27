@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-include(defs-embargo.m4)dnl
+include(defs-vpl.m4)dnl
 include(begin.m4)
 include(intel-gfx-embargo.m4)
 include(content.m4)
