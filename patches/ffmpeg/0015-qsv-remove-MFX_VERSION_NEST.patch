@@ -1,7 +1,7 @@
-From 14526b3b4bb83033e6af93f9d5acfb897a41ff98 Mon Sep 17 00:00:00 2001
+From eba0a1b6cad7f364288e9eb95032d2f6d316830a Mon Sep 17 00:00:00 2001
 From: Dmitry Rogozhkin <dmitry.v.rogozhkin@intel.com>
 Date: Tue, 25 May 2021 14:28:29 -0700
-Subject: [PATCH 16/16] qsv: remove MFX_VERSION_NEST
+Subject: [PATCH 15/17] qsv: remove MFX_VERSION_NEST
 
 Signed-off-by: Dmitry Rogozhkin <dmitry.v.rogozhkin@intel.com>
 ---

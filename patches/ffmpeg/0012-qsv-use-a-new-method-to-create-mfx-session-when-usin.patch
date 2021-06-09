@@ -1,7 +1,7 @@
-From e791d10310973bbc9f40306811c51ea8a72bb02a Mon Sep 17 00:00:00 2001
+From d6201f6ed8de26b0367698ea9151ea32a8bfd1d2 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Mon, 4 Jan 2021 10:46:14 +0800
-Subject: [PATCH 12/15] qsv: use a new method to create mfx session when using
+Subject: [PATCH 12/17] qsv: use a new method to create mfx session when using
  the oneVPL SDK
 
 In oneVPL, MFXLoad() and MFXCreateSession() are required to create a

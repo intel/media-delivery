@@ -1,7 +1,7 @@
-From a5ec0471a43807e1fc3bd7d1a066439150a5cf7c Mon Sep 17 00:00:00 2001
+From 027e5180fce5a2b4c08e90a69e2646ba73080f8f Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Tue, 18 Aug 2020 15:20:38 +0800
-Subject: [PATCH 04/15] qsv: load user plugin for MFX_VERSION < 2.0
+Subject: [PATCH 04/17] qsv: load user plugin for MFX_VERSION < 2.0
 
 User plugin isn't supported for MFX_VERSION >= 2.0[1][2], this is in
 preparation for oneVPL Support

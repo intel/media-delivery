@@ -1,0 +1,40 @@
+From 9770408bdc0683116e393a99782a7fe653e5ebf1 Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Mon, 7 Jun 2021 16:29:59 +0800
+Subject: [PATCH 17/17] lavfi/vf_vpp_qsv: fix the time_base for outlink
+
+Since commit 89ffcd1, the pts on output pad is in the time base of the
+input link, not the time base of the output link when EOF is reached, so
+a filter after vpp_qsv will get the wrong number of frames. In order to
+avoid this issue, use the same time base for input and ouput links
+
+The issue can be triggered with the command below:
+ffmpeg -hwaccel qsv -c:v hevc_qsv -i input.h265 -vf
+"vpp_qsv=w=1920:h=1080,fps=fps=60" -f null -
+
+[out_0_0 @ 0x55eb017b5060] 100 buffers queued in out_0_0, something may
+be wrong.
+[out_0_0 @ 0x55eb017b5060] 1000 buffers queued in out_0_0, something may
+be wrong.
+[out_0_0 @ 0x55eb017b5060] 10000 buffers queued in out_0_0, something
+may be wrong.
+---
+ libavfilter/vf_vpp_qsv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libavfilter/vf_vpp_qsv.c b/libavfilter/vf_vpp_qsv.c
+index b9ab5c6..74d1d51 100644
+--- a/libavfilter/vf_vpp_qsv.c
++++ b/libavfilter/vf_vpp_qsv.c
+@@ -303,7 +303,7 @@ static int config_output(AVFilterLink *outlink)
+     outlink->w          = vpp->out_width;
+     outlink->h          = vpp->out_height;
+     outlink->frame_rate = vpp->framerate;
+-    outlink->time_base  = av_inv_q(vpp->framerate);
++    outlink->time_base  = inlink->time_base;
+ 
+     param.filter_frame  = NULL;
+     param.num_ext_buf   = 0;
+-- 
+1.8.3.1
+

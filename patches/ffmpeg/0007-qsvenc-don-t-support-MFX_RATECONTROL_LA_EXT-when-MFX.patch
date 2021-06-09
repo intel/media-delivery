@@ -1,7 +1,7 @@
-From cfb5b2a2eb858addddd60941fa951256a3698e02 Mon Sep 17 00:00:00 2001
+From 3eef8d47f0794c40877c35fe8800085b4f62e7fc Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 19 Aug 2020 12:49:14 +0800
-Subject: [PATCH 07/15] qsvenc: don't support MFX_RATECONTROL_LA_EXT when
+Subject: [PATCH 07/17] qsvenc: don't support MFX_RATECONTROL_LA_EXT when
  MFX_VERSION >= 2.0
 
 MFX_RATECONTROL_LA_EXT isn't supported for MFX_VERSION >= 2.0[1][2],

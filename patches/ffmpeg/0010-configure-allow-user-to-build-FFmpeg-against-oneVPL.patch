@@ -1,7 +1,7 @@
-From 975f5b5f5fb63aa1d270211e20c8e56606050941 Mon Sep 17 00:00:00 2001
+From 72d962535bef2e77dbfbc13a2a267e21b9c5edb4 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 3 Feb 2021 14:49:46 +0800
-Subject: [PATCH 10/15] configure: allow user to build FFmpeg against oneVPL
+Subject: [PATCH 10/17] configure: allow user to build FFmpeg against oneVPL
 
 --enable-libvpl: build Intel oneVPL code via libvpl
 

@@ -1,7 +1,7 @@
-From deae19d33e3b59a97f21bdf0b2b349f06b06d242 Mon Sep 17 00:00:00 2001
+From 5b6d5cbdc39447916e704176b0f0d2adb32add26 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 19 Aug 2020 09:43:12 +0800
-Subject: [PATCH 08/15] qsv: don't support OPAQUE memory when MFX_VERSION >=
+Subject: [PATCH 08/17] qsv: don't support OPAQUE memory when MFX_VERSION >=
  2.0
 
 OPAQUE memory isn't supported for MFX_VERSION >= 2.0[1][2], this is in

@@ -1,7 +1,7 @@
-From f487e939728b25561d99709952cf17135b5bb088 Mon Sep 17 00:00:00 2001
+From 81e30ecfb759d4b3513fbca036142ef11818ccfb Mon Sep 17 00:00:00 2001
 From: "Chen,Wenbin" <wenbin.chen@intel.com>
 Date: Thu, 8 Apr 2021 13:09:47 +0800
-Subject: [PATCH 14/15] libavcodec/qsvenc_av1: add av1_qsv encoder
+Subject: [PATCH 13/17] libavcodec/qsvenc_av1: add av1_qsv encoder
 
 sample command:
 ffmpeg -f rawvideo -pix_fmt yuv420p -s 1920x1080 -i input.yuv -c:v
@@ -184,7 +184,7 @@ index 0000000..2f3d99f
 +
 +#endif
 diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
-index 1161ed2..4b057e7 100644
+index 2f29ad6..87a3f23 100644
 --- a/libavcodec/qsvenc.c
 +++ b/libavcodec/qsvenc.c
 @@ -623,9 +623,16 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
@@ -207,7 +207,7 @@ index 1161ed2..4b057e7 100644
  
          break;
  #if QSV_HAVE_AVBR
-@@ -783,6 +790,19 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+@@ -782,6 +789,19 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
      }
  #endif
  
@@ -227,7 +227,7 @@ index 1161ed2..4b057e7 100644
  #if QSV_HAVE_EXT_HEVC_TILES
      if (avctx->codec_id == AV_CODEC_ID_HEVC) {
          q->exthevctiles.Header.BufferId = MFX_EXTBUFF_HEVC_TILES;
-@@ -870,6 +890,55 @@ static int qsv_retrieve_enc_vp9_params(AVCodecContext *avctx, QSVEncContext *q)
+@@ -869,6 +889,55 @@ static int qsv_retrieve_enc_vp9_params(AVCodecContext *avctx, QSVEncContext *q)
      return 0;
  }
  
@@ -283,7 +283,7 @@ index 1161ed2..4b057e7 100644
  static int qsv_retrieve_enc_params(AVCodecContext *avctx, QSVEncContext *q)
  {
      AVCPBProperties *cpb_props;
-@@ -1227,6 +1296,9 @@ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q)
+@@ -1226,6 +1295,9 @@ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q)
      case AV_CODEC_ID_VP9:
          ret = qsv_retrieve_enc_vp9_params(avctx, q);
          break;

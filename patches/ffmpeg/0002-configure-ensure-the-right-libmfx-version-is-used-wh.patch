@@ -1,7 +1,7 @@
-From 5fe0ba799fc4a73f4a7f02170ffacf2e75ad747d Mon Sep 17 00:00:00 2001
+From 5778addf32aeaf8730819e24bd29f8f3d861620d Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 3 Feb 2021 09:08:27 +0800
-Subject: [PATCH 02/15] configure: ensure the right libmfx version is used when
+Subject: [PATCH 02/17] configure: ensure the right libmfx version is used when
  running pkg-config
 
 Intel's oneVPL is a successor to MediaSDK, but removed some obsolete
