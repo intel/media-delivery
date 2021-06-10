@@ -12,6 +12,7 @@ env:
   REGISTRY: dockerv2-gsae-fm.gfx-assets.fm.intel.com/solutions
   ARTIFACTORY: https://gfx-assets.fm.intel.com/artifactory
   ARTI_PATH: gfx-media-assets/media_solution/intel-media-delivery/cdn/master
+  SYS_M4_PASSWD: ${{ secrets.SYS_M4_PASSWD }}
   FLAVOR: ${{ github.event.inputs.agama_embargo_version }}
   http_proxy: http://proxy-chain.intel.com:911
   https_proxy: http://proxy-chain.intel.com:911
@@ -35,6 +36,8 @@ jobs:
           --build-arg IMAGE=$BASE_IMAGE \
           --build-arg SAMPLE=cdn \
           --build-arg FLAVOR=$FLAVOR \
+          --build-arg USER=sys_m4 \
+          --build-arg PASSWD=$SYS_M4_PASSWD \
           --no-cache \
           --force-rm \
           --file docker/ubuntu20.04/intel-gfx-embargo-vpl/Dockerfile.local \
