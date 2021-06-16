@@ -13,6 +13,8 @@ on:
     paths-ignore:
     - '.github/workflows/**'
     - '!.github/workflows/cdn-agama-embargo.yml'
+  repository_dispatch:
+    types: [build-embargo]
   schedule:
     - cron: "0 4 * * *"
 
@@ -92,7 +94,7 @@ jobs:
         if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
 
   deploy:
-    if: github.event_name == 'push' || github.event_name == 'schedule'
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'repository_dispatch'
     needs: [build, test-dg1, test-dg2]
     runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
     steps:
