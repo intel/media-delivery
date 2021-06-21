@@ -1,7 +1,7 @@
-From 072581b86546774cfec0e8ad757feab8f112a6df Mon Sep 17 00:00:00 2001
+From 4954cfb28d380913b38a6c7e1c62b9481a8cb574 Mon Sep 17 00:00:00 2001
 From: Fei Wang <fei.w.wang@intel.com>
 Date: Tue, 26 Jan 2021 15:57:33 +0800
-Subject: [PATCH 14/17] lavc/vaapi: support av1 encode.
+Subject: [PATCH 14/15] lavc/vaapi: support av1 encode.
 
 ffmpeg -hwaccel vaapi -vaapi_device /dev/dri/renderD128 -v verbose \
 -f rawvideo -pix_fmt yuv420p -s:v 704x576 -i input.yuv             \
@@ -23,10 +23,10 @@ Signed-off-by: Fei Wang <fei.w.wang@intel.com>
  create mode 100644 libavcodec/vaapi_encode_av1.c
 
 diff --git a/libavcodec/Makefile b/libavcodec/Makefile
-index a227a45..823afdd 100644
+index d187614..df486bb 100644
 --- a/libavcodec/Makefile
 +++ b/libavcodec/Makefile
-@@ -231,6 +231,7 @@ OBJS-$(CONFIG_AV1_CUVID_DECODER)       += cuviddec.o
+@@ -232,6 +232,7 @@ OBJS-$(CONFIG_AV1_CUVID_DECODER)       += cuviddec.o
  OBJS-$(CONFIG_AV1_QSV_DECODER)         += qsvdec.o
  OBJS-$(CONFIG_AV1_QSV_ENCODER)         += qsvenc_av1.o
  OBJS-$(CONFIG_AVRN_DECODER)            += avrndec.o

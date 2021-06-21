@@ -1,7 +1,7 @@
-From d6201f6ed8de26b0367698ea9151ea32a8bfd1d2 Mon Sep 17 00:00:00 2001
+From 6092727de068145ecdd569de942053af218e35e9 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Mon, 4 Jan 2021 10:46:14 +0800
-Subject: [PATCH 12/17] qsv: use a new method to create mfx session when using
+Subject: [PATCH 12/15] qsv: use a new method to create mfx session when using
  the oneVPL SDK
 
 In oneVPL, MFXLoad() and MFXCreateSession() are required to create a
@@ -273,10 +273,10 @@ index 0babf72..c80559b 100644
      AVBufferRef *va_device_ref;
      AVHWDeviceContext *va_device_ctx;
 diff --git a/libavcodec/qsvdec.c b/libavcodec/qsvdec.c
-index 9d2cfc7..f105217 100644
+index 095a376..e54c831 100644
 --- a/libavcodec/qsvdec.c
 +++ b/libavcodec/qsvdec.c
-@@ -151,7 +151,9 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
+@@ -161,7 +161,9 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
      } else if (hw_frames_ref) {
          if (q->internal_qs.session) {
              MFXClose(q->internal_qs.session);
@@ -286,7 +286,7 @@ index 9d2cfc7..f105217 100644
          }
          av_buffer_unref(&q->frames_ctx.hw_frames_ctx);
  
-@@ -176,7 +178,9 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
+@@ -186,7 +188,9 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
      } else if (hw_device_ref) {
          if (q->internal_qs.session) {
              MFXClose(q->internal_qs.session);

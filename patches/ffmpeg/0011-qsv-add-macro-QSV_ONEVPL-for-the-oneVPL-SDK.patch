@@ -1,7 +1,7 @@
-From 6f882d671c2cdcb83501ef8626f86456e786ac1e Mon Sep 17 00:00:00 2001
+From adc7ec037ae0ceff1029cfe017da298cc6a26844 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Mon, 4 Jan 2021 10:45:48 +0800
-Subject: [PATCH 11/17] qsv: add macro QSV_ONEVPL for the oneVPL SDK
+Subject: [PATCH 11/15] qsv: add macro QSV_ONEVPL for the oneVPL SDK
 
 ---
  libavcodec/qsv.c          | 4 ++--

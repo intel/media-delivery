@@ -99,7 +99,7 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg && \
   cd /opt/build/ffmpeg && \
-  git checkout 4c705a2
+  git checkout 05f9b3a
 
 RUN cd /opt/build/ffmpeg && \
   ./configure \

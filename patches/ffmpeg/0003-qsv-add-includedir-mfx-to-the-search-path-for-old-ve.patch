@@ -1,7 +1,7 @@
-From 071a4c34b55ff84a60e3e65a603fe9cf20a62695 Mon Sep 17 00:00:00 2001
+From de18cf7451a78b7352afbadc367954e92d818f8d Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Tue, 8 Sep 2020 11:17:27 +0800
-Subject: [PATCH 03/17] qsv: add ${includedir}/mfx to the search path for old
+Subject: [PATCH 03/15] qsv: add ${includedir}/mfx to the search path for old
  versions of libmfx
 
 ${includedir}/mfx has been added to Cflags in libmfx.pc for the current
@@ -43,10 +43,10 @@ This is in preparation for oneVPL support
  19 files changed, 32 insertions(+), 26 deletions(-)
 
 diff --git a/configure b/configure
-index 1f46142..26ee294 100755
+index c9b47c6..defebe9 100755
 --- a/configure
 +++ b/configure
-@@ -6411,12 +6411,18 @@ enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_
+@@ -6419,12 +6419,18 @@ enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_
  # Media SDK or Intel Media Server Studio, these don't come with
  # pkg-config support.  Instead, users should make sure that the build
  # can find the libraries and headers through other means.
@@ -136,7 +136,7 @@ index 5d276b0..4f0f1da 100644
  #include "libavutil/frame.h"
  
 diff --git a/libavcodec/qsvdec.c b/libavcodec/qsvdec.c
-index f543def..7c21949 100644
+index 6227509..567de9e 100644
 --- a/libavcodec/qsvdec.c
 +++ b/libavcodec/qsvdec.c
 @@ -25,7 +25,7 @@

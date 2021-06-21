@@ -1,7 +1,7 @@
-From 5b6d5cbdc39447916e704176b0f0d2adb32add26 Mon Sep 17 00:00:00 2001
+From 692f925febde8b9daaee0afef0682c9d646ef975 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 19 Aug 2020 09:43:12 +0800
-Subject: [PATCH 08/17] qsv: don't support OPAQUE memory when MFX_VERSION >=
+Subject: [PATCH 08/15] qsv: don't support OPAQUE memory when MFX_VERSION >=
  2.0
 
 OPAQUE memory isn't supported for MFX_VERSION >= 2.0[1][2], this is in
@@ -69,10 +69,10 @@ index 4f0f1da..cf7f688 100644
      AVBufferRef *hw_frames_ref;
      mfxHDLPair handle_pair;
 diff --git a/libavcodec/qsvdec.c b/libavcodec/qsvdec.c
-index 7c21949..9d2cfc7 100644
+index 567de9e..095a376 100644
 --- a/libavcodec/qsvdec.c
 +++ b/libavcodec/qsvdec.c
-@@ -161,7 +161,11 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
+@@ -171,7 +171,11 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
  
          ret = ff_qsv_init_session_frames(avctx, &q->internal_qs.session,
                                           &q->frames_ctx, q->load_plugins,
@@ -84,7 +84,7 @@ index 7c21949..9d2cfc7 100644
                                           q->gpu_copy);
          if (ret < 0) {
              av_buffer_unref(&q->frames_ctx.hw_frames_ctx);
-@@ -243,10 +247,15 @@ static int qsv_decode_preinit(AVCodecContext *avctx, QSVContext *q, enum AVPixel
+@@ -253,10 +257,15 @@ static int qsv_decode_preinit(AVCodecContext *avctx, QSVContext *q, enum AVPixel
          AVQSVFramesContext *frames_hwctx = frames_ctx->hwctx;
  
          if (!iopattern) {

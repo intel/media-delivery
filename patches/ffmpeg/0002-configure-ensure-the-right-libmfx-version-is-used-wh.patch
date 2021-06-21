@@ -1,7 +1,7 @@
-From 5778addf32aeaf8730819e24bd29f8f3d861620d Mon Sep 17 00:00:00 2001
+From 6adc021644dcb982092e104424a84ff3f743a2c2 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 3 Feb 2021 09:08:27 +0800
-Subject: [PATCH 02/17] configure: ensure the right libmfx version is used when
+Subject: [PATCH 02/15] configure: ensure the right libmfx version is used when
  running pkg-config
 
 Intel's oneVPL is a successor to MediaSDK, but removed some obsolete
@@ -17,10 +17,10 @@ features
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/configure b/configure
-index 82367fd..1f46142 100755
+index dbe66bb..c9b47c6 100755
 --- a/configure
 +++ b/configure
-@@ -6411,7 +6411,9 @@ enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_
+@@ -6419,7 +6419,9 @@ enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_
  # Media SDK or Intel Media Server Studio, these don't come with
  # pkg-config support.  Instead, users should make sure that the build
  # can find the libraries and headers through other means.
