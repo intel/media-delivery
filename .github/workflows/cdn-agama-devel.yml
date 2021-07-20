@@ -15,8 +15,6 @@ on:
     - '!.github/workflows/cdn-agama-devel.yml'
   repository_dispatch:
     types: [build-devel]
-  schedule:
-    - cron: "0 4 * * *"
 
 env:
   BASE_IMAGE: amr-registry.caas.intel.com/vtt-osgc/os/ubuntu:focal
