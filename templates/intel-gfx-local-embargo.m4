@@ -45,7 +45,7 @@ ARG PASSWD
 RUN mkdir -p /opt/apt-pkgs && cd /opt/apt-pkgs && \
   curl -s --noproxy '*' -L \
     -u "$USER:$PASSWD" \
-    INTEL_GFX_URL/embargo/$FLAVOR/artifacts/linux/ubuntu/20.04?archiveType=tgz | \
+    INTEL_GFX_URL/$(echo ${FLAVOR} | sed -E "s/agama-ci-(.*)-[0-9]+$/\1/")/$FLAVOR/artifacts/linux/ubuntu/20.04?archiveType=tgz | \
     tar -xvz --warning=no-timestamp
 
 RUN cd /opt/apt-pkgs && \

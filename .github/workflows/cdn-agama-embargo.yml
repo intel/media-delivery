@@ -15,8 +15,6 @@ on:
     - '!.github/workflows/cdn-agama-embargo.yml'
   repository_dispatch:
     types: [build-embargo]
-  schedule:
-    - cron: "0 19 * * 1"
 
 env:
   BASE_IMAGE: amr-registry.caas.intel.com/vtt-osgc/os/ubuntu:focal

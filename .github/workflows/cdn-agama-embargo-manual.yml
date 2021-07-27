@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       agama_embargo_version:
-        description: 'Agama embargo version to use (ex.: agama-ci-embargo-517)'
+        description: 'Agama version to use (ex.: agama-ci-embargo-517, agama-ci-prerelease-144)'
         required: true
 
 env:

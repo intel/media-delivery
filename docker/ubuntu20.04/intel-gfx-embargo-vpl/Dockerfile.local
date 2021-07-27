@@ -39,7 +39,7 @@ ARG PASSWD
 RUN mkdir -p /opt/apt-pkgs && cd /opt/apt-pkgs && \
   curl -s --noproxy * -L \
     -u "$USER:$PASSWD" \
-    https://gfx-assets-build.fm.intel.com/artifactory/api/archive/download/agama-builds/ci/embargo/$FLAVOR/artifacts/linux/ubuntu/20.04?archiveType=tgz | \
+    https://gfx-assets-build.fm.intel.com/artifactory/api/archive/download/agama-builds/ci/$(echo ${FLAVOR} | sed -E "s/agama-ci-(.*)-[0-9]+$/\1/")/$FLAVOR/artifacts/linux/ubuntu/20.04?archiveType=tgz | \
     tar -xvz --warning=no-timestamp
 
 RUN cd /opt/apt-pkgs && \
