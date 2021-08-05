@@ -254,7 +254,7 @@ PROCESSING OPTIONS
 	`/opt/data/artifacts/measure/quality` if ran under docker,
 	`$HOME/measure/quality` otherwise)
 
---outprefix::
+--outprefix <string>::
 	File prefix to append to output artifacts (default: `$(basename $inputfile)`).
 	Not applicable in `<folder>` mode.
 
