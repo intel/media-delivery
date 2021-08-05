@@ -129,8 +129,8 @@ while true; do
             shift 2
             ;;
         --outprefix)
-            outprefix=yes
-            shift
+            outprefix=$2
+            shift 2
             ;;
         --skip-metrics)
             skip_metrics=yes
