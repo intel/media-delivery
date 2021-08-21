@@ -26,8 +26,6 @@ define(`INTEL_GFX_URL',https://gfx-assets-build.intel.com/artifactory)
 pushdef(`_install_ubuntu',`dnl
 INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent libnss3-tools software-properties-common unzip wget))
 
-COPY assets/embargo/setup-certs.sh /tmp/
-#RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
 RUN curl --noproxy "*" -fsSL INTEL_GFX_URL/api/gpg/key/public | apt-key add -
 
 ARG FLAVOR=focal-embargo-untested

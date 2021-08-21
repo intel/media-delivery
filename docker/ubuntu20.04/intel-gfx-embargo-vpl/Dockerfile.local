@@ -30,8 +30,6 @@ RUN apt-get update && \
     curl ca-certificates gpg-agent libnss3-tools software-properties-common unzip wget && \
   rm -rf /var/lib/apt/lists/*
 
-COPY assets/embargo/setup-certs.sh /tmp/
-#RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
 RUN curl --noproxy "*" -fsSL https://gfx-assets-build.intel.com/artifactory/api/gpg/key/public | apt-key add -
 
 ARG FLAVOR=focal-embargo-untested
