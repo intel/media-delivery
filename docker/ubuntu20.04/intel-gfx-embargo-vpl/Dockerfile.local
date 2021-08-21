@@ -27,24 +27,15 @@ FROM $IMAGE AS base
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    curl ca-certificates dpkg-dev gpg-agent libnss3-tools software-properties-common unzip wget && \
+    curl ca-certificates gpg-agent libnss3-tools software-properties-common unzip wget && \
   rm -rf /var/lib/apt/lists/*
 
 COPY assets/embargo/setup-certs.sh /tmp/
-RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
+#RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
+RUN curl --noproxy "*" -fsSL https://gfx-assets-build.intel.com/artifactory/api/gpg/key/public | apt-key add -
 
-ARG FLAVOR
-ARG USER
-ARG PASSWD
-RUN mkdir -p /opt/apt-pkgs && cd /opt/apt-pkgs && \
-  curl -s --noproxy * -L \
-    -u "$USER:$PASSWD" \
-    https://gfx-assets-build.fm.intel.com/artifactory/api/archive/download/agama-builds/ci/$(echo ${FLAVOR} | sed -E "s/agama-ci-(.*)-[0-9]+$/\1/")/$FLAVOR/artifacts/linux/ubuntu/20.04?archiveType=tgz | \
-    tar -xvz --warning=no-timestamp
-
-RUN cd /opt/apt-pkgs && \
-  dpkg-scanpackages .  > Packages && \
-  echo "deb [trusted=yes arch=amd64] file:///opt/apt-pkgs ./" > /etc/apt/sources.list.d/intel-gfx-$FLAVOR.list''
+ARG FLAVOR=focal-embargo-untested
+RUN apt-add-repository "deb https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build untested/main/agama/$(echo ${FLAVOR} | sed -E "s/agama-ci-(.*)-[0-9]+$/\1/")/focal $FLAVOR"
 
 FROM base as content
 

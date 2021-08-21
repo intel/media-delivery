@@ -1,56 +1,37 @@
-dnl BSD 3-Clause License
-dnl
-dnl Copyright (c) 2020, Intel Corporation
-dnl All rights reserved.
-dnl
-dnl Redistribution and use in source and binary forms, with or without
-dnl modification, are permitted provided that the following conditions are met:
-dnl
-dnl * Redistributions of source code must retain the above copyright notice, this
-dnl   list of conditions and the following disclaimer.
-dnl
-dnl * Redistributions in binary form must reproduce the above copyright notice,
-dnl   this list of conditions and the following disclaimer in the documentation
-dnl   and/or other materials provided with the distribution.
-dnl
-dnl * Neither the name of the copyright holder nor the names of its
-dnl   contributors may be used to endorse or promote products derived from
-dnl   this software without specific prior written permission.
-dnl
-dnl THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-dnl AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-dnl IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-dnl DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-dnl FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-dnl DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-dnl SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-dnl CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-dnl OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-dnl
+dnl # Copyright (c) 2020 Intel Corporation
+dnl #
+dnl # Permission is hereby granted, free of charge, to any person obtaining a copy
+dnl # of this software and associated documentation files (the "Software"), to deal
+dnl # in the Software without restriction, including without limitation the rights
+dnl # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+dnl # copies of the Software, and to permit persons to whom the Software is
+dnl # furnished to do so, subject to the following conditions:
+dnl #
+dnl # The above copyright notice and this permission notice shall be included in all
+dnl # copies or substantial portions of the Software.
+dnl #
+dnl # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+dnl # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+dnl # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+dnl # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+dnl # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+dnl # SOFTWARE.
+dnl #
 include(begin.m4)
 include(ubuntu.m4)
 
-define(`INTEL_GFX_URL',https://gfx-assets-build.fm.intel.com/artifactory/api/archive/download/agama-builds/ci)
+define(`INTEL_GFX_URL',https://gfx-assets-build.intel.com/artifactory)
 
 pushdef(`_install_ubuntu',`dnl
-INSTALL_PKGS(PKGS(curl ca-certificates dpkg-dev gpg-agent libnss3-tools software-properties-common unzip wget))
+INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent libnss3-tools software-properties-common unzip wget))
 
 COPY assets/embargo/setup-certs.sh /tmp/
-RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
+#RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
+RUN curl --noproxy "*" -fsSL INTEL_GFX_URL/api/gpg/key/public | apt-key add -
 
-ARG FLAVOR
-ARG USER
-ARG PASSWD
-RUN mkdir -p /opt/apt-pkgs && cd /opt/apt-pkgs && \
-  curl -s --noproxy '*' -L \
-    -u "$USER:$PASSWD" \
-    INTEL_GFX_URL/$(echo ${FLAVOR} | sed -E "s/agama-ci-(.*)-[0-9]+$/\1/")/$FLAVOR/artifacts/linux/ubuntu/20.04?archiveType=tgz | \
-    tar -xvz --warning=no-timestamp
-
-RUN cd /opt/apt-pkgs && \
-  dpkg-scanpackages .  > Packages && \
-  echo "deb [trusted=yes arch=amd64] file:///opt/apt-pkgs ./" > /etc/apt/sources.list.d/intel-gfx-$FLAVOR.list')
+ARG FLAVOR=focal-embargo-untested
+RUN apt-add-repository "deb INTEL_GFX_URL/gfx-debs-per-build untested/main/agama/$(echo ${FLAVOR} | sed -E "s/agama-ci-(.*)-[0-9]+$/\1/")/focal $FLAVOR"')
 
 ifelse(OS_NAME,ubuntu,ifelse(OS_VERSION,20.04,
 `define(`ENABLE_INTEL_GFX_REPO',defn(`_install_ubuntu'))'))
