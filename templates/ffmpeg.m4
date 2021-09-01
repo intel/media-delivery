@@ -27,7 +27,7 @@ define(`FFMPEG_BUILD_DEPS',`ca-certificates gcc g++ git dnl
   ifelse(FFMPEG_ENABLE_MFX,1.x,libmfx-dev,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl-dev)) dnl
   libva-dev libx264-dev libx265-dev make patch pkg-config yasm')
 define(`FFMPEG_INSTALL_DEPS',`intel-media-va-driver-non-free libigfxcmrt7 libmfx1 dnl
-  ifelse(FFMPEG_ENABLE_MFX,2.x,libmfxgen1 libvpl1) dnl
+  ifelse(FFMPEG_ENABLE_MFX,2.x,libmfxgen1 libvpl2) dnl
   libva-drm2 libx264-155 libx265-179 libxcb-shm0')
 
 define(`BUILD_FFMPEG',

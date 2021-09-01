@@ -208,7 +208,7 @@ RUN apt-get update && \
     libigfxcmrt7 \
     libmfx1 \
     libmfxgen1 \
-    libvpl1 \
+    libvpl2 \
     libva-drm2 \
     libx264-155 \
     libx265-179 \
