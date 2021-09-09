@@ -28,8 +28,19 @@ INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent libnss3-tools software-properti
 
 RUN curl --noproxy "*" -fsSL INTEL_GFX_URL/api/gpg/key/public | apt-key add -
 
-ARG FLAVOR=focal-embargo-untested
-RUN apt-add-repository "deb INTEL_GFX_URL/gfx-debs-per-build untested/main/agama/$(echo ${FLAVOR} | sed -E "s/agama-ci-(.*)-[0-9]+$/\1/")/focal $FLAVOR"')
+# Supported FLAVOR patterns:
+#  * aaa-ci-bbb-nnn, where aaa|bbb - arbitrary names, ci - mandatory delimiter, nnn - a number
+# FLAVOR examples:
+#  * agama-ci-prerelease-nnn
+#  * gfx-driver-ci-master-nnn
+#  * gfx-driver-ci-comp_media-nnn
+ARG FLAVOR
+RUN { \
+  A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/"); \
+  B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/"); \
+  apt-add-repository "deb INTEL_GFX_URL/gfx-debs-per-build untested/main/$A/$B/focal $FLAVOR"; \
+  }
+')
 
 ifelse(OS_NAME,ubuntu,ifelse(OS_VERSION,20.04,
 `define(`ENABLE_INTEL_GFX_REPO',defn(`_install_ubuntu'))'))
