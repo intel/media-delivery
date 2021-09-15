@@ -1,0 +1,26 @@
+From fe3381215c72874998c4d1393f84ee3fd39009e4 Mon Sep 17 00:00:00 2001
+From: Daniel Socek <daniel.socek@intel.com>
+Date: Fri, 26 Jun 2020 21:25:20 +0000
+Subject: [PATCH 4/4] patch ffmpeg-qsv to enable LA with ExtBRC
+
+Signed-off-by: Daniel Socek <daniel.socek@intel.com>
+---
+ libavcodec/qsvenc.c | 4 +++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
+index e3d0429809..e3af668892 100644
+--- a/libavcodec/qsvenc.c
++++ b/libavcodec/qsvenc.c
+@@ -637,6 +637,9 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+     switch (q->param.mfx.RateControlMethod) {
+     case MFX_RATECONTROL_CBR:
+     case MFX_RATECONTROL_VBR:
++        if (q->extbrc) {
++            q->extco2.LookAheadDepth = q->look_ahead_depth;
++        }
+ #if QSV_HAVE_VCM
+     case MFX_RATECONTROL_VCM:
+ #endif
+--
+2.25.1
