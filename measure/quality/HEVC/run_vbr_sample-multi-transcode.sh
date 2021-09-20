@@ -26,13 +26,26 @@ file=$1
 shift
 prefix=$1
 shift
-nframes=$1
-shift
+if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
+  width=$1
+  shift
+  height=$1
+  shift
+  nframes=$1
+  shift
+  framerate=$1
+  shift
+  std="i420"
+  rawvideo="-w $width -h $height -override_encoder_framerate $framerate"
+else
+  nframes=$1
+  shift
+  std=$1
+  shift
+fi
 bitrate_Mbps=$1
 shift
 preset=$1
-shift
-raw=$1
 shift
 options=$@
 shift
@@ -45,10 +58,10 @@ vframes="-n $nframes"
 
 DEVICE=${DEVICE:-/dev/dri/renderD128}
 
-cmd=(sample_multi_transcode -i::$raw $file \
+cmd=(sample_multi_transcode -i::$std $file \
   -hw -async 1 -device $DEVICE \
-  -u $preset -b $bitrate -vbr $vframes  \
-  $options \
+  -u $preset -b $bitrate -vbr $vframes \
+  $rawvideo $options \
   -hrd $bufsize \
   -o::h265 ${prefix}_${bitrate_Mbps}Mbps_VBR_SMT.h265)
 
