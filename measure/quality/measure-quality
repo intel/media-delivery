@@ -440,7 +440,7 @@ function get_coding_commandline_options() {
     if [ "$preset" = "best" ]; then
       options_qsv+="-extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256"
       options_senc+="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
-      options_smt+="-extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+      options_smt+="-extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
@@ -450,7 +450,7 @@ function get_coding_commandline_options() {
     if [ "$preset" = "best" ]; then
       options_qsv+="-extbrc 1 -bf 7 -refs 5 -g 256"
       options_senc+="-extbrc:implicit -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
-      options_smt+="-extbrc::implicit -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+      options_smt+="-extbrc::implicit -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
@@ -725,7 +725,7 @@ function compute_bdrate_averages() {
     process_avg_bdrates $codec ffmpeg-qsv
   fi
   if [[ "$skip_msdk" = "no" ]]; then
-    process_avg_bdrates $codec sample-encode
+    process_avg_bdrates $codec sample-multi-transcode
   fi
 }
 
@@ -920,8 +920,8 @@ if [ "$skip_encoding" = "no" ]; then
       if [ "$skip_msdk" = "no" ]; then
         raw=$(get_raw_stream_info $file)
         if [ -n "$raw" ]; then
-          [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $b $tu $raw $options_smt
-          [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $b $tu $raw $options_smt
+          [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $raw $b $tu $options_smt
+          [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $raw $b $tu $options_smt
         fi
       fi
     else
@@ -934,8 +934,8 @@ if [ "$skip_encoding" = "no" ]; then
         [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_qsv
       fi
       if [ "$skip_msdk" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_sample-encode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_senc
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_sample-encode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_senc
+        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_smt
+        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_smt
       fi
     fi
   done
@@ -1017,10 +1017,7 @@ if [ "$skip_metrics" = "no" ]; then
 
       out=$(echo "$metrics" | grep CBR_QSV); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-qsv.metrics
       out=$(echo "$metrics" | grep VBR_QSV); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-qsv.metrics
-      if [ "$is_yuv" = "yes" ]; then
-        out=$(echo "$metrics" | grep CBR_SENC); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.sample-encode.metrics
-        out=$(echo "$metrics" | grep VBR_SENC); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.sample-encode.metrics
-      elif [ -n "$raw" ]; then
+      if [ "$is_yuv" = "yes" ] || [ -n "$raw" ]; then
         out=$(echo "$metrics" | grep CBR_SMT); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.sample-multi-transcode.metrics
         out=$(echo "$metrics" | grep VBR_SMT); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.sample-multi-transcode.metrics
       fi
