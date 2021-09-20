@@ -102,7 +102,7 @@ RUN apt-get update && \
     gcc \
     g++ \
     git \
-    libmfx-dev \
+    libvpl-dev \
     libva-dev \
     libx264-dev \
     libx265-dev \
@@ -115,6 +115,13 @@ RUN git clone https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg && \
   cd /opt/build/ffmpeg && \
   git checkout 05f9b3a
 
+COPY patches/ffmpeg /opt/build/ffmpeg
+RUN cd /opt/build/ffmpeg && { set -e; \
+  for patch_file in $(find -iname "*.patch" | sort -n); do \
+    echo "Applying: ${patch_file}"; \
+    patch -p1 < ${patch_file}; \
+  done; }
+
 RUN cd /opt/build/ffmpeg && \
   ./configure \
   --prefix=/opt/intel/samples \
@@ -123,7 +130,7 @@ RUN cd /opt/build/ffmpeg && \
   --disable-doc \
   --enable-shared \
   --enable-vaapi \
-  --enable-libmfx \
+  --enable-libvpl \
   --enable-gpl \
   --enable-libx264 \
   --enable-libx265 \
@@ -200,6 +207,8 @@ RUN apt-get update && \
     intel-media-va-driver-non-free \
     libigfxcmrt7 \
     libmfx1 \
+    libmfxgen1 \
+    libvpl2 \
     libva-drm2 \
     libx264-155 \
     libx265-179 \

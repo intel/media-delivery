@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-include(defs-vpl.m4)dnl
+include(defs.m4)dnl
 include(begin.m4)
 ifelse(LOCAL_REPO,true,dnl
 `include(intel-gfx-local-embargo.m4)',

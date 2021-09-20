@@ -19,6 +19,10 @@
 # SOFTWARE.
 
 include(defs.m4)dnl
+divert(-1)
+define(`FFMPEG_ENABLE_MFX',1.x)
+undefine(`FFMPEG_PATCH_PATH')
+divert(0)dnl
 include(begin.m4)
 include(content.m4)
 include(vmaf.m4)
