@@ -55,17 +55,28 @@ by origin of the Intel media stack components included into the docker image whi
 which Intel GPUs and media codec features will be supported. Some media stacks might
 also require special host setup instruction. See table below.
 
-+--------------------------------------------+--------------------------------------+------------------------------------------------+----------------------------------+
-| Dockerfile                                 | Intel media stack origin             | Supported Intel GPUs                           | Host setup instructions          |
-+============================================+======================================+================================================+==================================+
-| `docker/ubuntu20.04/native/Dockerfile`_    | Ubuntu 20.04                         | Gen8+, check Ubuntu 20.04 documentation        | Use any Linux distribution which |
-|                                            |                                      |                                                | supports required platform       |
-+--------------------------------------------+--------------------------------------+------------------------------------------------+----------------------------------+
-| `docker/ubuntu20.04/intel-gfx/Dockerfile`_ | `Intel Graphics Package Repository`_ | `Intel® Iris® Xe MAX Graphics`_ (formerly DG1) | `DG1 Setup Instruction`_         |
-+                                            +                                      +------------------------------------------------+----------------------------------+
-|                                            |                                      | Platforms starting from Gen8 and prior to DG1  | Use any Linux distribution which |
-|                                            |                                      |                                                | supports required platform       |
-+--------------------------------------------+--------------------------------------+------------------------------------------------+----------------------------------+
++--------------------------------------------+----------------------------------------+------------------------------------------------+----------------------------------+
+| Dockerfile                                 | Intel media stack origin               | Supported Intel GPUs                           | Host setup instructions          |
++============================================+========================================+================================================+==================================+
+| `docker/ubuntu20.04/native/Dockerfile`_    | Ubuntu 20.04                           | Gen8+, check Ubuntu 20.04 documentation        | Use any Linux distribution which |
+|                                            |                                        |                                                | supports required platform       |
++--------------------------------------------+----------------------------------------+------------------------------------------------+----------------------------------+
+| `docker/ubuntu20.04/intel-gfx/Dockerfile`_ | `Intel Graphics Package Repository`_   | `Intel® Iris® Xe MAX Graphics`_ (formerly DG1) | `DG1 Setup Instruction`_         |
++                                            +                                        +------------------------------------------------+----------------------------------+
+|                                            |                                        | Platforms starting from Gen8 and prior to DG1  | Use any Linux distribution which |
+|                                            |                                        |                                                | supports required platform       |
++--------------------------------------------+----------------------------------------+------------------------------------------------+----------------------------------+
+| `docker/ubuntu20.04/intel-gfx/Dockerfile`_ | Custom, specified via                  | Depends on the custom stack. Contact supplier.                                    |
+|                                            | ``--build-arg INTEL_GFX_APT_REPO=...`` |                                                                                   |
++--------------------------------------------+----------------------------------------+------------------------------------------------+----------------------------------+
+
+**Caveat:** current master branch is in active development to support DG2 and ATS-M GPUs
+via custom media stack (contact us for more details). Mind that latest release at
+`Intel Graphics Package Repository`_ is known to contain some outdated packages (for
+example, libvpl) which might have issues affecting our sample command lines modified for
+DG2 and ATS-M support. If you use our samples from latest master to run on DG1 or other
+legacy platforms and see some issues, please, let us know. As a mitigation you can use
+latest tagged release: `Media Delivery Software Stack v2 <https://github.com/intel/media-delivery/releases/tag/v2>`_.
 
 To use some of the examples below you might wish to install the following tools on your
 host (or some other system capable of reaching the container over network) to be able
