@@ -7,7 +7,7 @@ Video Quality Assessment Methodology
 ------------------------------------
 
 In this document we describe the methodology which is used to measure video quality of Intel® Media SDK 
-`Sample Encode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-encode_linux.md>`_ and 
+`Sample Multi-Transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_ and
 `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration into FFmpeg) codecs.
 A `video quality measuring tool <man/measure-quality.asciidoc>`_ which implements this methodology is provided as 
 a part of Media Delivery Software Stack. In addition, a `performance measuring tool <man/measure-perf.asciidoc>`_ is 
@@ -190,7 +190,7 @@ individual BD-rates:
 4. VBR high bitrates BD-rate.
 
 In the following sections you can find command lines used for high quality H.264/AVC and H.265/HEVC video 
-coding with Intel® Media SDK `Sample Encode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-encode_linux.md>`_
+coding with Intel® Media SDK `Sample Multi-Transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
 and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration into FFmpeg).
 
 Video Quality Measuring Tool
@@ -225,12 +225,15 @@ MP4 Container Quality Measure Example
 
 Only ffmpeg-based quality results will be computed for pre-encoded input content encapsulated in a container.
 
+Next we present quality command lines for H.264/AVC and H.265/HEVC. To maximize quality over performance, use "veryslow" preset. For maximum
+performance set preset to "veryfast". For a balanced quality/performance tradeoff use "medium" preset.
+
+
 H.264/AVC Command Lines
 -----------------------
 
-ffmpeg-qsv VBR
-**************
-
+ffmpeg-qsv VBR (Encoding)
+*************************
 ::
 
   ffmpeg -hwaccel qsv \
@@ -240,9 +243,8 @@ ffmpeg-qsv VBR
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
 
-ffmpeg-qsv CBR
-**************
-
+ffmpeg-qsv CBR (Encoding)
+*************************
 ::
 
   ffmpeg -hwaccel qsv \
@@ -252,58 +254,74 @@ ffmpeg-qsv CBR
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
 
-Intel Media SDK sample-encode VBR
-*********************************
+Intel Media SDK sample-multi-transcode VBR (Encoding)
+*****************************************************
 ::
 
-  sample_encode h264 -hw \
-    -i $input -w $width -h $height -n $numframes -f $framerate \
-    -o $output \
-    -u $preset -vbr -b $bitrate \
-    -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 2))') \
-    -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 \
-    -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -w $width -h $height -n $numframes -override_encoder_framerate $framerate \
+    -vbr -extbrc::implicit -num_ref 5 -dist 8 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4))  \
+    -o::h264 $output
 
-Intel Media SDK sample-encode CBR
-*********************************
+Intel Media SDK sample-multi-transcode CBR (Encoding)
+*****************************************************
 ::
 
-  sample_encode h264 -hw \
-    -i $input -w $width -h $height -n $numframes -f $framerate \
-    -o $output \
-    -u $preset -cbr -b $bitrate \
-    -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 4))') \
-    -extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 \
-    -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -w $width -h $height -n $numframes -override_encoder_framerate $framerate \
+    -cbr -extbrc::implicit -num_ref 5 -dist 8 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
+    -o::h264 $output
 
-Intel Media SDK sample-multi-transcode VBR
-******************************************
+
+ffmpeg-qsv VBR (Transcoding)
+****************************
+::
+
+  ffmpeg -hwaccel qsv \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v h264_qsv -preset $preset -profile:v high \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
+    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+
+ffmpeg-qsv CBR (Transcoding)
+****************************
+::
+
+  ffmpeg -hwaccel qsv \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v h264_qsv -preset $preset -profile:v high \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
+    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+
+
+Intel Media SDK sample-multi-transcode VBR (Transcoding)
+********************************************************
 ::
 
   sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
-    -u $preset -b $bitrate -vbr -n $nframes \
-    -hrd $(python3 -c 'print(int('$bitrate' / 2))') \
-    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 \
-    -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
+    -vbr -extbrc::implicit -num_ref 5 -gop_size 256 -dist 8 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
     -o::h264 $output
 
-Intel Media SDK sample-multi-transcode CBR
-******************************************
+Intel Media SDK sample-multi-transcode CBR (Transcoding)
+********************************************************
 ::
 
   sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
-    -u $preset -b $bitrate -cbr -n $nframes \
-    -hrd $(python3 -c 'print(int('$bitrate' / 4))') \
-    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 \
-    -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
+    -cbr -extbrc::implicit -num_ref 5 -gop_size 256 -dist 8 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
     -o::h264 $output
+
 
 H.265/HEVC Command Lines
 ------------------------
 
-ffmpeg-qsv VBR
-**************
-
+ffmpeg-qsv VBR (Encoding)
+*************************
 ::
 
   ffmpeg -hwaccel qsv \
@@ -313,9 +331,8 @@ ffmpeg-qsv VBR
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
 
-ffmpeg-qsv CBR
-**************
-
+ffmpeg-qsv CBR (Encoding)
+*************************
 ::
 
   ffmpeg -hwaccel qsv \
@@ -325,53 +342,66 @@ ffmpeg-qsv CBR
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
 
-Intel Media SDK sample-encode VBR
-*********************************
-
+Intel Media SDK sample-multi-transcode VBR (Encoding)
+*****************************************************
 ::
 
-  sample_encode h265 -hw \
-    -i $input -w $width -h $height -n $numframes -f $framerate \
-    -o $output \
-    -u medium -vbr -b $bitrate \
-    -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 2))') \
-    -extbrc:implicit -x 5 \
-    -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -w $width -h $height -n $numframes -override_encoder_framerate $framerate \
+    -vbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -dist 8 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
+    -o::h265 $output
 
-Intel Media SDK sample-encode CBR
-*********************************
-
+Intel Media SDK sample-multi-transcode CBR (Encoding)
+*****************************************************
 ::
 
-  sample_encode h265 -hw \
-    -i $input -w $width -h $height -n $numframes -f $framerate \
-    -o $output \
-    -u medium -cbr -b $bitrate \
-    -BufferSizeInKB $(python3 -c 'print(int('$bitrate' / 4))') \
-    -extbrc:implicit -x 5 \
-    -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -w $width -h $height -n $numframes -override_encoder_framerate $framerate \
+    -cbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -dist 8 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
+    -o::h265 $output
 
-Intel Media SDK sample-multi-transcode VBR
-******************************************
+ffmpeg-qsv VBR (Transcoding)
+****************************
+::
+
+  ffmpeg -hwaccel qsv \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v hevc_qsv -preset medium -profile:v main \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
+    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+
+ffmpeg-qsv CBR (Transcoding)
+****************************
+::
+
+  ffmpeg -hwaccel qsv \
+    -i $inputyuv -vframes $numframes -y \
+    -c:v hevc_qsv -preset medium -profile:v main \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
+    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+
+Intel Media SDK sample-multi-transcode VBR (Transcoding)
+********************************************************
 ::
 
   sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
-    -u $preset -b $bitrate -vbr -n $nframes \
-    -hrd $(python3 -c 'print(int('$bitrate' / 2))') \
-    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 \
-    -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
+    -vbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
     -o::h265 $output
 
-Intel Media SDK sample-multi-transcode CBR
-******************************************
+Intel Media SDK sample-multi-transcode CBR (Transcoding)
+********************************************************
 ::
 
   sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
-    -u $preset -b $bitrate -cbr -n $nframes \
-    -hrd $(python3 -c 'print(int('$bitrate' / 4))') \
-    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 \
-    -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
+    -cbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
     -o::h265 $output
+
 
 Reference Codecs
 ----------------
@@ -382,7 +412,6 @@ with 12 threads and ``-tune psnr`` option.
 
 ffmpeg-x264 VBR reference
 *************************
-
 ::
 
   ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
@@ -393,7 +422,6 @@ ffmpeg-x264 VBR reference
 
 ffmpeg-x264 CBR reference
 *************************
-
 ::
 
   ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
@@ -404,7 +432,6 @@ ffmpeg-x264 CBR reference
 
 ffmpeg-x265 VBR reference
 *************************
-
 ::
 
   ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
@@ -415,7 +442,6 @@ ffmpeg-x265 VBR reference
 
 ffmpeg-x265 CBR reference
 *************************
-
 ::
 
   ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
@@ -429,5 +455,5 @@ Links
 -----
 
 * `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
-* `Intel Media SDK sample-encode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-encode_linux.md>`_
+* `Intel Media SDK sample-multi-transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
 

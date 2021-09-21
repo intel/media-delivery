@@ -12,7 +12,7 @@ Configuration
 
 Tool allows performance evaluations for the following applications:
 
-* Intel® Media SDK `Sample Encode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-encode_linux.md>`_
+* Intel® Media SDK `Sample Multi-Transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
 * FFmpeg sample application (aka ffmpeg) with the enabled `qsv plugins <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
   (Intel® Media SDK integration into FFmpeg)
 
