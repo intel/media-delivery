@@ -12,7 +12,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Run quality measure via ffmpeg-qsv and/or Intel Media SDK Sample Encode.
+Run quality measure via ffmpeg-qsv and/or Intel Media SDK Sample Multi-Transcode.
 There are 3 modes of operation to highlight.
 
 1. Run quality measurement on the pre-defined set of workloads
@@ -31,14 +31,13 @@ Search is done in the root `<folder>` and all subfolders.
     measure quality -w <width> -h <height> -f <framerate> <stream.yuv>
 ------------
 +
-In this case quality measure is run only for the specified stream. If stream is YUV
-you need to specify its characteristics via command line optins (`-w`, `-h`, `-f`,
-etc.). The script accepts only 8-bit I420 YUV input streams. Mind that YUV
-stream will be measured using both ffmpeg-qsv and Media SDK Sample Encode, but a stream
+In this case the quality measure is run only for the specified stream. If the stream is in YUV format,
+then its characteristics must be specified via command line optins (`-w`, `-h`, `-f`,
+etc.). The script accepts only 8-bit I420 YUV input streams. If the input stream is uncompressed YUV or
+elementary compressed bitstream (e.g. standard compliant h264), quality will be measured
+using both ffmpeg-qsv and Media SDK Sample Multi-Transcode. On the other hand, a stream
 encapsulated in a container (e.g. MP4, TS, etc.) will be measured only using
-ffmpeg-qsv (since Sample Encode does not support compressed streams). On the other hand,
-a raw compressed bitstream (e.g. standard compliant h264) will be measured using both
-ffmpeg-qsv and Media SDK Sample Multi Transcode.
+ffmpeg-qsv (since Sample Multi-Transcode does not support containers).
 
 3. Run quality measure for the pre-defined stream
 +
@@ -90,9 +89,9 @@ streams and text files with the calculated metrics. Consider an example below
 
 # ls -1
 WAR_TRAILER_HiQ_10_withAudio.mp4.cbr.ffmpeg-qsv.metrics
-WAR_TRAILER_HiQ_10_withAudio.mp4.cbr.sample-encode.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4.cbr.sample-multi-transcode.metrics
 WAR_TRAILER_HiQ_10_withAudio.mp4.vbr.ffmpeg-qsv.metrics
-WAR_TRAILER_HiQ_10_withAudio.mp4.vbr.sample-encode.metrics
+WAR_TRAILER_HiQ_10_withAudio.mp4.vbr.sample-multi-transcode.metrics
 WAR_TRAILER_HiQ_10_withAudio.mp4_12Mbps_CBR_QSV.h264
 WAR_TRAILER_HiQ_10_withAudio.mp4_12Mbps_VBR_QSV.h264
 WAR_TRAILER_HiQ_10_withAudio.mp4_24Mbps_CBR_QSV.h264
@@ -119,7 +118,7 @@ default one is always used). `<codec>` is the video compression standard used
 in quality measurement (AVC or HEVC), which can be specified on the command line with
 `--codec` option. `<mode>` is a bitrate mode like `cbr` (constant bitrate) or
 `vbr` (variable bitrate). `application` is the application being measured for video 
-quality: ffmpeg or Intel Media SDK Sample Encode. In addition, when BD-rate calculation 
+quality: ffmpeg or Intel Media SDK Sample Multi-Transcode. In addition, when BD-rate calculation
 is enabled, `application` is set to `ref` indicating metrics files obtained from a 
 reference (e.g. x264 or x265) used for BD-rate calculation. Metrics data is in
 CSV format with colon `:` separator. The first field is a stream name, the second
@@ -217,7 +216,7 @@ WORKING MODE OPTIONS
 	Do not run ffmpeg-qsv quality measurement.
 
 --skip-msdk::
-	Do not run Intel Media SDK Sample Encode quality measurement.
+	Do not run Intel Media SDK Sample Multi-Transcode quality measurement.
 
 --skip-cbr::
 	Do not execute Constant Bitrate (CBR) encoding cases.
