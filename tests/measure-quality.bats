@@ -114,7 +114,7 @@ get264="ffmpeg -i WAR.mp4 -vcodec copy -an WAR.h264"
 }
 
 # get raw HEVC stream from an mp4 container
-get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vsync 0 WAR.h265"
+get265="ffmpeg -i WAR.mp4 -y -vframes 50 -c:v libx265 -preset medium -b:v 15M -vsync 0 WAR.h265"
 
 @test "measure quality: transcode 5 frames of a user-defined raw HEVC video stream into AVC stream" {
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
@@ -174,11 +174,11 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
   [ $status -eq 0 ]
 }
 
-@test "measure quality: encode 5 frames of a YUV video with HEVC encTools" {
+@test "measure quality: encode 50 frames of a YUV video with HEVC encTools" {
   if [ "$TEST_ENCTOOLS" != "on" ]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
     measure quality -w 480 -h 270 -f 24 \
-    --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
+    --codec HEVC --nframes 50 --skip-metrics --skip-bdrate --use-enctools \
     WAR.yuv; \
     result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
@@ -197,10 +197,10 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
   [ $status -eq 0 ]
 }
 
-@test "measure quality: transcode 5 frames of a user-defined raw H.264 video stream into HEVC stream using encTools" {
+@test "measure quality: transcode 50 frames of a user-defined raw H.264 video stream into HEVC stream using encTools" {
   if [ "$TEST_ENCTOOLS" != "on" ]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
-    measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
+    measure quality --codec HEVC --nframes 50 --skip-metrics --skip-bdrate --use-enctools \
     WAR.h264; \
     result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
@@ -219,10 +219,10 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
   [ $status -eq 0 ]
 }
 
-@test "measure quality: transcode 5 frames of a user-defined raw HEVC video stream into HEVC stream using encTools" {
+@test "measure quality: transcode 50 frames of a user-defined raw HEVC video stream into HEVC stream using encTools" {
   if [ "$TEST_ENCTOOLS" != "on" ]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
-    measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
+    measure quality --codec HEVC --nframes 50 --skip-metrics --skip-bdrate --use-enctools \
     WAR.h265; \
     result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
