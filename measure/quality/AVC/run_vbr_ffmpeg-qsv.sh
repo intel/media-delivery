@@ -50,8 +50,9 @@ options=$@
 shift
 
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000000))')
-maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
-bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
+maxrate=$(python3 -c 'print(int('$bitrate' * 2))') # 2*bitrate
+bufsize=$(python3 -c 'print(int('$bitrate' * 4))') # 4sec
+initbuf=$(python3 -c 'print(int('$bufsize' / 2))') # 1/2 buffer
 
 vframes="-frames:v $nframes"
 [[ "$nframes" = "0" ]] && vframes=""
@@ -67,7 +68,7 @@ cmd=(ffmpeg $dev -an \
   $rawvideo -i $file $vframes \
   -c:v h264_qsv -preset $preset -profile:v high \
   -b:v $bitrate -maxrate $maxrate -bitrate_limit 0 \
-  -bufsize $bufsize \
+  -bufsize $bufsize -rc_init_occupancy $initbuf \
   $options \
   -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_VBR_QSV.h264)
 

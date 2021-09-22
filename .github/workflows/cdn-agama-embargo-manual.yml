@@ -59,6 +59,7 @@ jobs:
         export MDS_IMAGE=$image
         export MDS_LOGS=$(pwd)/_logs
         export MDS_DEMO=cdn
+        export TEST_ENCTOOLS=on
         test_status=0
         bats tests/*.bats || test_status=$?
         docker rmi --force $(docker images -q $image | uniq)
@@ -76,6 +77,7 @@ jobs:
         export MDS_IMAGE=$image
         export MDS_LOGS=$(pwd)/_logs
         export MDS_DEMO=cdn
+        export TEST_ENCTOOLS=on
         test_status=0
         bats tests/*.bats || test_status=$?
         docker rmi --force $(docker images -q $image | uniq)
