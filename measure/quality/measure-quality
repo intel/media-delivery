@@ -304,7 +304,11 @@ function run() {
       elif [ "$prefix" = "CrowdRun_720p" ] || [ "$prefix" = "ParkJoy_720p" ]; then
         bitrates="6:8:10:12:15"
       elif [ "$prefix" = "DinnerScene_1080p" ]; then
-        bitrates="1:1.5:2:3:4"
+        if [ "$codec" = "AVC" ]; then
+          bitrates="1:1.5:2:3:4"
+        else
+          bitrates="3:7:11:15:20"
+        fi
       elif [ "$prefix" = "Sintel_trailer_1080p" ]; then
         bitrates="0.5:1:2:6:9"
       fi
