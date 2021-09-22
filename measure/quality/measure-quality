@@ -28,7 +28,7 @@ LONGOPTIONS+=",width:,height:,fourcc:,framerate:,progressive,interlaced"
 LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-ms-ssim,skip-vmaf"
 LONGOPTIONS+=",skip-encoding,skip-ffmpeg,skip-msdk,skip-cbr,skip-vbr"
 LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate,use-vdenc,use-gold-ref"
-LONGOPTIONS+=",nframes:,dry-run,outdir:,outprefix:"
+LONGOPTIONS+=",use-enctools,nframes:,dry-run,outdir:,outprefix:"
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -74,6 +74,7 @@ skip_bdrate=no
 single_bdrate=no
 use_vdenc=no
 use_gold_ref=no
+use_enctools=no
 
 while true; do
     case "$1" in
@@ -193,6 +194,10 @@ while true; do
             use_gold_ref=yes
             shift
             ;;
+        --use-enctools)
+            use_enctools=yes
+            shift
+            ;;
         --)
             shift
             break
@@ -220,6 +225,7 @@ check_for ffmpeg
 check_for ffprobe
 check_for python3
 check_for sample_encode
+check_for sample_multi_transcode
 
 function get_param() {
   local file=$1
@@ -336,6 +342,7 @@ function run() {
       $(if_yes $single_bdrate "--single-bdrate") \
       $(if_yes $use_vdenc "--use-vdenc") \
       $(if_yes $use_gold_ref "--use-gold-ref") \
+      $(if_yes $use_enctools "--use-enctools") \
       -- \
       $stream
     set_err $?
@@ -430,7 +437,7 @@ function get_coding_commandline_options() {
   local options_smt=""
   local options_ref=""
 
-  if [ "$use_vdenc" = "yes" ]; then
+  if [ "$use_vdenc" = "yes" ] || [ "$use_enctools" = "yes" ]; then
       options_qsv+="-low_power true "
       options_senc+="-lowpower:on "
       options_smt+="-lowpower:on "
@@ -438,9 +445,15 @@ function get_coding_commandline_options() {
 
   if [ "$codec" = "AVC" ]; then
     if [ "$preset" = "best" ]; then
-      options_qsv+="-extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256"
-      options_senc+="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
-      options_smt+="-extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
+      if [ "$use_enctools" = "yes" ]; then
+        options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 -async_depth 1"
+        options_senc+="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+        options_smt+="-lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 5 -gop_size 256 -dist 8 -NalHrdConformance:off -VuiNalHrdParameters:off"
+      else
+        options_qsv+="-extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256"
+        options_senc+="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+        options_smt+="-extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
+      fi
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
@@ -448,9 +461,15 @@ function get_coding_commandline_options() {
     options_ref="-preset veryslow -profile:v high"
   elif [ "$codec" = "HEVC" ]; then
     if [ "$preset" = "best" ]; then
-      options_qsv+="-extbrc 1 -bf 7 -refs 5 -g 256"
-      options_senc+="-extbrc:implicit -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
-      options_smt+="-extbrc::implicit -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
+      if [ "$use_enctools" = "yes" ]; then
+        options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 0 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 -async_depth 1"
+        options_senc+="-extbrc:implicit -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+        options_smt+="-lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 -NalHrdConformance:off -VuiNalHrdParameters:off"
+      else
+        options_qsv+="-extbrc 1 -bf 7 -refs 5 -g 256"
+        options_senc+="-extbrc:implicit -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+        options_smt+="-extbrc::implicit -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
+      fi
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
@@ -847,7 +866,7 @@ if [[ "$is_yuv" = "yes" && "$(can_process_yuv $width $height $framerate)" = "no"
   exit -1
 fi
 
-if [ "$use_vdenc" = "yes" ]; then
+if [ "$use_vdenc" = "yes" ] || [ "$use_enctools" = "yes" ]; then
   if [ "$codec" = "AVC" ]; then
     lpmode="H264High"
   elif [ "$codec" = "HEVC" ]; then

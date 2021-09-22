@@ -51,7 +51,8 @@ options=$@
 shift
 
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000))')
-bufsize=$(python3 -c 'print(int('$bitrate' / 4))')
+bufsize=$(python3 -c 'print(int('$bitrate' / 4))') # 2sec
+initbuf=$(python3 -c 'print(int('$bufsize' / 2))') # 1/2 buf
 
 vframes="-n $nframes"
 [[ "$nframes" = "0" ]] && vframes=""
@@ -62,7 +63,7 @@ cmd=(sample_multi_transcode -i::$std $file \
   -hw -async 1 -device $DEVICE \
   -u $preset -b $bitrate -cbr $vframes \
   $rawvideo $options \
-  -hrd $bufsize \
+  -hrd $bufsize -InitialDelayInKB $initbuf \
   -o::h265 ${prefix}_${bitrate_Mbps}Mbps_CBR_SMT.h265)
 
 if [ "$dry_run" = "no" ]; then
