@@ -243,7 +243,7 @@ RUN apt-get update && \
     libxcb-shm0 \
     less \
     man-db \
-    libmfx-tools \
+    libvpl-tools \
     libnginx-mod-http-lua \
     libnginx-mod-rtmp \
     linux-tools-generic \

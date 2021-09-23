@@ -19,6 +19,9 @@
 # SOFTWARE.
 
 include(defs.m4)dnl
+divert(-1)
+define(`USE_VPL_TOOLS',yes)
+divert(0)dnl
 include(begin.m4)
 ifelse(LOCAL_REPO,true,dnl
 `include(intel-gfx-local-embargo.m4)',
