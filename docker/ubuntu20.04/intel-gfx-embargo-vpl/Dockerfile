@@ -342,10 +342,5 @@ CMD ["/usr/bin/hello-bash"]
 # sure that environment settings are correct.
 ENTRYPOINT ["/usr/bin/demo-bash"]
 
-# Setting up mediasdk-ci-master-1.0.1698 (temporary solution)
-COPY tmp /opt/tmp
-RUN sudo cp /opt/tmp/mediasdk-ci-master-1.0.1698/samples/* /usr/bin/
-RUN apt-get remove -y libmfx-tools
-
 USER user
 WORKDIR /home/user
