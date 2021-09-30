@@ -1,39 +1,51 @@
-From 1e00c449f8f46c9bc6a390caa94805abe37c419e Mon Sep 17 00:00:00 2001
+From 39369edb3d178ffd62215cdae7157afe61f04edd Mon Sep 17 00:00:00 2001
 From: "Chen,Wenbin" <wenbin.chen@intel.com>
 Date: Thu, 8 Apr 2021 13:09:47 +0800
-Subject: [PATCH 13/15] libavcodec/qsvenc_av1: add av1_qsv encoder
+Subject: [PATCH 11/13] libavcodec/qsvenc_av1: add av1_qsv encoder
+
+Don't enable av1_qsv_encoder if using libmfx or an older version of
+libvpl (Haihao)
 
 sample command:
 ffmpeg -f rawvideo -pix_fmt yuv420p -s 1920x1080 -i input.yuv -c:v
-av1_qsv -async_depth 1 -q 50 -f rawvideo output.ivf
+av1_qsv -low_power 1 -async_depth 1 -q 50 output.ivf
 
 Signed-off-by: Wenbin Chen <wenbin.chen@intel.com>
+Signed-off-by: Haihao Xiang <haihao.xiang@intel.com>
 ---
- configure               |   1 +
+ configure               |   4 ++
  libavcodec/Makefile     |   2 +
  libavcodec/allcodecs.c  |   1 +
- libavcodec/av1_temp.h   | 120 ++++++++++++++++++++++++++++++++++++++++++++++++
- libavcodec/qsvenc.c     |  78 +++++++++++++++++++++++++++++--
- libavcodec/qsvenc.h     |   8 +++-
+ libavcodec/qsvenc.c     | 119 ++++++++++++++++++++++++++++++++++++++++++++++--
+ libavcodec/qsvenc.h     |   9 +++-
  libavcodec/qsvenc_av1.c | 105 ++++++++++++++++++++++++++++++++++++++++++
- 7 files changed, 311 insertions(+), 4 deletions(-)
- create mode 100644 libavcodec/av1_temp.h
+ 6 files changed, 236 insertions(+), 4 deletions(-)
  create mode 100644 libavcodec/qsvenc_av1.c
 
 diff --git a/configure b/configure
-index 8cf0bc3..4928cdc 100755
+index e9d2564..4a0d7b7 100755
 --- a/configure
 +++ b/configure
-@@ -3184,6 +3184,7 @@ vp9_qsv_encoder_select="qsvenc"
+@@ -3191,6 +3191,8 @@ vp9_qsv_encoder_select="qsvenc"
  vp9_v4l2m2m_decoder_deps="v4l2_m2m vp9_v4l2_m2m"
  wmv3_crystalhd_decoder_select="crystalhd"
  av1_qsv_decoder_select="qsvdec"
 +av1_qsv_encoder_select="qsvenc"
++av1_qsv_encoder_deps="libvpl MFX_EXTBUFF_AV1_BITSTREAM_PARAM"
  
  # parsers
  aac_parser_select="adts_header"
+@@ -6456,6 +6458,8 @@ elif enabled libvpl; then
+         warn "build FFmpeg against oneVPL 2.2+, OPAQUE memory, multi-frame encode, user plugins\n"\
+              "and LA_EXT rate control mode in FFmpeg QSV won't be supported." ||
+             die "ERROR: libvpl >= 2.2 not found"
++
++    check_cc MFX_EXTBUFF_AV1_BITSTREAM_PARAM "mfxdefs.h mfxstructures.h" "MFX_EXTBUFF_AV1_BITSTREAM_PARAM"
+ fi
+ 
+ if enabled libmfx; then
 diff --git a/libavcodec/Makefile b/libavcodec/Makefile
-index 04f28c6..d187614 100644
+index 8012b69..d9287e1 100644
 --- a/libavcodec/Makefile
 +++ b/libavcodec/Makefile
 @@ -229,6 +229,8 @@ OBJS-$(CONFIG_AURA_DECODER)            += cyuv.o
@@ -46,10 +58,10 @@ index 04f28c6..d187614 100644
  OBJS-$(CONFIG_AVRP_DECODER)            += r210dec.o
  OBJS-$(CONFIG_AVRP_ENCODER)            += r210enc.o
 diff --git a/libavcodec/allcodecs.c b/libavcodec/allcodecs.c
-index 623db2a..35bc771 100644
+index c42aba1..a7555e1 100644
 --- a/libavcodec/allcodecs.c
 +++ b/libavcodec/allcodecs.c
-@@ -794,6 +794,7 @@ extern const AVCodec ff_libaom_av1_decoder;
+@@ -800,6 +800,7 @@ extern const AVCodec ff_libaom_av1_decoder;
  extern const AVCodec ff_av1_decoder;
  extern const AVCodec ff_av1_cuvid_decoder;
  extern const AVCodec ff_av1_qsv_decoder;
@@ -57,137 +69,11 @@ index 623db2a..35bc771 100644
  extern const AVCodec ff_libopenh264_encoder;
  extern const AVCodec ff_libopenh264_decoder;
  extern const AVCodec ff_h264_amf_encoder;
-diff --git a/libavcodec/av1_temp.h b/libavcodec/av1_temp.h
-new file mode 100644
-index 0000000..2f3d99f
---- /dev/null
-+++ b/libavcodec/av1_temp.h
-@@ -0,0 +1,120 @@
-+/*############################################################################
-+  # Copyright (C) 2018-2021 Intel Corporation
-+  #
-+  # SPDX-License-Identifier: MIT
-+  ############################################################################*/
-+
-+#ifndef __AV1_TEMP_H__
-+#define __AV1_TEMP_H__
-+#include <mfxcommon.h>
-+
-+#if !defined (__GNUC__)
-+#pragma warning(disable: 4201)
-+#endif
-+
-+#ifdef __cplusplus
-+extern "C" {
-+#endif
-+
-+#ifndef MFX_VERSION_NEXT
-+
-+enum {
-+    MFX_EXTBUFF_AV1_PARAM                       = MFX_MAKEFOURCC('1', 'P', 'A', 'R'),
-+    MFX_EXTBUFF_AV1_AUXDATA                     = MFX_MAKEFOURCC('1', 'A', 'U', 'X')
-+};
-+
-+MFX_PACK_BEGIN_USUAL_STRUCT()
-+typedef struct {
-+    mfxExtBuffer Header;
-+
-+    mfxU16  FrameWidth;
-+    mfxU16  FrameHeight;
-+
-+    mfxU8   WriteIVFHeaders;          /* tri-state option */
-+    mfxU8   UseAnnexB;                /* tri-state option */
-+    mfxU8   PackOBUFrame;             /* tri-state option */
-+    mfxU8   InsertTemporalDelimiter;  /* tri-state option */
-+
-+    mfxU8   UniformTileSpacing;       /* tri-state option */
-+    mfxU8   ContextUpdateTileIdPlus1; /* Minus 1 specifies context_update_tile_id */
-+    mfxU16  NumTileRows;
-+    mfxU16  NumTileColumns;
-+    mfxU16  NumTileGroups;
-+    mfxU16  NumTilesPerTileGroup[256];
-+    mfxU16  TileWidthInSB[128];
-+    mfxU16  TileHeightInSB[128];
-+
-+    mfxU8   EnableCdef;               /* tri-state option */
-+    mfxU8   EnableRestoration;        /* tri-state option */
-+    mfxU8   LoopFilterSharpness;      /* 0..8, 0 = default, map to bitstream: [1..8] => [0..7] */
-+
-+    mfxU8   InterpFilter;             /* see enum AV1InterpolationMode */
-+
-+    mfxU8   SegmentationMode;         /* see enum AV1SegmentMode*/
-+
-+    mfxU8   DisableCdfUpdate;         /* tri-state option */
-+    mfxU8   DisableFrameEndUpdateCdf; /* tri-state option */
-+
-+    mfxU8   EnableSuperres;           /* tri-state option */
-+    mfxU8   SuperresScaleDenominator; /* 9..16, 0 = default */
-+
-+    mfxU8   StillPictureMode;         /* tri-state option */
-+    mfxU16  SwitchInterval;           /* interval, 0 - disabled */
-+
-+    mfxU8   EnableLoopFilter;         /* tri-state option */
-+
-+    mfxU8   reserved[63];
-+} mfxExtAV1Param;
-+MFX_PACK_END()
-+
-+MFX_PACK_BEGIN_USUAL_STRUCT()
-+typedef struct {
-+    mfxExtBuffer Header;
-+
-+    struct {
-+        mfxU8  CdefDampingMinus3;   /* 0..3 */
-+        mfxU8  CdefBits;            /* 0..3 */
-+        mfxU8  CdefYStrengths[8];   /* 0..63 */
-+        mfxU8  CdefUVStrengths[8];  /* 0..63 */
-+        mfxU8  reserved[14];
-+    } Cdef;
-+
-+    struct {
-+        mfxU8  LFLevelYVert;        /* 0..63 */
-+        mfxU8  LFLevelYHorz;        /* 0..63 */
-+        mfxU8  LFLevelU;            /* 0..63 */
-+        mfxU8  LFLevelV;            /* 0..63 */
-+        mfxU8  ModeRefDeltaEnabled; /* 0, 1 */
-+        mfxU8  ModeRefDeltaUpdate;  /* 0, 1 */
-+        mfxI8  RefDeltas[8];        /* -63..63 */
-+        mfxI8  ModeDeltas[2];       /* -63..63 */
-+        mfxU8  reserved[16];
-+    } LoopFilter;
-+
-+    struct {
-+        mfxI8  YDcDeltaQ;           /* -63..63 */
-+        mfxI8  UDcDeltaQ;           /* -63..63 */
-+        mfxI8  VDcDeltaQ;           /* -63..63 */
-+        mfxI8  UAcDeltaQ;           /* -63..63 */
-+        mfxI8  VAcDeltaQ;           /* -63..63 */
-+        mfxU8  MinBaseQIndex;
-+        mfxU8  MaxBaseQIndex;
-+        mfxU8  reserved[25];
-+    } QP;
-+
-+    mfxU8  ErrorResilientMode;          /* tri-state option */
-+    mfxU8  EnableOrderHint;             /* tri-state option */
-+    mfxU8  OrderHintBits;               /* 0..8, 0 = default */
-+    mfxU8  DisplayFormatSwizzle;        /* 0, 1 */
-+
-+    mfxU8  reserved[60];
-+} mfxExtAV1AuxData;
-+MFX_PACK_END()
-+
-+#endif
-+
-+#ifdef __cplusplus
-+} // extern "C"
-+#endif
-+
-+#endif
 diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
-index 2f29ad6..87a3f23 100644
+index 546efd9..69712a8 100644
 --- a/libavcodec/qsvenc.c
 +++ b/libavcodec/qsvenc.c
-@@ -623,9 +623,16 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+@@ -629,9 +629,16 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
      case MFX_RATECONTROL_CQP:
          quant = avctx->global_quality / FF_QP2LAMBDA;
  
@@ -207,27 +93,29 @@ index 2f29ad6..87a3f23 100644
  
          break;
  #if QSV_HAVE_AVBR
-@@ -782,6 +789,19 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+@@ -797,6 +804,21 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
      }
  #endif
  
 +#if QSV_HAVE_EXT_AV1_PARAM
 +    if (avctx->codec_id == AV_CODEC_ID_AV1) {
-+        q->extav1param.Header.BufferId = MFX_EXTBUFF_AV1_PARAM;
-+        q->extav1param.Header.BufferSz = sizeof(q->extav1param);
-+        q->extav1param.FrameWidth = avctx->width;
-+        q->extav1param.FrameHeight = avctx->height;
-+        q->extav1param.NumTileColumns  = q->tile_cols;
-+        q->extav1param.NumTileRows     = q->tile_rows;
-+        q->extav1param.PackOBUFrame = MFX_CODINGOPTION_OFF;
-+        q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extav1param;
++        q->extav1tileparam.Header.BufferId = MFX_EXTBUFF_AV1_TILE_PARAM;
++        q->extav1tileparam.Header.BufferSz = sizeof(q->extav1tileparam);
++        q->extav1tileparam.NumTileColumns  = q->tile_cols;
++        q->extav1tileparam.NumTileRows     = q->tile_rows;
++        q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extav1tileparam;
++
++        q->extav1bsparam.Header.BufferId = MFX_EXTBUFF_AV1_BITSTREAM_PARAM;
++        q->extav1bsparam.Header.BufferSz = sizeof(q->extav1bsparam);
++        q->extav1bsparam.WriteIVFHeaders = MFX_CODINGOPTION_OFF;
++        q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extav1bsparam;
 +    }
 +#endif
 +
  #if QSV_HAVE_EXT_HEVC_TILES
      if (avctx->codec_id == AV_CODEC_ID_HEVC) {
          q->exthevctiles.Header.BufferId = MFX_EXTBUFF_HEVC_TILES;
-@@ -869,6 +889,55 @@ static int qsv_retrieve_enc_vp9_params(AVCodecContext *avctx, QSVEncContext *q)
+@@ -902,6 +924,77 @@ static int qsv_retrieve_enc_vp9_params(AVCodecContext *avctx, QSVEncContext *q)
      return 0;
  }
  
@@ -235,9 +123,9 @@ index 2f29ad6..87a3f23 100644
 +{
 +    int ret = 0;
 +#if QSV_HAVE_EXT_AV1_PARAM
-+    mfxExtAV1Param av1_extend_buf = {
-+         .Header.BufferId = MFX_EXTBUFF_AV1_PARAM,
-+         .Header.BufferSz = sizeof(av1_extend_buf),
++    mfxExtAV1TileParam av1_extend_tile_buf = {
++         .Header.BufferId = MFX_EXTBUFF_AV1_TILE_PARAM,
++         .Header.BufferSz = sizeof(av1_extend_tile_buf),
 +    };
 +#endif
 +
@@ -257,7 +145,7 @@ index 2f29ad6..87a3f23 100644
 +
 +    mfxExtBuffer *ext_buffers[] = {
 +#if QSV_HAVE_EXT_AV1_PARAM
-+        (mfxExtBuffer*)&av1_extend_buf,
++        (mfxExtBuffer*)&av1_extend_tile_buf,
 +#endif
 +#if QSV_HAVE_CO2
 +        (mfxExtBuffer*)&co2,
@@ -277,13 +165,35 @@ index 2f29ad6..87a3f23 100644
 +
 +    q->packet_size = q->param.mfx.BufferSizeInKB * q->param.mfx.BRCParamMultiplier * 1000;
 +
++    if (avctx->flags & AV_CODEC_FLAG_GLOBAL_HEADER) {
++        const AVBitStreamFilter *filter = av_bsf_get_by_name("extract_extradata");
++        int ret;
++
++        if (!filter) {
++            av_log(avctx, AV_LOG_ERROR, "extract_extradata bitstream filter "
++                   "not found. This is a bug, please report it.\n");
++            return AVERROR_BUG;
++        }
++        ret = av_bsf_alloc(filter, &q->bsf);
++        if (ret < 0)
++            return ret;
++
++        ret = avcodec_parameters_from_context(q->bsf->par_in, avctx);
++        if (ret < 0)
++           return ret;
++
++        ret = av_bsf_init(q->bsf);
++        if (ret < 0)
++           return ret;
++    }
++
 +    return 0;
 +}
 +
  static int qsv_retrieve_enc_params(AVCodecContext *avctx, QSVEncContext *q)
  {
      AVCPBProperties *cpb_props;
-@@ -1226,6 +1295,9 @@ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q)
+@@ -1259,6 +1352,9 @@ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q)
      case AV_CODEC_ID_VP9:
          ret = qsv_retrieve_enc_vp9_params(avctx, q);
          break;
@@ -293,46 +203,78 @@ index 2f29ad6..87a3f23 100644
      default:
          ret = qsv_retrieve_enc_params(avctx, q);
          break;
+@@ -1611,6 +1707,22 @@ int ff_qsv_encode(AVCodecContext *avctx, QSVEncContext *q,
+ 
+         av_packet_move_ref(pkt, &new_pkt);
+ 
++        if (avctx->codec_id == AV_CODEC_ID_AV1 && avctx->flags & AV_CODEC_FLAG_GLOBAL_HEADER) {
++            ret = av_bsf_send_packet(q->bsf, pkt);
++            if (ret < 0) {
++                av_log(avctx, AV_LOG_ERROR, "extract_extradata filter "
++                    "failed to send input packet\n");
++                return ret;
++            }
++
++            ret = av_bsf_receive_packet(q->bsf, pkt);
++            if (ret < 0) {
++                av_log(avctx, AV_LOG_ERROR, "extract_extradata filter "
++                    "failed to receive output packet\n");
++                return ret;
++            }
++        }
++
+         *got_packet = 1;
+     }
+ 
+@@ -1661,6 +1773,7 @@ int ff_qsv_enc_close(AVCodecContext *avctx, QSVEncContext *q)
+ #endif
+ 
+     av_freep(&q->extparam);
++    av_bsf_free(&q->bsf);
+ 
+     return 0;
+ }
 diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
-index 4d0d3fa..db417f5 100644
+index 7a7eaea..f4a485c 100644
 --- a/libavcodec/qsvenc.h
 +++ b/libavcodec/qsvenc.h
-@@ -26,6 +26,7 @@
- #include <stdint.h>
- #include <sys/types.h>
- 
-+#include "av1_temp.h"
- #include <mfxvideo.h>
- 
- #include "libavutil/common.h"
-@@ -44,6 +45,7 @@
+@@ -44,6 +44,7 @@
  
  #define QSV_HAVE_EXT_HEVC_TILES QSV_VERSION_ATLEAST(1, 13)
  #define QSV_HAVE_EXT_VP9_PARAM QSV_VERSION_ATLEAST(1, 26)
-+#define QSV_HAVE_EXT_AV1_PARAM QSV_ONEVPL
++#define QSV_HAVE_EXT_AV1_PARAM QSV_VERSION_ATLEAST(2, 5)
  
  #define QSV_HAVE_TRELLIS QSV_VERSION_ATLEAST(1, 8)
  #define QSV_HAVE_MAX_SLICE_SIZE QSV_VERSION_ATLEAST(1, 9)
-@@ -137,6 +139,10 @@ typedef struct QSVEncContext {
+@@ -137,6 +138,10 @@ typedef struct QSVEncContext {
  #if QSV_HAVE_EXT_VP9_PARAM
      mfxExtVP9Param  extvp9param;
  #endif
 +#if QSV_HAVE_EXT_AV1_PARAM
-+    mfxExtAV1Param extav1param;
-+    mfxExtAV1AuxData extav1auxdata;
++    mfxExtAV1TileParam extav1tileparam;
++    mfxExtAV1BitstreamParam extav1bsparam;
 +#endif
  
  #if QSV_HAVE_OPAQUE
      mfxExtOpaqueSurfaceAlloc opaque_alloc;
-@@ -144,7 +150,7 @@ typedef struct QSVEncContext {
-     AVBufferRef             *opaque_alloc_buf;
- #endif
+@@ -146,7 +151,7 @@ typedef struct QSVEncContext {
  
--    mfxExtBuffer  *extparam_internal[2 + QSV_HAVE_CO2 + QSV_HAVE_CO3 + (QSV_HAVE_MF * 2)];
-+    mfxExtBuffer  *extparam_internal[2 + QSV_HAVE_CO2 + QSV_HAVE_CO3 + (QSV_HAVE_MF * 2)+QSV_HAVE_EXT_AV1_PARAM*2];
+     mfxExtVideoSignalInfo extvsi;
+ 
+-    mfxExtBuffer  *extparam_internal[3 + QSV_HAVE_CO2 + QSV_HAVE_CO3 + (QSV_HAVE_MF * 2)];
++    mfxExtBuffer  *extparam_internal[3 + QSV_HAVE_CO2 + QSV_HAVE_CO3 + (QSV_HAVE_MF * 2)+QSV_HAVE_EXT_AV1_PARAM*2];
      int         nb_extparam_internal;
  
      mfxExtBuffer **extparam;
+@@ -208,6 +213,8 @@ typedef struct QSVEncContext {
+     char *load_plugins;
+     SetEncodeCtrlCB *set_encode_ctrl_cb;
+     int forced_idr;
++
++    AVBSFContext *bsf;
+ } QSVEncContext;
+ 
+ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q);
 diff --git a/libavcodec/qsvenc_av1.c b/libavcodec/qsvenc_av1.c
 new file mode 100644
 index 0000000..17528be

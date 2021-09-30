@@ -1,28 +1,31 @@
-From de18cf7451a78b7352afbadc367954e92d818f8d Mon Sep 17 00:00:00 2001
+From 76c3f5ec7570fed400e3ea645b6496ea710b6b3a Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Tue, 8 Sep 2020 11:17:27 +0800
-Subject: [PATCH 03/15] qsv: add ${includedir}/mfx to the search path for old
- versions of libmfx
+Subject: [PATCH 03/13] qsv: remove mfx/ prefix from mfx headers
 
-${includedir}/mfx has been added to Cflags in libmfx.pc for the current
-libmfx. We may add ${includedir}/mfx to the search path for old
-versions of libmfx so that we may include foo.h instead of mfx/foo.h
+The following Cflags has been added to libmfx.pc, so mfx/ prefix is no
+longer needed when including mfx headers in FFmpeg.
+   Cflags: -I${includedir} -I${includedir}/mfx
 
-After applying this change, we won't need to change #include to include
-the right header files when the mfx header files are installed to a new
-directory for a new version of libmfx. E.g. for libmfx 2.0 (oneVPL,
-https://github.com/oneapi-src/oneVPL), the header files will be
-installed in vpl directory
+Some old versions of libmfx have the following Cflags in libmfx.pc
+   Cflags: -I${includedir}
 
-If your libmfx comes without pkg-config support, this patch requires a
-small change to your environment setting (e.g. adding
-/opt/intel/mediasdk/include/mfx instead of /opt/intel/mediasdk/include
-to CFLAGS) so that the build can find the headers
+We may add -I${includedir}/mfx to CFLAGS when running 'configure
+--enable-libmfx' for old versions of libmfx, if so, mfx headers without
+mfx/ prefix can be included too.
 
-This is in preparation for oneVPL support
+If libmfx comes without pkg-config support, we may do a small change to
+the settings of the environment(e.g. set -I/opt/intel/mediasdk/include/mfx
+instead of -I/opt/intel/mediasdk/include to CFLAGS), then the build can
+find the mfx headers without mfx/ prefix
+
+After applying this change, we won't need to change #include for mfx
+headers when mfx headers are installed under a new directory.
+
+This is in preparation for oneVPL support (mfx headers in oneVPL are
+installed under vpl directory)
 ---
- configure                        | 16 +++++++++++-----
- fftools/ffmpeg_qsv.c             |  2 +-
+ configure                        | 13 +++++++++----
  libavcodec/qsv.c                 |  8 ++++----
  libavcodec/qsv.h                 |  2 +-
  libavcodec/qsv_internal.h        |  2 +-
@@ -40,51 +43,37 @@ This is in preparation for oneVPL support
  libavutil/hwcontext_opencl.c     |  2 +-
  libavutil/hwcontext_qsv.c        |  2 +-
  libavutil/hwcontext_qsv.h        |  2 +-
- 19 files changed, 32 insertions(+), 26 deletions(-)
+ 18 files changed, 29 insertions(+), 24 deletions(-)
 
 diff --git a/configure b/configure
-index c9b47c6..defebe9 100755
+index 21c744e..9655a58 100755
 --- a/configure
 +++ b/configure
-@@ -6419,12 +6419,18 @@ enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_
+@@ -6434,13 +6434,18 @@ enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_
  # Media SDK or Intel Media Server Studio, these don't come with
  # pkg-config support.  Instead, users should make sure that the build
  # can find the libraries and headers through other means.
--enabled libmfx            && { { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit &&
--                                 warn "Build FFmpeg against libmfx 1.x, obsolete features of libmfx such as\n"\
--                                      "OPAQUE memory, multi-frame encode and LA_EXT rate control mode are enabled"; } ||
--                               { require libmfx "mfx/mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } }
-+enabled libmfx            && { { { check_pkg_config libmfx "libmfx < 2.0" "mfxvideo.h" MFXInit ||
+-enabled libmfx            && { { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit ||
+-                                 { require "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } } &&
++
++enabled libmfx            && { { check_pkg_config libmfx "libmfx < 2.0" "mfxvideo.h" MFXInit ||
 +# Some old versions of libmfx have the following settings in libmfx.pc:
 +#   includedir=/usr/include
 +#   Cflags: -I${includedir}
-+# So add -I${includedir}/mfx to the include path
-+                               { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit &&
-+                                 add_cflags -I$($pkg_config --variable=includedir libmfx)/mfx; } } &&
-+                               warn "Build FFmpeg against libmfx 1.x, obsolete features of libmfx such as\n"\
-+                                    "OPAQUE memory, multi-frame encode and LA_EXT rate control mode are enabled"; } ||
-+                               { require libmfx "mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } }
++# So add -I${includedir}/mfx to CFLAGS
++                                 { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit && add_cflags -I$($pkg_config --variable=includedir libmfx)/mfx; } ||
++                                 { require "libmfx < 2.0" "mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } } &&
+                                warn "build FFmpeg against libmfx 1.x, obsolete features of libmfx such as OPAQUE memory,\n"\
+                                     "multi-frame encode, user plugins and LA_EXT rate control mode are enabled"; }
+-
  if enabled libmfx; then
--   check_cc MFX_CODEC_VP9 "mfx/mfxvp9.h mfx/mfxstructures.h" "MFX_CODEC_VP9"
-+   check_cc MFX_CODEC_VP9 "mfxvp9.h mfxstructures.h" "MFX_CODEC_VP9"
+-   check_cc MFX_CODEC_VP9 "mfx/mfxdefs.h mfx/mfxstructures.h" "MFX_CODEC_VP9"
++   check_cc MFX_CODEC_VP9 "mfxdefs.h mfxstructures.h" "MFX_CODEC_VP9"
  fi
  
  enabled libmodplug        && require_pkg_config libmodplug libmodplug libmodplug/modplug.h ModPlug_Load
-diff --git a/fftools/ffmpeg_qsv.c b/fftools/ffmpeg_qsv.c
-index 960c88b..0df0b58 100644
---- a/fftools/ffmpeg_qsv.c
-+++ b/fftools/ffmpeg_qsv.c
-@@ -16,7 +16,7 @@
-  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-  */
- 
--#include <mfx/mfxvideo.h>
-+#include <mfxvideo.h>
- #include <stdlib.h>
- 
- #include "libavutil/dict.h"
 diff --git a/libavcodec/qsv.c b/libavcodec/qsv.c
-index b7b00dd..e3dc6d6 100644
+index 9d08485..84f0401 100644
 --- a/libavcodec/qsv.c
 +++ b/libavcodec/qsv.c
 @@ -18,9 +18,9 @@
@@ -123,7 +112,7 @@ index b77158e..04ae0d6 100644
  #include "libavutil/buffer.h"
  
 diff --git a/libavcodec/qsv_internal.h b/libavcodec/qsv_internal.h
-index 5d276b0..4f0f1da 100644
+index 8090b74..24c3e93 100644
 --- a/libavcodec/qsv_internal.h
 +++ b/libavcodec/qsv_internal.h
 @@ -39,7 +39,7 @@
@@ -136,7 +125,7 @@ index 5d276b0..4f0f1da 100644
  #include "libavutil/frame.h"
  
 diff --git a/libavcodec/qsvdec.c b/libavcodec/qsvdec.c
-index 6227509..567de9e 100644
+index 8bce9f2..1cadb84 100644
 --- a/libavcodec/qsvdec.c
 +++ b/libavcodec/qsvdec.c
 @@ -25,7 +25,7 @@
@@ -149,7 +138,7 @@ index 6227509..567de9e 100644
  #include "libavutil/common.h"
  #include "libavutil/fifo.h"
 diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
-index 0ec8e0e..6b69e34 100644
+index 06f5560..7eaa680 100644
 --- a/libavcodec/qsvenc.c
 +++ b/libavcodec/qsvenc.c
 @@ -23,7 +23,7 @@
@@ -162,7 +151,7 @@ index 0ec8e0e..6b69e34 100644
  #include "libavutil/common.h"
  #include "libavutil/hwcontext.h"
 diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
-index 6d305f8..4c18f58 100644
+index 31516b8..7a71ffe 100644
 --- a/libavcodec/qsvenc.h
 +++ b/libavcodec/qsvenc.h
 @@ -26,7 +26,7 @@
@@ -188,7 +177,7 @@ index 80fe3cc..9134e6a 100644
  #include "libavutil/common.h"
  #include "libavutil/opt.h"
 diff --git a/libavcodec/qsvenc_hevc.c b/libavcodec/qsvenc_hevc.c
-index a5671eb..eb8a4ab 100644
+index b7b2f56..a268a00 100644
 --- a/libavcodec/qsvenc_hevc.c
 +++ b/libavcodec/qsvenc_hevc.c
 @@ -22,7 +22,7 @@
@@ -253,7 +242,7 @@ index e0f4c8f..8c0cf3e 100644
  #include "avfilter.h"
  #include "libavutil/fifo.h"
 diff --git a/libavfilter/vf_deinterlace_qsv.c b/libavfilter/vf_deinterlace_qsv.c
-index cd128c2..b56f2af 100644
+index 173c314..ab84955 100644
 --- a/libavfilter/vf_deinterlace_qsv.c
 +++ b/libavfilter/vf_deinterlace_qsv.c
 @@ -21,7 +21,7 @@
@@ -266,7 +255,7 @@ index cd128c2..b56f2af 100644
  #include <stdio.h>
  #include <string.h>
 diff --git a/libavfilter/vf_scale_qsv.c b/libavfilter/vf_scale_qsv.c
-index 6925920..3170d97 100644
+index 5a37cef..19c9bb6 100644
 --- a/libavfilter/vf_scale_qsv.c
 +++ b/libavfilter/vf_scale_qsv.c
 @@ -21,7 +21,7 @@
@@ -279,7 +268,7 @@ index 6925920..3170d97 100644
  #include <stdio.h>
  #include <string.h>
 diff --git a/libavutil/hwcontext_opencl.c b/libavutil/hwcontext_opencl.c
-index 964b783..320751a 100644
+index 26a3a24..194165f 100644
 --- a/libavutil/hwcontext_opencl.c
 +++ b/libavutil/hwcontext_opencl.c
 @@ -47,7 +47,7 @@
@@ -292,7 +281,7 @@ index 964b783..320751a 100644
  #include <va/va.h>
  #include <CL/cl_va_api_media_sharing_intel.h>
 diff --git a/libavutil/hwcontext_qsv.c b/libavutil/hwcontext_qsv.c
-index c68f79c..82d0f38 100644
+index c18747f..6725a09 100644
 --- a/libavutil/hwcontext_qsv.c
 +++ b/libavutil/hwcontext_qsv.c
 @@ -19,7 +19,7 @@
