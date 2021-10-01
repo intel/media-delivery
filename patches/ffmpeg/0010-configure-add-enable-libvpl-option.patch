@@ -1,22 +1,40 @@
-From d37b5bb0869503a0c1e6950a0695805b896d5587 Mon Sep 17 00:00:00 2001
+From e8886f1e61043a3c46b1bdc6774a7a77a097bc71 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 3 Feb 2021 14:49:46 +0800
 Subject: [PATCH 10/13] configure: add --enable-libvpl option
 
-This allows user to build FFmpeg against Intel oneVPL. oneVPL 2.2
+This allows user to build FFmpeg against Intel oneVPL. oneVPL 2.6
 is the required minimum version when building Intel oneVPL code.
 
 It will fail to run configure script if both libmfx and libvpl are
 enabled.
+
+It is recommended to use oneVPL for new work, even for currently available
+hardwares [1]
+
+Note the preferred child device type is d3d11va for libvpl on Windows.
+The commands below will use d3d11va if d3d11va is available on Windows.
+$> ffmpeg -hwaccel qsv -c:v h264_qsv ...
+$> ffmpeg -qsv_device 0 -hwaccel qsv -c:v h264_qsv ...
+$> ffmpeg -init_hw_device qsv=qsv:hw_any -hwaccel qsv -c:v h264_qsv ...
+$> ffmpeg -init_hw_device qsv=qsv:hw_any,child_device=0 -hwaccel qsv -c:v h264_qsv ...
+
+User may use child_device_type option to specify child device type to
+dxva2 or derive a qsv device from a dxva2 device
+$> ffmpeg -init_hw_device qsv=qsv:hw_any,child_device=0,child_device_type=dxva2 -hwaccel qsv -c:v h264_qsv ...
+$> ffmpeg -init_hw_device dxva2=d3d9:0 -init_hw_device qsv=qsv@d3d9 -hwaccel qsv -c:v h264_qsv ...
+
+[1] https://software.intel.com/content/www/us/en/develop/articles/upgrading-from-msdk-to-onevpl.html
 ---
- configure | 26 ++++++++++++++++++++------
- 1 file changed, 20 insertions(+), 6 deletions(-)
+ configure                 | 27 ++++++++++++++++++------
+ libavutil/hwcontext_qsv.c | 52 ++++++++++++++++++++++++++++++++++-------------
+ 2 files changed, 59 insertions(+), 20 deletions(-)
 
 diff --git a/configure b/configure
-index 9655a5823e..e9d2564819 100755
+index 23268c5..c71b4c5 100755
 --- a/configure
 +++ b/configure
-@@ -337,6 +337,7 @@ External library support:
+@@ -339,6 +339,7 @@ External library support:
    --disable-ffnvcodec      disable dynamically linked Nvidia code [autodetect]
    --enable-libdrm          enable DRM code (Linux) [no]
    --enable-libmfx          enable Intel MediaSDK (AKA Quick Sync Video) code via libmfx [no]
@@ -24,7 +42,7 @@ index 9655a5823e..e9d2564819 100755
    --enable-libnpp          enable Nvidia Performance Primitives-based code [no]
    --enable-mmal            enable Broadcom Multi-Media Abstraction Layer (Raspberry Pi) via MMAL [no]
    --disable-nvdec          disable Nvidia video decoding acceleration (via hwaccel) [autodetect]
-@@ -1895,6 +1896,7 @@ HWACCEL_LIBRARY_NONFREE_LIST="
+@@ -1917,6 +1918,7 @@ HWACCEL_LIBRARY_NONFREE_LIST="
  HWACCEL_LIBRARY_LIST="
      $HWACCEL_LIBRARY_NONFREE_LIST
      libmfx
@@ -32,7 +50,7 @@ index 9655a5823e..e9d2564819 100755
      mmal
      omx
      opencl
-@@ -6428,22 +6430,34 @@ enabled libilbc           && require libilbc ilbc.h WebRtcIlbcfix_InitDecode -li
+@@ -6542,22 +6544,35 @@ enabled libilbc           && require libilbc ilbc.h WebRtcIlbcfix_InitDecode -li
  enabled libklvanc         && require libklvanc libklvanc/vanc.h klvanc_context_create -lklvanc
  enabled libkvazaar        && require_pkg_config libkvazaar "kvazaar >= 0.8.1" kvazaar.h kvz_api_get
  enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_db_new
@@ -53,26 +71,90 @@ index 9655a5823e..e9d2564819 100755
  #   includedir=/usr/include
  #   Cflags: -I${includedir}
  # So add -I${includedir}/mfx to CFLAGS
--                                 { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit && add_cflags -I$($pkg_config --variable=includedir libmfx)/mfx; } ||
+-                                 { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit && add_cflags -I${libmfx_incdir}/mfx; } ||
 -                                 { require "libmfx < 2.0" "mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } } &&
 -                               warn "build FFmpeg against libmfx 1.x, obsolete features of libmfx such as OPAQUE memory,\n"\
 -                                    "multi-frame encode, user plugins and LA_EXT rate control mode are enabled"; }
-+      { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit && add_cflags -I$($pkg_config --variable=includedir libmfx)/mfx; } ||
++      { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit && add_cflags -I${libmfx_incdir}/mfx; } ||
 +      { require "libmfx < 2.0" "mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } } &&
 +    warn "build FFmpeg against libmfx 1.x, obsolete features of libmfx such as OPAQUE memory,\n"\
 +         "multi-frame encode, user plugins and LA_EXT rate control mode are enabled"
 +elif enabled libvpl; then
-+# Consider pkg-config only. The name of libmfx is still used in the following check for --enable-libvpl option
-+# because QSV has dependency on libmfx, we can use the same dependency if using libmfx in this check.
-+    check_pkg_config libmfx "vpl >= 2.2" "mfxvideo.h mfxdispatcher.h" MFXLoad && \
-+        warn "build FFmpeg against oneVPL 2.2+, OPAQUE memory, multi-frame encode, user plugins\n"\
++# Consider pkg-config only. The name of libmfx is still passed to check_pkg_config function for --enable-libvpl option
++# because QSV has dependency on libmfx, we can use the same dependency if using libmfx in this check. The package name
++# is extracted from "vpl >= 2.6"
++    check_pkg_config libmfx "vpl >= 2.6" "mfxvideo.h mfxdispatcher.h" MFXLoad && \
++        warn "build FFmpeg against oneVPL 2.6+, OPAQUE memory, multi-frame encode, user plugins\n"\
 +             "and LA_EXT rate control mode in FFmpeg QSV won't be supported." ||
-+            die "ERROR: libvpl >= 2.2 not found"
++            die "ERROR: libvpl >= 2.6 not found"
 +fi
 +
  if enabled libmfx; then
     check_cc MFX_CODEC_VP9 "mfxdefs.h mfxstructures.h" "MFX_CODEC_VP9"
  fi
+diff --git a/libavutil/hwcontext_qsv.c b/libavutil/hwcontext_qsv.c
+index 17fc834..b6cbdf2 100644
+--- a/libavutil/hwcontext_qsv.c
++++ b/libavutil/hwcontext_qsv.c
+@@ -710,20 +710,44 @@ static int qsv_create_mfx_session(void *ctx,
+         goto fail;
+     }
+ 
+-    if (child_device &&
+-        (MFX_HANDLE_D3D9_DEVICE_MANAGER == handle_type ||
+-         MFX_HANDLE_D3D11_DEVICE == handle_type)) {
+-        uint32_t idx = atoi(child_device);
+-
+-        impl_value.Type = MFX_VARIANT_TYPE_U32;
+-        impl_value.Data.U32 = idx;
+-        sts = MFXSetConfigFilterProperty(cfg,
+-                                         (const mfxU8 *)"mfxImplDescription.VendorImplID", impl_value);
+-
+-        if (sts != MFX_ERR_NONE) {
+-            av_log(ctx, AV_LOG_ERROR, "Error adding a MFX configuration"
+-                   "VendorImplID property: %d.\n", sts);
+-            goto fail;
++    if (child_device) {
++        if ((MFX_HANDLE_D3D9_DEVICE_MANAGER == handle_type ||
++             MFX_HANDLE_D3D11_DEVICE == handle_type)) {
++            uint32_t idx = atoi(child_device);
++
++            impl_value.Type = MFX_VARIANT_TYPE_U32;
++            impl_value.Data.U32 = idx;
++            sts = MFXSetConfigFilterProperty(cfg,
++                                             (const mfxU8 *)"mfxImplDescription.VendorImplID", impl_value);
++
++            if (sts != MFX_ERR_NONE) {
++                av_log(ctx, AV_LOG_ERROR, "Error adding a MFX configuration"
++                       "VendorImplID property: %d.\n", sts);
++                goto fail;
++            }
++        } else {
++            uint32_t node;
++
++            if ((sscanf(child_device, "/dev/dri/renderD%d", &node) != 1) &&
++                (sscanf(child_device, "/dev/dri/card%d", &node) != 1)) {
++                av_log(ctx, AV_LOG_ERROR, "Invalid DRI device\n");
++                goto fail;
++            }
++
++            /* Use the corresponding render node to find the implementation for card0, card1, ... */
++            if (node < 128)
++                node += 128;
++
++            impl_value.Type = MFX_VARIANT_TYPE_U32;
++            impl_value.Data.U32 = node;
++            MFXSetConfigFilterProperty(cfg,
++                                       (const mfxU8 *)"mfxExtendedDeviceId.DRMRenderNodeNum", impl_value);
++
++            if (sts != MFX_ERR_NONE) {
++                av_log(ctx, AV_LOG_ERROR, "Error adding a MFX configuration"
++                       "DRMRenderNodeNum property: %d.\n", sts);
++                goto fail;
++            }
+         }
+     }
+ 
 -- 
-2.25.1
+1.8.3.1
 

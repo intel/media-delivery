@@ -19,8 +19,9 @@ dnl # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
 dnl # SOFTWARE.
 dnl #
 include(begin.m4)
+include(dav1d.m4)
 
-DECLARE(`FFMPEG_VER',`b2538ce')
+DECLARE(`FFMPEG_VER',`bea841a')
 DECLARE(`FFMPEG_ENABLE_MFX',`1.x')
 
 define(`FFMPEG_BUILD_DEPS',`ca-certificates gcc g++ git dnl
@@ -54,6 +55,7 @@ ifelse(FFMPEG_ENABLE_MFX,1.x,`dnl
   --enable-libx265 \
   --enable-version3 \
   --enable-libvmaf \
+  --enable-libdav1d \
   && make -j $(nproc --all) \
   && make install DESTDIR=BUILD_DESTDIR \
   && make install
