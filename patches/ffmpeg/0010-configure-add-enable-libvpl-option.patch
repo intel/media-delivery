@@ -1,4 +1,4 @@
-From 1acb925dcc08f4b37e598749a3210f76851afd05 Mon Sep 17 00:00:00 2001
+From d37b5bb0869503a0c1e6950a0695805b896d5587 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 3 Feb 2021 14:49:46 +0800
 Subject: [PATCH 10/13] configure: add --enable-libvpl option
@@ -13,7 +13,7 @@ enabled.
  1 file changed, 20 insertions(+), 6 deletions(-)
 
 diff --git a/configure b/configure
-index 9655a58..e9d2564 100755
+index 9655a5823e..e9d2564819 100755
 --- a/configure
 +++ b/configure
 @@ -337,6 +337,7 @@ External library support:
@@ -74,5 +74,5 @@ index 9655a58..e9d2564 100755
     check_cc MFX_CODEC_VP9 "mfxdefs.h mfxstructures.h" "MFX_CODEC_VP9"
  fi
 -- 
-1.8.3.1
+2.25.1
 

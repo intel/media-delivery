@@ -1,4 +1,4 @@
-From e204e43b2986ff1193e908d94b82af8958b34366 Mon Sep 17 00:00:00 2001
+From bcb23285f389116c63044eba42e317eed68b649d Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Tue, 18 Aug 2020 15:30:32 +0800
 Subject: [PATCH 05/13] qsv: build audio related code when MFX_VERSION < 2.0
@@ -15,7 +15,7 @@ preparation for oneVPL support
  3 files changed, 13 insertions(+)
 
 diff --git a/libavcodec/qsv.c b/libavcodec/qsv.c
-index 83056e5..e0a124a 100644
+index 83056e5976..e0a124a5cb 100644
 --- a/libavcodec/qsv.c
 +++ b/libavcodec/qsv.c
 @@ -37,6 +37,7 @@
@@ -48,7 +48,7 @@ index 83056e5..e0a124a 100644
  
  /**
 diff --git a/libavfilter/qsvvpp.c b/libavfilter/qsvvpp.c
-index d121835..1113d27 100644
+index d1218355c7..1113d27ba1 100644
 --- a/libavfilter/qsvvpp.c
 +++ b/libavfilter/qsvvpp.c
 @@ -38,6 +38,8 @@
@@ -82,7 +82,7 @@ index d121835..1113d27 100644
  
  static int qsv_map_error(mfxStatus mfx_err, const char **desc)
 diff --git a/libavfilter/qsvvpp.h b/libavfilter/qsvvpp.h
-index 8c0cf3e..46e90c1 100644
+index 8c0cf3ed95..46e90c1d2c 100644
 --- a/libavfilter/qsvvpp.h
 +++ b/libavfilter/qsvvpp.h
 @@ -40,6 +40,8 @@
@@ -95,5 +95,5 @@ index 8c0cf3e..46e90c1 100644
      AVFrame          *frame;
      mfxFrameSurface1 surface;
 -- 
-1.8.3.1
+2.25.1
 

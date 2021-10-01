@@ -1,4 +1,4 @@
-From ee06a278a3c68107c5d43bbcc867ea1d41a81393 Mon Sep 17 00:00:00 2001
+From 40c63d626e3adff2d3f11eec45c12edb6538da77 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 19 Aug 2020 12:49:14 +0800
 Subject: [PATCH 07/13] qsvenc: support MFX_RATECONTROL_LA_EXT when MFX_VERSION
@@ -14,7 +14,7 @@ This is in preparation for oneVPL support
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
-index 7eaa680..6c64947 100644
+index 7eaa680ae4..6c6494745f 100644
 --- a/libavcodec/qsvenc.c
 +++ b/libavcodec/qsvenc.c
 @@ -100,7 +100,7 @@ static const struct {
@@ -27,5 +27,5 @@ index 7eaa680..6c64947 100644
  #endif
  #if QSV_HAVE_LA_HRD
 -- 
-1.8.3.1
+2.25.1
 

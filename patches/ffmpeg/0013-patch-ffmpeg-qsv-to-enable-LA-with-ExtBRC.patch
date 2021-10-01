@@ -1,15 +1,16 @@
-From 6db5895b24fc8af7d43ba99c50b75044ff4be7c7 Mon Sep 17 00:00:00 2001
+From 0ed94965858b0bd4eb2128b25d2f5ecd8f22a014 Mon Sep 17 00:00:00 2001
 From: Daniel Socek <daniel.socek@intel.com>
 Date: Fri, 26 Jun 2020 21:25:20 +0000
 Subject: [PATCH 13/13] patch ffmpeg-qsv to enable LA with ExtBRC
 
 Signed-off-by: Daniel Socek <daniel.socek@intel.com>
 ---
- libavcodec/qsvenc.c | 3 +++
- 1 file changed, 3 insertions(+)
+ libavcodec/qsvenc.c      | 3 +++
+ libavcodec/qsvenc_hevc.c | 1 +
+ 2 files changed, 4 insertions(+)
 
 diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
-index 69712a8..6859243 100644
+index 69712a8953..685924369a 100644
 --- a/libavcodec/qsvenc.c
 +++ b/libavcodec/qsvenc.c
 @@ -610,6 +610,9 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
@@ -22,6 +23,18 @@ index 69712a8..6859243 100644
  #if QSV_HAVE_VCM
      case MFX_RATECONTROL_VCM:
  #endif
+diff --git a/libavcodec/qsvenc_hevc.c b/libavcodec/qsvenc_hevc.c
+index 7519b7b436..7aba91eebc 100644
+--- a/libavcodec/qsvenc_hevc.c
++++ b/libavcodec/qsvenc_hevc.c
+@@ -245,6 +245,7 @@ static const AVOption options[] = {
+ 
+     { "tile_cols",  "Number of columns for tiled encoding",   OFFSET(qsv.tile_cols),    AV_OPT_TYPE_INT, { .i64 = 0 }, 0, UINT16_MAX, VE },
+     { "tile_rows",  "Number of rows for tiled encoding",      OFFSET(qsv.tile_rows),    AV_OPT_TYPE_INT, { .i64 = 0 }, 0, UINT16_MAX, VE },
++    { "look_ahead_depth", "Depth of look ahead in number frames", OFFSET(qsv.look_ahead_depth), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 100, VE },
+     { "recovery_point_sei", "Insert recovery point SEI messages",       OFFSET(qsv.recovery_point_sei),      AV_OPT_TYPE_INT, { .i64 = -1 },               -1,          1, VE },
+     { "aud", "Insert the Access Unit Delimiter NAL", OFFSET(qsv.aud), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE},
+ 
 -- 
-1.8.3.1
+2.25.1
 

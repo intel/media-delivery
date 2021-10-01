@@ -1,4 +1,4 @@
-From 39369edb3d178ffd62215cdae7157afe61f04edd Mon Sep 17 00:00:00 2001
+From fcd35d3c1d001fc63291d72d27dd7e2090fb067e Mon Sep 17 00:00:00 2001
 From: "Chen,Wenbin" <wenbin.chen@intel.com>
 Date: Thu, 8 Apr 2021 13:09:47 +0800
 Subject: [PATCH 11/13] libavcodec/qsvenc_av1: add av1_qsv encoder
@@ -16,14 +16,14 @@ Signed-off-by: Haihao Xiang <haihao.xiang@intel.com>
  configure               |   4 ++
  libavcodec/Makefile     |   2 +
  libavcodec/allcodecs.c  |   1 +
- libavcodec/qsvenc.c     | 119 ++++++++++++++++++++++++++++++++++++++++++++++--
- libavcodec/qsvenc.h     |   9 +++-
- libavcodec/qsvenc_av1.c | 105 ++++++++++++++++++++++++++++++++++++++++++
+ libavcodec/qsvenc.c     | 119 +++++++++++++++++++++++++++++++++++++++-
+ libavcodec/qsvenc.h     |   9 ++-
+ libavcodec/qsvenc_av1.c | 105 +++++++++++++++++++++++++++++++++++
  6 files changed, 236 insertions(+), 4 deletions(-)
  create mode 100644 libavcodec/qsvenc_av1.c
 
 diff --git a/configure b/configure
-index e9d2564..4a0d7b7 100755
+index e9d2564819..4a0d7b7d6a 100755
 --- a/configure
 +++ b/configure
 @@ -3191,6 +3191,8 @@ vp9_qsv_encoder_select="qsvenc"
@@ -45,7 +45,7 @@ index e9d2564..4a0d7b7 100755
  
  if enabled libmfx; then
 diff --git a/libavcodec/Makefile b/libavcodec/Makefile
-index 8012b69..d9287e1 100644
+index 8012b69f61..d9287e16d5 100644
 --- a/libavcodec/Makefile
 +++ b/libavcodec/Makefile
 @@ -229,6 +229,8 @@ OBJS-$(CONFIG_AURA_DECODER)            += cyuv.o
@@ -58,7 +58,7 @@ index 8012b69..d9287e1 100644
  OBJS-$(CONFIG_AVRP_DECODER)            += r210dec.o
  OBJS-$(CONFIG_AVRP_ENCODER)            += r210enc.o
 diff --git a/libavcodec/allcodecs.c b/libavcodec/allcodecs.c
-index c42aba1..a7555e1 100644
+index c42aba140d..a7555e1e8b 100644
 --- a/libavcodec/allcodecs.c
 +++ b/libavcodec/allcodecs.c
 @@ -800,6 +800,7 @@ extern const AVCodec ff_libaom_av1_decoder;
@@ -70,7 +70,7 @@ index c42aba1..a7555e1 100644
  extern const AVCodec ff_libopenh264_decoder;
  extern const AVCodec ff_h264_amf_encoder;
 diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
-index 546efd9..69712a8 100644
+index 546efd9668..69712a8953 100644
 --- a/libavcodec/qsvenc.c
 +++ b/libavcodec/qsvenc.c
 @@ -629,9 +629,16 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
@@ -235,7 +235,7 @@ index 546efd9..69712a8 100644
      return 0;
  }
 diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
-index 7a7eaea..f4a485c 100644
+index 7a7eaea156..f4a485c389 100644
 --- a/libavcodec/qsvenc.h
 +++ b/libavcodec/qsvenc.h
 @@ -44,6 +44,7 @@
@@ -277,7 +277,7 @@ index 7a7eaea..f4a485c 100644
  int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q);
 diff --git a/libavcodec/qsvenc_av1.c b/libavcodec/qsvenc_av1.c
 new file mode 100644
-index 0000000..17528be
+index 0000000000..17528beafe
 --- /dev/null
 +++ b/libavcodec/qsvenc_av1.c
 @@ -0,0 +1,105 @@
@@ -387,5 +387,5 @@ index 0000000..17528be
 +    .hw_configs     = ff_qsv_enc_hw_configs,
 +};
 -- 
-1.8.3.1
+2.25.1
 

@@ -1,4 +1,4 @@
-From 9615d86d182b0f4538c640ebae3aa2fdc32f836d Mon Sep 17 00:00:00 2001
+From 25614d817c65e24bbcadbd81ac56ced94e779ad2 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Mon, 4 Jan 2021 10:46:14 +0800
 Subject: [PATCH 09/13] qsv: use a new method to create mfx session when using
@@ -18,7 +18,7 @@ This is in preparation for oneVPL support
 
 Signed-off-by: galinart <artem.galin@intel.com>
 ---
- libavcodec/qsv.c                 | 191 ++++++++++++++++++++---
+ libavcodec/qsv.c                 | 191 ++++++++++++++++--
  libavcodec/qsv_internal.h        |   1 +
  libavcodec/qsvdec.c              |   4 +
  libavcodec/qsvenc.h              |   3 +
@@ -27,16 +27,16 @@ Signed-off-by: galinart <artem.galin@intel.com>
  libavcodec/qsvenc_jpeg.c         |   1 -
  libavcodec/qsvenc_mpeg2.c        |   1 -
  libavcodec/qsvenc_vp9.c          |   1 -
- libavfilter/qsvvpp.c             | 107 +++++++++++--
+ libavfilter/qsvvpp.c             | 107 +++++++++-
  libavfilter/qsvvpp.h             |   5 +
  libavfilter/vf_deinterlace_qsv.c |  14 +-
  libavfilter/vf_scale_qsv.c       |  12 +-
- libavutil/hwcontext_qsv.c        | 322 ++++++++++++++++++++++++++++++++++-----
+ libavutil/hwcontext_qsv.c        | 322 +++++++++++++++++++++++++++----
  libavutil/hwcontext_qsv.h        |  16 ++
  15 files changed, 591 insertions(+), 89 deletions(-)
 
 diff --git a/libavcodec/qsv.c b/libavcodec/qsv.c
-index d6f7790..f00bb4d 100644
+index d6f77908e4..f00bb4db8a 100644
 --- a/libavcodec/qsv.c
 +++ b/libavcodec/qsv.c
 @@ -387,6 +387,164 @@ static int ff_qsv_set_display_handle(AVCodecContext *avctx, QSVSession *qs)
@@ -270,7 +270,7 @@ index d6f7790..f00bb4d 100644
  #ifdef AVCODEC_QSV_LINUX_SESSION_HANDLE
      av_buffer_unref(&qs->va_device_ref);
 diff --git a/libavcodec/qsv_internal.h b/libavcodec/qsv_internal.h
-index ff50b41..aea1441 100644
+index ff50b41de8..aea1441c7f 100644
 --- a/libavcodec/qsv_internal.h
 +++ b/libavcodec/qsv_internal.h
 @@ -87,6 +87,7 @@ typedef struct QSVFrame {
@@ -282,7 +282,7 @@ index ff50b41..aea1441 100644
      AVBufferRef *va_device_ref;
      AVHWDeviceContext *va_device_ctx;
 diff --git a/libavcodec/qsvdec.c b/libavcodec/qsvdec.c
-index 9395a1f..c4daa44 100644
+index 9395a1fd9a..c4daa44c1c 100644
 --- a/libavcodec/qsvdec.c
 +++ b/libavcodec/qsvdec.c
 @@ -161,7 +161,9 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
@@ -306,7 +306,7 @@ index 9395a1f..c4daa44 100644
  
          ret = ff_qsv_init_session_device(avctx, &q->internal_qs.session,
 diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
-index 320ad6d..7a7eaea 100644
+index 320ad6db2b..7a7eaea156 100644
 --- a/libavcodec/qsvenc.h
 +++ b/libavcodec/qsvenc.h
 @@ -28,6 +28,9 @@
@@ -320,7 +320,7 @@ index 320ad6d..7a7eaea 100644
  #include "libavutil/fifo.h"
  
 diff --git a/libavcodec/qsvenc_h264.c b/libavcodec/qsvenc_h264.c
-index 9134e6a..5ed5e1e 100644
+index 9134e6a68c..5ed5e1ed0d 100644
 --- a/libavcodec/qsvenc_h264.c
 +++ b/libavcodec/qsvenc_h264.c
 @@ -32,7 +32,6 @@
@@ -332,7 +332,7 @@ index 9134e6a..5ed5e1e 100644
  #include "atsc_a53.h"
  
 diff --git a/libavcodec/qsvenc_hevc.c b/libavcodec/qsvenc_hevc.c
-index a268a00..7519b7b 100644
+index a268a002d6..7519b7b436 100644
 --- a/libavcodec/qsvenc_hevc.c
 +++ b/libavcodec/qsvenc_hevc.c
 @@ -35,7 +35,6 @@
@@ -344,7 +344,7 @@ index a268a00..7519b7b 100644
  
  enum LoadPlugin {
 diff --git a/libavcodec/qsvenc_jpeg.c b/libavcodec/qsvenc_jpeg.c
-index ad8f09b..f473b1d 100644
+index ad8f09befe..f473b1ddbc 100644
 --- a/libavcodec/qsvenc_jpeg.c
 +++ b/libavcodec/qsvenc_jpeg.c
 @@ -30,7 +30,6 @@
@@ -356,7 +356,7 @@ index ad8f09b..f473b1d 100644
  
  typedef struct QSVMJPEGEncContext {
 diff --git a/libavcodec/qsvenc_mpeg2.c b/libavcodec/qsvenc_mpeg2.c
-index 610bbf7..0e2a518 100644
+index 610bbf79c1..0e2a51811c 100644
 --- a/libavcodec/qsvenc_mpeg2.c
 +++ b/libavcodec/qsvenc_mpeg2.c
 @@ -30,7 +30,6 @@
@@ -368,7 +368,7 @@ index 610bbf7..0e2a518 100644
  
  typedef struct QSVMpeg2EncContext {
 diff --git a/libavcodec/qsvenc_vp9.c b/libavcodec/qsvenc_vp9.c
-index 0a382eb..9d88b03 100644
+index 0a382eb76d..9d88b03bbf 100644
 --- a/libavcodec/qsvenc_vp9.c
 +++ b/libavcodec/qsvenc_vp9.c
 @@ -30,7 +30,6 @@
@@ -380,7 +380,7 @@ index 0a382eb..9d88b03 100644
  
  typedef struct QSVVP9EncContext {
 diff --git a/libavfilter/qsvvpp.c b/libavfilter/qsvvpp.c
-index d9d39c8..8eaffb5 100644
+index d9d39c8b70..8eaffb5005 100644
 --- a/libavfilter/qsvvpp.c
 +++ b/libavfilter/qsvvpp.c
 @@ -23,8 +23,6 @@
@@ -509,7 +509,7 @@ index d9d39c8..8eaffb5 100644
 +
 +#endif
 diff --git a/libavfilter/qsvvpp.h b/libavfilter/qsvvpp.h
-index 67c351f..d1c12be 100644
+index 67c351f297..d1c12be25b 100644
 --- a/libavfilter/qsvvpp.h
 +++ b/libavfilter/qsvvpp.h
 @@ -28,6 +28,8 @@
@@ -530,7 +530,7 @@ index 67c351f..d1c12be 100644
 +
  #endif /* AVFILTER_QSVVPP_H */
 diff --git a/libavfilter/vf_deinterlace_qsv.c b/libavfilter/vf_deinterlace_qsv.c
-index fe6cb69..205b164 100644
+index fe6cb69afe..205b164bf6 100644
 --- a/libavfilter/vf_deinterlace_qsv.c
 +++ b/libavfilter/vf_deinterlace_qsv.c
 @@ -172,7 +172,7 @@ static int init_out_session(AVFilterContext *ctx)
@@ -562,7 +562,7 @@ index fe6cb69..205b164 100644
      if (handle) {
          err = MFXVideoCORE_SetHandle(s->session, handle_type, handle);
 diff --git a/libavfilter/vf_scale_qsv.c b/libavfilter/vf_scale_qsv.c
-index 6cc6d19..76ed178 100644
+index 6cc6d192ff..76ed178831 100644
 --- a/libavfilter/vf_scale_qsv.c
 +++ b/libavfilter/vf_scale_qsv.c
 @@ -290,7 +290,7 @@ static int init_out_session(AVFilterContext *ctx)
@@ -592,7 +592,7 @@ index 6cc6d19..76ed178 100644
      if (handle) {
          err = MFXVideoCORE_SetHandle(s->session, handle_type, handle);
 diff --git a/libavutil/hwcontext_qsv.c b/libavutil/hwcontext_qsv.c
-index 2535aba..8a0865b 100644
+index 2535aba022..8a0865b8e5 100644
 --- a/libavutil/hwcontext_qsv.c
 +++ b/libavutil/hwcontext_qsv.c
 @@ -72,8 +72,10 @@ typedef struct QSVDeviceContext {
@@ -1047,7 +1047,7 @@ index 2535aba..8a0865b 100644
  #endif
      default:
 diff --git a/libavutil/hwcontext_qsv.h b/libavutil/hwcontext_qsv.h
-index 42e34d0..65415d3 100644
+index 42e34d0dda..65415d3d8c 100644
 --- a/libavutil/hwcontext_qsv.h
 +++ b/libavutil/hwcontext_qsv.h
 @@ -19,8 +19,23 @@
@@ -1083,5 +1083,5 @@ index 42e34d0..65415d3 100644
  } AVQSVDeviceContext;
  
 -- 
-1.8.3.1
+2.25.1
 

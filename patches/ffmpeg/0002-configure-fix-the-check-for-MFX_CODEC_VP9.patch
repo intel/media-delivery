@@ -1,4 +1,4 @@
-From 89d29a6a09fed65dc52e02af8f831124db3f46d4 Mon Sep 17 00:00:00 2001
+From 6b658d4cd32cc68df52df6c3a095438312a7944e Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Fri, 19 Feb 2021 08:51:35 +0800
 Subject: [PATCH 02/13] configure: fix the check for MFX_CODEC_VP9
@@ -18,7 +18,7 @@ from oneVPL [1]
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/configure b/configure
-index 34e9a7c..21c744e 100755
+index 34e9a7c863..21c744e627 100755
 --- a/configure
 +++ b/configure
 @@ -6440,7 +6440,7 @@ enabled libmfx            && { { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfx
@@ -31,5 +31,5 @@ index 34e9a7c..21c744e 100755
  
  enabled libmodplug        && require_pkg_config libmodplug libmodplug libmodplug/modplug.h ModPlug_Load
 -- 
-1.8.3.1
+2.25.1
 

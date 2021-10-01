@@ -1,4 +1,4 @@
-From d241a45e6063328f6118a9ed2a09b9267f17ec9c Mon Sep 17 00:00:00 2001
+From 1b93c9adad84e9b09df7a400daeeca29c8607348 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 19 Aug 2020 09:43:12 +0800
 Subject: [PATCH 08/13] qsv: support OPAQUE memory when MFX_VERSION < 2.0
@@ -9,21 +9,21 @@ preparation for oneVPL support
 [1]: https://spec.oneapi.io/versions/latest/elements/oneVPL/source/appendix/VPL_intel_media_sdk.html#msdk-full-name-feature-removals
 [2]: https://github.com/oneapi-src/oneVPL
 ---
- libavcodec/qsv.c                 |  4 +++
- libavcodec/qsv.h                 |  2 ++
+ libavcodec/qsv.c                 |  4 ++
+ libavcodec/qsv.h                 |  2 +
  libavcodec/qsv_internal.h        |  1 +
- libavcodec/qsvdec.c              |  9 +++++
- libavcodec/qsvenc.c              | 21 ++++++++++++
- libavcodec/qsvenc.h              |  2 ++
- libavfilter/qsvvpp.c             | 26 +++++++++++++-
+ libavcodec/qsvdec.c              |  9 ++++
+ libavcodec/qsvenc.c              | 21 +++++++++
+ libavcodec/qsvenc.h              |  2 +
+ libavfilter/qsvvpp.c             | 26 ++++++++++-
  libavfilter/qsvvpp.h             |  3 ++
- libavfilter/vf_deinterlace_qsv.c | 57 +++++++++++++++++--------------
- libavfilter/vf_scale_qsv.c       | 74 ++++++++++++++++++++++------------------
- libavutil/hwcontext_qsv.c        | 56 ++++++++++++++++++++++--------
+ libavfilter/vf_deinterlace_qsv.c | 57 +++++++++++++-----------
+ libavfilter/vf_scale_qsv.c       | 74 ++++++++++++++++++--------------
+ libavutil/hwcontext_qsv.c        | 56 +++++++++++++++++-------
  11 files changed, 181 insertions(+), 74 deletions(-)
 
 diff --git a/libavcodec/qsv.c b/libavcodec/qsv.c
-index e0a124a..d6f7790 100644
+index e0a124a5cb..d6f77908e4 100644
 --- a/libavcodec/qsv.c
 +++ b/libavcodec/qsv.c
 @@ -89,10 +89,14 @@ static const struct {
@@ -42,7 +42,7 @@ index e0a124a..d6f7790 100644
  
  int ff_qsv_print_iopattern(void *log_ctx, int mfx_iopattern,
 diff --git a/libavcodec/qsv.h b/libavcodec/qsv.h
-index 04ae0d6..c156b08 100644
+index 04ae0d6f34..c156b08d07 100644
 --- a/libavcodec/qsv.h
 +++ b/libavcodec/qsv.h
 @@ -61,6 +61,8 @@ typedef struct AVQSVContext {
@@ -55,7 +55,7 @@ index 04ae0d6..c156b08 100644
      int opaque_alloc;
  
 diff --git a/libavcodec/qsv_internal.h b/libavcodec/qsv_internal.h
-index 659417d..ff50b41 100644
+index 659417ded8..ff50b41de8 100644
 --- a/libavcodec/qsv_internal.h
 +++ b/libavcodec/qsv_internal.h
 @@ -61,6 +61,7 @@
@@ -67,7 +67,7 @@ index 659417d..ff50b41 100644
  typedef struct QSVMid {
      AVBufferRef *hw_frames_ref;
 diff --git a/libavcodec/qsvdec.c b/libavcodec/qsvdec.c
-index 1cadb84..9395a1f 100644
+index 1cadb846f5..9395a1fd9a 100644
 --- a/libavcodec/qsvdec.c
 +++ b/libavcodec/qsvdec.c
 @@ -171,7 +171,11 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
@@ -99,7 +99,7 @@ index 1cadb84..9395a1f 100644
      }
  
 diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
-index 6c64947..546efd9 100644
+index 6c6494745f..546efd9668 100644
 --- a/libavcodec/qsvenc.c
 +++ b/libavcodec/qsvenc.c
 @@ -1029,6 +1029,7 @@ static int qsv_retrieve_enc_params(AVCodecContext *avctx, QSVEncContext *q)
@@ -177,7 +177,7 @@ index 6c64947..546efd9 100644
      av_freep(&q->extparam);
  
 diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
-index 93af4d1..320ad6d 100644
+index 93af4d1198..320ad6db2b 100644
 --- a/libavcodec/qsvenc.h
 +++ b/libavcodec/qsvenc.h
 @@ -135,9 +135,11 @@ typedef struct QSVEncContext {
@@ -193,7 +193,7 @@ index 93af4d1..320ad6d 100644
      mfxExtVideoSignalInfo extvsi;
  
 diff --git a/libavfilter/qsvvpp.c b/libavfilter/qsvvpp.c
-index 1113d27..d9d39c8 100644
+index 1113d27ba1..d9d39c8b70 100644
 --- a/libavfilter/qsvvpp.c
 +++ b/libavfilter/qsvvpp.c
 @@ -34,7 +34,9 @@
@@ -304,7 +304,7 @@ index 1113d27..d9d39c8 100644
      av_fifo_free(s->async_fifo);
      av_freep(vpp);
 diff --git a/libavfilter/qsvvpp.h b/libavfilter/qsvvpp.h
-index 46e90c1..67c351f 100644
+index 46e90c1d2c..67c351f297 100644
 --- a/libavfilter/qsvvpp.h
 +++ b/libavfilter/qsvvpp.h
 @@ -41,6 +41,7 @@
@@ -329,7 +329,7 @@ index 46e90c1..67c351f 100644
      int got_frame;
      int async_depth;
 diff --git a/libavfilter/vf_deinterlace_qsv.c b/libavfilter/vf_deinterlace_qsv.c
-index ab84955..fe6cb69 100644
+index ab849558ef..fe6cb69afe 100644
 --- a/libavfilter/vf_deinterlace_qsv.c
 +++ b/libavfilter/vf_deinterlace_qsv.c
 @@ -62,7 +62,9 @@ typedef struct QSVDeintContext {
@@ -426,7 +426,7 @@ index ab84955..fe6cb69 100644
      par.ExtParam    = s->ext_buffers;
      par.NumExtParam = s->num_ext_buffers;
 diff --git a/libavfilter/vf_scale_qsv.c b/libavfilter/vf_scale_qsv.c
-index 19c9bb6..6cc6d19 100644
+index 19c9bb6463..6cc6d192ff 100644
 --- a/libavfilter/vf_scale_qsv.c
 +++ b/libavfilter/vf_scale_qsv.c
 @@ -90,7 +90,9 @@ typedef struct QSVScaleContext {
@@ -540,7 +540,7 @@ index 19c9bb6..6cc6d19 100644
  #if QSV_HAVE_SCALING_CONFIG
      memset(&s->scale_conf, 0, sizeof(mfxExtVPPScaling));
 diff --git a/libavutil/hwcontext_qsv.c b/libavutil/hwcontext_qsv.c
-index 6725a09..2535aba 100644
+index 6725a0998d..2535aba022 100644
 --- a/libavutil/hwcontext_qsv.c
 +++ b/libavutil/hwcontext_qsv.c
 @@ -53,6 +53,8 @@
@@ -693,5 +693,5 @@ index 6725a09..2535aba 100644
      s->session_download = NULL;
      s->session_upload   = NULL;
 -- 
-1.8.3.1
+2.25.1
 
