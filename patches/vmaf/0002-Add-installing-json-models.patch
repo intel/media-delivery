@@ -1,0 +1,25 @@
+From 3cddc878cf384e0f5ed20f969daa5763a74ded48 Mon Sep 17 00:00:00 2001
+From: Daniel Socek <daniel.socek@intel.com>
+Date: Sat, 25 Sep 2021 17:31:17 +0000
+Subject: [PATCH 2/2] Add installing json models
+
+Signed-off-by: Daniel Socek <daniel.socek@intel.com>
+---
+ libvmaf/meson.build | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/libvmaf/meson.build b/libvmaf/meson.build
+index f5a58cb..bcd85dd 100644
+--- a/libvmaf/meson.build
++++ b/libvmaf/meson.build
+@@ -17,6 +17,7 @@ vmaf_api_version_revision = vmaf_api_version_array[2]
+ libvmaf_src_root = meson.current_source_dir()
+ cc = meson.get_compiler('c')
+ libvmaf_inc = include_directories(['include'])
++install_subdir('../model', install_dir: 'share')
+ 
+ # Arguments in test_args will be used even on feature tests
+ test_args = []
+-- 
+2.25.1
+
