@@ -496,9 +496,9 @@ function get_coding_commandline_options() {
 function get_vmaf_model() {
   local resolution=$1
   if [ "$resolution" = "4K" ]; then
-    echo "vmaf_4k_v0.6.1.pkl"
+    echo "vmaf_4k_v0.6.1.json"
   else
-    echo "vmaf_v0.6.1.pkl"
+    echo "vmaf_v0.6.1.json"
   fi
 }
 
@@ -998,13 +998,14 @@ if [ "$skip_metrics" = "no" ]; then
       fi
     fi
 
+    nproc=$(nproc)
     cmd=(ffmpeg -an
       $rawvideo -i $file
       -r $framerate -i $out
       -lavfi " \
         [0:v]trim=end_frame=$nframes[ref]; \
         [1:v]trim=end_frame=$nframes[v]; \
-        [v][ref]libvmaf=model_path=${vmaf_model_path}${metrics}:log_fmt=json:log_path=/tmp/out.json"
+        [v][ref]libvmaf=model_path=${vmaf_model_path}${metrics}:log_fmt=json:log_path=/tmp/out.json:n_threads=${nproc}"
       -f null -)
 
     if [ "$dry_run" = "no" ]; then
@@ -1022,13 +1023,13 @@ if [ "$skip_metrics" = "no" ]; then
       b=$(python3 -c 'print('$b' / 1000)')         # kbps
 
       metrics="$out:$b"
-      [[ "$skip_vmaf" = "no" ]] && vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["VMAF score"])')
+      [[ "$skip_vmaf" = "no" ]] && vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["vmaf"]["mean"])')
       metrics+=":$vmaf"
-      [[ "$skip_psnr" = "no" ]] && psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["PSNR score"])')
+      [[ "$skip_psnr" = "no" ]] && psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["psnr"]["mean"])')
       metrics+=":$psnr"
-      [[ "$skip_ssim" = "no" ]] && ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["SSIM score"])')
+      [[ "$skip_ssim" = "no" ]] && ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["ssim"]["mean"])')
       metrics+=":$ssim"
-      [[ "$skip_msim" = "no" ]] && msim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["MS-SSIM score"])')
+      [[ "$skip_msim" = "no" ]] && msim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["ms_ssim"]["mean"])')
       metrics+=":$msim"
 
       out=$(echo "$metrics" | grep CBR_QSV); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-qsv.metrics

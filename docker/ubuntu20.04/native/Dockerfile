@@ -49,6 +49,7 @@ RUN apt-get update && \
     git \
     make \
     meson \
+    nasm \
     patch \
     pkg-config \
     cython3 \
@@ -60,7 +61,7 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 # As of now we need 2 things from VMAF: libvmaf library against which we will link
 # ffmpeg and model *.pkl files to be able to calculate VMAF.
-RUN git clone --depth 1 --branch v1.5.2 https://github.com/Netflix/vmaf.git /opt/build/vmaf
+RUN git clone --depth 1 --branch v2.2.1 https://github.com/Netflix/vmaf.git /opt/build/vmaf
 
 COPY patches/vmaf /opt/build/vmaf
 RUN cd /opt/build/vmaf && { set -e; \

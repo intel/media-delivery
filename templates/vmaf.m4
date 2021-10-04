@@ -20,14 +20,14 @@ dnl # SOFTWARE.
 dnl #
 include(begin.m4)
 
-DECLARE(`VMAF_VER',`v1.5.2')
+DECLARE(`VMAF_VER',`v2.2.1')
 DECLARE(`ENABLE_VMAF_PYTHON',`yes')
 
 define(`VMAF_PYTHON_DEPS',`ifelse(ENABLE_VMAF_PYTHON,yes,
 `cython3 python3 python3-dev python3-numpy python3-setuptools python3-wheel')')
 define(`VMAF_PYTHON_INSTALL_DEPS',`ifelse(ENABLE_VMAF_PYTHON,yes,`python3 python3-pip')')
 
-define(`VMAF_BUILD_DEPS',`ca-certificates gcc g++ git make meson patch pkg-config VMAF_PYTHON_DEPS')
+define(`VMAF_BUILD_DEPS',`ca-certificates gcc g++ git make meson nasm patch pkg-config VMAF_PYTHON_DEPS')
 define(`VMAF_INSTALL_DEPS',`VMAF_PYTHON_INSTALL_DEPS')
 
 define(`BUILD_VMAF',dnl
