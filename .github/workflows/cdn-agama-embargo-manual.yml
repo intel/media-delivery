@@ -49,7 +49,7 @@ jobs:
 
   test-dg1:
     needs: build
-    runs-on: [self-hosted, osgc-solutions, ubuntu-gen12-dg1]
+    runs-on: [self-hosted, osgc-solutions, dg1, prelim]
     steps:
     - uses: actions/checkout@v2
     - run: |
