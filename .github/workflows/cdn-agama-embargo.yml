@@ -17,7 +17,7 @@ on:
     types: [build-embargo]
 
 env:
-  BASE_IMAGE: amr-registry.caas.intel.com/vtt-osgc/os/ubuntu:focal
+  BASE_IMAGE: dockerv2-gsae-fm.gfx-assets.fm.intel.com/ubuntu:20.04
   REGISTRY: dockerv2-gsae-fm.gfx-assets.fm.intel.com/solutions
   ARTIFACTORY: https://gfx-assets.fm.intel.com/artifactory
   ARTI_PATH: gfx-media-assets/media_solution/intel-media-delivery/cdn/master
