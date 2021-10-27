@@ -43,6 +43,7 @@ jobs:
         fi
         image=$tagname:$FLAVOR
         echo "Building $image ..."
+        docker pull $BASE_IMAGE
         docker build \
           $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
           --build-arg IMAGE=$BASE_IMAGE \
