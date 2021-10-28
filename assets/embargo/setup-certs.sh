@@ -25,11 +25,11 @@ set -ex
 echo "Installing Intel CA certificates"
 CERTPATH=/usr/local/share/ca-certificates
 cd ${CERTPATH}
-wget -O IntelSHA2RootChain-Base64.zip http://certificates.intel.com/repository/certificates/IntelSHA2RootChain-Base64.zip
+wget --no-proxy -O IntelSHA2RootChain-Base64.zip http://certificates.intel.com/repository/certificates/IntelSHA2RootChain-Base64.zip
 unzip -o IntelSHA2RootChain-Base64.zip
 rm IntelSHA2RootChain-Base64.zip
 
-wget -O IntelRootChain-Base64.zip http://certificates.intel.com/repository/certificates/Intel%20Root%20Certificate%20Chain%20Base64.zip
+wget --no-proxy -O IntelRootChain-Base64.zip http://certificates.intel.com/repository/certificates/Intel%20Root%20Certificate%20Chain%20Base64.zip
 unzip -o IntelRootChain-Base64.zip
 rm IntelRootChain-Base64.zip
 
@@ -41,3 +41,4 @@ update-ca-certificates --fresh
     CERTNAME="${CERTFILE/.crt}"
     certutil -d sql:$HOME/.pki/nssdb -A -n "${CERTNAME}" -i "${CERTFILE}" -t TCP,TCP,TCP
 done
+

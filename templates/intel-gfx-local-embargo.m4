@@ -27,6 +27,12 @@ pushdef(`_install_ubuntu',`dnl
 INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent libnss3-tools software-properties-common unzip wget))
 
 RUN curl --noproxy "*" -fsSL INTEL_GFX_URL/api/gpg/key/public | apt-key add -
+RUN { \
+  echo "Acquire::https::Proxy {"; \
+  echo "  gfx-assets-build.intel.com DIRECT;"; \
+  echo "};"; \
+  } >> /etc/apt/apt.conf
+
 
 # Supported FLAVOR patterns:
 #  * aaa-ci-bbb-nnn, where aaa|bbb - arbitrary names, ci - mandatory delimiter, nnn - a number

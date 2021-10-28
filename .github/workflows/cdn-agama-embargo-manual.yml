@@ -14,9 +14,9 @@ env:
   ARTI_PATH: gfx-media-assets/media_solution/intel-media-delivery/cdn/master
   SYS_M4_PASSWD: ${{ secrets.SYS_M4_PASSWD }}
   FLAVOR: ${{ github.event.inputs.agama_embargo_version }}
-  http_proxy: http://proxy-chain.intel.com:911
-  https_proxy: http://proxy-chain.intel.com:911
-  no_proxy:
+  http_proxy: http://proxy-dmz.intel.com:912
+  https_proxy: http://proxy-dmz.intel.com:912
+  no_proxy: # do NOT add intel.com here - this will break access to repositories.intel.com!
 
 jobs:
   build:

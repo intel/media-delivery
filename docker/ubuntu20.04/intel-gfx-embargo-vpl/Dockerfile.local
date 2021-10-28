@@ -31,6 +31,12 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 
 RUN curl --noproxy "*" -fsSL https://gfx-assets-build.intel.com/artifactory/api/gpg/key/public | apt-key add -
+RUN { \
+  echo "Acquire::https::Proxy {"; \
+  echo "  gfx-assets-build.intel.com DIRECT;"; \
+  echo "};"; \
+  } >> /etc/apt/apt.conf
+
 
 # Supported FLAVOR patterns:
 #  * aaa-ci-bbb-nnn, where aaa|bbb - arbitrary names, ci - mandatory delimiter, nnn - a number

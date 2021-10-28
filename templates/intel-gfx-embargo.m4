@@ -28,7 +28,12 @@ INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent libnss3-tools software-properti
 
 COPY assets/embargo/setup-certs.sh /tmp/
 RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
-RUN curl -fsSL INTEL_GFX_URL/intel-graphics.key | apt-key add -
+RUN curl --noproxy "*" -fsSL INTEL_GFX_URL/intel-graphics.key | apt-key add -
+RUN { \
+  echo "Acquire::https::Proxy {"; \
+  echo "  osgc.jf.intel.com DIRECT;"; \
+  echo "};"; \
+  } >> /etc/apt/apt.conf
 
 ARG FLAVOR=focal-embargo-untested
 RUN apt-add-repository "deb INTEL_GFX_URL/ubuntu $FLAVOR main"')
