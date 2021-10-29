@@ -97,6 +97,27 @@ RUN cd /opt/build/vmaf/python \
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
+    tar \
+    g++ \
+    wget \
+    pkg-config \
+    nasm \
+    meson && \
+  rm -rf /var/lib/apt/lists/*
+
+# build dav1d
+ARG DAV1D_REPO=https://code.videolan.org/videolan/dav1d/-/archive/0.9.2/dav1d-0.9.2.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${DAV1D_REPO} | tar xz
+RUN cd /opt/build/dav1d-0.9.2 && \
+  meson build --prefix=/opt/intel/samples --libdir /opt/intel/samples/lib --buildtype=plain && \
+  cd build && \
+  ninja install && \
+  DESTDIR=/opt/dist ninja install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
     gcc \
     g++ \
     git \
@@ -134,6 +155,7 @@ RUN cd /opt/build/ffmpeg && \
   --enable-libx265 \
   --enable-version3 \
   --enable-libvmaf \
+  --enable-libdav1d \
   && make -j $(nproc --all) \
   && make install DESTDIR=/opt/dist \
   && make install
