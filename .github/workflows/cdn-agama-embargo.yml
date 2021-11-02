@@ -78,7 +78,7 @@ jobs:
 
   test-dg2:
     needs: build
-    runs-on: [self-hosted, osgc-solutions, ubuntu, dg2, single-gpu]
+    runs-on: [self-hosted, osgc-solutions, ubuntu, dg2, dual-gpu]
     steps:
     - uses: actions/checkout@v2
     - run: |
@@ -89,6 +89,11 @@ jobs:
         export MDS_LOGS=$(pwd)/_logs
         export MDS_DEMO=cdn
         export TEST_ENCTOOLS=on
+        for d in renderD128 renderD129; do \
+          if fgrep -i 0x56a1 /sys/class/drm/$d/device/device; then \
+            export DEVICE=/dev/dri/$d; \
+          fi; \
+        done
         test_status=0
         bats tests/*.bats || test_status=$?
         docker rmi --force $(docker images -q $image | uniq)
