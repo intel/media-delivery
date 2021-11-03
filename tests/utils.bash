@@ -187,3 +187,4 @@ function vdenc_support() {
   [ -z "$(vainfo -a --display drm --device $DEVICE 2> /dev/null | sed -n $segment | grep VA_RC_VBR)" ] && return 0
   return 1
 }
+
