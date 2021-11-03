@@ -164,8 +164,12 @@ function get_perf_opts() {
 
 @test "measure perf --skip-perf --use-vdenc --codec AVC raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  run vdenc_support H264High
-  if [ $status -eq 0 ]; then skip; fi
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh H264High);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
   run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
     $(get_test_body "$rawh264" "measure perf --skip-perf --use-vdenc --codec AVC /tmp/WAR.h264")"
   print_output
@@ -186,8 +190,12 @@ function get_perf_opts() {
 
 @test "measure perf --skip-perf --use-vdenc --codec HEVC raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  run vdenc_support HEVCMain
-  if [ $status -eq 0 ]; then skip; fi
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh HEVCMain);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
   run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
     $(get_test_body "$rawh264" "measure perf --skip-perf --use-vdenc --codec HEVC /tmp/WAR.h264")"
   print_output
@@ -236,8 +244,12 @@ function get_perf_opts() {
 
 @test "measure perf --skip-perf --use-vdenc --codec AVC raw h265" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  run vdenc_support H264High
-  if [ $status -eq 0 ]; then skip; fi
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh H264High);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
   run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
     $(get_test_body "$rawh265" "measure perf --skip-perf --use-vdenc --codec AVC /tmp/WAR.hevc")"
   print_output
@@ -258,8 +270,12 @@ function get_perf_opts() {
 
 @test "measure perf --skip-perf --use-vdenc --codec HEVC raw h265" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
-  run vdenc_support HEVCMain
-  if [ $status -eq 0 ]; then skip; fi
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh HEVCMain);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
   run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
     $(get_test_body "$rawh265" "measure perf --skip-perf --use-vdenc --codec HEVC /tmp/WAR.hevc")"
   print_output
