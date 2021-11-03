@@ -137,8 +137,12 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
 }
 
 @test "measure quality: encode 5 frames of a YUV video with AVC in low power mode (VDENC)" {
-  run vdenc_support H264High
-  if [ $status -eq 0 ]; then skip; fi
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh H264High);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
     measure quality -w 480 -h 270 -f 24 \
     --nframes 5 --skip-metrics --skip-bdrate --use-vdenc \
@@ -150,8 +154,12 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
 }
 
 @test "measure quality: encode 5 frames of a YUV video with HEVC in low power mode (VDENC)" {
-  run vdenc_support HEVCMain
-  if [ $status -eq 0 ]; then skip; fi
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh HEVCMain);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
     measure quality -w 480 -h 270 -f 24 \
     --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-vdenc \

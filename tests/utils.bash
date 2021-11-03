@@ -169,25 +169,6 @@ function kernel_ge_4_16() {
   return 0
 }
 
-function vdenc_support() {
-  local std=$1
-  # we get seg in the form of: seg="200 300", where 200 and 300 are line numbers in vainfo output:
-  #  200 VAProfileH264/VAEntrypointEncSliceLP
-  #  ...
-  #  300 VAProfile<next-item>/VAEntrypoint<next-item>
-  local seg=$(vainfo -a --display drm --device $DEVICE 2> /dev/null | \
-    grep -n VAProfile | grep -A1 VAProfile${std}/VAEntrypointEncSliceLP | awk -F: '{ print $1 }')
-  seg=(${seg// / })
-  [ -z "${seg}" ] && return 0 # profile does not exist
-  # now we produce segment variable as an input to sed in a form: segment="200,300p", or segment="200,$p"
-  # if there is no profile entry after the one we searched for ($ indicates EOF and p stands for "print" for sed)
-  local segment=${seg[0]}
-  [ ${#seg[@]} -eq 1 ] && segment+=',$p' || segment+=','${seg[1]}'p'
-  [ -z "$(vainfo -a --display drm --device $DEVICE 2> /dev/null | sed -n $segment | grep VA_RC_CBR)" ] && return 0
-  [ -z "$(vainfo -a --display drm --device $DEVICE 2> /dev/null | sed -n $segment | grep VA_RC_VBR)" ] && return 0
-  return 1
-}
-
 function get_devid() {
   local node=${DEVICE##*/}
   echo "$node"
