@@ -109,6 +109,16 @@ given in the following tables:
 | other | 1, 1.5, 3, 4.5, 7.5
 |===
 
+* AV1 encoding bitrates
++
+|===
+| Resolution | Bitrates (Mbps)
+
+| `width > 1920 && height > 1088` | 6, 9, 15, 24, 40
+| `width > 1280 && height > 720` | 2, 3, 6, 9, 15
+| other | 1, 1.5, 3, 4.5, 7.5
+|===
+
 Mind that script uses the following bitrates for some pre-defined streams with
 exceptional complexity:
 
@@ -126,6 +136,19 @@ exceptional complexity:
 |===
 
 * In case of HEVC encoding:
++
+|===
+| Stream | Bitrates (Mbps)
+
+| crowd_run_1920x1080p_500_50.yuv | 15, 20, 25, 30, 35
+| park_joy_1920x1080_500_50.yuv | 15, 20, 25, 30, 35
+| DinnerScene_1920x1080_60.yuv | 3, 7, 11, 15, 20
+| Sintel_trailer_o537n480_1920x1080_24.yuv | 0.5, 1, 2, 6, 9
+| crowd_run_1280x720_50.yuv | 6, 8, 10, 12, 15
+| park_joy_1280x720_50.yuv | 6 8, 10, 12, 15
+|===
+
+* In case of AV1 encoding:
 +
 |===
 | Stream | Bitrates (Mbps)
@@ -176,7 +199,7 @@ WAR_TRAILER_HiQ_10_withAudio.mp4_6Mbps_CBR_QSV.h264:14923:99.68411421582299:53.1
 `<outprefix>.<codec>.<mode>.<application>.metrics`. `<outprefix>` is
 `--outprefix` specified on the command line (running pre-defined set of streams
 default one is always used). `<codec>` is the video compression standard used
-in quality measurement (AVC or HEVC), which can be specified on the command line with
+in quality measurement (AVC or HEVC or AV1), which can be specified on the command line with
 `--codec` option. `<mode>` is a bitrate mode like `cbr` (constant bitrate) or
 `vbr` (variable bitrate). `application` is the application being measured for video 
 quality: ffmpeg or Intel Media SDK Sample Multi-Transcode. In addition, when BD-rate calculation
@@ -239,7 +262,7 @@ the separators in the output report.
 
 ENCODING OPTIONS
 ----------------
---codec AVC|HEVC::
+--codec AVC|HEVC|AV1::
 	Sets an encoder to use (default: `AVC`).
 
 --preset default|best::
