@@ -181,7 +181,7 @@ RUN apt-get update && \
 ARG IGT_REPO=https://gitlab.freedesktop.org/drm/igt-gpu-tools.git
 RUN git clone $IGT_REPO /opt/build/igt
 RUN cd /opt/build/igt \
-  && git checkout db972bdaab8ada43b742bc9621bb0fc9d56a6fc6 \
+  && git checkout 1869d560c550ac273f495076ead46f8a337fc20b \
   && meson build \
   --buildtype=release \
   --prefix=/opt/intel/samples \

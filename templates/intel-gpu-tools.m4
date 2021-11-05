@@ -20,7 +20,7 @@ dnl # SOFTWARE.
 dnl #
 include(begin.m4)
 
-# We need igt older than the following commit to have be able to select desired device
+# We need igt older than the following commit to be able to select desired device
 # for intel_gpu_top on multi-gpu systems:
 #
 # commit a627439eb5e39d927306055b1e540ef5940d7396
@@ -38,7 +38,7 @@ include(begin.m4)
 #    Cc: Zbigniew Kempczynski <zbigniew.kempczynski@intel.com>
 #    Cc: Dixit Ashutosh <ashutosh.dixit@intel.com>
 #    Reviewed-by: Zbigniew Kempczyński <zbigniew.kempczynski@intel.com>
-DECLARE(`IGT_VER',`db972bdaab8ada43b742bc9621bb0fc9d56a6fc6')
+DECLARE(`IGT_VER',`1869d560c550ac273f495076ead46f8a337fc20b')
 
 define(`IGT_BUILD_DEPS',`ca-certificates gcc bison flex git libcairo-dev libdrm-dev dnl
   libdw-dev libkmod-dev libpciaccess-dev libpixman-1-dev libprocps-dev libudev-dev dnl
