@@ -421,8 +421,19 @@ function get_bitrates() {
       echo "bug: invalid resolution: $resolution" >&2
       exit -1
     fi
+  elif [ "$codec" = "AV1" ]; then
+    if [ "$resolution" = "4K" ]; then
+      echo "6 9 15 24 40"
+    elif [ "$resolution" = "HD" ]; then
+      echo "2 3 6 9 15"
+    elif [ "$resolution" = "SD" ]; then
+      echo "1 1.5 3 4.5 7.5"
+    else
+      echo "bug: invalid resolution: $resolution" >&2
+      exit -1
+    fi 
   else
-    echo "bug: invalid codec (AVC|HEVC): $codec" >&2
+    echo "bug: invalid codec (AVC|HEVC|AV1): $codec" >&2
     exit -1
   fi
 }
@@ -475,8 +486,17 @@ function get_coding_commandline_options() {
       exit -1
     fi
     options_ref+="-preset veryslow"
+  elif [ "$codec" = "AV1" ]; then
+    if [ "$preset" = "best" ]; then
+      options_qsv+="-bf 7 -refs 3 -g 256"
+      options_smt+="-num_ref 3 -gop_size 256 -MemType::system"
+    elif [[ ! $preset =~ default ]]; then
+      echo "error: invalid encoding options preset (default, best): $preset" >&2
+      exit -1
+    fi
+    options_ref+="-preset veryslow"
   else
-    echo "error: invalid codec (AVC|HEVC): $codec" >&2
+    echo "error: invalid codec (AVC|HEVC|AV1): $codec" >&2
     exit -1
   fi
 
@@ -814,7 +834,7 @@ function get_raw_stream_info() {
   # check if video format is supported by MSDK SMT
   supported="no"
   case $raw in
-    h265|h264|mpeg2|vc1|vp9) supported="yes";;
+    h265|h264|mpeg2|vc1|vp9|av1) supported="yes";;
   esac
   [[ "$supported" = "no" ]] && raw=""
   echo $raw
@@ -871,8 +891,10 @@ if [ "$use_vdenc" = "yes" ] || [ "$use_enctools" = "yes" ]; then
     lpmode="H264High"
   elif [ "$codec" = "HEVC" ]; then
     lpmode="HEVCMain"
+  elif [ "$codec" = "AV1" ]; then
+    lpmode="AV1Profile0"
   else
-    echo "error: invalid codec (AVC|HEVC): $codec" >&2
+    echo "error: invalid codec (AVC|HEVC|AV1): $codec" >&2
     exit -1
   fi
   vdenc=$(is_vdenc_supported $lpmode)
@@ -932,7 +954,7 @@ if [ "$skip_encoding" = "no" ]; then
       fi
       if [ "$skip_ffmpeg" = "no" ]; then
         std=$(get_param $file "stream" "codec_name")
-        case $std in h264|hevc|mpeg2|vc1);; *) std=UNSUPPORTED;; esac
+        case $std in h264|hevc|mpeg2|vc1|av1);; *) std=UNSUPPORTED;; esac
         [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $b $tu $options_qsv
         [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $b $tu $options_qsv
       fi
