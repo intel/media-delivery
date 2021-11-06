@@ -194,7 +194,6 @@ This is the simplest demo mode. To run it, execute::
 Upon successful launch you will see output similar to the below one.
 
 .. image:: doc/pic/demo-ffmpeg.png
-   :width: 50%
 
 Few terminals will be opened in a tiled layout and provide the following information:
 
