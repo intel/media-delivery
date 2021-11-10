@@ -73,7 +73,7 @@ cyuv="ffmpeg -i WAR.mp4 \
     --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     WAR.yuv; \
     result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
-    [[ \$result = 20 ]]"
+    [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
 }
@@ -119,7 +119,7 @@ cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
     measure quality --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
     result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
-    [[ \$result = 20 ]]"
+    [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
 }
@@ -158,7 +158,7 @@ get264="ffmpeg -i WAR.mp4 -vcodec copy -an WAR.h264"
     measure quality --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     WAR.h264; \
     result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
-    [[ \$result = 20 ]]"
+    [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
 }
@@ -197,7 +197,7 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
     measure quality --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     WAR.h265; \
     result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
-    [[ \$result = 20 ]]"
+    [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
 }
@@ -216,7 +216,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
     measure quality --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     WAR.ivf; \
     result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
-    [[ \$result = 10 ]]"
+    [[ \$result = 20 ]]"
   print_output
   [ $status -eq 0 ]
 }

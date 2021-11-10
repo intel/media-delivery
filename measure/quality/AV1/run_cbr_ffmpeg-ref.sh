@@ -54,12 +54,12 @@ vframes="-frames:v $nframes"
 
 cmd=(ffmpeg -an \
   $rawvideo -i $file $vframes \
-  -c:v av1_qsv $options -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $bufsize -tune psnr -threads 12 \
-  -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_CBR_REF.ivf)
+  -c:v libx265 $options -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $bufsize -tune psnr -threads 12 \
+  -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_CBR_REF.h265)
 
 if [ "$dry_run" = "no" ]; then
   "${cmd[@]}"
 else
   echo "${cmd[@]}"
-  touch ${prefix}_${bitrate_Mbps}Mbps_CBR_REF.ivf
+  touch ${prefix}_${bitrate_Mbps}Mbps_CBR_REF.h265
 fi
