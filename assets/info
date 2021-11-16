@@ -3,7 +3,6 @@
 commands=(
   "lsb_release -rdi"
   "uname -a"
-  "cat /proc/cmdline"
   "cat /proc/cpuinfo | grep \"model name\" | uniq"
   "ls /dev/dri/"
   "lspci -nn | grep VGA"
