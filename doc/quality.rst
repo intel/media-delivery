@@ -17,6 +17,80 @@ Peak signal-to-noise ratio (PSNR) is the most widely used objective image qualit
 frames (PSNR-Y) as the basic quality assessment metric. Since PSNR fails to capture certain perceptual quality traits, we also make use of 
 the following additional quality metrics: SSIM, MS-SSIM, and VMAF.
 
+We evaluate quality on the following streams:
+
+* 1080p 8-bit YUV 4:2:0
+
++-----------------+------------+-----+------------------------------------+
+| Sequence        | Resolution | FPS | Source                             |
++=================+============+=====+====================================+
+| BasketBallDrive | 1920x1080  | 50  | MPEG Test Suite                    |
++-----------------+------------+-----+------------------------------------+
+| BQTerrace       | 1920x1080  | 60  | MPEG Test Suite                    |
++-----------------+------------+-----+------------------------------------+
+| Cactus          | 1920x1080  | 50  | MPEG Test Suite                    |
++-----------------+------------+-----+------------------------------------+
+| CrowdRun        | 1920x1080  | 50  | https://media.xiph.org/video/derf/ |
++-----------------+------------+-----+------------------------------------+
+| DinnerScene     | 1920x1080  | 60  | https://media.xiph.org/video/derf/ |
++-----------------+------------+-----+------------------------------------+
+| Kimono          | 1920x1080  | 24  | MPEG Test Suite                    |
++-----------------+------------+-----+------------------------------------+
+| ParkJoy         | 1920x1080  | 50  | https://media.xiph.org/video/derf/ |
++-----------------+------------+-----+------------------------------------+
+| RedKayak        | 1920x1080  | 30  | https://media.xiph.org/video/derf/ |
++-----------------+------------+-----+------------------------------------+
+| RushFieldCuts   | 1920x1080  | 30  | https://media.xiph.org/video/derf/ |
++-----------------+------------+-----+------------------------------------+
+
+* 720p 8-bit YUV 4:2:0
+
++---------------+------------+-----+------------------------------------+
+| Sequence      | Resolution | FPS | Source                             |
++===============+============+=====+====================================+
+| Boat          | 1280x720   | 60  | https://media.xiph.org/video/derf/ |
++---------------+------------+-----+------------------------------------+
+| CrowdRun      | 1280x720   | 50  | https://media.xiph.org/video/derf/ |
++---------------+------------+-----+------------------------------------+
+| FoodMarket    | 1280x720   | 60  | https://media.xiph.org/video/derf/ |
++---------------+------------+-----+------------------------------------+
+| Kimono        | 1280x720   | 24  | MPEG Test Suite                    |
++---------------+------------+-----+------------------------------------+
+| ParkJoy       | 1280x720   | 50  | https://media.xiph.org/video/derf/ |
++---------------+------------+-----+------------------------------------+
+| ParkScene     | 1280x720   | 24  | MPEG Test Suite                    |
++---------------+------------+-----+------------------------------------+
+| PierSeaSide   | 1280x720   | 60  | https://media.xiph.org/video/derf/ |
++---------------+------------+-----+------------------------------------+
+| Tango         | 1280x720   | 60  | https://media.xiph.org/video/derf/ |
++---------------+------------+-----+------------------------------------+
+| TouchDownPass | 1280x720   | 30  | MPEG Test Suite                    |
++---------------+------------+-----+------------------------------------+
+
+* Synthetic/Animation Test Content 1080p 8-bit YUV 4:2:0
+
++----------------------+------------+-----+------------------------------------+
+| Sequence             | Resolution | FPS | Source                             |
++======================+============+=====+====================================+
+| Bunny                | 1920x1080  | 24  | https://media.xiph.org/video/derf/ |
++----------------------+------------+-----+------------------------------------+
+| CSGO                 | 1920x1080  | 60  | https://media.xiph.org/video/derf/ |
++----------------------+------------+-----+------------------------------------+
+| DOTA2                | 1920x1080  | 60  | https://media.xiph.org/video/derf/ |
++----------------------+------------+-----+------------------------------------+
+| GTAV                 | 1920x1080  | 60  | https://media.xiph.org/video/derf/ |
++----------------------+------------+-----+------------------------------------+
+| Hearthstone          | 1920x1080  | 60  | https://media.xiph.org/video/derf/ |
++----------------------+------------+-----+------------------------------------+
+| Minecraft            | 1920x1080  | 60  | https://media.xiph.org/video/derf/ |
++----------------------+------------+-----+------------------------------------+
+| MrFox_BlueBird       | 1920x1080  | 30  | VQEG Test Suite                    |
++----------------------+------------+-----+------------------------------------+
+| Sintel_offset537n480 | 1920x1080  | 24  | https://media.xiph.org/video/derf/ |
++----------------------+------------+-----+------------------------------------+
+| Witcher              | 1920x1080  | 60  | https://media.xiph.org/video/derf/ |
++----------------------+------------+-----+------------------------------------+
+
 To compare quality with different codecs and/or coding options, we compute the Bjøntegaard-Delta bitrate (BD-rate) measure, in which 
 negative values indicate how much the bitrate is reduced, and positive values indicate how much the bitrate is increased for the same PSNR-Y. 
 Minimum of 4 distinct points are needed for a successful BD-rate measure, so minimum of 4 distinct bitrates need to be used for each sequence 
@@ -43,6 +117,28 @@ Target bitrates for H.264/AVC video quality assessment:
 |            | High          | 1.5, 3, 6, 12   |
 +------------+---------------+-----------------+
 
+Bitrates in the able above are used for all content except some streams with exceptional complexity:
+
++------------------------+---------+-----------------+
+| Stream                 | Setting | Bitrates (MB/s) |
++========================+=========+=================+
+| CrowdRun, 1920x1080    | Low     | 15, 20, 25, 30  |
+|                        +---------+-----------------+
+| ParkJoy, 1920x1080     | High    | 20, 25, 30, 35  |
++------------------------+---------+-----------------+
+| DinnerScene, 1920x1080 | Low     | 1, 1.5, 2, 3    |
+|                        +---------+-----------------+
+|                        | High    | 1.5, 2, 3, 4    |
++------------------------+---------+-----------------+
+| Sintel_offset537n480   | Low     | 0.5, 1, 2, 6    |
+|                        +---------+-----------------+
+|                        | High    | 1, 2, 6, 9      |
++------------------------+---------+-----------------+
+| CrowdRun, 1280x720     | Low     | 6, 8, 10, 12    |
+|                        +---------+-----------------+
+| ParkJoy, 1280x720      | High    | 8, 10, 12, 15   |
++------------------------+---------+-----------------+
+
 
 Target bitrates for H.265/HEVC video quality assessment:
 
@@ -61,6 +157,28 @@ Target bitrates for H.265/HEVC video quality assessment:
 |            +---------------+-----------------+
 |            | High          | 1.5, 3, 4.5, 7.5|
 +------------+---------------+-----------------+
+
+Bitrates in the able above are used for all content except some streams with exceptional complexity:
+
++------------------------+---------+-----------------+
+| Stream                 | Setting | Bitrates (MB/s) |
++========================+=========+=================+
+| CrowdRun, 1920x1080    | Low     | 15, 20, 25, 30  |
+|                        +---------+-----------------+
+| ParkJoy, 1920x1080     | High    | 20, 25, 30, 35  |
++------------------------+---------+-----------------+
+| DinnerScene, 1920x1080 | Low     | 3, 7, 11, 15    |
+|                        +---------+-----------------+
+|                        | High    | 7, 11, 15, 20   |
++------------------------+---------+-----------------+
+| Sintel_offset537n480   | Low     | 0.5, 1, 2, 6    |
+|                        +---------+-----------------+
+|                        | High    | 1, 2, 6, 9      |
++------------------------+---------+-----------------+
+| CrowdRun, 1280x720     | Low     | 6, 8, 10, 12    |
+|                        +---------+-----------------+
+| ParkJoy, 1280x720      | High    | 8, 10, 12, 15   |
++------------------------+---------+-----------------+
 
 In addition, we measure 2 encoding modes: variable bitrate (VBR) and, constant bitrate (CBR) modes. 
 The BD-rate for a video sequence encoded with a given encoder is computed by averaging the following 4 
