@@ -47,7 +47,39 @@ ffmpeg-qsv and Media SDK Sample Multi Transcode.
 ------------
 +
 This is a simplified variant of the previous mode. If the stream name matches one of the
-pre-defined streams (which are YUV streams) you may skip specifying its characteristics.
+following pre-defined streams you may skip specifying its characteristics:
++
+|===
+| Sequence | Resolution | FPS | Source
+
+| BasketballDrive_1920x1080_50.yuv | 1920x1080 | 50 | MPEG Test Suite
+| BoatNF_1280x720_60.yuv | 1280x720 | 60 | https://media.xiph.org/video/derf/
+| bq_terrace_1920x1080p_600_60.yuv | 1920x1080 | 60 | MPEG Test Suite
+| Bunny_1920x1080_24_600.yuv | 1920x1080 | 24 | https://media.xiph.org/video/derf/
+| Cactus_1920x1080_50.yuv | 1920x1080 | 50 | MPEG Test Suite
+| crowd_run_1280x720_50.yuv | 1280x720 | 50 | https://media.xiph.org/video/derf/
+| crowd_run_1920x1080p_500_50.yuv | 1920x1080 | 50 | https://media.xiph.org/video/derf/
+| CSGO_1920x1080_60.yuv | 1920x1080 | 60 | https://media.xiph.org/video/derf/
+| DinnerScene_1920x1080_60.yuv | 1920x1080 | 60 | https://media.xiph.org/video/derf/
+| DOTA2_1920x1080_60_600.yuv | 1920x1080 | 60 | https://media.xiph.org/video/derf/
+| FoodMarket2NF_1280x720_60.yuv | 1280x720 | 60 | https://media.xiph.org/video/derf/
+| GTAV_1920x1080_60_600.yuv | 1920x1080 | 60 | https://media.xiph.org/video/derf/
+| Hearthstone_1920x1080_60.yuv | 1920x1080 | 60 | https://media.xiph.org/video/derf/
+| Kimono1_1280x720_24.yuv | 1280x720 | 24 | MPEG Test Suite
+| Kimono1_1920x1080_24.yuv | 1920x1080 | 24 | MPEG Test Suite
+| MINECRAFT_1920x1080_60_600.yuv | 1920x1080 | 60 | https://media.xiph.org/video/derf/
+| MrFox_BlueBird_1920x1080_30.yuv | 1920x1080 | 30 | VQEG Test Suite
+| park_joy_1280x720_50.yuv | 1280x720 | 50 | https://media.xiph.org/video/derf/
+| park_joy_1920x1080_500_50.yuv | 1920x1080 | 50 | https://media.xiph.org/video/derf/
+| ParkScene_1280x720_24.yuv | 1280x720 | 24 | MPEG Test Suite
+| PierSeasideNF_1280x720_60.yuv | 1280x720 | 60 | https://media.xiph.org/video/derf/
+| RedKayak_1920x1080_30.yuv | 1920x1080 | 30 | https://media.xiph.org/video/derf/
+| RushFieldCuts_1920x1080_30.yuv | 1920x1080 | 30 | https://media.xiph.org/video/derf/
+| Sintel_trailer_o537n480_1920x1080_24.yuv | 1920x1080 | 24 | https://media.xiph.org/video/derf/
+| TangoNF_1280x720_60.yuv | 1280x720 | 60 | https://media.xiph.org/video/derf/
+| touchdown_pass_1280x720_30.yuv | 1280x720 | 30 | MPEG Test Suite
+| WITCHER3_1920x1080_60.yuv | 1920x1080 | 60 | https://media.xiph.org/video/derf/
+|===
 
 Script checks whether the input stream is YUV by the following file
 extensions: '.yuv', '.YUV'. Any other file is considered to be in a container
@@ -76,6 +108,35 @@ given in the following tables:
 | `width > 1920 && height > 1088` | 6, 9, 15, 24, 40
 | `width > 1280 && height > 720` | 2, 3, 6, 9, 15
 | other | 1, 1.5, 3, 4.5, 7.5
+|===
+
+Mind that script uses the following bitrates for some pre-defined streams with
+exceptional complexity:
+
+* In case of AVC encoding:
++
+|===
+| Stream | Bitrates (Mbps)
+
+| crowd_run_1920x1080p_500_50.yuv | 15, 20, 25, 30, 35
+| park_joy_1920x1080_500_50.yuv | 15, 20, 25, 30, 35
+| DinnerScene_1920x1080_60.yuv | 1, 1.5, 2, 3, 4
+| Sintel_trailer_o537n480_1920x1080_24.yuv | 0.5, 1, 2, 6, 9
+| crowd_run_1280x720_50.yuv | 6, 8, 10, 12, 15
+| park_joy_1280x720_50.yuv | 6 8, 10, 12, 15
+|===
+
+* In case of HEVC encoding:
++
+|===
+| Stream | Bitrates (Mbps)
+
+| crowd_run_1920x1080p_500_50.yuv | 15, 20, 25, 30, 35
+| park_joy_1920x1080_500_50.yuv | 15, 20, 25, 30, 35
+| DinnerScene_1920x1080_60.yuv | 3, 7, 11, 15, 20
+| Sintel_trailer_o537n480_1920x1080_24.yuv | 0.5, 1, 2, 6, 9
+| crowd_run_1280x720_50.yuv | 6, 8, 10, 12, 15
+| park_joy_1280x720_50.yuv | 6 8, 10, 12, 15
 |===
 
 OUTPUT ARTIFACTS
