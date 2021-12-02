@@ -27,7 +27,7 @@ jobs:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
     with:
       flavor: focal-embargo-untested
-      dockerfile: docker/ubuntu20.04/intel-gfx-embargo-vpl/Dockerfile
+      dockerfile: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile
       pr_number: ${{github.event.pull_request.number}}
 
   test-dg1:

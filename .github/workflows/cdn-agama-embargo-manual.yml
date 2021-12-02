@@ -12,7 +12,7 @@ jobs:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
     with:
       flavor: ${{github.event.inputs.agama_embargo_version}}
-      dockerfile: docker/ubuntu20.04/intel-gfx-embargo-vpl/Dockerfile.local
+      dockerfile: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile.local
       pr_number: ${{github.event.pull_request.number}}
     secrets:
       SYS_M4_PASSWD: ${{ secrets.SYS_M4_PASSWD }}
