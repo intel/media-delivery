@@ -1,7 +1,7 @@
-From bcb23285f389116c63044eba42e317eed68b649d Mon Sep 17 00:00:00 2001
+From 52af20f932f33a186ea2e21bba4adfbe9b794350 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Tue, 18 Aug 2020 15:30:32 +0800
-Subject: [PATCH 05/13] qsv: build audio related code when MFX_VERSION < 2.0
+Subject: [PATCH 05/15] qsv: build audio related code when MFX_VERSION < 2.0
 
 Audio isn't supported for MFX_VERSION >= 2.0[1][2]. This is in
 preparation for oneVPL support
@@ -95,5 +95,5 @@ index 8c0cf3ed95..46e90c1d2c 100644
      AVFrame          *frame;
      mfxFrameSurface1 surface;
 -- 
-2.25.1
+2.17.1
 

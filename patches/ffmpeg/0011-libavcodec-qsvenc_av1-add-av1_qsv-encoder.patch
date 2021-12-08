@@ -1,7 +1,7 @@
-From fcd35d3c1d001fc63291d72d27dd7e2090fb067e Mon Sep 17 00:00:00 2001
+From fc411de23eaa3ae884de3211f0d9e703680cc852 Mon Sep 17 00:00:00 2001
 From: "Chen,Wenbin" <wenbin.chen@intel.com>
 Date: Thu, 8 Apr 2021 13:09:47 +0800
-Subject: [PATCH 11/13] libavcodec/qsvenc_av1: add av1_qsv encoder
+Subject: [PATCH 11/15] libavcodec/qsvenc_av1: add av1_qsv encoder
 
 Don't enable av1_qsv_encoder if using libmfx or an older version of
 libvpl (Haihao)
@@ -387,5 +387,5 @@ index 0000000000..17528beafe
 +    .hw_configs     = ff_qsv_enc_hw_configs,
 +};
 -- 
-2.25.1
+2.17.1
 

@@ -1,0 +1,33 @@
+From 841f7d5fce98d787e486850bdf3fafcf1c50ab55 Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Mon, 6 Dec 2021 13:42:53 +0800
+Subject: [PATCH 15/15] qsvenc: b_strategy can be applied to AV1 encoder
+
+---
+ libavcodec/qsvenc.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
+index 3b4fe0fab6..175f48b062 100644
+--- a/libavcodec/qsvenc.c
++++ b/libavcodec/qsvenc.c
+@@ -710,7 +710,15 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+         q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extco;
+ 
+ #if QSV_HAVE_CO2
+-        if (avctx->codec_id == AV_CODEC_ID_H264 || avctx->codec_id == AV_CODEC_ID_HEVC) {
++        if (avctx->codec_id == AV_CODEC_ID_AV1) {
++            if (q->b_strategy >= 0)
++                q->extco2.BRefType = q->b_strategy ? MFX_B_REF_PYRAMID : MFX_B_REF_OFF;
++
++            q->extco2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
++            q->extco2.Header.BufferSz = sizeof(q->extco2);
++
++            q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extco2;
++        } else if (avctx->codec_id == AV_CODEC_ID_H264 || avctx->codec_id == AV_CODEC_ID_HEVC) {
+             if (q->int_ref_type >= 0)
+                 q->extco2.IntRefType = q->int_ref_type;
+             if (q->int_ref_cycle_size >= 0)
+-- 
+2.17.1
+

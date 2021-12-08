@@ -1,7 +1,7 @@
-From 25614d817c65e24bbcadbd81ac56ced94e779ad2 Mon Sep 17 00:00:00 2001
+From 40a729336d2cbb7b83eb3d09dd7fa968d2da27be Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Mon, 4 Jan 2021 10:46:14 +0800
-Subject: [PATCH 09/13] qsv: use a new method to create mfx session when using
+Subject: [PATCH 09/15] qsv: use a new method to create mfx session when using
  oneVPL
 
 In oneVPL, MFXLoad() and MFXCreateSession() are required to create a
@@ -1083,5 +1083,5 @@ index 42e34d0dda..65415d3d8c 100644
  } AVQSVDeviceContext;
  
 -- 
-2.25.1
+2.17.1
 

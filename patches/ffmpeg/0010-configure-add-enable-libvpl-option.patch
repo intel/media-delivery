@@ -1,7 +1,7 @@
-From d37b5bb0869503a0c1e6950a0695805b896d5587 Mon Sep 17 00:00:00 2001
+From 244fe37cc34c78ac66ebcd0798a18a029edc9758 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 3 Feb 2021 14:49:46 +0800
-Subject: [PATCH 10/13] configure: add --enable-libvpl option
+Subject: [PATCH 10/15] configure: add --enable-libvpl option
 
 This allows user to build FFmpeg against Intel oneVPL. oneVPL 2.2
 is the required minimum version when building Intel oneVPL code.
@@ -74,5 +74,5 @@ index 9655a5823e..e9d2564819 100755
     check_cc MFX_CODEC_VP9 "mfxdefs.h mfxstructures.h" "MFX_CODEC_VP9"
  fi
 -- 
-2.25.1
+2.17.1
 

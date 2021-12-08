@@ -1,7 +1,7 @@
-From 0d5322455e390ad1e0748c96ee6dfcac78278c2a Mon Sep 17 00:00:00 2001
+From 72ffdaa3eb71ae33f5e8d04b4b1cef66cedc8348 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Tue, 8 Sep 2020 11:17:27 +0800
-Subject: [PATCH 03/13] qsv: remove mfx/ prefix from mfx headers
+Subject: [PATCH 03/15] qsv: remove mfx/ prefix from mfx headers
 
 The following Cflags has been added to libmfx.pc, so mfx/ prefix is no
 longer needed when including mfx headers in FFmpeg.
@@ -307,5 +307,5 @@ index b98d611cfc..42e34d0dda 100644
  /**
   * @file
 -- 
-2.25.1
+2.17.1
 

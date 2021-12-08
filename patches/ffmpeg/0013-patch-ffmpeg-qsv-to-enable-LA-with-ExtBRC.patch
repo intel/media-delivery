@@ -1,7 +1,7 @@
-From 0ed94965858b0bd4eb2128b25d2f5ecd8f22a014 Mon Sep 17 00:00:00 2001
+From 205865f287b596510a69996d435aacd00e2185ff Mon Sep 17 00:00:00 2001
 From: Daniel Socek <daniel.socek@intel.com>
 Date: Fri, 26 Jun 2020 21:25:20 +0000
-Subject: [PATCH 13/13] patch ffmpeg-qsv to enable LA with ExtBRC
+Subject: [PATCH 13/15] patch ffmpeg-qsv to enable LA with ExtBRC
 
 Signed-off-by: Daniel Socek <daniel.socek@intel.com>
 ---
@@ -36,5 +36,5 @@ index 7519b7b436..7aba91eebc 100644
      { "aud", "Insert the Access Unit Delimiter NAL", OFFSET(qsv.aud), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE},
  
 -- 
-2.25.1
+2.17.1
 

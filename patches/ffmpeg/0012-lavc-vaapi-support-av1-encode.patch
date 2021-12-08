@@ -1,7 +1,7 @@
-From 2c8e4670415692f2646d31ac195f22e13239a3a3 Mon Sep 17 00:00:00 2001
+From ab2f855781fe7c52b2045939c389c28a936b0203 Mon Sep 17 00:00:00 2001
 From: Fei Wang <fei.w.wang@intel.com>
 Date: Tue, 26 Jan 2021 15:57:33 +0800
-Subject: [PATCH 12/13] lavc/vaapi: support av1 encode.
+Subject: [PATCH 12/15] lavc/vaapi: support av1 encode.
 
 1. Don't enable av1_vaapi_encoder if vaapi is not enabled (Haihao)
 2. Support tile groups and levels
@@ -1706,5 +1706,5 @@ index aa199e0308..0d1fc96299 100644
  fate-iirfilter: libavcodec/tests/iirfilter$(EXESUF)
  fate-iirfilter: CMD = run libavcodec/tests/iirfilter$(EXESUF)
 -- 
-2.25.1
+2.17.1
 

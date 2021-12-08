@@ -1,7 +1,7 @@
-From 1b93c9adad84e9b09df7a400daeeca29c8607348 Mon Sep 17 00:00:00 2001
+From 49de00c59694ef87f446e2ec780494950d28e990 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 19 Aug 2020 09:43:12 +0800
-Subject: [PATCH 08/13] qsv: support OPAQUE memory when MFX_VERSION < 2.0
+Subject: [PATCH 08/15] qsv: support OPAQUE memory when MFX_VERSION < 2.0
 
 OPAQUE memory isn't supported for MFX_VERSION >= 2.0[1][2]. This is in
 preparation for oneVPL support
@@ -693,5 +693,5 @@ index 6725a0998d..2535aba022 100644
      s->session_download = NULL;
      s->session_upload   = NULL;
 -- 
-2.25.1
+2.17.1
 
