@@ -488,7 +488,7 @@ function get_coding_commandline_options() {
     options_ref+="-preset veryslow"
   elif [ "$codec" = "AV1" ]; then
     if [ "$preset" = "best" ]; then
-      options_qsv+="-bf 7 -refs 3 -g 256"
+      options_qsv+="-b_strategy 1 -bf 7 -refs 3 -g 256"
       options_smt+="-num_ref 3 -gop_size 256 -dist 8 -MemType::system -bref"
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
