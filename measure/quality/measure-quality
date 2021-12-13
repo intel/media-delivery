@@ -764,7 +764,7 @@ function compute_bdrate_averages() {
     process_avg_bdrates $codec ffmpeg-qsv
   fi
   if [[ "$skip_msdk" = "no" ]]; then
-    process_avg_bdrates $codec sample-encode
+    process_avg_bdrates $codec sample-multi-transcode
   fi
 }
 
