@@ -39,6 +39,7 @@ jobs:
           --build-arg FLAVOR=$FLAVOR \
           --build-arg USER=sys_m4 \
           --build-arg PASSWD=$SYS_M4_PASSWD \
+          --build-arg IGT_REPO=https://github.com/freedesktop/xorg-intel-gpu-tools.git \
           --no-cache \
           --force-rm \
           --file docker/ubuntu20.04/intel-gfx-embargo-vpl/Dockerfile.local \

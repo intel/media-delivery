@@ -49,6 +49,7 @@ jobs:
           --build-arg IMAGE=$BASE_IMAGE \
           --build-arg SAMPLE=cdn \
           --build-arg FLAVOR=$FLAVOR \
+          --build-arg IGT_REPO=https://github.com/freedesktop/xorg-intel-gpu-tools.git \
           --no-cache \
           --force-rm \
           --file docker/ubuntu20.04/intel-gfx-embargo-vpl/Dockerfile \

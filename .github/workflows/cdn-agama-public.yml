@@ -53,6 +53,7 @@ jobs:
           $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
           --build-arg IMAGE=$IMAGE \
           --build-arg SAMPLE=cdn \
+          --build-arg IGT_REPO=https://github.com/freedesktop/xorg-intel-gpu-tools.git \
           --no-cache \
           --force-rm \
           --file docker/ubuntu20.04/intel-gfx/Dockerfile \
