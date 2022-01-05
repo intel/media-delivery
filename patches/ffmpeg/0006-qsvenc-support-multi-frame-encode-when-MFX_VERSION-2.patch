@@ -1,7 +1,7 @@
-From 64ae8adbc62c55726c8b0d8fc48e863d70c6bc5a Mon Sep 17 00:00:00 2001
+From 6ccf42d8f1d86d27cb55fb1a9a822485529b92e6 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Wed, 19 Aug 2020 12:41:16 +0800
-Subject: [PATCH 06/15] qsvenc: support multi-frame encode when MFX_VERSION <
+Subject: [PATCH 06/18] qsvenc: support multi-frame encode when MFX_VERSION <
  2.0
 
 Multi-frame encode isn't supported for MFX_VERSION >= 2.0[1][2]. This is
@@ -27,5 +27,5 @@ index 7a71ffe98f..93af4d1198 100644
  
  #if !QSV_HAVE_LA_DS
 -- 
-2.17.1
+2.25.1
 

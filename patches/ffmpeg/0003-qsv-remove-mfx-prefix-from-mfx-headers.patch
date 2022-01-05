@@ -1,7 +1,7 @@
-From 72ffdaa3eb71ae33f5e8d04b4b1cef66cedc8348 Mon Sep 17 00:00:00 2001
+From afba925311d0cf0d5dc36556623226a3f5f6651c Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Tue, 8 Sep 2020 11:17:27 +0800
-Subject: [PATCH 03/15] qsv: remove mfx/ prefix from mfx headers
+Subject: [PATCH 03/18] qsv: remove mfx/ prefix from mfx headers
 
 The following Cflags has been added to libmfx.pc, so mfx/ prefix is no
 longer needed when including mfx headers in FFmpeg.
@@ -46,10 +46,10 @@ installed under vpl directory)
  18 files changed, 29 insertions(+), 24 deletions(-)
 
 diff --git a/configure b/configure
-index 21c744e627..9655a5823e 100755
+index 701fc6563c..2e95c57ada 100755
 --- a/configure
 +++ b/configure
-@@ -6434,13 +6434,18 @@ enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_
+@@ -6550,13 +6550,18 @@ enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_
  # Media SDK or Intel Media Server Studio, these don't come with
  # pkg-config support.  Instead, users should make sure that the build
  # can find the libraries and headers through other means.
@@ -61,7 +61,7 @@ index 21c744e627..9655a5823e 100755
 +#   includedir=/usr/include
 +#   Cflags: -I${includedir}
 +# So add -I${includedir}/mfx to CFLAGS
-+                                 { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit && add_cflags -I$($pkg_config --variable=includedir libmfx)/mfx; } ||
++                                 { check_pkg_config libmfx "libmfx < 2.0" "mfx/mfxvideo.h" MFXInit && add_cflags -I${libmfx_incdir}/mfx; } ||
 +                                 { require "libmfx < 2.0" "mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } } &&
                                 warn "build FFmpeg against libmfx 1.x, obsolete features of libmfx such as OPAQUE memory,\n"\
                                      "multi-frame encode, user plugins and LA_EXT rate control mode are enabled"; }
@@ -112,7 +112,7 @@ index b77158ec26..04ae0d6f34 100644
  #include "libavutil/buffer.h"
  
 diff --git a/libavcodec/qsv_internal.h b/libavcodec/qsv_internal.h
-index 8090b748b3..24c3e9307e 100644
+index fe9d5319c4..0ac9ba6789 100644
 --- a/libavcodec/qsv_internal.h
 +++ b/libavcodec/qsv_internal.h
 @@ -39,7 +39,7 @@
@@ -138,7 +138,7 @@ index 8bce9f2cf0..1cadb846f5 100644
  #include "libavutil/common.h"
  #include "libavutil/fifo.h"
 diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
-index 06f55604b5..7eaa680ae4 100644
+index db6d397068..5980ae264d 100644
 --- a/libavcodec/qsvenc.c
 +++ b/libavcodec/qsvenc.c
 @@ -23,7 +23,7 @@
@@ -164,7 +164,7 @@ index 31516b8e55..7a71ffe98f 100644
  #include "libavutil/avutil.h"
  #include "libavutil/fifo.h"
 diff --git a/libavcodec/qsvenc_h264.c b/libavcodec/qsvenc_h264.c
-index 80fe3cc280..9134e6a68c 100644
+index 9f127607b7..999fdc9bc9 100644
 --- a/libavcodec/qsvenc_h264.c
 +++ b/libavcodec/qsvenc_h264.c
 @@ -24,7 +24,7 @@
@@ -177,7 +177,7 @@ index 80fe3cc280..9134e6a68c 100644
  #include "libavutil/common.h"
  #include "libavutil/opt.h"
 diff --git a/libavcodec/qsvenc_hevc.c b/libavcodec/qsvenc_hevc.c
-index b7b2f5633e..a268a002d6 100644
+index 08aba3011d..8758b9c414 100644
 --- a/libavcodec/qsvenc_hevc.c
 +++ b/libavcodec/qsvenc_hevc.c
 @@ -22,7 +22,7 @@
@@ -242,7 +242,7 @@ index e0f4c8f5bb..8c0cf3ed95 100644
  #include "avfilter.h"
  #include "libavutil/fifo.h"
 diff --git a/libavfilter/vf_deinterlace_qsv.c b/libavfilter/vf_deinterlace_qsv.c
-index 173c314bb8..ab849558ef 100644
+index fb54d179ed..b8ff3e8339 100644
 --- a/libavfilter/vf_deinterlace_qsv.c
 +++ b/libavfilter/vf_deinterlace_qsv.c
 @@ -21,7 +21,7 @@
@@ -255,7 +255,7 @@ index 173c314bb8..ab849558ef 100644
  #include <stdio.h>
  #include <string.h>
 diff --git a/libavfilter/vf_scale_qsv.c b/libavfilter/vf_scale_qsv.c
-index 5a37cef63d..19c9bb6463 100644
+index 371f629457..2ba7d086b7 100644
 --- a/libavfilter/vf_scale_qsv.c
 +++ b/libavfilter/vf_scale_qsv.c
 @@ -21,7 +21,7 @@
@@ -281,7 +281,7 @@ index 26a3a24593..194165fba2 100644
  #include <va/va.h>
  #include <CL/cl_va_api_media_sharing_intel.h>
 diff --git a/libavutil/hwcontext_qsv.c b/libavutil/hwcontext_qsv.c
-index c18747f7eb..6725a0998d 100644
+index 853fb7f60d..c2c80e3395 100644
 --- a/libavutil/hwcontext_qsv.c
 +++ b/libavutil/hwcontext_qsv.c
 @@ -19,7 +19,7 @@
@@ -307,5 +307,5 @@ index b98d611cfc..42e34d0dda 100644
  /**
   * @file
 -- 
-2.17.1
+2.25.1
 

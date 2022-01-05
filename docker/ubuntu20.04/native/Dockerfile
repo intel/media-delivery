@@ -121,7 +121,7 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg && \
   cd /opt/build/ffmpeg && \
-  git checkout b2538ce
+  git checkout 20b0b2b
 
 RUN cd /opt/build/ffmpeg && \
   ./configure \

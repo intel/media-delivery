@@ -1,0 +1,35 @@
+From 3dd8ceae9c7546e55977d4996a50b57e460c569b Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Thu, 9 Dec 2021 10:06:04 +0800
+Subject: [PATCH 16/18] lavc/qsvenc: retrieve more AV1 parameters
+
+---
+ libavcodec/qsvenc.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
+index 7d98b0743a..7b90874a3e 100644
+--- a/libavcodec/qsvenc.c
++++ b/libavcodec/qsvenc.c
+@@ -1130,6 +1130,10 @@ static int qsv_retrieve_enc_av1_params(AVCodecContext *avctx, QSVEncContext *q)
+          .Header.BufferId = MFX_EXTBUFF_AV1_TILE_PARAM,
+          .Header.BufferSz = sizeof(av1_extend_tile_buf),
+     };
++    mfxExtAV1BitstreamParam av1_bs_param = {
++         .Header.BufferId = MFX_EXTBUFF_AV1_BITSTREAM_PARAM,
++         .Header.BufferSz = sizeof(av1_bs_param),
++    };
+ #endif
+ 
+ #if QSV_HAVE_CO2
+@@ -1149,6 +1153,7 @@ static int qsv_retrieve_enc_av1_params(AVCodecContext *avctx, QSVEncContext *q)
+     mfxExtBuffer *ext_buffers[] = {
+ #if QSV_HAVE_EXT_AV1_PARAM
+         (mfxExtBuffer*)&av1_extend_tile_buf,
++        (mfxExtBuffer*)&av1_bs_param,
+ #endif
+ #if QSV_HAVE_CO2
+         (mfxExtBuffer*)&co2,
+-- 
+2.25.1
+

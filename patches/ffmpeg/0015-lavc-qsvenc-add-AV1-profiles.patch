@@ -1,0 +1,43 @@
+From 46fc6d9bbedc2b94c3bf0ce7540f581adf6bb709 Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Thu, 9 Dec 2021 08:44:18 +0800
+Subject: [PATCH 15/18] lavc/qsvenc: add AV1 profiles
+
+---
+ libavcodec/qsvenc.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
+index c6de8246cf..7d98b0743a 100644
+--- a/libavcodec/qsvenc.c
++++ b/libavcodec/qsvenc.c
+@@ -85,6 +85,14 @@ static const struct profile_names vp9_profiles[] = {
+ #endif
+ };
+ 
++static const struct profile_names av1_profiles[] = {
++#if QSV_VERSION_ATLEAST(1, 34)
++    { MFX_PROFILE_AV1_MAIN,                     "main"                  },
++    { MFX_PROFILE_AV1_HIGH,                     "high"                  },
++    { MFX_PROFILE_AV1_PRO,                      "professional"          },
++#endif
++};
++
+ static const char *print_profile(enum AVCodecID codec_id, mfxU16 profile)
+ {
+     const struct profile_names *profiles;
+@@ -111,6 +119,11 @@ static const char *print_profile(enum AVCodecID codec_id, mfxU16 profile)
+         num_profiles = FF_ARRAY_ELEMS(vp9_profiles);
+         break;
+ 
++    case AV_CODEC_ID_AV1:
++        profiles = av1_profiles;
++        num_profiles = FF_ARRAY_ELEMS(av1_profiles);
++        break;
++
+     default:
+         return "unknown";
+     }
+-- 
+2.25.1
+
