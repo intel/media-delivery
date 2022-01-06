@@ -280,7 +280,7 @@ ffmpeg-qsv VBR (Transcoding)
 ::
 
   ffmpeg -hwaccel qsv \
-    -i $inputyuv -vframes $numframes -y \
+    -i $input -c:v $inputcode -vframes $numframes -y \
     -c:v h264_qsv -preset $preset -profile:v high \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
@@ -290,7 +290,7 @@ ffmpeg-qsv CBR (Transcoding)
 ::
 
   ffmpeg -hwaccel qsv \
-    -i $inputyuv -vframes $numframes -y \
+    -i $input -c:v $inputcodec -vframes $numframes -y \
     -c:v h264_qsv -preset $preset -profile:v high \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
@@ -367,7 +367,7 @@ ffmpeg-qsv VBR (Transcoding)
 ::
 
   ffmpeg -hwaccel qsv \
-    -i $inputyuv -vframes $numframes -y \
+    -i $input -c:v $inputcodec -vframes $numframes -y \
     -c:v hevc_qsv -preset medium -profile:v main \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
@@ -377,7 +377,7 @@ ffmpeg-qsv CBR (Transcoding)
 ::
 
   ffmpeg -hwaccel qsv \
-    -i $inputyuv -vframes $numframes -y \
+    -i $input -c:v $inputcodec -vframes $numframes -y \
     -c:v hevc_qsv -preset medium -profile:v main \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
@@ -402,13 +402,94 @@ Intel Media SDK sample-multi-transcode CBR (Transcoding)
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
     -o::h265 $output
 
+AV1 Command Lines
+-----------------------
 
+ffmpeg-qsv VBR (Encoding)
+*************************
+::
+
+  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va \
+   -an -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+   -i $inputyuv -frames:v $numframes -c:v av1_qsv -preset medium -profile:v main \
+   -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+   -rc_init_occupancy $(($bufsize / 2)) -low_power true -b_strategy 1 -bf 7 -refs 3 -g 256 -vsync 0 -y $output
+
+ffmpeg-qsv CBR (Encoding)
+*************************
+::
+
+  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va \
+   -an -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+   -i $inputyuv -frames:v $numframes -c:v av1_qsv -preset medium -profile:v main \
+   -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+   -rc_init_occupancy $(($bufsize / 2)) -low_power true -b_strategy 1 -bf 7 -refs 3 -g 256 -vsync 0 -y $output
+
+Intel Media SDK sample-multi-transcode VBR (Encoding)
+*****************************************************
+::
+   
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
+    -lowpower:on -num_ref 3 -gop_size 256 -dist 8 -MemType::system -bref -hrd 250 -InitialDelayInKB $(($bitrateKb / 4)) \
+    -o::av1 $output
+
+Intel Media SDK sample-multi-transcode CBR (Encoding)
+*****************************************************
+::
+   
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+   -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
+   -lowpower:on -num_ref 3 -gop_size 256 -dist 8 -MemType::system -bref -hrd 250 -InitialDelayInKB $(($bitrateKb / 8)) \
+   -o::av1 $output
+
+ffmpeg-qsv VBR (Transcoding)
+****************************
+::
+
+  ffmpeg -hwaccel qsv \
+    -i $input -c:v $inputcodec -vframes $numframes -y \
+    -c:v av1_qsv -preset medium -profile:v main \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
+    -g 256 -refs 5 -bf 7 -vsync 0 $output
+
+ffmpeg-qsv CBR (Transcoding)
+****************************
+::
+
+  ffmpeg -hwaccel qsv \
+    -i $input -c:v $inputcodec -vframes $numframes -y \
+    -c:v av1_qsv -preset medium -profile:v main \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
+    -g 256 -refs 5 -bf 7 -vsync 0 $output
+
+Intel Media SDK sample-multi-transcode VBR (Transcoding)
+********************************************************
+::
+
+  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
+    -vbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
+    -o::av1 $output
+
+Intel Media SDK sample-multi-transcode CBR (Transcoding)
+********************************************************
+::
+
+  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
+    -cbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
+    -o::av1 $output
+   
 Reference Codecs
 ----------------
 
 For assessing the quality of Intel's H.264 Advanced Video Coding (AVC) and H.265 High Efficiency Video Coding (HEVC) codecs we are
-using ffmpeg-x264 and ffmpeg-x265 as reference codecs in ``veryslow`` preset for the BD-rate measure. The reference codecs are ran
-with 12 threads and ``-tune psnr`` option. 
+using ffmpeg-x264 and ffmpeg-x265 as reference codecs in ``veryslow`` preset for the BD-rate measure. For assessing the quality of 
+Intel's AV1 codec we are using ffmpeg-x265 as reference codec in ``veryslow`` preset for the BD-rate measure. The reference codecs 
+are ran with 12 threads and ``-tune psnr`` option.
 
 ffmpeg-x264 VBR reference
 *************************
