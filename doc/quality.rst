@@ -228,12 +228,25 @@ Only ffmpeg-based quality results will be computed for pre-encoded input content
 Next we present quality command lines for H.264/AVC and H.265/HEVC. To maximize quality over performance, use "veryslow" preset. For maximum
 performance set preset to "veryfast". For a balanced quality/performance tradeoff use "medium" preset.
 
+EncTools and ExtBRC
+-------------------
+`EncTools` is Intel’s new software based (SW) BRC which also includes a set of encoding tools designed to
+improve video quality (thus a name EncTools).
+
+`ExtBRC` is Intel’s legacy SW BRC while EncTools BRC is a new and improved SW BRC which also comes with a
+suite of adaptive encoding tools.
+
+EncTools are engaged automatically with enabling external BRC (extbrc 1) and setting lookahead depth >= 1.
+Positive lookahead depth will automatically enable EncTools BRC and all adaptive encoding tools. For low
+power lookahead to engage with EncTools BRC, lookahead depth should be > mini-GoP size. Several adaptive
+encoding tools can be disabled by engaging SMT or FFmpeg-QSV flags, such as for example AdaptiveI off
+(disable scene cut detection) and AdaptiveB off (disable adaptive mini-GoP).
 
 H.264/AVC Command Lines
 -----------------------
 
-ffmpeg-qsv VBR (Encoding)
-*************************
+ffmpeg-qsv VBR (ExtBRC Encoding)
+********************************
 ::
 
   ffmpeg -hwaccel qsv \
@@ -243,8 +256,20 @@ ffmpeg-qsv VBR (Encoding)
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
 
-ffmpeg-qsv CBR (Encoding)
-*************************
+ffmpeg-qsv VBR (EncTools BRC Encoding)
+*****************************************
+::
+
+  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an\
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -b:v $bitrate \
+    -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power true -look_ahead_depth 40 -extbrc 1 \
+    -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
+    -async_depth 1 -vsync 0 -y $output
+
+ffmpeg-qsv CBR (ExtBRC Encoding)
+********************************
 ::
 
   ffmpeg -hwaccel qsv \
@@ -254,8 +279,20 @@ ffmpeg-qsv CBR (Encoding)
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
 
-Intel Media SDK sample-multi-transcode VBR (Encoding)
-*****************************************************
+ffmpeg-qsv CBR (EncTools BRC Encoding)
+*****************************************
+::
+
+  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -b:v $bitrate \
+    -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bitrate -low_power true -look_ahead_depth 40 -extbrc 1 \
+    -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
+    -async_depth 1 -vsync 0 -y $output
+
+Intel Media SDK sample-multi-transcode VBR (ExtBRC Encoding)
+************************************************************
 ::
 
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
@@ -264,8 +301,19 @@ Intel Media SDK sample-multi-transcode VBR (Encoding)
     -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4))  \
     -o::h264 $output
 
-Intel Media SDK sample-multi-transcode CBR (Encoding)
-*****************************************************
+Intel Media SDK sample-multi-transcode VBR (EncTools BRC Encoding)
+*********************************************************************
+::
+
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -vbr -n $numframes \
+    -w $width -h $height -override_encoder_framerate $framerate -lowpower:on -lad 40 \
+    -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 5 -gop_size 256 -dist 8 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -o::h264 $output
+
+Intel Media SDK sample-multi-transcode CBR (ExtBRC Encoding)
+************************************************************
 ::
 
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
@@ -274,6 +322,16 @@ Intel Media SDK sample-multi-transcode CBR (Encoding)
     -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
     -o::h264 $output
 
+Intel Media SDK sample-multi-transcode CBR (EncTools BRC Encoding)
+*********************************************************************
+::
+
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -cbr -n $numframes \
+    -w $width -h $height  -override_encoder_framerate $framerate -lowpower:on -lad 40 \
+    -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 5 -gop_size 256 -dist 8 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
+    -InitialDelayInKB $(($bitrateKb / 8)) -o::h264 $output
 
 ffmpeg-qsv VBR (Transcoding)
 ****************************
@@ -320,8 +378,8 @@ Intel Media SDK sample-multi-transcode CBR (Transcoding)
 H.265/HEVC Command Lines
 ------------------------
 
-ffmpeg-qsv VBR (Encoding)
-*************************
+ffmpeg-qsv VBR (ExtBRC Encoding)
+********************************
 ::
 
   ffmpeg -hwaccel qsv \
@@ -331,8 +389,21 @@ ffmpeg-qsv VBR (Encoding)
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
 
-ffmpeg-qsv CBR (Encoding)
-*************************
+ffmpeg-qsv VBR (EncTools BRC Encoding)
+*****************************************
+::
+
+  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -b:v $bitrate \
+    -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power true -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
+    -async_depth 1 -vsync 0 -y $output
+
+
+ffmpeg-qsv CBR (ExtBRC Encoding)
+********************************
 ::
 
   ffmpeg -hwaccel qsv \
@@ -342,24 +413,56 @@ ffmpeg-qsv CBR (Encoding)
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
 
-Intel Media SDK sample-multi-transcode VBR (Encoding)
-*****************************************************
+ffmpeg-qsv CBR (EncTools BRC Encoding)
+*****************************************
+::
+
+  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -b:v $bitrate \
+    -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bitrate -low_power true -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
+    -async_depth 1 -vsync 0 -y $output
+
+Intel Media SDK sample-multi-transcode VBR (ExtBRC Encoding)
+************************************************************
 ::
 
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -w $width -h $height -n $numframes -override_encoder_framerate $framerate \
-    -vbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -dist 8 -gop_size 256 \
-    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
+    -vbr -extbrc::implicit -num_ref 4 -dist 8 -gop_size 256 -NalHrdConformance:off \
+    -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
     -o::h265 $output
 
-Intel Media SDK sample-multi-transcode CBR (Encoding)
-*****************************************************
+Intel Media SDK sample-multi-transcode VBR (EncTools BRC Encoding)
+*********************************************************************
+::
+
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height  -override_encoder_framerate $framerate \
+    -lowpower:on -lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \ 
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4))  \
+    -o::h265 $output
+
+Intel Media SDK sample-multi-transcode CBR (ExtBRC Encoding)
+************************************************************
 ::
 
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -w $width -h $height -n $numframes -override_encoder_framerate $framerate \
-    -cbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -dist 8 -gop_size 256 \
-    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
+    -cbr -extbrc::implicit -num_ref 4 -dist 8 -gop_size 256 -NalHrdConformance:off \
+    -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
+    -o::h265 $output
+
+Intel Media SDK sample-multi-transcode CBR (EncTools BRC Encoding)
+*********************************************************************
+::
+
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height  -override_encoder_framerate $framerate \
+    -lowpower:on -lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8  \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8))  \
     -o::h265 $output
 
 ffmpeg-qsv VBR (Transcoding)

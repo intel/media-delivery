@@ -259,7 +259,6 @@ MS-SSIM BD-rate. If any of the `--skip-*` metrics options are specified, then th
 BD-rates corresponding these metrics are represented with an empty string between
 the separators in the output report.
 
-
 ENCODING OPTIONS
 ----------------
 --codec AVC|HEVC|AV1::
@@ -322,6 +321,9 @@ WORKING MODE OPTIONS
 
 --use-gold-ref::
 	Use precomputed golden references for BD-rate computation (disabled by default).
+
+--use-enctools::
+    Use enctools BRC for encoding.
 
 PROCESSING OPTIONS
 ------------------
