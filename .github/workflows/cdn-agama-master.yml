@@ -78,7 +78,7 @@ jobs:
 
   test-dg1:
     needs: build
-    runs-on: [self-hosted, osgc-solutions, ubuntu-gen12-dg1]
+    runs-on: [self-hosted, osgc-solutions, ubuntu, dg1, prelim]
     steps:
     - uses: actions/checkout@v2
     - run: |
@@ -130,3 +130,4 @@ jobs:
         } > docker_image_info.json
         cat docker_image_info.json
         gta-asset push --no-archive --root-url $ARTIFACTORY $ARTI_PATH agama-master $tag docker_image_info.json
+
