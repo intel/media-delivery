@@ -9,7 +9,6 @@ on:
 
 jobs:
   build:
-    runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
     with:
       flavor: ${{github.event.inputs.agama_embargo_version}}
