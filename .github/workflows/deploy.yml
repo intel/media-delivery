@@ -1,0 +1,60 @@
+name: deploy
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: 'Which stash docker image to deploy?'
+        required: true
+        type: string
+      gta-asset-name:
+        description: 'Which gta-asset name to use?'
+        required: true
+        type: string
+
+env:
+  REGISTRY: dockerv2-gsae-fm.gfx-assets.fm.intel.com/solutions
+  ARTIFACTORY: https://gfx-assets.fm.intel.com/artifactory
+  ARTI_PATH: gfx-media-assets/media_solution/intel-media-delivery/cdn/master
+  http_proxy: http://proxy-dmz.intel.com:912
+  https_proxy: http://proxy-dmz.intel.com:912
+  no_proxy: intel.com
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        image=${{ inputs.image }}
+        echo "Deploying $image ..."
+        docker pull $image
+        version=$(docker run --rm -e MDS_IGNORE_ERRORS=yes $image apt-cache show libmfx1 2>/dev/null | grep Version)
+        version=${version#Version:}
+        version=$(echo $version | sed 's/ //g' | sed 's/[^a-z|A-Z|0-9|.|-]/./g')
+        commit=$(git rev-parse --short $GITHUB_SHA)
+        tag=$GITHUB_RUN_ID-$commit-$version
+        deploytag1="${image%/stash*}/agama-devel:$tag"
+        deploytag2="${image%/stash*}/agama-devel:latest"
+        echo "... as $deploytag1 ..."
+        docker tag $image $deploytag1
+        docker push $deploytag1
+        echo "... and as $deploytag2 ..."
+        docker tag $image $deploytag2
+        docker push $deploytag2
+        docker rmi --force \
+          $(docker images -q $image | uniq) \
+          $(docker images -q $deploytag1 | uniq) \
+          $(docker images -q $deploytag2 | uniq)
+        echo "Posting artifactory asset ..."
+        { \
+          echo "{"; \
+          echo "    \"pipeline\":\"${GITHUB_RUN_ID}\","; \
+          echo "    \"commit_id\":\"${commit}\","; \
+          echo "    \"docker_image\":\"${deploytag1}\""; \
+          echo "}"; \
+        } > docker_image_info.json
+        cat docker_image_info.json
+        name=${{ inputs.gta-asset-name }}
+        gta-asset push --no-archive --root-url $ARTIFACTORY $ARTI_PATH $name $tag docker_image_info.json
+

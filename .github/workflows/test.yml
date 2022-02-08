@@ -1,0 +1,53 @@
+name: test
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: 'Which docker image to test?'
+        required: true
+        type: string
+      test_enctools:
+        description: 'Test enctools (for all genX)?'
+        required: true
+        type: string
+        # This does not seem currently supported:
+        #type: choice
+        #default: 'ON'
+        #options:
+        #- ON
+        #- OFF
+      on:
+        description: 'Test on which runner?'
+        required: true
+        type: string
+      kernel:
+        description: 'Run on which kernel?'
+        required: true
+        type: string
+
+jobs:
+  test:
+    runs-on: [self-hosted, osgc-solutions, '${{inputs.on}}', '${{inputs.kernel}}' ]
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        image=${{inputs.image}}
+        echo "Testing $image ..."
+        docker pull $image
+        export MDS_IMAGE=$image
+        export MDS_LOGS=$(pwd)/_logs
+        export MDS_DEMO=cdn
+        export TEST_ENCTOOLS=${{inputs.test_enctools}}
+        for d in renderD128 renderD129; do \
+          if fgrep -i 0x56a1 /sys/class/drm/$d/device/device; then \
+            export DEVICE=/dev/dri/$d; \
+          fi; \
+        done
+        echo "  TEST_ENCTOOLS=$TEST_ENCTOOLS"
+        echo "  DEVICE=$DEVICE"
+        test_status=0
+        bats tests/*.bats || test_status=$?
+        docker rmi --force $(docker images -q $image | uniq)
+        if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
+

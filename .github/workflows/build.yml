@@ -1,0 +1,77 @@
+name: build
+
+on:
+  workflow_call:
+    inputs:
+      flavor:
+        description: 'Which agama to use?'
+        required: true
+        type: string
+      dockerfile:
+        description: 'Which dockerfile to use?'
+        required: true
+        type: string
+      pr_number:
+        description: 'What is PR number?'
+        required: true
+        type: string
+    secrets:
+      SYS_M4_PASSWD:
+        required: false
+    outputs:
+      image:
+        description: 'Image name pushed to docker registry'
+        value: ${{ jobs.build.outputs.tagname }}
+
+env:
+  BASE_IMAGE: dockerv2-gsae-fm.gfx-assets.fm.intel.com/ubuntu:20.04
+  REGISTRY: dockerv2-gsae-fm.gfx-assets.fm.intel.com/solutions
+  http_proxy: http://proxy-dmz.intel.com:912
+  https_proxy: http://proxy-dmz.intel.com:912
+  # repositories.intel.com needs no_proxy=''
+  no_proxy: ''
+
+jobs:
+  build:
+    runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
+    outputs:
+      tagname: ${{steps.build.outputs.tagname}}
+    steps:
+    - uses: actions/checkout@v2
+    - id: build
+      run: |
+        tagname="$REGISTRY/intel-media-delivery/cdn/"
+        if [ -n "${{inputs.pr_number}}" ]; then \
+          tagname+=master/mr/${{inputs.pr_number}}
+        else
+          tagname+=embargo/stash/$GITHUB_RUN_ID
+        fi
+        image=$tagname:${{ inputs.flavor }}
+        echo "Building $image ..."
+        # repositories.intel.com needs no_proxy=''
+        export no_proxy=""
+        echo "  no_proxy=$no_proxy"
+        docker pull $BASE_IMAGE
+        if [ -n "${{secrets.SYS_M4_PASSWD}}"]; then \
+          MY_USER="--build-arg USER=sys_m4"; \
+          MY_PASSWD="--build-arg PASSWD=${{secrets.SYS_M4_PASSWD}}"
+        else
+          MY_USER=""
+          MY_PASSWD=""
+        fi
+        docker build \
+          $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
+          --build-arg IMAGE=$BASE_IMAGE \
+          --build-arg SAMPLE=cdn \
+          --build-arg FLAVOR=${{ inputs.flavor }} \
+          $MY_USER $MY_PASSWD \
+          --build-arg IGT_REPO=https://github.com/freedesktop/xorg-intel-gpu-tools.git \
+          --no-cache \
+          --force-rm \
+          --file ${{inputs.dockerfile}} \
+          -t $image \
+          .
+        docker push $image
+        docker rmi --force $(docker images -q $image | uniq)
+        echo "::set-output name=tagname::$image"
+
