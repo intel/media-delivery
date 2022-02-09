@@ -56,5 +56,6 @@ jobs:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       image: ${{needs.build.outputs.image}}
+      type: latest
       gta-asset-name: agama-public
 

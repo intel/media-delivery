@@ -7,6 +7,10 @@ on:
         description: 'Which stash docker image to deploy?'
         required: true
         type: string
+      type:
+        description: 'Which deployment is needed?'
+        required: true
+        type: string
       gta-asset-name:
         description: 'Which gta-asset name to use?'
         required: true
@@ -26,7 +30,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: |
-        image=${{ inputs.image }}
+        image=${{inputs.image}}
+        name=${{inputs.gta-asset-name}}
         echo "Deploying $image ..."
         docker pull $image
         version=$(docker run --rm -e MDS_IGNORE_ERRORS=yes $image apt-cache show libmfx1 2>/dev/null | grep Version)
@@ -34,18 +39,20 @@ jobs:
         version=$(echo $version | sed 's/ //g' | sed 's/[^a-z|A-Z|0-9|.|-]/./g')
         commit=$(git rev-parse --short $GITHUB_SHA)
         tag=$GITHUB_RUN_ID-$commit-$version
-        deploytag1="${image%/stash*}/agama-devel:$tag"
-        deploytag2="${image%/stash*}/agama-devel:latest"
+        deploytag1="${image%/stash*}/$name:$tag"
         echo "... as $deploytag1 ..."
         docker tag $image $deploytag1
         docker push $deploytag1
-        echo "... and as $deploytag2 ..."
-        docker tag $image $deploytag2
-        docker push $deploytag2
+        if [ "${{inputs.type}}" = "latest" ]; then
+          deploytag2="${image%/stash*}/$name:latest"
+          echo "... and as $deploytag2 ..."
+          docker tag $image $deploytag2
+          docker push $deploytag2
+          docker rmi --force $(docker images -q $deploytag2 | uniq) || false
+        fi
         docker rmi --force \
           $(docker images -q $image | uniq) \
-          $(docker images -q $deploytag1 | uniq) \
-          $(docker images -q $deploytag2 | uniq)
+          $(docker images -q $deploytag1 | uniq) || false
         echo "Posting artifactory asset ..."
         { \
           echo "{"; \
@@ -55,6 +62,5 @@ jobs:
           echo "}"; \
         } > docker_image_info.json
         cat docker_image_info.json
-        name=${{ inputs.gta-asset-name }}
         gta-asset push --no-archive --root-url $ARTIFACTORY $ARTI_PATH $name $tag docker_image_info.json
 
