@@ -41,6 +41,6 @@ jobs:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       image: ${{needs.build.outputs.image}}
-      type: latest
+      type: manual
       gta-asset-name: ${{github.event.inputs.agama_embargo_version}}
 
