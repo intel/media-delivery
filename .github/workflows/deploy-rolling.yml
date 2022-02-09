@@ -1,4 +1,4 @@
-name: deploy
+name: deploy-rolling
 
 on:
   workflow_call:
@@ -30,21 +30,29 @@ jobs:
         name=${{inputs.gta-asset-name}}
         echo "Deploying $image ..."
         docker pull $image
+        version=$(docker run --rm -e MDS_IGNORE_ERRORS=yes $image apt-cache show libmfx1 2>/dev/null | grep Version)
+        version=${version#Version:}
+        version=$(echo $version | sed 's/ //g' | sed 's/[^a-z|A-Z|0-9|.|-]/./g')
         commit=$(git rev-parse --short $GITHUB_SHA)
-        tag=$GITHUB_RUN_ID-$commit
-        deploytag="${image%/stash*}/$name:$tag"
-        echo "... as $deploytag ..."
-        docker tag $image $deploytag
-        docker push $deploytag
+        tag=$GITHUB_RUN_ID-$commit-$version
+        deploytag1="${image%/stash*}/$name:$tag"
+        echo "... as $deploytag1 ..."
+        docker tag $image $deploytag1
+        docker push $deploytag1
+        deploytag2="${image%/stash*}/$name:latest"
+        echo "... and as $deploytag2 ..."
+        docker tag $image $deploytag2
+        docker push $deploytag2
+        docker rmi --force $(docker images -q $deploytag2 | uniq) || true
         docker rmi --force \
           $(docker images -q $image | uniq) \
-          $(docker images -q $deploytag | uniq) || true
+          $(docker images -q $deploytag1 | uniq) || true
         echo "Posting artifactory asset ..."
         { \
           echo "{"; \
           echo "    \"pipeline\":\"${GITHUB_RUN_ID}\","; \
           echo "    \"commit_id\":\"${commit}\","; \
-          echo "    \"docker_image\":\"${deploytag}\""; \
+          echo "    \"docker_image\":\"${deploytag1}\""; \
           echo "}"; \
         } > docker_image_info.json
         cat docker_image_info.json

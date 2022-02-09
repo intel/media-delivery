@@ -9,7 +9,7 @@ on:
     - '!.github/workflows/cdn-agama-public.yml'
     - '!.github/workflows/build.yml'
     - '!.github/workflows/test.yml'
-    - '!.github/workflows/deploy.yml'
+    - '!.github/workflows/deploy-rolling.yml'
   pull_request:
     branches:
     - master
@@ -18,7 +18,7 @@ on:
     - '!.github/workflows/cdn-agama-public.yml'
     - '!.github/workflows/build.yml'
     - '!.github/workflows/test.yml'
-    - '!.github/workflows/deploy.yml'
+    - '!.github/workflows/deploy-rolling.yml'
   repository_dispatch:
     types: [build-public]
   schedule:
@@ -50,12 +50,11 @@ jobs:
       on: dg1
       kernel: prelim
 
-  deploy:
+  deploy-rolling:
     if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'repository_dispatch'
     needs: [build, test-gen9, test-dg1]
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy-rolling.yml@master
     with:
       image: ${{needs.build.outputs.image}}
-      type: latest
       gta-asset-name: agama-public
 
