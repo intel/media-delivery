@@ -48,6 +48,6 @@ jobs:
         echo "  DEVICE=$DEVICE"
         test_status=0
         bats tests/*.bats || test_status=$?
-        docker rmi --force $(docker images -q $image | uniq)
+        docker rmi --force $(docker images -q $image | uniq) || true
         if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
 

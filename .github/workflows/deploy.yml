@@ -48,11 +48,11 @@ jobs:
           echo "... and as $deploytag2 ..."
           docker tag $image $deploytag2
           docker push $deploytag2
-          docker rmi --force $(docker images -q $deploytag2 | uniq) || false
+          docker rmi --force $(docker images -q $deploytag2 | uniq) || true
         fi
         docker rmi --force \
           $(docker images -q $image | uniq) \
-          $(docker images -q $deploytag1 | uniq) || false
+          $(docker images -q $deploytag1 | uniq) || true
         echo "Posting artifactory asset ..."
         { \
           echo "{"; \

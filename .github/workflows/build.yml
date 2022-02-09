@@ -72,6 +72,6 @@ jobs:
           -t $image \
           .
         docker push $image
-        docker rmi --force $(docker images -q $image | uniq)
+        docker rmi --force $(docker images -q $image | uniq) || true
         echo "::set-output name=tagname::$image"
 
