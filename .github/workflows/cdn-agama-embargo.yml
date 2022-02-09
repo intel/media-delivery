@@ -50,7 +50,7 @@ jobs:
 
   deploy:
     if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'repository_dispatch'
-    needs: [test-dg1, test-dg2]
+    needs: [build, test-dg1, test-dg2]
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       image: ${{needs.build.outputs.image}}
