@@ -35,7 +35,7 @@ jobs:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
     with:
       image: ${{needs.build.outputs.image}}
-      test_enctools: 'OFF'
+      test_enctools: 'ON'
       on: dg1
       kernel: prelim
 
