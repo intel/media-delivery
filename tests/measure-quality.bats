@@ -256,7 +256,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
 }
 
 @test "measure quality: encode 5 frames of a YUV video with AVC encTools" {
-  if [ "$TEST_ENCTOOLS" != "on" ]; then skip; fi
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
     measure quality -w 480 -h 270 -f 24 \
     --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
@@ -268,7 +268,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
 }
 
 @test "measure quality: encode 5 frames of a YUV video with HEVC encTools" {
-  if [ "$TEST_ENCTOOLS" != "on" ]; then skip; fi
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
     measure quality -w 480 -h 270 -f 24 \
     --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
@@ -280,7 +280,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
 }
 
 @test "measure quality: transcode 5 frames of a user-defined raw H.264 video stream into AVC stream using encTools" {
-  if [ "$TEST_ENCTOOLS" != "on" ]; then skip; fi
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
     measure quality --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.h264; \
@@ -291,7 +291,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
 }
 
 @test "measure quality: transcode 5 frames of a user-defined raw H.264 video stream into HEVC stream using encTools" {
-  if [ "$TEST_ENCTOOLS" != "on" ]; then skip; fi
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
     measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.h264; \
@@ -302,7 +302,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
 }
 
 @test "measure quality: transcode 5 frames of a user-defined raw HEVC video stream into AVC stream using encTools" {
-  if [ "$TEST_ENCTOOLS" != "on" ]; then skip; fi
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.h265; \
@@ -313,7 +313,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
 }
 
 @test "measure quality: transcode 5 frames of a user-defined raw HEVC video stream into HEVC stream using encTools" {
-  if [ "$TEST_ENCTOOLS" != "on" ]; then skip; fi
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.h265; \
