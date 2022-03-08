@@ -26,6 +26,8 @@ jobs:
   build:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
     with:
+      gfx_repo_key: 'https://repositories.gfxs.intel.com/internal/intel-graphics.key'
+      gfx_repo: 'deb https://repositories.gfxs.intel.com/internal/ubuntu focal-embargo-untested main'
       flavor: focal-embargo-untested
       dockerfile: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile
       pr_number: ${{github.event.pull_request.number}}

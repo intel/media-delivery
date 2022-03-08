@@ -3,8 +3,16 @@ name: build
 on:
   workflow_call:
     inputs:
+      gfx_repo_key:
+        description: 'Which APT repo key to use (http location)?'
+        required: false
+        type: string
+      gfx_repo:
+        description: 'Which APT repo to use?'
+        required: false
+        type: string
       flavor:
-        description: 'Which agama to use?'
+        description: 'What to use for docker tag?'
         required: true
         type: string
       dockerfile:
@@ -29,7 +37,7 @@ env:
   http_proxy: http://proxy-dmz.intel.com:912
   https_proxy: http://proxy-dmz.intel.com:912
   # repositories.intel.com needs no_proxy=''
-  no_proxy: ''
+  no_proxy: 'gfx-assets-build.intel.com,repositories.gfxs.intel.com'
 
 jobs:
   build:
@@ -39,6 +47,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - id: build
+      shell: bash
       run: |
         tagname="$REGISTRY/intel-media-delivery/cdn/"
         if [ -n "${{inputs.pr_number}}" ]; then \
@@ -48,23 +57,30 @@ jobs:
         fi
         image=$tagname:${{ inputs.flavor }}
         echo "Building $image ..."
-        # repositories.intel.com needs no_proxy=''
-        export no_proxy=""
         echo "  no_proxy=$no_proxy"
+        echo "  gfx_repo_key=${{inputs.gfx_repo_key}}"
+        echo "  gfx_repo=${{inputs.gfx_repo}}"
+        echo "  flavor=${{inputs.flavor}}"
+        echo "  dockerfile=${{inputs.dockerfile}}"
+        echo "  pr_number=${{inputs.pr_number}}"
         docker pull $BASE_IMAGE
-        if [ -n "${{secrets.SYS_M4_PASSWD}}"]; then \
-          MY_USER="--build-arg USER=sys_m4"; \
-          MY_PASSWD="--build-arg PASSWD=${{secrets.SYS_M4_PASSWD}}"
-        else
-          MY_USER=""
-          MY_PASSWD=""
+        MY_ARGS=()
+        if [ -n "${{inputs.gfx_repo_key}}" ]; then \
+          MY_ARGS+=(--build-arg INTEL_GFX_KEY_URL=${{inputs.gfx_repo_key}}); \
+        fi
+        if [ -n "${{inputs.gfx_repo}}" ]; then \
+          MY_ARGS+=(--build-arg INTEL_GFX_APT_REPO="${{inputs.gfx_repo}}"); \
+        fi
+        echo " args: ${MY_ARGS[@]}"
+        if [ -n "${{secrets.SYS_M4_PASSWD}}" ]; then \
+          MY_ARGS+=(--build-arg USER=sys_m4); \
+          MY_ARGS+=(--build-arg PASSWD=${{secrets.SYS_M4_PASSWD}}); \
         fi
         docker build \
           $(env | grep -E '_proxy=' | sed 's/^/--build-arg /') \
           --build-arg IMAGE=$BASE_IMAGE \
           --build-arg SAMPLE=cdn \
-          --build-arg FLAVOR=${{ inputs.flavor }} \
-          $MY_USER $MY_PASSWD \
+          "${MY_ARGS[@]}" \
           --build-arg IGT_REPO=https://github.com/freedesktop/xorg-intel-gpu-tools.git \
           --no-cache \
           --force-rm \

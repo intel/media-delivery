@@ -27,29 +27,14 @@ FROM $IMAGE AS base
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    curl ca-certificates gpg-agent libnss3-tools software-properties-common unzip wget && \
+    curl ca-certificates gpg-agent software-properties-common && \
   rm -rf /var/lib/apt/lists/*
 
-RUN curl --noproxy "*" -fsSL https://gfx-assets-build.intel.com/artifactory/api/gpg/key/public | apt-key add -
-RUN { \
-  echo "Acquire::https::Proxy {"; \
-  echo "  gfx-assets-build.intel.com DIRECT;"; \
-  echo "};"; \
-  } >> /etc/apt/apt.conf
+ARG INTEL_GFX_KEY_URL="https://repositories.intel.com/graphics/intel-graphics.key"
+RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi
 
-
-# Supported FLAVOR patterns:
-#  * aaa-ci-bbb-nnn, where aaa|bbb - arbitrary names, ci - mandatory delimiter, nnn - a number
-# FLAVOR examples:
-#  * agama-ci-prerelease-nnn
-#  * gfx-driver-ci-master-nnn
-#  * gfx-driver-ci-comp_media-nnn
-ARG FLAVOR
-RUN { \
-  A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/"); \
-  B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/"); \
-  apt-add-repository "deb https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build untested/main/$A/$B/focal $FLAVOR"; \
-  }
+ARG INTEL_GFX_APT_REPO="deb https://repositories.intel.com/graphics/ubuntu focal main"
+RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
 
 
 FROM base as content

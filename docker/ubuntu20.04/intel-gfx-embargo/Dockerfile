@@ -32,15 +32,13 @@ RUN apt-get update && \
 
 COPY assets/embargo/setup-certs.sh /tmp/
 RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
-RUN curl --noproxy "*" -fsSL https://repositories.gfxs.intel.com/internal/intel-graphics.key | apt-key add -
-RUN { \
-  echo "Acquire::https::Proxy {"; \
-  echo "  repositories.gfxs.intel.com DIRECT;"; \
-  echo "};"; \
-  } >> /etc/apt/apt.conf
 
-ARG FLAVOR=focal-embargo-untested
-RUN apt-add-repository "deb https://repositories.gfxs.intel.com/internal/ubuntu $FLAVOR main"
+ARG INTEL_GFX_KEY_URL="https://repositories.gfxs.intel.com/internal/intel-graphics.key"
+RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi
+
+ARG INTEL_GFX_APT_REPO="deb https://repositories.gfxs.intel.com/internal/ubuntu focal main"
+RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
+
 
 FROM base as content
 

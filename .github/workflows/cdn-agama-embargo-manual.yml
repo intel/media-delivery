@@ -8,9 +8,24 @@ on:
         required: true
 
 jobs:
+  repo:
+    runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
+    outputs:
+      repo: ${{steps.repo.outputs.repo}}
+    steps:
+    - id: repo
+      run: |
+        FLAVOR=${{github.event.inputs.agama_embargo_version}}
+        A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/")
+        B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/")
+        echo "::set-output name=repo::untested/main/$A/$B/focal"
+
   build:
+    needs: repo
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
     with:
+      gfx_repo_key: 'https://gfx-assets-build.intel.com/artifactory/api/gpg/key/public'
+      gfx_repo: 'deb https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build ${{needs.repo.outputs.repo}} ${{github.event.inputs.agama_embargo_version}}'
       flavor: ${{github.event.inputs.agama_embargo_version}}
       dockerfile: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile.local
       pr_number: ${{github.event.pull_request.number}}

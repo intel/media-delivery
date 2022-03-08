@@ -38,8 +38,11 @@ pushdef(`_install_ubuntu',`dnl
 pushdef(`_tmp',`ifelse($1,`',UBUNTU_CODENAME(OS_VERSION),UBUNTU_CODENAME(OS_VERSION)-$1)')dnl
 INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent software-properties-common))
 
-RUN curl -fsSL INTEL_GFX_URL/intel-graphics.key | apt-key add -
-RUN apt-add-repository "deb INTEL_GFX_URL/ubuntu _tmp main"
+ARG INTEL_GFX_KEY_URL="INTEL_GFX_URL/intel-graphics.key"
+RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi
+
+ARG INTEL_GFX_APT_REPO="deb INTEL_GFX_URL/ubuntu _tmp main"
+RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
 popdef(`_tmp')')
 
 ifelse(OS_NAME,ubuntu,ifelse(OS_VERSION,20.04,

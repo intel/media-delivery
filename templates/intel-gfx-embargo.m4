@@ -24,19 +24,18 @@ include(ubuntu.m4)
 define(`INTEL_GFX_URL',https://repositories.gfxs.intel.com/internal)
 
 pushdef(`_install_ubuntu',`dnl
+pushdef(`_tmp',`ifelse($1,`',UBUNTU_CODENAME(OS_VERSION),UBUNTU_CODENAME(OS_VERSION)-$1)')dnl
 INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent libnss3-tools software-properties-common unzip wget))
 
 COPY assets/embargo/setup-certs.sh /tmp/
 RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
-RUN curl --noproxy "*" -fsSL INTEL_GFX_URL/intel-graphics.key | apt-key add -
-RUN { \
-  echo "Acquire::https::Proxy {"; \
-  echo "  repositories.gfxs.intel.com DIRECT;"; \
-  echo "};"; \
-  } >> /etc/apt/apt.conf
 
-ARG FLAVOR=focal-embargo-untested
-RUN apt-add-repository "deb INTEL_GFX_URL/ubuntu $FLAVOR main"')
+ARG INTEL_GFX_KEY_URL="INTEL_GFX_URL/intel-graphics.key"
+RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi
+
+ARG INTEL_GFX_APT_REPO="deb INTEL_GFX_URL/ubuntu _tmp main"
+RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
+popdef(`_tmp')')
 
 ifelse(OS_NAME,ubuntu,ifelse(OS_VERSION,20.04,
 `define(`ENABLE_INTEL_GFX_REPO',defn(`_install_ubuntu'))'))
