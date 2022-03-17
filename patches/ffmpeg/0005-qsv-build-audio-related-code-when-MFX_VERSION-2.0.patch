@@ -1,7 +1,7 @@
-From 2d7f3ec7a41e0141b6424d503ab90f27e80b1fa9 Mon Sep 17 00:00:00 2001
+From 31a42a4c17ad37a32d0c0157bf307cf48cbcbd57 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Tue, 18 Aug 2020 15:30:32 +0800
-Subject: [PATCH 05/18] qsv: build audio related code when MFX_VERSION < 2.0
+Subject: [PATCH 05/13] qsv: build audio related code when MFX_VERSION < 2.0
 
 Audio isn't supported for MFX_VERSION >= 2.0[1][2]. This is in
 preparation for oneVPL support
@@ -15,7 +15,7 @@ preparation for oneVPL support
  3 files changed, 13 insertions(+)
 
 diff --git a/libavcodec/qsv.c b/libavcodec/qsv.c
-index 83056e5976..e0a124a5cb 100644
+index 0eb0d83..063d6df 100644
 --- a/libavcodec/qsv.c
 +++ b/libavcodec/qsv.c
 @@ -37,6 +37,7 @@
@@ -48,7 +48,7 @@ index 83056e5976..e0a124a5cb 100644
  
  /**
 diff --git a/libavfilter/qsvvpp.c b/libavfilter/qsvvpp.c
-index d1218355c7..1113d27ba1 100644
+index 954f882..3647891 100644
 --- a/libavfilter/qsvvpp.c
 +++ b/libavfilter/qsvvpp.c
 @@ -38,6 +38,8 @@
@@ -59,8 +59,8 @@ index d1218355c7..1113d27ba1 100644
 +
  static const AVRational default_tb = { 1, 90000 };
  
- static const struct {
-@@ -95,8 +97,10 @@ static const struct {
+ typedef struct QSVAsyncFrame {
+@@ -100,8 +102,10 @@ static const struct {
      { MFX_ERR_INVALID_VIDEO_PARAM,      AVERROR(EINVAL), "invalid video parameters"             },
      { MFX_ERR_UNDEFINED_BEHAVIOR,       AVERROR_BUG,     "undefined behavior"                   },
      { MFX_ERR_DEVICE_FAILED,            AVERROR(EIO),    "device failed"                        },
@@ -71,7 +71,7 @@ index d1218355c7..1113d27ba1 100644
  
      { MFX_WRN_IN_EXECUTION,             0,               "operation in execution"               },
      { MFX_WRN_DEVICE_BUSY,              0,               "device busy"                          },
-@@ -106,7 +110,9 @@ static const struct {
+@@ -111,7 +115,9 @@ static const struct {
      { MFX_WRN_VALUE_NOT_CHANGED,        0,               "value is saturated"                   },
      { MFX_WRN_OUT_OF_RANGE,             0,               "value out of range"                   },
      { MFX_WRN_FILTER_SKIPPED,           0,               "filter skipped"                       },
@@ -82,7 +82,7 @@ index d1218355c7..1113d27ba1 100644
  
  static int qsv_map_error(mfxStatus mfx_err, const char **desc)
 diff --git a/libavfilter/qsvvpp.h b/libavfilter/qsvvpp.h
-index 8c0cf3ed95..46e90c1d2c 100644
+index 543c58a..802abd9 100644
 --- a/libavfilter/qsvvpp.h
 +++ b/libavfilter/qsvvpp.h
 @@ -40,6 +40,8 @@
@@ -95,5 +95,5 @@ index 8c0cf3ed95..46e90c1d2c 100644
      AVFrame          *frame;
      mfxFrameSurface1 surface;
 -- 
-2.25.1
+1.8.3.1
 

@@ -1,7 +1,7 @@
-From ab0712a20a32d756153dd8f3cd4b7bd126f89dbe Mon Sep 17 00:00:00 2001
+From 47d633198975797d5f35d651b1dd54fb781ee687 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Mon, 4 Jan 2021 10:46:14 +0800
-Subject: [PATCH 09/18] qsv: use a new method to create mfx session when using
+Subject: [PATCH 09/13] qsv: use a new method to create mfx session when using
  oneVPL
 
 In oneVPL, MFXLoad() and MFXCreateSession() are required to create a
@@ -18,16 +18,16 @@ This is in preparation for oneVPL support
 
 Signed-off-by: galinart <artem.galin@intel.com>
 ---
- libavcodec/qsv.c                 | 197 +++++++++++++++--
+ libavcodec/qsv.c                 | 197 ++++++++++++++++++---
  libavcodec/qsv_internal.h        |   1 +
- libavcodec/qsvdec.c              |  10 +
+ libavcodec/qsvdec.c              |  10 ++
  libavcodec/qsvenc.h              |   3 +
  libavcodec/qsvenc_h264.c         |   1 -
  libavcodec/qsvenc_hevc.c         |   1 -
  libavcodec/qsvenc_jpeg.c         |   1 -
  libavcodec/qsvenc_mpeg2.c        |   1 -
  libavcodec/qsvenc_vp9.c          |   1 -
- libavfilter/qsvvpp.c             | 113 +++++++++-
+ libavfilter/qsvvpp.c             | 113 +++++++++++-
  libavfilter/qsvvpp.h             |   5 +
  libavfilter/vf_deinterlace_qsv.c |  14 +-
  libavfilter/vf_scale_qsv.c       |  12 +-
@@ -35,14 +35,14 @@ Signed-off-by: galinart <artem.galin@intel.com>
  libavutil/hwcontext_d3d11va.h    |   5 +
  libavutil/hwcontext_dxva2.c      |   8 +
  libavutil/hwcontext_dxva2.h      |   4 +
- libavutil/hwcontext_qsv.c        | 365 +++++++++++++++++++++++++++----
+ libavutil/hwcontext_qsv.c        | 362 ++++++++++++++++++++++++++++++++++-----
  libavutil/hwcontext_qsv.h        |   1 +
  libavutil/hwcontext_vaapi.c      |  13 ++
  libavutil/hwcontext_vaapi.h      |   4 +
- 21 files changed, 684 insertions(+), 89 deletions(-)
+ 21 files changed, 682 insertions(+), 88 deletions(-)
 
 diff --git a/libavcodec/qsv.c b/libavcodec/qsv.c
-index d6f77908e4..46d3ac95eb 100644
+index c708964..0a0a429 100644
 --- a/libavcodec/qsv.c
 +++ b/libavcodec/qsv.c
 @@ -47,6 +47,12 @@
@@ -58,7 +58,7 @@ index d6f77908e4..46d3ac95eb 100644
  int ff_qsv_codec_id_to_mfx(enum AVCodecID codec_id)
  {
      switch (codec_id) {
-@@ -387,6 +393,164 @@ static int ff_qsv_set_display_handle(AVCodecContext *avctx, QSVSession *qs)
+@@ -403,6 +409,164 @@ static int ff_qsv_set_display_handle(AVCodecContext *avctx, QSVSession *qs)
  }
  #endif //AVCODEC_QSV_LINUX_SESSION_HANDLE
  
@@ -223,7 +223,7 @@ index d6f77908e4..46d3ac95eb 100644
  int ff_qsv_init_internal_session(AVCodecContext *avctx, QSVSession *qs,
                                   const char *load_plugins, int gpu_copy)
  {
-@@ -396,20 +560,13 @@ int ff_qsv_init_internal_session(AVCodecContext *avctx, QSVSession *qs,
+@@ -412,20 +576,13 @@ int ff_qsv_init_internal_session(AVCodecContext *avctx, QSVSession *qs,
      mfxIMPL          impl = MFX_IMPL_AUTO_ANY;
  #endif
      mfxVersion        ver = { { QSV_VERSION_MINOR, QSV_VERSION_MAJOR } };
@@ -248,7 +248,7 @@ index d6f77908e4..46d3ac95eb 100644
  
  #ifdef AVCODEC_QSV_LINUX_SESSION_HANDLE
      ret = ff_qsv_set_display_handle(avctx, qs);
-@@ -710,7 +867,7 @@ int ff_qsv_init_session_device(AVCodecContext *avctx, mfxSession *psession,
+@@ -729,7 +886,7 @@ int ff_qsv_init_session_device(AVCodecContext *avctx, mfxSession *psession,
      AVHWDeviceContext    *device_ctx = (AVHWDeviceContext*)device_ref->data;
      AVQSVDeviceContext *device_hwctx = device_ctx->hwctx;
      mfxSession        parent_session = device_hwctx->session;
@@ -257,7 +257,7 @@ index d6f77908e4..46d3ac95eb 100644
      mfxHDL                    handle = NULL;
      int          hw_handle_supported = 0;
  
-@@ -751,15 +908,11 @@ int ff_qsv_init_session_device(AVCodecContext *avctx, mfxSession *psession,
+@@ -770,15 +927,11 @@ int ff_qsv_init_session_device(AVCodecContext *avctx, mfxSession *psession,
                 "from the session\n");
      }
  
@@ -278,7 +278,7 @@ index d6f77908e4..46d3ac95eb 100644
  
      if (handle) {
          err = MFXVideoCORE_SetHandle(session, handle_type, handle);
-@@ -836,7 +989,9 @@ int ff_qsv_close_internal_session(QSVSession *qs)
+@@ -855,7 +1008,9 @@ int ff_qsv_close_internal_session(QSVSession *qs)
  {
      if (qs->session) {
          MFXClose(qs->session);
@@ -289,10 +289,10 @@ index d6f77908e4..46d3ac95eb 100644
  #ifdef AVCODEC_QSV_LINUX_SESSION_HANDLE
      av_buffer_unref(&qs->va_device_ref);
 diff --git a/libavcodec/qsv_internal.h b/libavcodec/qsv_internal.h
-index fb909b7f48..3a387f0ed3 100644
+index c788293..09c915a 100644
 --- a/libavcodec/qsv_internal.h
 +++ b/libavcodec/qsv_internal.h
-@@ -93,6 +93,7 @@ typedef struct QSVSession {
+@@ -99,6 +99,7 @@ typedef struct QSVSession {
      AVBufferRef *va_device_ref;
      AVHWDeviceContext *va_device_ctx;
  #endif
@@ -301,10 +301,10 @@ index fb909b7f48..3a387f0ed3 100644
  
  typedef struct QSVFramesContext {
 diff --git a/libavcodec/qsvdec.c b/libavcodec/qsvdec.c
-index 9395a1fd9a..f35ca6ffdc 100644
+index 8c3fb82..b085f20 100644
 --- a/libavcodec/qsvdec.c
 +++ b/libavcodec/qsvdec.c
-@@ -46,6 +46,12 @@
+@@ -49,6 +49,12 @@
  #include "qsv.h"
  #include "qsv_internal.h"
  
@@ -317,7 +317,7 @@ index 9395a1fd9a..f35ca6ffdc 100644
  static const AVRational mfx_tb = { 1, 90000 };
  
  #define PTS_TO_MFX_PTS(pts, pts_tb) ((pts) == AV_NOPTS_VALUE ? \
-@@ -161,7 +167,9 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
+@@ -170,7 +176,9 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
      } else if (hw_frames_ref) {
          if (q->internal_qs.session) {
              MFXClose(q->internal_qs.session);
@@ -327,7 +327,7 @@ index 9395a1fd9a..f35ca6ffdc 100644
          }
          av_buffer_unref(&q->frames_ctx.hw_frames_ctx);
  
-@@ -186,7 +194,9 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
+@@ -195,7 +203,9 @@ static int qsv_init_session(AVCodecContext *avctx, QSVContext *q, mfxSession ses
      } else if (hw_device_ref) {
          if (q->internal_qs.session) {
              MFXClose(q->internal_qs.session);
@@ -338,7 +338,7 @@ index 9395a1fd9a..f35ca6ffdc 100644
  
          ret = ff_qsv_init_session_device(avctx, &q->internal_qs.session,
 diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
-index 320ad6db2b..7a7eaea156 100644
+index 8be00d4..7fec3ca 100644
 --- a/libavcodec/qsvenc.h
 +++ b/libavcodec/qsvenc.h
 @@ -28,6 +28,9 @@
@@ -352,7 +352,7 @@ index 320ad6db2b..7a7eaea156 100644
  #include "libavutil/fifo.h"
  
 diff --git a/libavcodec/qsvenc_h264.c b/libavcodec/qsvenc_h264.c
-index 999fdc9bc9..d554a54dd6 100644
+index 7c6f3a5..fed6cf4 100644
 --- a/libavcodec/qsvenc_h264.c
 +++ b/libavcodec/qsvenc_h264.c
 @@ -32,7 +32,6 @@
@@ -364,7 +364,7 @@ index 999fdc9bc9..d554a54dd6 100644
  #include "atsc_a53.h"
  
 diff --git a/libavcodec/qsvenc_hevc.c b/libavcodec/qsvenc_hevc.c
-index 8758b9c414..994f3f5fe7 100644
+index e383caf..7a37db5 100644
 --- a/libavcodec/qsvenc_hevc.c
 +++ b/libavcodec/qsvenc_hevc.c
 @@ -35,7 +35,6 @@
@@ -376,7 +376,7 @@ index 8758b9c414..994f3f5fe7 100644
  
  enum LoadPlugin {
 diff --git a/libavcodec/qsvenc_jpeg.c b/libavcodec/qsvenc_jpeg.c
-index ad8f09befe..f473b1ddbc 100644
+index ad8f09b..f473b1d 100644
 --- a/libavcodec/qsvenc_jpeg.c
 +++ b/libavcodec/qsvenc_jpeg.c
 @@ -30,7 +30,6 @@
@@ -388,7 +388,7 @@ index ad8f09befe..f473b1ddbc 100644
  
  typedef struct QSVMJPEGEncContext {
 diff --git a/libavcodec/qsvenc_mpeg2.c b/libavcodec/qsvenc_mpeg2.c
-index 610bbf79c1..0e2a51811c 100644
+index 610bbf7..0e2a518 100644
 --- a/libavcodec/qsvenc_mpeg2.c
 +++ b/libavcodec/qsvenc_mpeg2.c
 @@ -30,7 +30,6 @@
@@ -400,7 +400,7 @@ index 610bbf79c1..0e2a51811c 100644
  
  typedef struct QSVMpeg2EncContext {
 diff --git a/libavcodec/qsvenc_vp9.c b/libavcodec/qsvenc_vp9.c
-index 0a382eb76d..9d88b03bbf 100644
+index 5a0c044..aa58ea9 100644
 --- a/libavcodec/qsvenc_vp9.c
 +++ b/libavcodec/qsvenc_vp9.c
 @@ -30,7 +30,6 @@
@@ -412,7 +412,7 @@ index 0a382eb76d..9d88b03bbf 100644
  
  typedef struct QSVVP9EncContext {
 diff --git a/libavfilter/qsvvpp.c b/libavfilter/qsvvpp.c
-index d9d39c8b70..6766984217 100644
+index 3f984fd..bc87f31 100644
 --- a/libavfilter/qsvvpp.c
 +++ b/libavfilter/qsvvpp.c
 @@ -23,8 +23,6 @@
@@ -437,7 +437,7 @@ index d9d39c8b70..6766984217 100644
  #define IS_VIDEO_MEMORY(mode)  (mode & (MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET | \
                                          MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET))
  #if QSV_HAVE_OPAQUE
-@@ -609,13 +613,11 @@ static int init_vpp_session(AVFilterContext *avctx, QSVVPPContext *s)
+@@ -614,13 +618,11 @@ static int init_vpp_session(AVFilterContext *avctx, QSVVPPContext *s)
      }
  
      /* create a "slave" session with those same properties, to be used for vpp */
@@ -456,7 +456,7 @@ index d9d39c8b70..6766984217 100644
  
      if (handle) {
          ret = MFXVideoCORE_SetHandle(s->session, handle_type, handle);
-@@ -914,3 +916,96 @@ int ff_qsvvpp_filter_frame(QSVVPPContext *s, AVFilterLink *inlink, AVFrame *picr
+@@ -906,3 +908,96 @@ int ff_qsvvpp_filter_frame(QSVVPPContext *s, AVFilterLink *inlink, AVFrame *picr
  
      return 0;
  }
@@ -554,7 +554,7 @@ index d9d39c8b70..6766984217 100644
 +
 +#endif
 diff --git a/libavfilter/qsvvpp.h b/libavfilter/qsvvpp.h
-index 67c351f297..ac6c54d2e8 100644
+index 3e7d560..a8cfcc5 100644
 --- a/libavfilter/qsvvpp.h
 +++ b/libavfilter/qsvvpp.h
 @@ -28,6 +28,8 @@
@@ -575,7 +575,7 @@ index 67c351f297..ac6c54d2e8 100644
 +
  #endif /* AVFILTER_QSVVPP_H */
 diff --git a/libavfilter/vf_deinterlace_qsv.c b/libavfilter/vf_deinterlace_qsv.c
-index 50f9156d14..4986873cbb 100644
+index 50f9156..4986873 100644
 --- a/libavfilter/vf_deinterlace_qsv.c
 +++ b/libavfilter/vf_deinterlace_qsv.c
 @@ -163,7 +163,7 @@ static int init_out_session(AVFilterContext *ctx)
@@ -607,7 +607,7 @@ index 50f9156d14..4986873cbb 100644
      if (handle) {
          err = MFXVideoCORE_SetHandle(s->session, handle_type, handle);
 diff --git a/libavfilter/vf_scale_qsv.c b/libavfilter/vf_scale_qsv.c
-index 30434033d1..82a51ee837 100644
+index 3043403..82a51ee 100644
 --- a/libavfilter/vf_scale_qsv.c
 +++ b/libavfilter/vf_scale_qsv.c
 @@ -281,7 +281,7 @@ static int init_out_session(AVFilterContext *ctx)
@@ -637,7 +637,7 @@ index 30434033d1..82a51ee837 100644
      if (handle) {
          err = MFXVideoCORE_SetHandle(s->session, handle_type, handle);
 diff --git a/libavutil/hwcontext_d3d11va.c b/libavutil/hwcontext_d3d11va.c
-index 8ab96bad25..e0e820f164 100644
+index 8ab96ba..e0e820f 100644
 --- a/libavutil/hwcontext_d3d11va.c
 +++ b/libavutil/hwcontext_d3d11va.c
 @@ -525,6 +525,13 @@ static void d3d11va_device_uninit(AVHWDeviceContext *hwdev)
@@ -675,7 +675,7 @@ index 8ab96bad25..e0e820f164 100644
      }
  
 diff --git a/libavutil/hwcontext_d3d11va.h b/libavutil/hwcontext_d3d11va.h
-index 77d2d72f1b..41a315b9e6 100644
+index 77d2d72..41a315b 100644
 --- a/libavutil/hwcontext_d3d11va.h
 +++ b/libavutil/hwcontext_d3d11va.h
 @@ -94,6 +94,11 @@ typedef struct AVD3D11VADeviceContext {
@@ -691,7 +691,7 @@ index 77d2d72f1b..41a315b9e6 100644
  
  /**
 diff --git a/libavutil/hwcontext_dxva2.c b/libavutil/hwcontext_dxva2.c
-index 53d00fa815..6967357093 100644
+index 53d00fa..6967357 100644
 --- a/libavutil/hwcontext_dxva2.c
 +++ b/libavutil/hwcontext_dxva2.c
 @@ -431,6 +431,7 @@ static void dxva2_device_free(AVHWDeviceContext *ctx)
@@ -717,7 +717,7 @@ index 53d00fa815..6967357093 100644
  }
  
 diff --git a/libavutil/hwcontext_dxva2.h b/libavutil/hwcontext_dxva2.h
-index e1b79bc0de..253ddbed51 100644
+index e1b79bc..253ddbe 100644
 --- a/libavutil/hwcontext_dxva2.h
 +++ b/libavutil/hwcontext_dxva2.h
 @@ -38,6 +38,10 @@
@@ -732,10 +732,10 @@ index e1b79bc0de..253ddbed51 100644
  
  /**
 diff --git a/libavutil/hwcontext_qsv.c b/libavutil/hwcontext_qsv.c
-index 9fe4fa4174..b967cffce1 100644
+index f5bdb84..17fc834 100644
 --- a/libavutil/hwcontext_qsv.c
 +++ b/libavutil/hwcontext_qsv.c
-@@ -57,6 +57,12 @@
+@@ -58,6 +58,12 @@
  #define QSV_ONEVPL       QSV_VERSION_ATLEAST(2, 0)
  #define QSV_HAVE_OPAQUE  !QSV_ONEVPL
  
@@ -748,7 +748,7 @@ index 9fe4fa4174..b967cffce1 100644
  typedef struct QSVDevicePriv {
      AVBufferRef *child_device_ctx;
  } QSVDevicePriv;
-@@ -69,12 +75,15 @@ typedef struct QSVDeviceContext {
+@@ -70,12 +76,15 @@ typedef struct QSVDeviceContext {
  
      enum AVHWDeviceType child_device_type;
      enum AVPixelFormat  child_pix_fmt;
@@ -758,13 +758,13 @@ index 9fe4fa4174..b967cffce1 100644
  typedef struct QSVFramesContext {
      mfxSession session_download;
 +    void *loader_download;
-     int session_download_init;
+     atomic_int session_download_init;
      mfxSession session_upload;
 +    void *loader_upload;
-     int session_upload_init;
+     atomic_int session_upload_init;
  #if HAVE_PTHREADS
      pthread_mutex_t session_lock;
-@@ -254,15 +263,19 @@ static void qsv_frames_uninit(AVHWFramesContext *ctx)
+@@ -288,15 +297,19 @@ static void qsv_frames_uninit(AVHWFramesContext *ctx)
      if (s->session_download) {
          MFXVideoVPP_Close(s->session_download);
          MFXClose(s->session_download);
@@ -784,7 +784,7 @@ index 9fe4fa4174..b967cffce1 100644
      s->session_upload_init = 0;
  
  #if HAVE_PTHREADS
-@@ -586,8 +599,241 @@ static mfxStatus frame_get_hdl(mfxHDL pthis, mfxMemId mid, mfxHDL *hdl)
+@@ -619,8 +632,241 @@ static mfxStatus frame_get_hdl(mfxHDL pthis, mfxMemId mid, mfxHDL *hdl)
      return MFX_ERR_NONE;
  }
  
@@ -1027,7 +1027,7 @@ index 9fe4fa4174..b967cffce1 100644
  {
      AVQSVFramesContext *frames_hwctx = ctx->hwctx;
      QSVDeviceContext   *device_priv  = ctx->device_ctx->internal->priv;
-@@ -604,29 +850,36 @@ static int qsv_init_internal_session(AVHWFramesContext *ctx,
+@@ -637,29 +883,36 @@ static int qsv_init_internal_session(AVHWFramesContext *ctx,
  
      mfxVideoParam par;
      mfxStatus err;
@@ -1073,7 +1073,7 @@ index 9fe4fa4174..b967cffce1 100644
      }
  
      memset(&par, 0, sizeof(par));
-@@ -662,11 +915,22 @@ static int qsv_init_internal_session(AVHWFramesContext *ctx,
+@@ -695,11 +948,22 @@ static int qsv_init_internal_session(AVHWFramesContext *ctx,
      if (err != MFX_ERR_NONE) {
          av_log(ctx, AV_LOG_VERBOSE, "Error opening the internal VPP session."
                 "Surface upload/download will not be possible\n");
@@ -1098,7 +1098,7 @@ index 9fe4fa4174..b967cffce1 100644
  }
  
  static int qsv_frames_init(AVHWFramesContext *ctx)
-@@ -731,6 +995,9 @@ static int qsv_frames_init(AVHWFramesContext *ctx)
+@@ -764,6 +1028,9 @@ static int qsv_frames_init(AVHWFramesContext *ctx)
      s->session_download = NULL;
      s->session_upload   = NULL;
  
@@ -1108,27 +1108,24 @@ index 9fe4fa4174..b967cffce1 100644
      s->session_download_init = 0;
      s->session_upload_init   = 0;
  
-@@ -1032,7 +1299,8 @@ static int qsv_transfer_data_from(AVHWFramesContext *ctx, AVFrame *dst,
-         if (pthread_mutex_trylock(&s->session_lock) == 0) {
+@@ -1053,6 +1320,7 @@ static int qsv_internal_session_check_init(AVHWFramesContext *ctx, int upload)
+     QSVFramesContext *s = ctx->internal->priv;
+     atomic_int *inited  = upload ? &s->session_upload_init : &s->session_download_init;
+     mfxSession *session = upload ? &s->session_upload      : &s->session_download;
++    void **loader       = upload ? &s->loader_upload       : &s->loader_download;
+     int ret = 0;
+ 
+     if (atomic_load(inited))
+@@ -1063,7 +1331,7 @@ static int qsv_internal_session_check_init(AVHWFramesContext *ctx, int upload)
  #endif
-             if (!s->session_download_init) {
--                ret = qsv_init_internal_session(ctx, &s->session_download, 0);
-+                ret = qsv_init_internal_session(ctx, &s->session_download,
-+                                                &s->loader_download, 0);
-                 if (s->session_download)
-                     s->session_download_init = 1;
-             }
-@@ -1107,7 +1375,8 @@ static int qsv_transfer_data_to(AVHWFramesContext *ctx, AVFrame *dst,
-         if (pthread_mutex_trylock(&s->session_lock) == 0) {
- #endif
-             if (!s->session_upload_init) {
--                ret = qsv_init_internal_session(ctx, &s->session_upload, 1);
-+                ret = qsv_init_internal_session(ctx, &s->session_upload,
-+                                                &s->loader_upload, 1);
-                 if (s->session_upload)
-                     s->session_upload_init = 1;
-             }
-@@ -1390,10 +1659,14 @@ static void qsv_device_free(AVHWDeviceContext *ctx)
+ 
+     if (!atomic_load(inited)) {
+-        ret = qsv_init_internal_session(ctx, session, upload);
++        ret = qsv_init_internal_session(ctx, session, loader, upload);
+         atomic_store(inited, 1);
+     }
+ 
+@@ -1406,10 +1674,14 @@ static void qsv_device_free(AVHWDeviceContext *ctx)
  {
      AVQSVDeviceContext *hwctx = ctx->hwctx;
      QSVDevicePriv       *priv = ctx->user_opaque;
@@ -1143,7 +1140,7 @@ index 9fe4fa4174..b967cffce1 100644
      av_buffer_unref(&priv->child_device_ctx);
      av_freep(&priv);
  }
-@@ -1443,6 +1716,7 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
+@@ -1459,6 +1731,7 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
                                          int flags)
  {
      AVQSVDeviceContext *hwctx = ctx->hwctx;
@@ -1151,7 +1148,7 @@ index 9fe4fa4174..b967cffce1 100644
  
      mfxVersion    ver = { { 3, 1 } };
      mfxHDL        handle;
-@@ -1457,6 +1731,7 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
+@@ -1473,6 +1746,7 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
              AVVAAPIDeviceContext *child_device_hwctx = child_device_ctx->hwctx;
              handle_type = MFX_HANDLE_VA_DISPLAY;
              handle = (mfxHDL)child_device_hwctx->display;
@@ -1159,7 +1156,7 @@ index 9fe4fa4174..b967cffce1 100644
          }
          break;
  #endif
-@@ -1466,6 +1741,7 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
+@@ -1482,6 +1756,7 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
              AVD3D11VADeviceContext *child_device_hwctx = child_device_ctx->hwctx;
              handle_type = MFX_HANDLE_D3D11_DEVICE;
              handle = (mfxHDL)child_device_hwctx->device;
@@ -1167,7 +1164,7 @@ index 9fe4fa4174..b967cffce1 100644
          }
          break;
  #endif
-@@ -1475,6 +1751,7 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
+@@ -1491,6 +1766,7 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
              AVDXVA2DeviceContext *child_device_hwctx = child_device_ctx->hwctx;
              handle_type = MFX_HANDLE_D3D9_DEVICE_MANAGER;
              handle = (mfxHDL)child_device_hwctx->devmgr;
@@ -1175,7 +1172,7 @@ index 9fe4fa4174..b967cffce1 100644
          }
          break;
  #endif
-@@ -1483,34 +1760,11 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
+@@ -1499,34 +1775,11 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
          goto fail;
      }
  
@@ -1213,7 +1210,7 @@ index 9fe4fa4174..b967cffce1 100644
  
      err = MFXVideoCORE_SetHandle(hwctx->session, handle_type, handle);
      if (err != MFX_ERR_NONE) {
-@@ -1525,6 +1779,8 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
+@@ -1541,6 +1794,8 @@ static int qsv_device_derive_from_child(AVHWDeviceContext *ctx,
  fail:
      if (hwctx->session)
          MFXClose(hwctx->session);
@@ -1222,7 +1219,7 @@ index 9fe4fa4174..b967cffce1 100644
      return ret;
  }
  
-@@ -1546,6 +1802,7 @@ static int qsv_device_create(AVHWDeviceContext *ctx, const char *device,
+@@ -1562,6 +1817,7 @@ static int qsv_device_create(AVHWDeviceContext *ctx, const char *device,
      AVHWDeviceContext *child_device;
      AVDictionary *child_device_opts;
      AVDictionaryEntry *e;
@@ -1230,7 +1227,7 @@ index 9fe4fa4174..b967cffce1 100644
  
      mfxIMPL impl;
      int ret;
-@@ -1567,6 +1824,16 @@ static int qsv_device_create(AVHWDeviceContext *ctx, const char *device,
+@@ -1583,6 +1839,16 @@ static int qsv_device_create(AVHWDeviceContext *ctx, const char *device,
          }
      } else if (CONFIG_VAAPI) {
          child_device_type = AV_HWDEVICE_TYPE_VAAPI;
@@ -1247,7 +1244,7 @@ index 9fe4fa4174..b967cffce1 100644
      } else if (CONFIG_DXVA2) {
          av_log(NULL, AV_LOG_WARNING,
                  "WARNING: defaulting child_device_type to AV_HWDEVICE_TYPE_DXVA2 for compatibility "
-@@ -1575,6 +1842,7 @@ static int qsv_device_create(AVHWDeviceContext *ctx, const char *device,
+@@ -1591,6 +1857,7 @@ static int qsv_device_create(AVHWDeviceContext *ctx, const char *device,
          child_device_type = AV_HWDEVICE_TYPE_DXVA2;
      } else if (CONFIG_D3D11VA) {
          child_device_type = AV_HWDEVICE_TYPE_D3D11VA;
@@ -1255,7 +1252,7 @@ index 9fe4fa4174..b967cffce1 100644
      } else {
          av_log(ctx, AV_LOG_ERROR, "No supported child device type is enabled\n");
          return AVERROR(ENOSYS);
-@@ -1601,6 +1869,13 @@ static int qsv_device_create(AVHWDeviceContext *ctx, const char *device,
+@@ -1617,6 +1884,13 @@ static int qsv_device_create(AVHWDeviceContext *ctx, const char *device,
  #endif
  #if CONFIG_DXVA2
      case AV_HWDEVICE_TYPE_DXVA2:
@@ -1269,7 +1266,7 @@ index 9fe4fa4174..b967cffce1 100644
          break;
  #endif
      default:
-@@ -1611,7 +1886,17 @@ static int qsv_device_create(AVHWDeviceContext *ctx, const char *device,
+@@ -1627,7 +1901,17 @@ static int qsv_device_create(AVHWDeviceContext *ctx, const char *device,
          break;
      }
  
@@ -1288,7 +1285,7 @@ index 9fe4fa4174..b967cffce1 100644
                                   e ? e->value : NULL, child_device_opts, 0);
  
 diff --git a/libavutil/hwcontext_qsv.h b/libavutil/hwcontext_qsv.h
-index 42e34d0dda..2485daa899 100644
+index 42e34d0..2485daa 100644
 --- a/libavutil/hwcontext_qsv.h
 +++ b/libavutil/hwcontext_qsv.h
 @@ -34,6 +34,7 @@
@@ -1300,7 +1297,7 @@ index 42e34d0dda..2485daa899 100644
  
  /**
 diff --git a/libavutil/hwcontext_vaapi.c b/libavutil/hwcontext_vaapi.c
-index 994b744e4d..89fdefee68 100644
+index 994b744e..89fdefe 100644
 --- a/libavutil/hwcontext_vaapi.c
 +++ b/libavutil/hwcontext_vaapi.c
 @@ -1517,6 +1517,7 @@ static void vaapi_device_free(AVHWDeviceContext *ctx)
@@ -1345,7 +1342,7 @@ index 994b744e4d..89fdefee68 100644
              }
              if (n >= max_devices)
 diff --git a/libavutil/hwcontext_vaapi.h b/libavutil/hwcontext_vaapi.h
-index 0b2e071cb3..3e0b54f5e9 100644
+index 0b2e071..3e0b54f 100644
 --- a/libavutil/hwcontext_vaapi.h
 +++ b/libavutil/hwcontext_vaapi.h
 @@ -78,6 +78,10 @@ typedef struct AVVAAPIDeviceContext {
@@ -1360,5 +1357,5 @@ index 0b2e071cb3..3e0b54f5e9 100644
  
  /**
 -- 
-2.25.1
+1.8.3.1
 

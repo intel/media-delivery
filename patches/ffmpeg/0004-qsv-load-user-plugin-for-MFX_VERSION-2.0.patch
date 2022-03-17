@@ -1,7 +1,7 @@
-From 1e27e7436471a3b0dc4655b6707fac96c4b66423 Mon Sep 17 00:00:00 2001
+From 27a850c7f8ff107d8b58731980f09e801e00deb4 Mon Sep 17 00:00:00 2001
 From: Haihao Xiang <haihao.xiang@intel.com>
 Date: Tue, 18 Aug 2020 15:20:38 +0800
-Subject: [PATCH 04/18] qsv: load user plugin for MFX_VERSION < 2.0
+Subject: [PATCH 04/13] qsv: load user plugin for MFX_VERSION < 2.0
 
 User plugin isn't supported for MFX_VERSION >= 2.0[1][2]. This is in
 preparation for oneVPL Support
@@ -14,7 +14,7 @@ preparation for oneVPL Support
  2 files changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/libavcodec/qsv.c b/libavcodec/qsv.c
-index 84f0401b0f..83056e5976 100644
+index f749e77..0eb0d83 100644
 --- a/libavcodec/qsv.c
 +++ b/libavcodec/qsv.c
 @@ -19,7 +19,6 @@
@@ -42,7 +42,7 @@ index 84f0401b0f..83056e5976 100644
  int ff_qsv_codec_id_to_mfx(enum AVCodecID codec_id)
  {
      switch (codec_id) {
-@@ -291,6 +295,7 @@ enum AVPictureType ff_qsv_map_pictype(int mfx_pic_type)
+@@ -307,6 +311,7 @@ enum AVPictureType ff_qsv_map_pictype(int mfx_pic_type)
  static int qsv_load_plugins(mfxSession session, const char *load_plugins,
                              void *logctx)
  {
@@ -50,7 +50,7 @@ index 84f0401b0f..83056e5976 100644
      if (!load_plugins || !*load_plugins)
          return 0;
  
-@@ -334,6 +339,7 @@ load_plugin_fail:
+@@ -350,6 +355,7 @@ load_plugin_fail:
          if (err < 0)
              return err;
      }
@@ -59,10 +59,10 @@ index 84f0401b0f..83056e5976 100644
      return 0;
  
 diff --git a/libavcodec/qsv_internal.h b/libavcodec/qsv_internal.h
-index 0ac9ba6789..8e33735944 100644
+index 09fc76f..6d6a6eb 100644
 --- a/libavcodec/qsv_internal.h
 +++ b/libavcodec/qsv_internal.h
-@@ -60,6 +60,8 @@
+@@ -62,6 +62,8 @@
      ((MFX_VERSION.Major > (MAJOR)) ||                           \
      (MFX_VERSION.Major == (MAJOR) && MFX_VERSION.Minor >= (MINOR)))
  
@@ -72,5 +72,5 @@ index 0ac9ba6789..8e33735944 100644
      AVBufferRef *hw_frames_ref;
      mfxHDLPair *handle_pair;
 -- 
-2.25.1
+1.8.3.1
 
