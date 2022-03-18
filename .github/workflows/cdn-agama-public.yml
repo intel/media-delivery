@@ -48,7 +48,7 @@ jobs:
       image: ${{needs.build.outputs.image}}
       test_enctools: 'OFF'
       on: dg1
-      kernel: prelim
+      kernel: public
 
   deploy-rolling:
     if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'repository_dispatch'
