@@ -994,6 +994,7 @@ if [ "$skip_metrics" = "no" ]; then
     echo "error: can't find vmaf model: $vmaf_model_path"
     exit -1
   fi
+  model="model='path=${vmaf_model_path}'"
 
   for out in $(ls -1t $outprefix* | grep -v '\.metrics\|\.*bdrate'); do
     if [ "$is_yuv" = "yes" ]; then
@@ -1002,14 +1003,15 @@ if [ "$skip_metrics" = "no" ]; then
 
     metrics=""
     if [ "$skip_psnr" = "no" ]; then
-      metrics+=":psnr=1"
+      [ ! -z "$metrics" ] && metrics+="|name=psnr" || metrics+="name=psnr"
     fi
     if [ "$skip_ssim" = "no" ]; then
-      metrics+=":ssim=1"
+      [ ! -z "$metrics" ] && metrics+="|name=float_ssim" || metrics+="name=float_ssim"
     fi
     if [ "$skip_msim" = "no" ]; then
-      metrics+=":ms_ssim=1"
+      [ ! -z "$metrics" ] && metrics+="|name=float_ms_ssim" || metrics+="name=float_ms_ssim"
     fi
+    [ ! -z "$metrics" ] && metrics=":feature='${metrics}'"
 
     # get number of really encoded frames from the stream rather than relying on the user input
     if [ "$dry_run" = "no" ]; then
@@ -1027,7 +1029,7 @@ if [ "$skip_metrics" = "no" ]; then
       -lavfi " \
         [0:v]trim=end_frame=$nframes[ref]; \
         [1:v]trim=end_frame=$nframes[v]; \
-        [v][ref]libvmaf=model_path=${vmaf_model_path}${metrics}:log_fmt=json:log_path=/tmp/out.json:n_threads=${nproc}"
+        [v][ref]libvmaf=${model}${metrics}:log_fmt=json:log_path=/tmp/out.json:n_threads=${nproc}"
       -f null -)
 
     if [ "$dry_run" = "no" ]; then
@@ -1047,11 +1049,11 @@ if [ "$skip_metrics" = "no" ]; then
       metrics="$out:$b"
       [[ "$skip_vmaf" = "no" ]] && vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["vmaf"]["mean"])')
       metrics+=":$vmaf"
-      [[ "$skip_psnr" = "no" ]] && psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["psnr"]["mean"])')
+      [[ "$skip_psnr" = "no" ]] && psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["psnr_y"]["mean"])')
       metrics+=":$psnr"
-      [[ "$skip_ssim" = "no" ]] && ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["ssim"]["mean"])')
+      [[ "$skip_ssim" = "no" ]] && ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["float_ssim"]["mean"])')
       metrics+=":$ssim"
-      [[ "$skip_msim" = "no" ]] && msim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["ms_ssim"]["mean"])')
+      [[ "$skip_msim" = "no" ]] && msim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["float_ms_ssim"]["mean"])')
       metrics+=":$msim"
 
       out=$(echo "$metrics" | grep CBR_QSV); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-qsv.metrics
