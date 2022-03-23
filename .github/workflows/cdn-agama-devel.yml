@@ -39,6 +39,15 @@ jobs:
       on: dg1
       kernel: prelim
 
+  test-dg2:
+    needs: build
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    with:
+      image: ${{needs.build.outputs.image}}
+      test_enctools: 'ON'
+      on: dg2
+      kernel: dual-gpu
+
   deploy-rolling:
     if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'repository_dispatch'
     needs: [build, test-dg1]
