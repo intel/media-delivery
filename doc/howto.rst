@@ -43,7 +43,7 @@ To achieve that use ``--group-add`` docker run comamnd line option::
 With that you explicitly grant permissions to access the specified device to
 the container user. This is advised way. If you have multiple users under
 container and experience issues granting access to all of them, then
-consider refactoring container having a single user or break single continer
+consider refactoring container having a single user or break single container
 into few with single user in each. General guidance is: docker container should
 be designed to solve specific problem, be as simple as possible, permissions
 should be managed explicitly. From this perspective, alternative way to
@@ -92,8 +92,8 @@ case, please, adjust paranoid setting on the host system::
 
 To make Media Delivery demo functional you need to specify value ``<=0``.
 
-Intel GPU Top (from Intel GPU Tools package) is one of the applications which get
-use of i915 Linux perf data. Follow the above BKM to run it.
+Intel GPU Top (from Intel GPU Tools package) is one of the applications which uses
+i915 Linux perf data. Follow the above BKM to run it.
 
 For further reading on the Linux perf security refer to Linux kernel
 `perf-security <https://www.kernel.org/doc/html/latest/admin-guide/perf-security.html>`_
@@ -201,7 +201,7 @@ Managing access rights for container user
 Managing permissions between container and a host might be tricky. Remember that the
 user you have under container (by default Media Delivery containers have
 user account named 'user') generally speaking is not the same user you have
-on your host system. Hence, you might have all bunch of access problems that
+on your host system. Hence, you might have access problems that
 container user can't write to the host folder or it can write there, but
 host user can't delete these files and you are forced to use ``sudo`` to modify
 them). The way to handle all that correctly would be to start container
@@ -227,12 +227,12 @@ user will be able to use them. This can be achieved in the following way::
     intel-media-delivery
 
 We use ``--tmpfs`` above for the simplicity to just highlight which mounts
-you need to make. Effectively, it is strongly recommended to mount output
+you need to make. It is strongly recommended to mount output
 locations for big files (like ``/opt/data/artifacts``, and ``/var/www/hls``
 in the example above) as real volumes (with ``-v`` option) pointing to real
 folders on a host system disk space.
 
-There is another type of sitation when you need to know exact locations to where
+There is another type of situation when you need to know exact locations to where
 container writes something. That's when you wish to strengthen container security
 mounting root file system as read-only (via ``--read-only`` option). Here is
 desired command line where we will additionally deny container to gain new
