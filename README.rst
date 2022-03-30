@@ -20,7 +20,7 @@ setup and integration with other popular tools you will likely use in
 your final product. We try to do our best to provide a configuration which
 will demonstrate the best quality and performance for Intel GPU media stack.
 
-Key topcis we are covering:
+Key topics we are covering:
 
 * Samples which demonstrate operations typical for Content Delivery Network (CDN)
   applications such as Video On Demand (VOD) streaming under Nginx server
@@ -157,7 +157,7 @@ On the output you should get list of streams similar to the following::
   http://localhost:8080/vod/hevc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 
 These streams can be supplied as an input to the demo command lines
-described below. Mind however that HEVC streaming miпht not be supported by
+described below. Mind however that HEVC streaming might not be supported by
 some client applications, for example, web browsers.
 
 If you want to run a client on some other system rather than host, make sure
