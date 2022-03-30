@@ -28,8 +28,8 @@ subs="ffmpeg -i \
   -s 480x270 -sws_flags lanczos -vframes 100 WAR.mp4"
 @test "measure quality: transcode 65 frames, calculate metrics, measure bdrate and check measuring artifacts" {
   run docker_run /bin/bash -c "set -ex; $subs; \
-    measure quality --nframes 65 WAR.mp4; \
-    result=\$(cat /opt/data/artifacts/measure/quality/*{.metrics,bdrate} | wc -l); \
+    measure quality --nframes 65 --bitrates 0.5:0.75:1:1.5:2 WAR.mp4; \
+    result=\$(cat /opt/data/artifacts/measure/quality/*{.metrics,bdrate} | grep -v :: | wc -l); \
     [[ \$result = 24 ]]"
   print_output
   [ $status -eq 0 ]
