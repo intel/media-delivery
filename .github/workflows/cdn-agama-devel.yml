@@ -24,7 +24,7 @@ on:
 
 jobs:
   build:
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@ci
     with:
       gfx_repo_key: 'https://repositories.gfxs.intel.com/internal/intel-graphics.key'
       gfx_repo: 'deb https://repositories.gfxs.intel.com/internal/ubuntu focal-devel-untested main'
@@ -34,7 +34,7 @@ jobs:
 
   test-dg1:
     needs: build
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@ci
     with:
       image: ${{needs.build.outputs.image}}
       test_enctools: 'ON'
@@ -43,7 +43,7 @@ jobs:
 
   test-dg2:
     needs: build
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@ci
     with:
       image: ${{needs.build.outputs.image}}
       test_enctools: 'ON'
@@ -53,7 +53,7 @@ jobs:
   deploy-rolling:
     if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'repository_dispatch'
     needs: [build, test-dg1]
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy-rolling.yml@master
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy-rolling.yml@ci
     with:
       image: ${{needs.build.outputs.image}}
       gta-asset-name: agama-devel

@@ -22,7 +22,7 @@ jobs:
 
   build:
     needs: repo
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@ci
     with:
       gfx_repo_key: 'https://gfx-assets-build.intel.com/artifactory/api/gpg/key/public'
       gfx_repo: 'deb https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build ${{needs.repo.outputs.repo}} ${{github.event.inputs.agama_embargo_version}}'
@@ -34,7 +34,7 @@ jobs:
 
   test-dg1:
     needs: build
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@ci
     with:
       image: ${{needs.build.outputs.image}}
       test_enctools: 'ON'
@@ -43,7 +43,7 @@ jobs:
 
   test-dg2:
     needs: build
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@ci
     with:
       image: ${{needs.build.outputs.image}}
       test_enctools: 'ON'
@@ -52,7 +52,7 @@ jobs:
 
   deploy:
     needs: [build, test-dg1, test-dg2]
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@ci
     with:
       image: ${{needs.build.outputs.image}}
       gta-asset-name: ${{github.event.inputs.agama_embargo_version}}
