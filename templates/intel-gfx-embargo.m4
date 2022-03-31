@@ -21,7 +21,7 @@ dnl #
 include(begin.m4)
 include(ubuntu.m4)
 
-define(`INTEL_GFX_URL',https://osgc.jf.intel.com/internal)
+define(`INTEL_GFX_URL',https://repositories.gfxs.intel.com/internal)
 
 pushdef(`_install_ubuntu',`dnl
 INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent libnss3-tools software-properties-common unzip wget))
@@ -31,7 +31,7 @@ RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
 RUN curl --noproxy "*" -fsSL INTEL_GFX_URL/intel-graphics.key | apt-key add -
 RUN { \
   echo "Acquire::https::Proxy {"; \
-  echo "  osgc.jf.intel.com DIRECT;"; \
+  echo "  repositories.gfxs.intel.com DIRECT;"; \
   echo "};"; \
   } >> /etc/apt/apt.conf
 
