@@ -26,7 +26,7 @@ on:
 
 jobs:
   build:
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@ci
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
     with:
       flavor: public
       dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
@@ -34,7 +34,7 @@ jobs:
 
   test-gen9:
     needs: build
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@ci
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
     with:
       image: ${{needs.build.outputs.image}}
       test_enctools: 'OFF'
@@ -43,7 +43,7 @@ jobs:
 
   test-dg1:
     needs: build
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@ci
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
     with:
       image: ${{needs.build.outputs.image}}
       test_enctools: 'OFF'
@@ -53,7 +53,7 @@ jobs:
   deploy-rolling:
     if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'repository_dispatch'
     needs: [build, test-gen9, test-dg1]
-    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy-rolling.yml@ci
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy-rolling.yml@master
     with:
       image: ${{needs.build.outputs.image}}
       gta-asset-name: agama-public
