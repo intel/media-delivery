@@ -29,7 +29,7 @@ jobs:
       gfx_repo_key: 'https://repositories.gfxs.intel.com/internal/intel-graphics.key'
       gfx_repo: 'deb https://repositories.gfxs.intel.com/internal/ubuntu focal-devel-untested main'
       flavor: focal-devel-untested
-      dockerfile: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile
+      dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
       pr_number: ${{github.event.pull_request.number}}
 
   test-dg1:

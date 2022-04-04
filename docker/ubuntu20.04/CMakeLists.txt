@@ -44,25 +44,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
   VERBATIM
   )
 
-add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx-embargo/Dockerfile
-  DEPENDS ${srcs}
-    ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx-embargo/Dockerfile.m4
-  COMMAND ${M4} ${M4FLAGS} -D OS_NAME=ubuntu -D OS_VERSION=20.04
-    ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx-embargo/Dockerfile.m4 > ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx-embargo/Dockerfile
-  VERBATIM
-  )
-
-add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx-embargo/Dockerfile.local
-  DEPENDS ${srcs}
-    ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx-embargo/Dockerfile.m4
-  COMMAND ${M4} ${M4FLAGS} -D OS_NAME=ubuntu -D OS_VERSION=20.04 -D LOCAL_REPO=true
-    ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx-embargo/Dockerfile.m4 > ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx-embargo/Dockerfile.local
-  VERBATIM
-  )
-
 add_custom_target(ubuntu20.04-dockerfiles ALL DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/native/Dockerfile
-  ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
-  ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx-embargo/Dockerfile
-  ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx-embargo/Dockerfile.local)
+  ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile)
 

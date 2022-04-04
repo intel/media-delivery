@@ -27,7 +27,7 @@ jobs:
       gfx_repo_key: 'https://gfx-assets-build.intel.com/artifactory/api/gpg/key/public'
       gfx_repo: 'deb https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build ${{needs.repo.outputs.repo}} ${{github.event.inputs.agama_embargo_version}}'
       flavor: ${{github.event.inputs.agama_embargo_version}}
-      dockerfile: docker/ubuntu20.04/intel-gfx-embargo/Dockerfile.local
+      dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
       pr_number: ${{github.event.pull_request.number}}
     secrets:
       SYS_M4_PASSWD: ${{ secrets.SYS_M4_PASSWD }}

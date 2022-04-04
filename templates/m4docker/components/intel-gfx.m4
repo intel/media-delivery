@@ -32,11 +32,14 @@ include(begin.m4)
 
 include(ubuntu.m4)
 
-define(`INTEL_GFX_URL',https://repositories.intel.com/graphics)
+define(`INTEL_GFX_URL',https://repositories.gfxs.intel.com/internal)
 
 pushdef(`_install_ubuntu',`dnl
 pushdef(`_tmp',`ifelse($1,`',UBUNTU_CODENAME(OS_VERSION),UBUNTU_CODENAME(OS_VERSION)-$1)')dnl
-INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent software-properties-common))
+INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent software-properties-common libnss3-tools unzip wget))
+
+COPY assets/embargo/setup-certs.sh /tmp/
+RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
 
 ARG INTEL_GFX_KEY_URL="INTEL_GFX_URL/intel-graphics.key"
 RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi

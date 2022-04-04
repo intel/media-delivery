@@ -27,13 +27,16 @@ FROM $IMAGE AS base
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    curl ca-certificates gpg-agent software-properties-common && \
+    curl ca-certificates gpg-agent software-properties-common libnss3-tools unzip wget && \
   rm -rf /var/lib/apt/lists/*
 
-ARG INTEL_GFX_KEY_URL="https://repositories.intel.com/graphics/intel-graphics.key"
+COPY assets/embargo/setup-certs.sh /tmp/
+RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
+
+ARG INTEL_GFX_KEY_URL="https://repositories.gfxs.intel.com/internal/intel-graphics.key"
 RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi
 
-ARG INTEL_GFX_APT_REPO="deb https://repositories.intel.com/graphics/ubuntu focal main"
+ARG INTEL_GFX_APT_REPO="deb https://repositories.gfxs.intel.com/internal/ubuntu focal main"
 RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
 
 
@@ -238,7 +241,7 @@ RUN apt-get update && \
     libxcb-shm0 \
     less \
     man-db \
-    libmfx-tools \
+    libvpl-tools \
     libnginx-mod-http-lua \
     libnginx-mod-rtmp \
     linux-tools-generic \
