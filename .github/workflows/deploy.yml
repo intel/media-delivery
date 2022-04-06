@@ -30,6 +30,7 @@ jobs:
     runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
     steps:
     - uses: actions/checkout@v2
+      with:
         repository: ${{inputs.repo}}
     - run: |
         image=${{inputs.image}}
