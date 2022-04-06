@@ -12,7 +12,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Helper script to minitor HLS streaming from server side. You can exit from
+Helper script used to monitor HLS streaming from the server side. You can exit from
 the script with CTRL^C. You should see the following output:
 
 ------------
