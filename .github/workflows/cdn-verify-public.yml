@@ -1,0 +1,79 @@
+name: cdn-verify-public
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: 'PR to verify?'
+        required: true
+  push:
+    branches:
+    - master
+    paths:
+    - '.github/workflows/cdn-verify-public.yml'
+    - '.github/workflows/build.yml'
+    - '.github/workflows/test.yml'
+    - '.github/workflows/deploy-rolling.yml'
+  pull_request:
+    branches:
+    - master
+    paths-ignore:
+    - '.github/workflows/cdn-verify-public.yml'
+    - '.github/workflows/build.yml'
+    - '.github/workflows/test.yml'
+    - '.github/workflows/deploy-rolling.yml'
+
+jobs:
+  prepare:
+    runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
+    outputs:
+      pr: ${{steps.prepare.outputs.pr}}
+    steps:
+    - id: prepare
+      run: |
+        if [ ${{github.event_name}} = "workflow_dispatch" ]; then \
+          echo "::set-output name=pr::${{github.event.inputs.pr}}"
+        else \
+          echo "::set-output name=pr::"; \
+        fi
+
+  build:
+    needs: prepare
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
+    with:
+      repo: intel/media-delivery
+      pr: ${{needs.prepare.outputs.pr}}
+      flavor: public
+      dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
+
+  test-gen9:
+    needs: [prepare, build]
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    with:
+      repo: intel/media-delivery
+      pr: ${{needs.prepare.outputs.pr}}
+      image: ${{needs.build.outputs.image}}
+      test_enctools: 'OFF'
+      on: gen9
+      kernel: linux
+
+  test-dg1:
+    needs: [prepare, build]
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    with:
+      repo: intel/media-delivery
+      pr: ${{needs.prepare.outputs.pr}}
+      image: ${{needs.build.outputs.image}}
+      test_enctools: 'OFF'
+      on: dg1
+      kernel: public
+
+  deploy-rolling:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: [build, test-gen9, test-dg1]
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy-rolling.yml@master
+    with:
+      repo: intel/media-delivery
+      image: ${{needs.build.outputs.image}}
+      gta-asset-name: agama-public
+

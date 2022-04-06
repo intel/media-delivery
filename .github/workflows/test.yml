@@ -3,6 +3,16 @@ name: test
 on:
   workflow_call:
     inputs:
+      repo:
+        description: 'Which Github repo to clone?'
+        required: false
+        type: string
+        default: ${{github.repository}}
+      pr:
+        description: 'Which PR to verify?'
+        required: false
+        type: string
+        default: ''
       image:
         description: 'Which docker image to test?'
         required: true
@@ -31,7 +41,15 @@ jobs:
     runs-on: [self-hosted, osgc-solutions, '${{inputs.on}}', '${{inputs.kernel}}' ]
     steps:
     - uses: actions/checkout@v2
+      with:
+        repository: ${{inputs.repo}}
     - run: |
+        pr=${{inputs.pr}}
+        if [ -n "$pr" ]; then \
+          git fetch origin pull/$pr/head:pr_$pr; \
+          git checkout pr_$pr; \
+        fi
+
         image=${{inputs.image}}
         echo "Testing $image ..."
         docker pull $image

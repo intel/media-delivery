@@ -3,6 +3,21 @@ name: build
 on:
   workflow_call:
     inputs:
+      # NOTE: repo/pr pair might correspond to other repo which
+      # we want to build (specifically - intel/media-delivery).
+      # As such, there might be actually 2 pairs at the same time:
+      #  * repo/pr - which might be public intel/media-delivery and pr
+      #  * private repo + pr for private repo
+      repo:
+        description: 'Which Github repo to clone?'
+        required: false
+        type: string
+        default: ${{github.repository}}
+      pr:
+        description: 'Which PR to verify?'
+        required: false
+        type: string
+        default: ''
       gfx_repo_key:
         description: 'Which APT repo key to use (http location)?'
         required: false
@@ -17,10 +32,6 @@ on:
         type: string
       dockerfile:
         description: 'Which dockerfile to use?'
-        required: true
-        type: string
-      pr_number:
-        description: 'What is PR number?'
         required: true
         type: string
     secrets:
@@ -46,23 +57,45 @@ jobs:
       tagname: ${{steps.build.outputs.tagname}}
     steps:
     - uses: actions/checkout@v2
+      with:
+        repository: ${{inputs.repo}}
     - id: build
       shell: bash
       run: |
+        pr=${{inputs.pr}}
+        priv_pr=${{github.event.pull_request.number}}
+
         tagname="$REGISTRY/intel-media-delivery/cdn/"
-        if [ -n "${{inputs.pr_number}}" ]; then \
-          tagname+=master/mr/${{inputs.pr_number}}
+        if [ "${{inputs.repo}}" = "intel/media-delivery" ]; then
+          tagname+=public/
         else
-          tagname+=embargo/stash/$GITHUB_RUN_ID
+          tagname+=embargo/
         fi
+        if [ -n "$pr" ]; then \
+          tagname+=verify/$pr/
+        fi
+        if [ -n "$priv_pr" ]; then \
+          tagname+=mr/$priv_pr
+        else
+          tagname+=stash/$GITHUB_RUN_ID
+        fi
+
         image=$tagname:${{ inputs.flavor }}
         echo "Building $image ..."
+        echo "  repo=${{inputs.repo}}"
+        echo "  pr=$pr"
+        echo "  priv_pr=$priv_pr"
         echo "  no_proxy=$no_proxy"
         echo "  gfx_repo_key=${{inputs.gfx_repo_key}}"
         echo "  gfx_repo=${{inputs.gfx_repo}}"
         echo "  flavor=${{inputs.flavor}}"
         echo "  dockerfile=${{inputs.dockerfile}}"
-        echo "  pr_number=${{inputs.pr_number}}"
+
+        if [ -n "$pr" ]; then \
+          git fetch origin pull/$pr/head:pr_$pr; \
+          git checkout pr_$pr; \
+        fi
+
         docker pull $BASE_IMAGE
         MY_ARGS=()
         if [ -n "${{inputs.gfx_repo_key}}" ]; then \
