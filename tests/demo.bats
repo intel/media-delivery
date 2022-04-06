@@ -199,6 +199,22 @@ function test_ffmpeg_capture() {
   test_ffmpeg_capture "vod/hevc"
 }
 
+@test "demo vod/avc-enctools capture" {
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  if [ $MDS_DEMO != "cdn" ]; then
+    skip "note: mode not supported for '$MDS_DEMO' demo"
+  fi
+  test_ffmpeg_capture "vod/avc-enctools"
+}
+
+@test "demo vod/hevc-enctools capture" {
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  if [ $MDS_DEMO != "cdn" ]; then
+    skip "note: mode not supported for '$MDS_DEMO' demo"
+  fi
+  test_ffmpeg_capture "vod/hevc-enctools"
+}
+
 h265="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
   -c:v h264_qsv -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 20 \
@@ -247,4 +263,35 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   [ $status -eq 0 ]
 
   test_expect vod/hevc WAR_noaudio 20
+}
+
+@test "demo vod/avc-enctools from noaudio" {
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
+    demo --exit vod/avc-enctools/WAR_noaudio;"
+  [ $status -eq 0 ]
+
+  test_expect vod/avc-enctools WAR_noaudio 20
+}
+
+@test "demo vod/hevc-enctools from noaudio" {
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  if [ $MDS_DEMO != "cdn" ]; then
+    skip "note: mode not supported for '$MDS_DEMO' demo"
+  fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
+    demo --exit vod/hevc-enctools/WAR_noaudio;"
+  [ $status -eq 0 ]
+
+  test_expect vod/hevc-enctools WAR_noaudio 20
 }

@@ -13,15 +13,15 @@ SYNOPSIS
 DESCRIPTION
 -----------
 `demo setup` is a script which helps to setup a demo on a container launch.
-It cheks for a various issues which might prevent successful demo and
-returns non-zero exit status if any detected. Script also might adjust some
-access permissions, for example to allow access GPU under specific user
+It checks for various issues which might prevent successful demo and
+returns a non-zero exit status if any errors are detected. The script also may
+adjust some access permissions, for example to allow access GPU under specific user
 accounts.
 
 USER ACCOUNTS
 -------------
 user::
-	This is a user account used to:
+	This is a user account which is used to:
 	* Run nginx server
 	* Run ffmpeg transcoding scheduled by nginx server
 	* Run demo client(s) under the container (if that's the case)
@@ -31,17 +31,17 @@ user::
 PATHS
 -----
 /opt/data/artifacts::
-	Location for various demo output artifacts. For example, from running
-	server side ffmpeg transcoding and monitoring scripts and/or client
-	side player and monitoring scripts. 'user' needs 'rw' permissions for
-	this location.
+	Location designated for various demo output artifacts. For example,
+        the output from running the server side ffmpeg transcoding and monitoring
+        scripts and/or client side player and monitoring scripts. 'user' needs 'rw'
+        permissions for this location.
 
 /opt/data/content::
-	Location where you can put your own content for the demo to see.
-	'user' needs 'r' permission for this location.
+	Location where you can put your own content for the demo. 'user' needs 'r'
+        permission for this location.
 
 /var/www/hls::
-	Location where HLS stream is produced to. 'user' needs 'rw'
+	Location where HLS stream is generated. 'user' needs 'rw'
 	permissions for this location.
 
 EXIT STATUS

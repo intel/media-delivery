@@ -12,18 +12,18 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Helper script to trigger HLS streaming and capture it to the file.
+Helper script which is used to trigger HLS streaming and capture it to the file.
 Script recognizes the following stream specifications:
 
 * http://localhost:8080/<stream>/index.m3u8
 * <stream> aka http://localhost:8080/<stream>/index.m3u8
 
-Script starts capture in the background process and enters monitoring
+Script starts the capture in the background process and enters monitoring
 loop. If terminal is attached you can exit from it with CTRL^C. Upon
 exit script will enter bash shell for you to wander about. If
 '--exit' option was specified, script will exit automatically
-upon capturing all the streams. If terminal is not attached monitoring
-loop will produce outpout to `stdout`.
+upon capturing all the streams. If terminal is not attached, the monitoring
+loop will produce output to `stdout`.
 
 If the script was called as
 ------------
@@ -48,7 +48,7 @@ Completed clients: 0
 
 It says that there is a single client being monitored (`Total clients`).
 It is currently running (`Running clients`) and its running status is as
-follows: file being capured is `vod/avc/WAR_TRAILER_HiQ_10_withAudio`,
+follows: file being captured is `vod/avc/WAR_TRAILER_HiQ_10_withAudio`,
 currently 8.0M were received which is around 250 frames and average receiving
 speed is 24 fps.
 
