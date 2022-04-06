@@ -67,7 +67,7 @@ type=${tmp##/}
 addlog "type=$type, stream=$stream, index=$index"
 
 function request_valid() {
-  if [[ ! "$type" =~ ^(vod/avc|vod/hevc|vod/abr)$ ]]; then
+  if [[ ! "$type" =~ ^(vod/avc|vod/hevc|vod/abr|vod/avc-enctools|vod/hevc-enctools)$ ]]; then
     return 1
   fi
   if [ -z "$stream" -o "$index" != "index.m3u8" ]; then
@@ -154,15 +154,16 @@ if [ "$type" = "vod/avc" ]; then
   bitrate=3000000
   maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
   bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
+  initbuf=$(python3 -c 'print(int('$bufsize' / 2))')
   if [ -n "$audio" ]; then
     as="-c:a copy"
     a0=",a:0"
   fi
   cmd=(ffmpeg
     $accel $dec_plugin -re -i $to_play $as
-    -c:v h264_qsv -profile:v high -preset medium
-      -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
-      -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256
+    -c:v h264_qsv -profile:v high -preset medium -async_depth 1
+      -b:v $bitrate -maxrate $maxrate -bufsize $bufsize -rc_init_occupancy $initbuf
+      -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 -strict -1 -bitrate_limit 0
     -f hls -hls_time $hls_time -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
@@ -172,15 +173,16 @@ elif [ "$type" = "vod/hevc" ]; then
   bitrate=3000000
   maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
   bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
+  initbuf=$(python3 -c 'print(int('$bufsize' / 2))')
   if [ -n "$audio" ]; then
     as="-c:a copy"
     a0=",a:0"
   fi
   cmd=(ffmpeg
     $accel $dec_plugin -re -i $to_play $as
-    -c:v hevc_qsv -profile:v main -preset medium
-      -b:v $bitrate -maxrate $maxrate -bufsize $bufsize
-      -extbrc 1 -bf 7 -refs 5 -g 256
+    -c:v hevc_qsv -profile:v main -preset medium -async_depth 1
+      -b:v $bitrate -maxrate $maxrate -bufsize $bufsize -rc_init_occupancy $initbuf
+      -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -g 256 -strict -1
     -f hls -hls_time $hls_time -hls_playlist_type event
     -master_pl_name index.m3u8
     -hls_segment_filename stream_%v/data%06d.ts
@@ -204,6 +206,46 @@ elif [ "$type" = "vod/abr" ]; then
     -hls_segment_filename stream_%v/data%06d.ts
     -strftime_mkdir 1
     -var_stream_map "v:0$a0 v:1$a1" stream_%v.m3u8)
+elif [ "$type" = "vod/avc-enctools" ]; then
+  bitrate=3000000
+  maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
+  bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
+  initbuf=$(python3 -c 'print(int('$bufsize' / 2))')
+  if [ -n "$audio" ]; then
+    as="-c:a copy"
+    a0=",a:0"
+  fi
+  cmd=(ffmpeg
+    $accel $dec_plugin -re -extra_hw_frames 64 -i $to_play $as
+    -c:v h264_qsv -profile:v high -preset medium -async_depth 1
+      -b:v $bitrate -maxrate $maxrate -bufsize $bufsize -rc_init_occupancy $initbuf
+      -look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1
+      -bf 7 -refs 5 -g 256 -strict -1 -bitrate_limit 0
+    -f hls -hls_time $hls_time -hls_playlist_type event
+    -master_pl_name index.m3u8
+    -hls_segment_filename stream_%v/data%06d.ts
+    -strftime_mkdir 1
+    -var_stream_map "v:0$a0" stream_%v.m3u8)
+elif [ "$type" = "vod/hevc-enctools" ]; then
+  bitrate=3000000
+  maxrate=$(python3 -c 'print(int('$bitrate' * 2))')
+  bufsize=$(python3 -c 'print(int('$bitrate' * 4))')
+  initbuf=$(python3 -c 'print(int('$bufsize' / 2))')
+  if [ -n "$audio" ]; then
+    as="-c:a copy"
+    a0=",a:0"
+  fi
+  cmd=(ffmpeg
+    $accel $dec_plugin -re -extra_hw_frames 64 -i $to_play $as
+    -c:v hevc_qsv -profile:v main -preset medium -async_depth 1
+      -b:v $bitrate -maxrate $maxrate -bufsize $bufsize -rc_init_occupancy $initbuf
+      -look_ahead_depth 40 -extbrc 1 -b_strategy 1
+      -bf 7 -refs 4 -g 256 -strict -1
+    -f hls -hls_time $hls_time -hls_playlist_type event
+    -master_pl_name index.m3u8
+    -hls_segment_filename stream_%v/data%06d.ts
+    -strftime_mkdir 1
+    -var_stream_map "v:0$a0" stream_%v.m3u8)
 else
   cmd=(bash -c 'echo "bug: unsupported streaming type: $type"; exit 1;')
 fi

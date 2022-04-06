@@ -12,19 +12,19 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-'demo-bash' is media delivery containers entrypoint. It gets executed anytime
-you try to run anything via container. This script assures that correct
-environment is setup and acts as follows. First it `source /etc/demo.env` to
-get demo environment variables. Then it executes `demo-setup` script which
-should setup demo environment and return non-zero exit status in case of
-any errors. If 'demo-bash' sees an error form `demo-setup` it exits
-immediately dumping error message to `stderr`. This behavior can be
-overwritten with `MDS_IGNORE_ERRORS=yes` enviroment variable.
+'demo-bash' is media delivery container's entrypoint. It gets executed anytime
+you try to run anything via container. This script ensures that the correct
+environment is setup. It consists of the following steps. First it runs
+`source /etc/demo.env` to set the demo environment variables. Then it executes
+`demo-setup` script which sets up the demo environment and returns a non-zero
+exit status in case of any errors. If 'demo-bash' sees an error form `demo-setup`
+it exits immediately dumping error message to `stderr`. This behavior can be
+overridden with `MDS_IGNORE_ERRORS=yes` environment variable.
 
-Assuming that `demo-setup` succeeded 'demo-bash' verifies whether any groups
-were adjusted and reenters shell if needed.
+Assuming that `demo-setup` succeeded, 'demo-bash' verifies whether any groups
+were adjusted and re-enters shell if needed.
 
-In the very end 'demo-bash' executes specified command.
+In the very end 'demo-bash' executes the specified command.
 
 Media delivery containers are configured in a way that if no command is
 specified they would just enter shell maybe displaying some welcome

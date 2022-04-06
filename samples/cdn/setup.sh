@@ -61,7 +61,7 @@ done
   echo "export DEMO_PREFIX=$prefix"
   # these are streaming types supported by the demo, i.e. <type> in the following address:
   #   http://localhost:8080/vod/<type>/<stream>.index.m3u8
-  echo "export DEMO_STREAM_TYPES=vod/avc:vod/hevc:vod/abr"
+  echo "export DEMO_STREAM_TYPES=vod/avc:vod/hevc:vod/abr:vod/avc-enctools:vod/hevc-enctools"
   echo "export PATH=\$DEMO_PREFIX/bin:/usr/share/mfx/samples/:\$PATH"
   echo "export PYTHONUSERBASE=\$DEMO_PREFIX"
   echo "export MANPATH=\$DEMO_PREFIX/share/man:\$MANPATH"
