@@ -30,7 +30,6 @@ jobs:
       gfx_repo: 'deb https://repositories.gfxs.intel.com/internal/ubuntu focal-untested main'
       flavor: focal-untested
       dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
-      pr: ${{github.event.pull_request.number}}
 
   test-gen9:
     needs: build
