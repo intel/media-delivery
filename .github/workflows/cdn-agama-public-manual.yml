@@ -63,7 +63,7 @@ jobs:
       kernel: dual-gpu
 
   deploy:
-    needs: [build, test-dg1, test-dg2]
+    needs: [build, test-gen9, test-dg1, test-dg2]
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       repo: intel/media-delivery
