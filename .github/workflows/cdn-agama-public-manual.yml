@@ -8,10 +8,10 @@ on:
         required: true
 
 jobs:
-  repo:
+  prepare:
     runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
     outputs:
-      repo: ${{steps.repo.outputs.repo}}
+      repo: ${{steps.prepare.outputs.repo}}
     steps:
     - id: prepare
       run: |
@@ -26,7 +26,7 @@ jobs:
     with:
       repo: intel/media-delivery
       gfx_repo_key: 'https://gfx-assets-build.intel.com/artifactory/api/gpg/key/public'
-      gfx_repo: 'deb https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build ${{needs.repo.outputs.repo}} ${{github.event.inputs.ver}}'
+      gfx_repo: 'deb https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build ${{needs.prepare.outputs.repo}} ${{github.event.inputs.ver}}'
       flavor: ${{github.event.inputs.ver}}
       dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
     secrets:
