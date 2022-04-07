@@ -13,7 +13,7 @@ jobs:
     outputs:
       repo: ${{steps.repo.outputs.repo}}
     steps:
-    - id: repo
+    - id: prepare
       run: |
         FLAVOR=${{github.event.inputs.ver}}
         A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/")
@@ -21,7 +21,7 @@ jobs:
         echo "::set-output name=repo::untested/main/$A/$B/focal"
 
   build:
-    needs: repo
+    needs: prepare
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
     with:
       repo: intel/media-delivery
@@ -33,11 +33,10 @@ jobs:
       SYS_M4_PASSWD: ${{ secrets.SYS_M4_PASSWD }}
 
   test-gen9:
-    needs: [prepare, build]
+    needs: build
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
     with:
       repo: intel/media-delivery
-      pr: ${{needs.prepare.outputs.pr}}
       image: ${{needs.build.outputs.image}}
       test_enctools: 'OFF'
       on: gen9
