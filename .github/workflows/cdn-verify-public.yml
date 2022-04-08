@@ -6,6 +6,11 @@ on:
       pr:
         description: 'PR to verify?'
         required: true
+      ver:
+        description: 'Agama version to use (ex.: agama-ci-embargo-517, agama-ci-prerelease-144)'
+        required: false
+        default: ''
+
   push:
     branches:
     - master
@@ -28,6 +33,7 @@ jobs:
     runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
     outputs:
       pr: ${{steps.prepare.outputs.pr}}
+      repo: ${{steps.prepare.outputs.repo}}
     steps:
     - id: prepare
       run: |
@@ -36,6 +42,14 @@ jobs:
         else \
           echo "::set-output name=pr::"; \
         fi
+        if [ -n ${{github.event.inputs.ver}} ]; then \
+          FLAVOR=${{github.event.inputs.ver}}; \
+          A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/"); \
+          B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/"); \
+          echo "::set-output name=repo::untested/main/$A/$B/focal"; \
+       else \
+          echo "::set-output name=repo::"; \
+       fi
 
   build:
     needs: prepare
@@ -44,6 +58,18 @@ jobs:
       repo: intel/media-delivery
       pr: ${{needs.prepare.outputs.pr}}
       flavor: public
+      dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
+
+  build-ver:
+    if: ${{github.event.inputs.ver}} != ''
+    needs: prepare
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
+    with:
+      repo: intel/media-delivery
+      pr: ${{needs.prepare.outputs.pr}}
+      gfx_repo_key: 'https://gfx-assets-build.intel.com/artifactory/api/gpg/key/public'
+      gfx_repo: 'deb https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build ${{needs.prepare.outputs.repo}} ${{github.event.inputs.ver}}'
+      flavor: ${{github.event.inputs.ver}}
       dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
 
   test-gen9:
@@ -57,6 +83,17 @@ jobs:
       on: gen9
       kernel: linux
 
+  test-gen9-ver:
+    needs: [prepare, build-ver]
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    with:
+      repo: intel/media-delivery
+      pr: ${{needs.prepare.outputs.pr}}
+      image: ${{needs.build-ver.outputs.image}}
+      test_enctools: 'OFF'
+      on: gen9
+      kernel: linux
+
   test-dg1:
     needs: [prepare, build]
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
@@ -64,6 +101,17 @@ jobs:
       repo: intel/media-delivery
       pr: ${{needs.prepare.outputs.pr}}
       image: ${{needs.build.outputs.image}}
+      test_enctools: 'OFF'
+      on: dg1
+      kernel: public
+
+  test-dg1-ver:
+    needs: [prepare, build-ver]
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    with:
+      repo: intel/media-delivery
+      pr: ${{needs.prepare.outputs.pr}}
+      image: ${{needs.build-ver.outputs.image}}
       test_enctools: 'OFF'
       on: dg1
       kernel: public
