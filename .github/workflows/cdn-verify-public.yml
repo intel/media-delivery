@@ -10,7 +10,6 @@ on:
         description: 'Agama version to use (ex.: agama-ci-embargo-517, agama-ci-prerelease-144)'
         required: false
         default: ''
-
   push:
     branches:
     - master
@@ -61,7 +60,7 @@ jobs:
       dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
 
   build-ver:
-    if: ${{github.event.inputs.ver}} != ''
+    if: github.event_name == 'workflow_dispatch'
     needs: prepare
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
     with:
