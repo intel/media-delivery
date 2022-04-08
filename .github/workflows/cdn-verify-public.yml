@@ -47,9 +47,9 @@ jobs:
           A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/"); \
           B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/"); \
           echo "::set-output name=repo::untested/main/$A/$B/focal"; \
-       else \
+        else \
           echo "::set-output name=repo::"; \
-       fi
+        fi
 
   build:
     needs: prepare
