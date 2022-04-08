@@ -113,7 +113,7 @@ jobs:
       image: ${{needs.build-ver.outputs.image}}
       test_enctools: 'OFF'
       on: dg1
-      kernel: public
+      kernel: prelim
 
   deploy-rolling:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
