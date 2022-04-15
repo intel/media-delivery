@@ -47,7 +47,7 @@ jobs:
       image: ${{needs.build.outputs.image}}
       test_enctools: 'ON'
       on: dg2
-      kernel: dual-gpu
+      kernel: linux
 
   deploy-rolling:
     if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'repository_dispatch'
