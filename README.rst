@@ -29,44 +29,17 @@ Key topics we are covering:
 * Quality and Performance measuring infrastructure for data collection
 * Intel GPU Performance monitoring
 
-Explore more containers, models and more on the
+Explore more containers, models and tools on the
 `Intel® oneContainer Portal <https://software.intel.com/containers>`_.
 
-Host requirements
------------------
-
-To run these samples you need to:
-
-1. Have a system with enabled Intel GPU card supported by Intel media driver
-   (refer to https://github.com/intel/media-driver documentation for the list of
-   supported GPUs)
-2. Run Linux OS with up-to-date Linux kernel supporting underlying Intel GPU
-3. Have installed and configured Docker version 17.05 or later (see `instructions <https://docs.docker.com/install/>`_)
-
-You might need to follow specific system setup instruction if you use newer
-graphics processors such as `Intel® Iris® Xe MAX Graphics <https://www.intel.com/content/www/us/en/products/discrete-gpus/iris-xe-max.html>`_.
-Visit `this page <https://dgpu-docs.intel.com/devices/index.html>`_ to find appropriate
-instruction for your device if your out of the box Linux distro does not support
-it. In particular:
-
-* Intel® Iris® Xe MAX Graphics (formerly DG1) setup insruction is `here <https://dgpu-docs.intel.com/devices/iris-xe-max-graphics/index.html>`_
-
-Other than that you might wish to install some tools on your host (or some other
-system capable of reaching the container over network) to be able to interact with the
-service(s) running inside the container. Consider having on a host the following:
-
-1. `VLC player <https://www.videolan.org/vlc/index.html>`_ to be able to play streaming
-   videos
-2. `ffmpeg <http://ffmpeg.org/>`_ to be able to receive and save streaming videos
-
-How to get?
------------
-
-**Hint:** to install a docker refer to Docker install
-`instructions <https://docs.docker.com/install/>`_.
+Build and Setup
+---------------
 
 Each sample is available in a form of `Docker <https://docker.com>`_ container
-which you need to build locally. To build default sample (`CDN`_) run::
+which you need to build locally. Please, use Linux distro for the build and
+Docker version 17.05 or later (see `install instructions <https://docs.docker.com/install/>`_).
+
+To build default sample (`CDN`_) run::
 
   docker build \
     $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
@@ -77,19 +50,46 @@ which you need to build locally. To build default sample (`CDN`_) run::
 Use ``--build-arg SAMPLE=$SAMPLE`` docker build argument to specify other
 sample to build.
 
-There are few dockerfiles you can use to build the same sample. They differ
-by origin of some components included into the docker image.
+There are few dockerfiles you can use to build samples. They differ
+by origin of the Intel media stack components included into the docker image which implies
+which Intel GPUs and media codec features will be supported. Some media stacks might
+also require special host setup instruction. See table below.
 
-* `docker/ubuntu20.04/native/Dockerfile <docker/ubuntu20.04/native/Dockerfile>`_ - Intel media stack
-  is installed from Ubuntu distro packages
++--------------------------------------------+--------------------------------------+------------------------------------------------+----------------------------------+
+| Dockerfile                                 | Intel media stack origin             | Supported Intel GPUs                           | Host setup instructions          |
++============================================+======================================+================================================+==================================+
+| `docker/ubuntu20.04/native/Dockerfile`_    | Ubuntu 20.04                         | Gen8+, check Ubuntu 20.04 documentation        | Use any Linux distribution which |
+|                                            |                                      |                                                | supports required platform       |
++--------------------------------------------+--------------------------------------+------------------------------------------------+----------------------------------+
+| `docker/ubuntu20.04/intel-gfx/Dockerfile`_ | `Intel Graphics Package Repository`_ | `Intel® Iris® Xe MAX Graphics`_ (formerly DG1) | `DG1 Setup Instruction`_         |
++                                            +                                      +------------------------------------------------+----------------------------------+
+|                                            |                                      | Platforms starting from Gen8 and prior to DG1  | Use any Linux distribution which |
+|                                            |                                      |                                                | supports required platform       |
++--------------------------------------------+--------------------------------------+------------------------------------------------+----------------------------------+
 
-* `docker/ubuntu20.04/intel-gfx/Dockerfile <docker/ubuntu20.04/intel-gfx/Dockerfile>`_ - Intel media stack
-  is installed from `Intel Graphics Package Repository <https://dgpu-docs.intel.com/>`_
+To use some of the examples below you might wish to install the following tools on your
+host (or some other system capable of reaching the container over network) to be able
+to interact with the service(s) running inside the container:
 
-Going with `Intel Graphics Package Repository <https://dgpu-docs.intel.com/>`_ would
-usually allow to fetch the most recent package versions.
+1. `VLC player <https://www.videolan.org/vlc/index.html>`_ to be able to play streaming
+   videos
+2. `ffmpeg <http://ffmpeg.org/>`_ to be able to receive and save streaming videos
 
-Above dockerfiles are being generated from `m4 <https://www.gnu.org/software/m4/>`_
+.. _docker/ubuntu20.04/native/Dockerfile: docker/ubuntu20.04/native/Dockerfile
+.. _docker/ubuntu20.04/intel-gfx/Dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
+
+.. _Intel Graphics Package Repository: https://dgpu-docs.intel.com/
+
+.. _Intel® Iris® Xe MAX Graphics: https://www.intel.com/content/www/us/en/products/discrete-gpus/iris-xe-max.html
+.. _DG1 Setup Instruction: https://dgpu-docs.intel.com/devices/iris-xe-max-graphics/index.html
+
+Contibuting
+-----------
+
+Feedback and contributions are welcome. Please, help improve the project by submitting
+issues and pull requests with fixes.
+
+Mind that dockerfiles are being generated from `m4 <https://www.gnu.org/software/m4/>`_
 templates via `cmake <https://cmake.org/>`_ build system. Refer to
 `generating dockerfiles <doc/docker.rst>`_ document for further details.
 
