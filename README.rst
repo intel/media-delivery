@@ -137,7 +137,7 @@ parts:
 
 1. Service(s) running inside the container which produces and distributes media
    stream(s)
-2. Client(s) running somewhere (not neccessarily inside the container)
+2. Client(s) running somewhere (not necessarily inside the container)
    which consume media streams
 
 To get list of streams you will be able to play, execute::
@@ -161,7 +161,7 @@ described below. Mind however that HEVC streaming might not be supported by
 some client applications, for example, web browsers.
 
 If you want to run a client on some other system rather than host, make sure
-to substituite ``localhost`` with the host IP address::
+to substitute ``localhost`` with the host IP address::
 
   http://<host-ip>:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio/index.m3u8
 
@@ -204,7 +204,7 @@ Few terminals will be opened in a tiled layout and provide the following informa
 
 Tiled terminals are managed by `tmux <https://github.com/tmux/tmux>`_. Please, refer to
 its documentation if you wish to navigate and play around with the demo. To
-terminate, just press CTRL+C and CTRL+D repreatedly to stop and exit each
+terminate, just press CTRL+C and CTRL+D repeatedly to stop and exit each
 script and/or monitoring process.
 
 Interactive demo mode
@@ -274,7 +274,7 @@ option to emulate multiple streams available for streaming::
 
 "CDN" sample can be further scaled. For example, transcoding requests might be served
 by the dedicated system where server similar to socat one is running.
-Furthermore, each transcoding might be done on the dedicated GPU-capbale system
+Furthermore, each transcoding might be done on the dedicated GPU-capable system
 (a node). Typically, such tools like kafka and zookeeper are being used to
 manage these many nodes and orchestration server. This sample however intentionally
 avoids scaling examples and focuses on streaming configuration basics and key aspects
