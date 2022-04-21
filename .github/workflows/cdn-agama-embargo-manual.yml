@@ -15,6 +15,7 @@ jobs:
     steps:
     - id: repo
       run: |
+        echo "::notice title=agama.version::${{github.event.inputs.agama_embargo_version}}"
         FLAVOR=${{github.event.inputs.agama_embargo_version}}
         A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/")
         B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/")

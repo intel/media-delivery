@@ -37,11 +37,13 @@ jobs:
     - id: prepare
       run: |
         if [ ${{github.event_name}} = "workflow_dispatch" ]; then \
-          echo "::set-output name=pr::${{github.event.inputs.pr}}"
+          echo "::notice title=pr::${{github.event.inputs.pr}}"; \
+          echo "::set-output name=pr::${{github.event.inputs.pr}}"; \
         else \
           echo "::set-output name=pr::"; \
         fi
         if [ -n ${{github.event.inputs.ver}} ]; then \
+          echo "::notice title=agama.version::${{github.event.inputs.ver}}"; \
           FLAVOR=${{github.event.inputs.ver}}; \
           A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/"); \
           B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/"); \

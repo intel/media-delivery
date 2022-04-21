@@ -15,6 +15,7 @@ jobs:
     steps:
     - id: prepare
       run: |
+        echo "::notice title=agama.version::${{github.event.inputs.ver}}"
         FLAVOR=${{github.event.inputs.ver}}
         A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/")
         B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/")
