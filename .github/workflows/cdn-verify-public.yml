@@ -21,7 +21,7 @@ on:
   pull_request:
     branches:
     - master
-    paths-ignore:
+    paths:
     - '.github/workflows/cdn-verify-public.yml'
     - '.github/workflows/build.yml'
     - '.github/workflows/test.yml'
@@ -113,7 +113,7 @@ jobs:
       repo: intel/media-delivery
       pr: ${{needs.prepare.outputs.pr}}
       image: ${{needs.build-ver.outputs.image}}
-      test_enctools: 'OFF'
+      test_enctools: 'ON'
       on: dg1
       kernel: prelim
 
