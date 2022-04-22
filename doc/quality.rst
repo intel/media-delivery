@@ -441,7 +441,7 @@ Intel Media SDK sample-multi-transcode VBR (EncTools BRC Encoding)
 
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height  -override_encoder_framerate $framerate \
-    -lowpower:on -lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \ 
+    -lowpower:on -lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4))  \
     -o::h265 $output
 
@@ -531,7 +531,7 @@ ffmpeg-qsv CBR (Encoding)
 Intel Media SDK sample-multi-transcode VBR (Encoding)
 *****************************************************
 ::
-   
+
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
     -lowpower:on -num_ref 3 -gop_size 256 -dist 8 -MemType::system -bref -hrd 250 -InitialDelayInKB $(($bitrateKb / 4)) \
@@ -540,7 +540,7 @@ Intel Media SDK sample-multi-transcode VBR (Encoding)
 Intel Media SDK sample-multi-transcode CBR (Encoding)
 *****************************************************
 ::
-   
+
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
    -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
    -lowpower:on -num_ref 3 -gop_size 256 -dist 8 -MemType::system -bref -hrd 250 -InitialDelayInKB $(($bitrateKb / 8)) \
@@ -590,8 +590,8 @@ Reference Codecs
 ----------------
 
 For assessing the quality of Intel's H.264 Advanced Video Coding (AVC) and H.265 High Efficiency Video Coding (HEVC) codecs we are
-using ffmpeg-x264 and ffmpeg-x265 as reference codecs in ``veryslow`` preset for the BD-rate measure. For assessing the quality of 
-Intel's AV1 codec we are using ffmpeg-x265 as reference codec in ``veryslow`` preset for the BD-rate measure. The reference codecs 
+using ffmpeg-x264 and ffmpeg-x265 as reference codecs in ``veryslow`` preset for the BD-rate measure. For assessing the quality of
+Intel's AV1 codec we are using ffmpeg-x265 as reference codec in ``veryslow`` preset for the BD-rate measure. The reference codecs
 are ran with 12 threads and ``-tune psnr`` option.
 
 ffmpeg-x264 VBR reference

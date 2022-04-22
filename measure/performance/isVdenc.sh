@@ -30,4 +30,3 @@ segment=${seg[0]}
 [ -z "$(vainfo -a --display drm --device $DEVICE 2> /dev/null | sed -n $segment | grep VA_RC_VBR)" ] && echo "VDENC $1 VBR is not supported" && exit 12
 echo "VDENC" $1 "CBR and VBR are supported"
 exit 0
-
