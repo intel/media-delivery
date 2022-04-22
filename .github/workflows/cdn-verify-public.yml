@@ -61,6 +61,11 @@ jobs:
             echo "::set-output name=url::https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build"
             echo "::set-output name=repo::untested/main/$A/$B/focal"
             echo "::set-output name=ver::$ver"
+          else
+            echo "::notice title=agama.version::agama-ci-prerelease@latest"
+            echo "::set-output name=url::https://gfx-assets-build.intel.com/artifactory/gfx-debs"
+            echo "::set-output name=repo::agama/prerelease/focal-untested"
+            echo "::set-output name=ver::main"
           fi
         fi
 
