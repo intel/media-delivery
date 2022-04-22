@@ -33,23 +33,35 @@ jobs:
     outputs:
       pr: ${{steps.prepare.outputs.pr}}
       repo: ${{steps.prepare.outputs.repo}}
+      url: ${{steps.prepare.outputs.url}}
+      ver: ${{steps.prepare.outputs.ver}}
     steps:
     - id: prepare
       run: |
-        if [ ${{github.event_name}} = "workflow_dispatch" ]; then \
-          echo "::notice title=pr::${{github.event.inputs.pr}}"; \
-          echo "::set-output name=pr::${{github.event.inputs.pr}}"; \
-        else \
-          echo "::set-output name=pr::"; \
-        fi
-        if [ -n ${{github.event.inputs.ver}} ]; then \
-          echo "::notice title=agama.version::${{github.event.inputs.ver}}"; \
-          FLAVOR=${{github.event.inputs.ver}}; \
-          A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/"); \
-          B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/"); \
-          echo "::set-output name=repo::untested/main/$A/$B/focal"; \
-        else \
-          echo "::set-output name=repo::"; \
+        if [[ "${{github.event_name}}" == "push" || "${{github.event_name}}" == "pull_request" ]]; then
+          # NOTE: uncomment/adjust below settings for custom twicks
+          #echo pr=XXX
+          #echo "::notice title=pr::$pr"
+          #echo "::set-output name=pr::$pr"
+          echo "::set-output name=url::https://gfx-assets-build.intel.com/artifactory/gfx-debs"
+          echo "::set-output name=repo::agama/prerelease/focal-untested"
+          echo "::set-output name=ver::main"
+        else # which is "workflow_dispatch"
+          pr=${{github.event.inputs.pr}}
+          ver=${{github.event.inputs.ver}}
+          if [ -n "$pr" ]; then
+            echo "::notice title=pr::$pr"
+            echo "::set-output name=pr::$pr"
+          fi
+          if [ -n "$ver" ]; then
+            echo "::notice title=agama.version::$ver"
+            FLAVOR=$ver
+            A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/")
+            B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/")
+            echo "::set-output name=url::https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build"
+            echo "::set-output name=repo::untested/main/$A/$B/focal"
+            echo "::set-output name=ver::$ver"
+          fi
         fi
 
   build:
@@ -62,15 +74,14 @@ jobs:
       dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
 
   build-ver:
-    if: github.event_name == 'workflow_dispatch'
     needs: prepare
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
     with:
       repo: intel/media-delivery
       pr: ${{needs.prepare.outputs.pr}}
       gfx_repo_key: 'https://gfx-assets-build.intel.com/artifactory/api/gpg/key/public'
-      gfx_repo: 'deb https://gfx-assets-build.intel.com/artifactory/gfx-debs-per-build ${{needs.prepare.outputs.repo}} ${{github.event.inputs.ver}}'
-      flavor: ${{github.event.inputs.ver}}
+      gfx_repo: 'deb ${{needs.prepare.outputs.url}} ${{needs.prepare.outputs.repo}} ${{needs.prepare.outputs.ver}}'
+      flavor: ${{needs.prepare.outputs.ver}}
       dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
 
   test-gen9:
@@ -116,6 +127,17 @@ jobs:
       test_enctools: 'ON'
       on: dg1
       kernel: prelim
+
+  test-dg2-ver:
+    needs: [prepare, build-ver]
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    with:
+      repo: intel/media-delivery
+      pr: ${{needs.prepare.outputs.pr}}
+      image: ${{needs.build-ver.outputs.image}}
+      test_enctools: 'ON'
+      on: dg2
+      kernel: linux
 
   deploy-rolling:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
