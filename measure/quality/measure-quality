@@ -473,7 +473,7 @@ function get_coding_commandline_options() {
   elif [ "$codec" = "HEVC" ]; then
     if [ "$preset" = "best" ]; then
       if [ "$use_enctools" = "yes" ]; then
-        options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 0 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 -async_depth 1"
+        options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 -async_depth 1"
         options_senc+="-extbrc:implicit -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
         options_smt+="-lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 -NalHrdConformance:off -VuiNalHrdParameters:off"
       else
