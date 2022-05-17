@@ -431,7 +431,7 @@ function get_bitrates() {
     else
       echo "bug: invalid resolution: $resolution" >&2
       exit -1
-    fi 
+    fi
   else
     echo "bug: invalid codec (AVC|HEVC|AV1): $codec" >&2
     exit -1
@@ -661,7 +661,7 @@ function write_avg_bdrate() {
   out+=":"; [[ "$skip_psnr" = "no" ]] && out+=${avg_bdr[1]}
   out+=":"; [[ "$skip_ssim" = "no" ]] && out+=${avg_bdr[2]}
   out+=":"; [[ "$skip_msim" = "no" ]] && out+=${avg_bdr[3]}
-  echo $out >> $fname
+  echo $out > $fname
 }
 
 function stdout_avg_bdrate() {
@@ -996,7 +996,19 @@ if [ "$skip_metrics" = "no" ]; then
   fi
   model="model='path=${vmaf_model_path}'"
 
-  for out in $(ls -1t $outprefix* | grep -v '\.metrics\|\.*bdrate'); do
+  if [ "$codec" = "AVC" ]; then
+    exts='\.h264'
+  elif [ "$codec" = "HEVC" ]; then
+    exts='\.h265'
+  elif [ "$codec" = "AV1" ]; then
+    exts='\.av1|\.ivf'
+  else
+    echo "error: invalid codec (AVC|HEVC|AV1): $codec" >&2
+    exit -1
+  fi
+
+  rm -rf $outprefix.$codec.*.metrics
+  for out in $(ls -1t $outprefix* | grep $exts | grep -v '\.metrics\|\.*bdrate'); do
     if [ "$is_yuv" = "yes" ]; then
       rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
     fi
@@ -1073,6 +1085,7 @@ fi
 # bd-rate calculation
 if [[ "$skip_bdrate" = "no" ]]; then
 
+  rm -rf $outprefix.$codec.*bdrate
   for test_file in $(ls -1t $outprefix.$codec.* | grep \.metrics | grep -v ref\.metrics); do
     if echo "$test_file" | grep -q "\.cbr\."; then
       ref_file=$outprefix.$codec.cbr.ffmpeg-ref.metrics
