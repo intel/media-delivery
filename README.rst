@@ -378,9 +378,9 @@ Tips for best performance
 Ffmpeg is easy to use and flexible in supporting many video transcode pipelines. The
 ffmpeg command lines below illustrate good practices in using
 `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel Quick Sync Video
-- Intel Media SDK integration into ffmpeg. The use of "extbrc" demonstrates the use
-of developer configurable bitrate control, in these examples the defaults generate
-streams using pyramid coding and other quality optimizations.
+- Intel Media SDK integration into ffmpeg). The use of "extbrc" demonstrates the use
+of developer configurable bitrate control, pyramid coding and other quality optimizations.
+For the details on ffmpeg-qsv supported features, read `ffmpeg-qsv capabilites <doc/features/ffmpeg/>`_.
 
 **Example 1: AVC VBR Encode**::
 
