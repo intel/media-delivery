@@ -366,9 +366,8 @@ ffmpeg::
 ffprobe::
 	Used for getting information on the input/output stream(s).
 
-sample_encode::
-	Used for direct quality measurement of Intel Media SDK library (YUV input
-	streams).
+sample_multi_transcode::
+	Used for direct quality measurement of Intel MediaSDK/OneVPL library.
 
 python3::
 	Used for generic script purposes.
