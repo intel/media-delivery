@@ -224,7 +224,6 @@ function check_for() {
 check_for ffmpeg
 check_for ffprobe
 check_for python3
-check_for sample_encode
 check_for sample_multi_transcode
 
 function get_param() {
@@ -444,13 +443,11 @@ function get_coding_commandline_options() {
   local app=$3
   local use_vdenc=$4
   local options_qsv=""
-  local options_senc=""
   local options_smt=""
   local options_ref=""
 
   if [ "$use_vdenc" = "yes" ] || [ "$use_enctools" = "yes" ]; then
       options_qsv+="-low_power true "
-      options_senc+="-lowpower:on "
       options_smt+="-lowpower:on "
   fi
 
@@ -458,11 +455,9 @@ function get_coding_commandline_options() {
     if [ "$preset" = "best" ]; then
       if [ "$use_enctools" = "yes" ]; then
         options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 -async_depth 1"
-        options_senc+="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
         options_smt+="-lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 5 -gop_size 256 -dist 8 -NalHrdConformance:off -VuiNalHrdParameters:off"
       else
         options_qsv+="-extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256"
-        options_senc+="-extbrc:implicit -ExtBrcAdaptiveLTR:on -r 8 -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
         options_smt+="-extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
       fi
     elif [[ ! $preset =~ default ]]; then
@@ -474,11 +469,9 @@ function get_coding_commandline_options() {
     if [ "$preset" = "best" ]; then
       if [ "$use_enctools" = "yes" ]; then
         options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 -async_depth 1"
-        options_senc+="-extbrc:implicit -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
         options_smt+="-lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 -NalHrdConformance:off -VuiNalHrdParameters:off"
       else
         options_qsv+="-extbrc 1 -bf 7 -refs 5 -g 256"
-        options_senc+="-extbrc:implicit -x 5 -g 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
         options_smt+="-extbrc::implicit -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
       fi
     elif [[ ! $preset =~ default ]]; then
@@ -502,8 +495,6 @@ function get_coding_commandline_options() {
 
   if [ $app = "qsv" ]; then
     echo "$options_qsv"
-  elif [ $app = "senc" ]; then
-    echo "$options_senc"
   elif [ $app = "smt" ]; then
     echo "$options_smt"
   elif [ $app = "ref" ]; then
@@ -934,7 +925,6 @@ fi
 options_ref=$(get_coding_commandline_options $codec $preset "ref" $use_vdenc)
 options_qsv=$(get_coding_commandline_options $codec $preset "qsv" $use_vdenc)
 options_smt=$(get_coding_commandline_options $codec $preset "smt" $use_vdenc)
-options_senc=$(get_coding_commandline_options $codec $preset "senc" $use_vdenc)
 vmaf_model_path=$(get_vmaf_model $resolution)
 path=$(dirname $(readlink -f $0))
 
