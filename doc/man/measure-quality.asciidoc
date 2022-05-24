@@ -81,8 +81,8 @@ following pre-defined streams you may skip specifying its characteristics:
 |===
 
 Script checks whether the input stream is YUV by the following file
-extensions: '.yuv', '.YUV'. Any other file is considered to be in a container
-format.
+extensions: '.yuv', '.YUV'. Any other file is considered to be an encoded
+bitstream (either raw or in a container).
 
 Script checks input stream resolution to identify list of bitrates to use
 for encoding. This behaviour can be overwritten with `--bitrate` option which
@@ -270,10 +270,18 @@ ENCODING OPTIONS
 --bitrates <float>[:<float>...]::
 	Sets a list of bitrates in Mbps to use (default: use hardcoded bitrates which
 	depend on stream resolution and codec). A minimum of 4 distinct bitrates are 
-        needed for calculating BD-rate.
+	needed for calculating BD-rate.
 
 --tu veryslow|slower|slow|medium|fast|faster|veryfast::
-        Sets a target usage preset (default: `medium`).
+	Sets a target usage preset (default: `medium`).
+
+--buffer-delay <int>::
+	Sets encoding buffer delay in milliseconds for low-delay mode (default: `250`).
+
+--ref-preset veryslow|slower|slow|medium|fast|faster|veryfast::
+	Sets a target usage preset for the reference encoder (default: `veryslow`).
+	If low-delay mode is enabled, default is set to `medium`.
+
 
 WORKING MODE OPTIONS
 --------------------
@@ -323,7 +331,10 @@ WORKING MODE OPTIONS
 	Use precomputed golden references for BD-rate computation (disabled by default).
 
 --use-enctools::
-    Use enctools BRC for encoding.
+	Use enctools BRC for encoding (disabled by default). If enabled, it forces low power VDEnc hardware mode.
+
+--use-lowdelay::
+	Measure quality for low-delay/low-latency mode (disabled by default).
 
 PROCESSING OPTIONS
 ------------------
