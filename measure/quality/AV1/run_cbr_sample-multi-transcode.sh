@@ -70,5 +70,4 @@ if [ "$dry_run" = "no" ]; then
   "${cmd[@]}"
 else
   echo "${cmd[@]}"
-  touch ${prefix}_${bitrate_Mbps}Mbps_CBR_SMT.av1
 fi
