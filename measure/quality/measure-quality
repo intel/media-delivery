@@ -251,7 +251,7 @@ function find_stream() {
     echo "$vidpath/$stream"
   elif [ ${#path[@]} -gt 1 ]; then
     echo "warning: multiple streams with the same name: $stream" >&2
-    for s in ${path[@]}; do echo "warning:  $s" >&2; done
+    for s in ${path[@]}; do echo "warning: $s" >&2; done
   fi
   echo ${path[0]}
 }
@@ -454,8 +454,8 @@ function get_coding_commandline_options() {
   if [ "$codec" = "AVC" ]; then
     if [ "$preset" = "best" ]; then
       if [ "$use_enctools" = "yes" ]; then
-        options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 -async_depth 1"
-        options_smt+="-lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 5 -gop_size 256 -dist 8 -NalHrdConformance:off -VuiNalHrdParameters:off"
+        options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1"
+        options_smt+="-lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -num_ref 5 -gop_size 256 -dist 8 -NalHrdConformance:off -VuiNalHrdParameters:off"
       else
         options_qsv+="-extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256"
         options_smt+="-extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
@@ -468,11 +468,11 @@ function get_coding_commandline_options() {
   elif [ "$codec" = "HEVC" ]; then
     if [ "$preset" = "best" ]; then
       if [ "$use_enctools" = "yes" ]; then
-        options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 -async_depth 1"
-        options_smt+="-lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 -NalHrdConformance:off -VuiNalHrdParameters:off"
+        options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1"
+        options_smt+="-lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
       else
-        options_qsv+="-extbrc 1 -bf 7 -refs 5 -g 256"
-        options_smt+="-extbrc::implicit -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
+        options_qsv+="-extbrc 1 -bf 7 -refs 4 -g 256"
+        options_smt+="-extbrc::implicit -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
       fi
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
@@ -482,7 +482,7 @@ function get_coding_commandline_options() {
   elif [ "$codec" = "AV1" ]; then
     if [ "$preset" = "best" ]; then
       options_qsv+="-b_strategy 1 -bf 7 -refs 3 -g 256"
-      options_smt+="-num_ref 3 -gop_size 256 -dist 8 -MemType::system -bref"
+      options_smt+="-bref -dist 8 -num_ref 3 -gop_size 256 -MemType::system"
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
@@ -510,6 +510,22 @@ function get_vmaf_model() {
     echo "vmaf_4k_v0.6.1.json"
   else
     echo "vmaf_v0.6.1.json"
+  fi
+}
+
+function get_file_extension() {
+  local codec=$1
+  local app=$2
+  if [ "$codec" = "AVC" ]; then echo "h264"
+  elif [ "$codec" = "HEVC" ]; then echo "h265"
+  elif [ "$codec" = "AV1" ]; then
+    if [ "$app" = "REF" ]; then echo "h265"
+    else
+      [[ "$app" = "SMT" ]] && echo "av1" || echo "ivf"
+    fi
+  else
+    echo "error: invalid codec (AVC|HEVC|AV1): $codec" >&2
+    exit -1
   fi
 }
 
@@ -858,8 +874,10 @@ if [[ -d "$file" ||
     run $stream
     ((i++))
   done
-  # average BD-rates...
-  [[ "$skip_bdrate" = "no" ]] && compute_bdrate_averages
+  # compute average BD-rates
+  if [ "$skip_bdrate" = "no" ] && [ "$dry_run" = "no" ]; then
+    compute_bdrate_averages
+  fi
   exit $err
 fi
 
@@ -899,7 +917,7 @@ if [ -z "$outprefix" ]; then
   outprefix=$(basename $file)
   outprefix="${outprefix%.*}"
 elif echo "$outprefix" | grep "/"; then
-  echo "error: wrong --outprefix (should be bare folder name, not a path): $outprefix" >&2
+  echo "error: wrong --outprefix (should be bare file name, not a path): $outprefix" >&2
   exit -1
 fi
 
@@ -928,10 +946,12 @@ options_smt=$(get_coding_commandline_options $codec $preset "smt" $use_vdenc)
 vmaf_model_path=$(get_vmaf_model $resolution)
 path=$(dirname $(readlink -f $0))
 
-mkdir -p $outdir && cd $outdir
-if [[ $? -ne 0 ]]; then
-  echo "fatal: can't create output directory: $outdir" >&2
-  exit -1
+if [ "$dry_run" = "no" ]; then
+  mkdir -p $outdir && cd $outdir
+  if [[ $? -ne 0 ]]; then
+    echo "fatal: can't create output directory: $outdir" >&2
+    exit -1
+  fi
 fi
 
 # encoding
@@ -973,6 +993,19 @@ if [ "$skip_encoding" = "no" ]; then
 fi
 
 # metrics calculation
+rate_controls=()
+[[ "$skip_cbr" = "no" ]] && rate_controls+=("CBR")
+[[ "$skip_vbr" = "no" ]] && rate_controls+=("VBR")
+apps=()
+[[ "$skip_msdk" = "no" ]] && apps+=("SMT")
+[[ "$skip_ffmpeg" = "no" ]] && apps+=("QSV")
+[[ "$skip_reference" = "no" ]] && [[ "$use_gold_ref" = "no" ]] && apps+=("REF")
+dapps=()
+[[ "$skip_msdk" = "no" ]] && dapps+=("sample-multi-transcode")
+[[ "$skip_ffmpeg" = "no" ]] && dapps+=("ffmpeg-qsv")
+[[ "$skip_reference" = "no" ]] && [[ "$use_gold_ref" = "no" ]] && dapps+=("ffmpeg-ref")
+ibitrates=$(echo -n "${bitrates[@]} " | tac -s' ')
+
 if [ "$skip_metrics" = "no" ]; then
   if [ -f $DEMO_PREFIX/share/model/$vmaf_model_path ]; then
     # that's the location where media delivery demo installs vmaf models
@@ -986,128 +1019,119 @@ if [ "$skip_metrics" = "no" ]; then
   fi
   model="model='path=${vmaf_model_path}'"
 
-  if [ "$codec" = "AVC" ]; then
-    exts='\.h264'
-  elif [ "$codec" = "HEVC" ]; then
-    exts='\.h265'
-  elif [ "$codec" = "AV1" ]; then
-    exts='\.av1|\.ivf'
-  else
-    echo "error: invalid codec (AVC|HEVC|AV1): $codec" >&2
-    exit -1
-  fi
+  for ((i=0; i<${#apps[@]}; i++)); do
+    ext=$(get_file_extension $codec ${apps[i]})
+    for rc in ${rate_controls[@]}; do
+      rm -rf $outprefix.$codec.${rc,,}.${dapps[i]}.metrics
+      for b in ${ibitrates[@]}; do
+        out=${outprefix}_${b}Mbps_${rc}_${apps[i]}.$ext
+        [[ ! -f $out ]] && continue
+        if [ "$is_yuv" = "yes" ]; then
+          rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
+        fi
 
-  rm -rf $outprefix.$codec.*.metrics
-  for out in $(ls -1t $outprefix* | grep $exts | grep -v '\.metrics\|\.*bdrate'); do
-    if [ "$is_yuv" = "yes" ]; then
-      rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
-    fi
+        metrics=""
+        if [ "$skip_psnr" = "no" ]; then
+          [ ! -z "$metrics" ] && metrics+="|name=psnr" || metrics+="name=psnr"
+        fi
+        if [ "$skip_ssim" = "no" ]; then
+          [ ! -z "$metrics" ] && metrics+="|name=float_ssim" || metrics+="name=float_ssim"
+        fi
+        if [ "$skip_msim" = "no" ]; then
+          [ ! -z "$metrics" ] && metrics+="|name=float_ms_ssim" || metrics+="name=float_ms_ssim"
+        fi
+        [ ! -z "$metrics" ] && metrics=":feature='${metrics}'"
 
-    metrics=""
-    if [ "$skip_psnr" = "no" ]; then
-      [ ! -z "$metrics" ] && metrics+="|name=psnr" || metrics+="name=psnr"
-    fi
-    if [ "$skip_ssim" = "no" ]; then
-      [ ! -z "$metrics" ] && metrics+="|name=float_ssim" || metrics+="name=float_ssim"
-    fi
-    if [ "$skip_msim" = "no" ]; then
-      [ ! -z "$metrics" ] && metrics+="|name=float_ms_ssim" || metrics+="name=float_ms_ssim"
-    fi
-    [ ! -z "$metrics" ] && metrics=":feature='${metrics}'"
+        # get number of really encoded frames from the stream rather than relying on the user input
+        if [ "$dry_run" = "no" ]; then
+          nframes=$(count_frames $out)
+          if [[ -z "$nframes" || "$nframes" = "N/A" || "$nframes" -eq 0 ]]; then
+            echo "error: no frames in the stream: $out" >&2
+            continue
+          fi
+        fi
 
-    # get number of really encoded frames from the stream rather than relying on the user input
-    if [ "$dry_run" = "no" ]; then
-      nframes=$(count_frames $out)
-      if [[ -z "$nframes" || "$nframes" = "N/A" || "$nframes" -eq 0 ]]; then
-        echo "error: no frames in the stream: $out" >&2
-        continue
-      fi
-    fi
+        nproc=$(nproc)
+        cmd=(ffmpeg -an
+          $rawvideo -i $file
+          -r $framerate -i $out
+          -lavfi " \
+            [0:v]trim=end_frame=$nframes[ref]; \
+            [1:v]trim=end_frame=$nframes[v]; \
+            [v][ref]libvmaf=${model}${metrics}:log_fmt=json:log_path=/tmp/out.json:n_threads=${nproc}"
+          -f null -)
 
-    nproc=$(nproc)
-    cmd=(ffmpeg -an
-      $rawvideo -i $file
-      -r $framerate -i $out
-      -lavfi " \
-        [0:v]trim=end_frame=$nframes[ref]; \
-        [1:v]trim=end_frame=$nframes[v]; \
-        [v][ref]libvmaf=${model}${metrics}:log_fmt=json:log_path=/tmp/out.json:n_threads=${nproc}"
-      -f null -)
+        if [ "$dry_run" = "no" ]; then
+          "${cmd[@]}"
+        else
+          echo "${cmd[@]}"
+        fi
 
-    if [ "$dry_run" = "no" ]; then
-      "${cmd[@]}"
-    else
-      echo "${cmd[@]}"
-    fi
+        if [ "$dry_run" = "no" ]; then
+          # calculate bitrate in kbps
+          b=$(stat -c %s $out)                         # filesize
+          b=$(python3 -c 'print('$b' * 8)')            # filesize in bits
+          b=$(python3 -c 'print('$b' / '$nframes')')   # bits per frame
+          b=$(python3 -c 'print('$b' * '$framerate')') # bps
+          b=$(python3 -c 'print('$b' / 1000)')         # kbps
 
-    if [ "$dry_run" = "no" ]; then
-      # calculate bitrate in kbps
-      b=$(stat -c %s $out)                         # filesize
-      b=$(python3 -c 'print('$b' * 8)')            # filesize in bits
-      b=$(python3 -c 'print('$b' / '$nframes')')   # bits per frame
-      b=$(python3 -c 'print('$b' * '$framerate')') # bps
-      b=$(python3 -c 'print('$b' / 1000)')         # kbps
+          metrics="$out:$b"
+          [[ "$skip_vmaf" = "no" ]] && vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["vmaf"]["mean"])')
+          metrics+=":$vmaf"
+          [[ "$skip_psnr" = "no" ]] && psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["psnr_y"]["mean"])')
+          metrics+=":$psnr"
+          [[ "$skip_ssim" = "no" ]] && ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["float_ssim"]["mean"])')
+          metrics+=":$ssim"
+          [[ "$skip_msim" = "no" ]] && msim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["float_ms_ssim"]["mean"])')
+          metrics+=":$msim"
 
-      metrics="$out:$b"
-      [[ "$skip_vmaf" = "no" ]] && vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["vmaf"]["mean"])')
-      metrics+=":$vmaf"
-      [[ "$skip_psnr" = "no" ]] && psnr=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["psnr_y"]["mean"])')
-      metrics+=":$psnr"
-      [[ "$skip_ssim" = "no" ]] && ssim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["float_ssim"]["mean"])')
-      metrics+=":$ssim"
-      [[ "$skip_msim" = "no" ]] && msim=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["float_ms_ssim"]["mean"])')
-      metrics+=":$msim"
-
-      out=$(echo "$metrics" | grep CBR_QSV); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-qsv.metrics
-      out=$(echo "$metrics" | grep VBR_QSV); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-qsv.metrics
-      if [ "$is_yuv" = "yes" ] || [ -n "$raw" ]; then
-        out=$(echo "$metrics" | grep CBR_SMT); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.sample-multi-transcode.metrics
-        out=$(echo "$metrics" | grep VBR_SMT); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.sample-multi-transcode.metrics
-      fi
-      if [ "$skip_reference" = "no" ] && [ "$use_gold_ref" = "no" ]; then
-        out=$(echo "$metrics" | grep CBR_REF); [ -n "$out" ] && echo $out >> $outprefix.$codec.cbr.ffmpeg-ref.metrics
-        out=$(echo "$metrics" | grep VBR_REF); [ -n "$out" ] && echo $out >> $outprefix.$codec.vbr.ffmpeg-ref.metrics
-      fi
-    fi
+          echo "$metrics" >> $outprefix.$codec.${rc,,}.${dapps[i]}.metrics
+        fi
+      done
+    done
   done
 fi
 
 # bd-rate calculation
-if [[ "$skip_bdrate" = "no" ]]; then
+dapps=()
+[[ "$skip_msdk" = "no" ]] && dapps+=("sample-multi-transcode")
+[[ "$skip_ffmpeg" = "no" ]] && dapps+=("ffmpeg-qsv")
+if [ "$skip_bdrate" = "no" ] && [ "$dry_run" = "no" ]; then
+  for dapp in ${dapps[@]}; do
+    for rc in ${rate_controls[@]}; do
+      rm -rf $outprefix.$codec.${rc,,}.$dapp.*bdrate
+      test_file=$outprefix.$codec.${rc,,}.$dapp.metrics
+      ref_file=$outprefix.$codec.${rc,,}.ffmpeg-ref.metrics
+      if [ "$use_gold_ref" = "yes" ]; then
+        [[ "$use_lowdelay" = "yes" ]] && ref_file=$path/REF/${codec}_LD/$ref_file || ref_file=$path/REF/$codec/$ref_file
+      fi
 
-  rm -rf $outprefix.$codec.*bdrate
-  for test_file in $(ls -1t $outprefix.$codec.* | grep \.metrics | grep -v ref\.metrics); do
-    if echo "$test_file" | grep -q "\.cbr\."; then
-      ref_file=$outprefix.$codec.cbr.ffmpeg-ref.metrics
-    else
-      ref_file=$outprefix.$codec.vbr.ffmpeg-ref.metrics
-    fi
-    [[ "$use_gold_ref" = "yes" ]] && ref_file=$path/REF/$codec/$ref_file
+      # check requirements for bd-rate calculation
+      [[ ! -f $test_file ]] && continue
+      if [[ ! -f "$ref_file" ]]; then
+        echo "warning: reference metrics file not found: skipping BD-rate calculation for '$test_file'" >&2
+        continue
+      elif [[ $(cat $ref_file | wc -l) != $(cat $test_file | wc -l) ]]; then
+        echo "warning: reference and test metrics mismatch: skipping BD-rate calculation for '$test_file'" >&2
+        continue
+      fi
+      npts=$(cat $ref_file | wc -l)
+      if [[ $npts -lt 4 ]]; then
+        echo "warning: minimum 4 points required for BD-rate: skipping BD-rate calculation for '$test_file'" >&2
+        continue
+      fi
 
-    # check requirements for bd-rate calculation
-    if [[ ! -f "$ref_file" ]]; then
-      echo "warning: reference metrics file not found: skipping BD-rate calculation for '$test_file'" >&2
-      continue
-    elif [[ $(cat $ref_file | wc -l) != $(cat $test_file | wc -l) ]]; then
-      echo "warning: reference and test metrics mismatch: skipping BD-rate calculation for '$test_file'" >&2
-      continue
-    fi
-    npts=$(cat $ref_file | wc -l)
-    if [[ $npts -lt 4 ]]; then
-      echo "warning: minimum 4 points required for BD-rate: skipping BD-rate calculation for '$test_file'" >&2
-      continue
-    fi
+      if [[ "$single_bdrate" = "no" ]]; then
+        # calculate BD-rate for 4 high bitrate points
+        process_bdrates $ref_file $test_file $outprefix "hi-bdrate" head 4
 
-    if [[ "$single_bdrate" = "no" ]]; then
-      # calculate BD-rate for 4 high bitrate points
-      process_bdrates $ref_file $test_file $outprefix "hi-bdrate" head 4
-
-      # calculate BD-rate for 4 low bitrate points
-      process_bdrates $ref_file $test_file $outprefix "lo-bdrate" tail 4
-    else
-      # calculate single BD-rate for n points, n >= 4
-      process_bdrates $ref_file $test_file $outprefix "bdrate" head $npts
-    fi
+        # calculate BD-rate for 4 low bitrate points
+        process_bdrates $ref_file $test_file $outprefix "lo-bdrate" tail 4
+      else
+        # calculate single BD-rate for n points, n >= 4
+        process_bdrates $ref_file $test_file $outprefix "bdrate" head $npts
+      fi
+    done
   done
 fi
 

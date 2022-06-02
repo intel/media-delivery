@@ -51,6 +51,7 @@ options=$@
 shift
 
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000))')
+maxrate=$(python3 -c 'print(int('$bitrate' * 2))') # 2x
 bufsize=$(python3 -c 'print(int('$bitrate' / 2))') # 4sec
 initbuf=$(python3 -c 'print(int('$bufsize' / 2))') # 1/2 buf
 
@@ -63,12 +64,11 @@ cmd=(sample_multi_transcode -i::$std $file \
   -hw -async 1 -device $DEVICE \
   -u $preset -b $bitrate -vbr $vframes \
   $rawvideo $options \
-  -hrd $bufsize -InitialDelayInKB $initbuf \
+  -hrd $bufsize -InitialDelayInKB $initbuf -MaxKbps $maxrate \
   -o::h265 ${prefix}_${bitrate_Mbps}Mbps_VBR_SMT.h265)
 
 if [ "$dry_run" = "no" ]; then
   "${cmd[@]}"
 else
   echo "${cmd[@]}"
-  touch ${prefix}_${bitrate_Mbps}Mbps_VBR_SMT.h265
 fi

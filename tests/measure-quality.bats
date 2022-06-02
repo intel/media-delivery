@@ -26,9 +26,9 @@ load utils
 subs="ffmpeg -i \
   /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -s 480x270 -sws_flags lanczos -vframes 100 WAR.mp4"
-@test "measure quality: transcode 65 frames, calculate metrics, measure bdrate and check measuring artifacts" {
+@test "measure quality: transcode 50 frames, calculate metrics, measure bdrate and check measuring artifacts" {
   run docker_run /bin/bash -c "set -ex; $subs; \
-    measure quality --nframes 65 --bitrates 0.5:0.75:1:1.5:2 WAR.mp4; \
+    measure quality --nframes 50 --bitrates 0.1:0.2:0.3:0.4:0.5 WAR.mp4; \
     result=\$(cat /opt/data/artifacts/measure/quality/*{.metrics,bdrate} | grep -v :: | wc -l); \
     [[ \$result = 24 ]]"
   print_output
