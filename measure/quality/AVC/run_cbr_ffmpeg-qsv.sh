@@ -65,15 +65,14 @@ fi
 
 cmd=(ffmpeg $dev -an \
   $rawvideo -i $file $vframes \
-  -c:v h264_qsv -preset $preset -profile:v high \
+  -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
   -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 \
   -bufsize $bufsize -rc_init_occupancy $initbuf \
   $options \
-  -vsync 0 -y ${prefix}_${bitrate_Mbps}Mbps_CBR_QSV.h264)
+  -vsync passthrough -y ${prefix}_${bitrate_Mbps}Mbps_CBR_QSV.h264)
 
 if [ "$dry_run" = "no" ]; then
   "${cmd[@]}"
 else
   echo "${cmd[@]}"
-  touch ${prefix}_${bitrate_Mbps}Mbps_CBR_QSV.h264
 fi
