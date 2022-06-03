@@ -324,37 +324,67 @@ EncTools
 
 ::
 
-  # VBR (encoding from YUV)
-  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an\
+  # VBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
-    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -b:v $bitrate \
-    -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
-    -rc_init_occupancy $((2 * $bitrate)) -low_power true -look_ahead_depth 40 -extbrc 1 \
+    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
-    -async_depth 1 -vsync 0 -y $output
+    -vsync passthrough -y $output
 
-  # CBR (encoding from YUV)
-  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+  # CBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
-    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -b:v $bitrate \
-    -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
-    -rc_init_occupancy $bitrate -low_power true -look_ahead_depth 40 -extbrc 1 \
+    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
-    -async_depth 1 -vsync 0 -y $output
+    -vsync passthrough -y $output
 
-  # VBR (encoding from YUV)
-  sample_multi_transcode -i::i420 $inputyuv -hw -async 1
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 \
+    -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
+    -vsync passthrough -y $output
+
+  # CBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 \
+    -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
+    -vsync passthrough -y $output
+
+  # VBR (encoding from YUV with Sample Multi-Transcode)
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -vbr -n $numframes \
-    -w $width -h $height -override_encoder_framerate $framerate -lowpower:on -lad 40 \
-    -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 5 -gop_size 256 -dist 8 \
+    -w $width -h $height -override_encoder_framerate $framerate -lowpower:${LOWPOWER:-on} -lad 40 \
+    -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
-    -InitialDelayInKB $(($bitrateKb / 4)) -o::h264 $output
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
 
-  # CBR (encoding from YUV)
-  sample_multi_transcode -i::i420 $inputyuv -hw -async 1
+  # CBR (encoding from YUV with Sample Multi-Transcode)
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -cbr -n $numframes \
-    -w $width -h $height  -override_encoder_framerate $framerate -lowpower:on -lad 40 \
-    -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 5 -gop_size 256 -dist 8 \
+    -w $width -h $height  -override_encoder_framerate $framerate -lowpower:${LOWPOWER:-on} -lad 40 \
+    -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
+    -InitialDelayInKB $(($bitrateKb / 8)) -o::h264 $output
+
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -vbr -n $numframes \
+    -lowpower:${LOWPOWER:-on} -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
+
+  # CBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -cbr -n $numframes \
+    -lowpower:${LOWPOWER:-on} -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
     -InitialDelayInKB $(($bitrateKb / 8)) -o::h264 $output
 
@@ -363,49 +393,63 @@ ExtBRC
 
 ::
 
-  # VBR (encoding from YUV)
-  ffmpeg -hwaccel qsv \
+  # VBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
-    -i $inputyuv -vframes $numframes -y \
-    -c:v h264_qsv -preset $preset -profile:v high \
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+    -i $inputyuv -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
+    -vsync passthrough -y $output
 
-  # CBR (encoding from YUV)
-  ffmpeg -hwaccel qsv \
+  # CBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
-    -i $inputyuv -vframes $numframes -y \
-    -c:v h264_qsv -preset $preset -profile:v high \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+    -i $inputyuv -vframes $numframes -c:v h264_qsv -preset $preset -profile:v high \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
+    -vsync passthrough -y $output
 
-  # VBR (transcoding)
-  ffmpeg -hwaccel qsv \
-    -i $input -c:v $inputcodec -vframes $numframes -y \
-    -c:v h264_qsv -preset $preset -profile:v high \
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v h264_qsv -preset h264_qsv -profile:v high -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
+    -vsync passthrough -y $output
 
-  # CBR (transcoding)
-  ffmpeg -hwaccel qsv \
-    -i $input -c:v $inputcodec -vframes $numframes -y \
-    -c:v h264_qsv -preset $preset -profile:v high \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+  # CBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v h264_qsv -preset h264_qsv -profile:v high -async_depth 1 \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
+    -vsync passthrough -y $output
 
-  # VBR (encoding from YUV)
+  # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
-    -u $preset -b $bitrateKb -w $width -h $height -n $numframes -override_encoder_framerate $framerate \
-    -vbr -extbrc::implicit -num_ref 5 -dist 8 -gop_size 256 \
-    -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4))  \
-    -o::h264 $output
+    -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
+    -lowpower:${LOWPOWER:-off} -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
 
-  # CBR (encoding from YUV)
+  # CBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
-    -u $preset -b $bitrateKb -w $width -h $height -n $numframes -override_encoder_framerate $framerate \
-    -cbr -extbrc::implicit -num_ref 5 -dist 8 -gop_size 256 \
-    -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
-    -o::h264 $output
+    -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
+    -lowpower:${LOWPOWER:-off} -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
+    -InitialDelayInKB $(($bitrateKb / 8)) -o::h264 $output
+
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-off} \
+    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
+
+  # CBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -cbr -n $numframes -lowpower:${LOWPOWER:-off} \
+    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 4)) \
+    -InitialDelayInKB $(($bitrateKb / 8)) -o::h264 $output
 
 H.265/HEVC
 ----------
@@ -415,99 +459,130 @@ EncTools
 
 ::
 
-  # VBR (encoding from YUV)
-  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+  # VBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
-    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -b:v $bitrate \
-    -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
-    -rc_init_occupancy $((2 * $bitrate)) -low_power true -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
     -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
-    -async_depth 1 -vsync 0 -y $output
+    -vsync passthrough -y $output
 
-  # CBR (encoding from YUV)
-  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+  # CBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
-    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -b:v $bitrate \
-    -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
-    -rc_init_occupancy $bitrate -low_power true -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
     -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
-    -async_depth 1 -vsync 0 -y $output
+    -vsync passthrough -y $output
 
-  # VBR (encoding from YUV)
-  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
-    -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height  -override_encoder_framerate $framerate \
-    -lowpower:on -lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \
-    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4))  \
-    -o::h265 $output
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
+    -vsync passthrough -y $output
 
-  # CBR (encoding from YUV)
+  # CBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
+    -vsync passthrough -y $output
+
+  # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
-    -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height  -override_encoder_framerate $framerate \
-    -lowpower:on -lad 40 -AdaptiveI:on -AdaptiveB:on -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8  \
-    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8))  \
-    -o::h265 $output
+    -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
+    -lowpower:${LOWPOWER:-on} -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
+
+  # CBR (encoding from YUV with Sample Multi-Transcode)
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
+    -lowpower:${LOWPOWER:-on} -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
+    -InitialDelayInKB $(($bitrateKb / 8)) -o::h265 $output
+
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-on} \
+    -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h265 $output
+
+  # CBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -cbr -n $numframes -lowpower:${LOWPOWER:-on} \
+    -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
+    -InitialDelayInKB $(($bitrateKb / 8)) -o::h265 $output
+
 
 ExtBRC
 ******
 
 ::
 
-  # VBR (encoding from YUV)
-  ffmpeg -hwaccel qsv \
-    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
-    -i $inputyuv -vframes $numframes -y \
-    -c:v hevc_qsv -preset medium -profile:v main \
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+  # VBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
+    -vsync passthrough -y $output
 
-  # CBR (encoding from YUV)
-  ffmpeg -hwaccel qsv \
-    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
-    -i $inputyuv -vframes $numframes -y \
-    -c:v hevc_qsv -preset medium -profile:v main \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+  # CBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
+    -vsync passthrough -y $output
 
-  # VBR (transcoding)
-  ffmpeg -hwaccel qsv \
-    -i $input -c:v $inputcodec -vframes $numframes -y \
-    -c:v hevc_qsv -preset medium -profile:v main \
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
+    -vsync passthrough -y $output
 
-  # CBR (transcoding)
-  ffmpeg -hwaccel qsv \
-    -i $input -c:v $inputcodec -vframes $numframes -y \
-    -c:v hevc_qsv -preset medium -profile:v main \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+  # CBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
+    -vsync passthrough -y $output
 
-  # VBR (encoding from YUV)
+  # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
-    -u $preset -b $bitrateKb -w $width -h $height -n $numframes -override_encoder_framerate $framerate \
-    -vbr -extbrc::implicit -num_ref 4 -dist 8 -gop_size 256 -NalHrdConformance:off \
-    -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
-    -o::h265 $output
+    -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
+    -lowpower:${LOWPOWER:-off} -extbrc::implicit -dist 8 -num_ref 4 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $(($bitrateKb * 2)) -o::h265 $output
 
-  # CBR (encoding from YUV)
+  # CBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
-    -u $preset -b $bitrateKb -w $width -h $height -n $numframes -override_encoder_framerate $framerate \
-    -cbr -extbrc::implicit -num_ref 4 -dist 8 -gop_size 256 -NalHrdConformance:off \
-    -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
+    -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
+    -lowpower:${LOWPOWER:-off} -extbrc::implicit -dist 8 -num_ref 4 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
+    -InitialDelayInKB $(($bitrateKb / 8)) -o::h265 $output
+
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-off} \
+    -extbrc::implicit -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) \
     -o::h265 $output
 
-  # VBR (transcoding)
-  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
-    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
-    -vbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \
-    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
-    -o::h265 $output
-
-  # CBR (transcoding)
-  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
-    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
-    -cbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \
-    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
+  # CBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -cbr -n $numframes -lowpower:${LOWPOWER:-off} \
+    -extbrc::implicit -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
     -o::h265 $output
 
 AV1
@@ -515,59 +590,60 @@ AV1
 
 ::
 
-  # VBR (encoding from YUV)
-  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va \
-   -an -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
-   -i $inputyuv -frames:v $numframes -c:v av1_qsv -preset medium -profile:v main \
-   -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
-   -rc_init_occupancy $(($bufsize / 2)) -low_power true -b_strategy 1 -bf 7 -refs 3 -g 256 -vsync 0 -y $output
+  # VBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -refs 3 -g 256 \
+    -vsync passthrough -y $output
 
-  # CBR (encoding from YUV)
-  ffmpeg -init_hw_device ${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va \
-   -an -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
-   -i $inputyuv -frames:v $numframes -c:v av1_qsv -preset medium -profile:v main \
-   -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
-   -rc_init_occupancy $(($bufsize / 2)) -low_power true -b_strategy 1 -bf 7 -refs 3 -g 256 -vsync 0 -y $output
+  # CBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bufsize -b_strategy 1 -bf 7 -refs 3 -g 256 \
+    -vsync passthrough -y $output
 
-  # VBR (transcoding)
-  ffmpeg -hwaccel qsv \
-    -i $input -c:v $inputcodec -vframes $numframes -y \
-    -c:v av1_qsv -preset medium -profile:v main \
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -g 256 -refs 5 -bf 7 -vsync 0 $output
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -refs 3 -g 256 \
+    -vsync passthrough -y $output
 
-  # CBR (transcoding)
-  ffmpeg -hwaccel qsv \
-    -i $input -c:v $inputcodec -vframes $numframes -y \
-    -c:v av1_qsv -preset medium -profile:v main \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -g 256 -refs 5 -bf 7 -vsync 0 $output
+  # CBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -rc_init_occupancy $bufsize -b_strategy 1 -bf 7 -refs 3 -g 256 \
+    -vsync passthrough -y $output
 
-  # VBR (encoding from YUV)
+  # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
-    -lowpower:on -num_ref 3 -gop_size 256 -dist 8 -MemType::system -bref -hrd 250 -InitialDelayInKB $(($bitrateKb / 4)) \
-    -o::av1 $output
+    -bref -dist 8 -num_ref 3 -gop_size 256 -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
+    -MaxKbps $((bitrateKb * 2)) -o::av1 $output
 
-  # CBR (encoding from YUV)
+  # CBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
-   -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
-   -lowpower:on -num_ref 3 -gop_size 256 -dist 8 -MemType::system -bref -hrd 250 -InitialDelayInKB $(($bitrateKb / 8)) \
-   -o::av1 $output
-
-  # VBR (transcoding)
-  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
-    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
-    -vbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \
-    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
+    -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
+    -bref -dist 8 -num_ref 3 -gop_size 256 -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
     -o::av1 $output
 
-  # CBR (transcoding)
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
-    -cbr -lad 40 -AdaptiveI:on -AdaptiveB:off -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 \
-    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
-    -o::av1 $output
+    -vbr -n $numframes -bref -dist 8 -num_ref 3 -gop_size 256 -dist 8 -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::av1 $output
+
+  # CBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
+    -cbr -n $numframes -bref -dist 8 -num_ref 3 -gop_size 256 -dist 8 -hrd $(($bitrateKb / 4)) \
+    -InitialDelayInKB $(($bitrateKb / 8)) -o::av1 $output
+
    
 Reference Codecs
 ----------------
@@ -575,7 +651,7 @@ Reference Codecs
 For assessing the quality of Intel's H.264 Advanced Video Coding (AVC) and H.265 High Efficiency Video Coding (HEVC) codecs we are
 using ffmpeg-x264 and ffmpeg-x265 as reference codecs in ``veryslow`` preset for the BD-rate measure. For assessing the quality of
 Intel's AV1 codec we are using ffmpeg-x265 as reference codec in ``veryslow`` preset for the BD-rate measure. The reference codecs
-are ran with 12 threads and ``-tune psnr`` option.
+use 12 threads and ``-tune psnr`` option.
 
 ffmpeg-x264
 ***********
@@ -586,14 +662,14 @@ ffmpeg-x264
     -i $inputyuv -vframes $numframes -y \
     -c:v libx264 -preset veryslow -profile:v high \
     -b:v $bitrate -bufsize $((2 * bitrate)) -maxrate $((2 * bitrate)) \
-    -tune psnr -threads 12 -vsync 0 $output
+    -tune psnr -threads 12 -vsync passthrough $output
 
   # CBR (encoding from YUV)
   ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
     -i $inputyuv -vframes $numframes -y \
     -c:v libx264 -preset veryslow -profile:v high \
     -b:v $bitrate -x264opts no-sliced-threads:nal-hrd=cbr \
-    -tune psnr -threads 12 -vsync 0 $output
+    -tune psnr -threads 12 -vsync passthrough $output
 
 ffmpeg-x265
 ***********
@@ -605,20 +681,20 @@ ffmpeg-x265
     -i $inputyuv -vframes $numframes -y \
     -c:v libx265 -preset veryslow \
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((2 * bitrate)) \
-    -tune psnr -threads 12 -vsync 0 $output
+    -tune psnr -threads 12 -vsync passthrough $output
 
   # CBR (encoding from YUV)
   ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
     -i $inputyuv -vframes $numframes -y \
     -c:v libx265 -preset veryslow \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
-    -tune psnr -threads 12 -vsync 0 $output
+    -tune psnr -threads 12 -vsync passthrough $output
 
 Links
 -----
 
 * `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
-* `Intel Media SDK sample-multi-transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
+* `Intel Media SDK Sample Multi-Transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
 
 .. |na| raw:: html
 
