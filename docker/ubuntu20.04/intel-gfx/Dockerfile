@@ -36,7 +36,7 @@ RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
 ARG INTEL_GFX_KEY_URL="https://repositories.gfxs.intel.com/internal/intel-graphics.key"
 RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi
 
-ARG INTEL_GFX_APT_REPO="deb https://repositories.gfxs.intel.com/internal/ubuntu focal main"
+ARG INTEL_GFX_APT_REPO="deb https://repositories.gfxs.intel.com/internal/ubuntu focal-embargo-untested main"
 RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
 
 

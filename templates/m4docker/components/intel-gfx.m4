@@ -35,7 +35,7 @@ include(ubuntu.m4)
 define(`INTEL_GFX_URL',https://repositories.gfxs.intel.com/internal)
 
 pushdef(`_install_ubuntu',`dnl
-pushdef(`_tmp',`ifelse($1,`',UBUNTU_CODENAME(OS_VERSION),UBUNTU_CODENAME(OS_VERSION)-$1)')dnl
+pushdef(`_tmp',`UBUNTU_CODENAME(OS_VERSION)-embargo-untested')dnl
 INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent software-properties-common libnss3-tools unzip wget))
 
 COPY assets/embargo/setup-certs.sh /tmp/
