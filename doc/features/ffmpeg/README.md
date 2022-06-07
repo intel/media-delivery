@@ -28,8 +28,8 @@ ffmpeg <...> -c:v $qsvcodec -b:v $bitrate -q $qp \
 ```
 
 There are few other modes exposed by QSV Plugins, like AVBR, QVBR, ICQ and few others.
-These modes are not recommended in most use cases and are subject to be deprecated
-in the future.
+These modes are currently not recommended, and some cases may become subject to be
+deprecated.
 
 MJPEG encoder does not have bitrate control and in general uses separate configuration
 options. It's typical usage would be:
