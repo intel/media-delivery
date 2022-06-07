@@ -375,8 +375,8 @@ Known limitations
 Tips for best performance
 -------------------------
 
-Ffmpeg is easy to use and flexible in supporting many video transcode pipelines. The
-ffmpeg command lines below illustrate good practices in using
+Due to its flexible interface, ffmpeg supports many video transcode pipelines.
+The ffmpeg command lines below illustrate good practices in using
 `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel Quick Sync Video
 - Intel Media SDK integration into ffmpeg). The use of "extbrc" demonstrates the use
 of developer configurable bitrate control, pyramid coding and other quality optimizations.
