@@ -14,3 +14,51 @@ Not supported by upstream ffmpeg yet. Required patches are available here:
 
 * https://github.com/intel-media-ci/cartwheel-ffmpeg
 
+The following table corresponds to [cartwheel-ffmpeg@63b96fc](https://github.com/intel-media-ci/cartwheel-ffmpeg/commit/63b96fce1c50642f15136ad630ff27c0d621265d).
+
+| Feature                     | Commit ID                                                                                   | FFmpeg Version |
+| --------------------------- | ------------------------------------------------------------------------------------------- | -------------- |
+| `-c:v av1_qsv`              | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-adaptive_b -1\|0\|1`      | | not supported |
+| `-adaptive_i -1\|0\|1`      | | not supported |
+| `-async_depth <int>`        | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-avbr_accuracy <int>`      | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-avbr_convergence <int>`   | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-b:v <int>`                | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-b_strategy <int>`         | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-b_qfactor <float>`        | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-b_qoffset <float>`        | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-bitrate_limit <int>`      | | not supported |
+| `-bufsize <int>`            | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-dblk_idc 0\|1\|2`         | | not supported |
+| `-extbrc -1\|0\|1`          | | not supported |
+| `-forced_idr 0\|1`          | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-g <int>`                  | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-global_quality <int>`     | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-i_qfactor <float>`        | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-i_qoffset <float>`        | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-low_delay_brc 0\|1`       | | not supported |
+| `-low_power 0\|1`           | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-max_frame_size <int>`     | | not supported |
+| `-max_frame_size_i <int>`   | | not supported |
+| `-max_frame_size_p <int>`   | | not supported |
+| `-max_slice_size <int>`     | | not supported |
+| `-maxrate <int>`            | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-mbbrc -1\|0\|1`           | | not supported |
+| `-p_strategy 0\|1\|2`       | | not supported |
+| `-preset veryfast`          | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-preset faster`            | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-preset fast`              | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-preset medium`            | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-preset slow`              | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-preset slower`            | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-preset veryslow`          | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-profile unknown`          | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-profile main`             | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-q <int>`                  | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-rc_init_occupancy <int>`  | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-rdo -1\|0\|1`             | | not supported |
+| `-refs <int>`               | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-strict <int>`             | | not supported |
+| `-tile_cols <int>`          | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-tile_rows <int>`          | 0091-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
