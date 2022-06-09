@@ -40,18 +40,18 @@ jobs:
       on: dg1
       kernel: prelim
 
-  test-dg2:
+  test-atsm:
     needs: build
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
     with:
       image: ${{needs.build.outputs.image}}
       test_enctools: 'ON'
-      on: dg2
+      on: atsm
       kernel: linux
 
   deploy-rolling:
     if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'repository_dispatch'
-    needs: [build, test-dg1]
+    needs: [build, test-dg1, test-atsm]
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy-rolling.yml@master
     with:
       image: ${{needs.build.outputs.image}}
