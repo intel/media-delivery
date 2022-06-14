@@ -66,7 +66,7 @@ fi
 cmd=(ffmpeg $dev -an \
   $rawvideo -i $file $vframes \
   -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
-  -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 \
+  -b:v $bitrate -maxrate $bitrate -minrate $bitrate \
   -bufsize $bufsize -rc_init_occupancy $initbuf \
   $options \
   -vsync passthrough -y ${prefix}_${bitrate_Mbps}Mbps_CBR_QSV.h265)
