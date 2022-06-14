@@ -463,34 +463,34 @@ EncTools
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
-    -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
+    -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
     -vsync passthrough -y $output
 
   # CBR (encoding from YUV with ffmpeg-qsv)
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
-    -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
+    -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
     -vsync passthrough -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
-    -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
+    -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
     -vsync passthrough -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
-    -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
+    -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
     -vsync passthrough -y $output
 
   # VBR (encoding from YUV with Sample Multi-Transcode)
@@ -531,7 +531,7 @@ ExtBRC
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
     -vsync passthrough -y $output
 
@@ -539,21 +539,21 @@ ExtBRC
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
     -vsync passthrough -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
     -vsync passthrough -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
     -vsync passthrough -y $output
 
@@ -594,7 +594,7 @@ AV1
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -refs 3 -g 256 \
     -vsync passthrough -y $output
 
@@ -602,21 +602,21 @@ AV1
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -rc_init_occupancy $bufsize -b_strategy 1 -bf 7 -refs 3 -g 256 \
     -vsync passthrough -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
-    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -refs 3 -g 256 \
     -vsync passthrough -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -rc_init_occupancy $bufsize -b_strategy 1 -bf 7 -refs 3 -g 256 \
     -vsync passthrough -y $output
 
