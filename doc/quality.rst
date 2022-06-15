@@ -254,11 +254,11 @@ Below table summarizes which tools are available in EncTools and ExtBRC SW BRCs.
 +-------------------------------------------------------+---------+----------+
 | Feature                                               | ExtBRC  | EncTools |
 +=======================================================+=========+==========+
-| Adaptive Long Term Reference (ALTR)                   | |check| | |check|  |
+| Adaptive Long Term Reference (ALTR)*                  | |check| | |check|  |
 +-------------------------------------------------------+---------+----------+
-| Scene Change Detection (SCD/Adaptive I)               | |check| | |check|  |
+| Scene Change Detection (SCD/Adaptive I)*              | |check| | |check|  |
 +-------------------------------------------------------+---------+----------+
-| Adaptive Motion Compensation Temporal Filter (AMCTF)* | |check| | |check|  |
+| Adaptive Motion Compensation Temporal Filter (AMCTF)* | |check| | |cross|  |
 +-------------------------------------------------------+---------+----------+
 | Adaptive Pyramid Quantization (APQ)                   | |cross| | |check|  |
 +-------------------------------------------------------+---------+----------+
@@ -273,10 +273,10 @@ Below table summarizes which tools are available in EncTools and ExtBRC SW BRCs.
 | Persistance Adaptive Quantization (PAQ)               | |cross| | |check|  |
 +-------------------------------------------------------+---------+----------+
 
-\* - AMCTF is VME based and is available up to (and including) DG1.
+\* - VME based and is available up to (and including) DG1.
 
 EncTools and ExtBRC are not supported for all the codecs and platforms - see support matrix below.
-Mind that HW BRC for VDENC encoders requires HuC which is not enabled by default in Linux kernel
+Please note that HW BRC for VDENC encoders requires HuC which is not enabled by default in Linux kernel
 on some platforms. First platform which enables HuC by default is DG1 (TGL does not has HuC
 enabled by default).
 
@@ -321,6 +321,56 @@ H.264/AVC
 
 EncTools
 ********
+
+To achive better quality with Intel GPU H.264/AVC encoder running EncTools BRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | n2.8           | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -minrate $bitrate -maxrate $bitrate`` | n2.8           | This triggers CBR.                                                       |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((2 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 2 seconds is recommended    |
+|                                                       |                | for CBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $bitrate``                       | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR & VBR common settings                                                                                                                         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bitrate_limit 0``                                  | n3.0           | This disables target bitrate limitations that exist in MediaSDK/VPL for  |
+|                                                       |                | AVC encoding                                                             |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extbrc 1 -look_ahead_depth 40``                    | n3.0           | This enables EncTools Software BRC (need to have look ahead depth > than |
+|                                                       |                | miniGOP size which is equal to bf+1).                                    |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b_strategy 1 -bf 7``                               | n3.0           | These 2 settings activate full 3 level B-Pyramid.                        |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-refs 5``                                           | n2.7           | 5 references are important to trigger Long Term Reference (LTR) coding   |
+|                                                       |                | feature.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | n2.7           | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-adaptive_i 1 -adaptive_b 1``                       | n3.0           | Ensures to enable scene change detection and adaptive miniGOP.           |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-strict -1``                                        | n3.0           | Disables HRD compliance.                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+Example command lines:
 
 ::
 
@@ -391,6 +441,51 @@ EncTools
 ExtBRC
 ******
 
+To achive better quality with Intel GPU H.264/AVC encoder running ExtBRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | n2.8           | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -minrate $bitrate -maxrate $bitrate`` | n2.8           | This triggers CBR.                                                       |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((2 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 2 seconds is recommended    |
+|                                                       |                | for CBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $bitrate``                       | n2.8           | This is ithe initial buffer delay. You can vary this per your needs.     |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR & VBR common settings                                                                                                                         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bitrate_limit 0``                                  | n3.0           | This disables target bitrate limitations that exist in MediaSDK/VPL for  |
+|                                                       |                | AVC encoding                                                             |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extbrc 1``                                         |                | This enabled ExtBRC Software BRC                                         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b_strategy 1 -bf 7``                               | n3.0           | These 2 settings activate full 3 level B-Pyramid.                        |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-refs 5``                                           | n2.7           | 5 references are important to trigger Long Term Reference (LTR) coding   |
+|                                                       |                | feature.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | n2.7           | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+Example command lines:
+
 ::
 
   # VBR (encoding from YUV with ffmpeg-qsv)
@@ -456,6 +551,52 @@ H.265/HEVC
 
 EncTools
 ********
+
+To achive better quality with Intel GPU H.265/HEVC encoder running EncTools BRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | n2.8           | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -minrate $bitrate -maxrate $bitrate`` | n2.8           | This triggers CBR.                                                       |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((2 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 2 seconds is recommended    |
+|                                                       |                | for CBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $bitrate``                       | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR & VBR common settings                                                                                                                         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extbrc 1 -look_ahead_depth 40``                    | n5.0           | This enables EncTools Software BRC (need to have look ahead depth > than |
+|                                                       |                | miniGOP size which is equal to bf+1).                                    |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b_strategy 1 -bf 7``                               | master         | These 2 settings activate full 3 level B-Pyramid.                        |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-refs 4``                                           | n2.8           | 4 reference are recommended for high quality HEVC encoding.              |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | n2.8           | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-strict -1``                                        | n5.0           | Disables HRD compliance.                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-idr_interval begin_only``                          | n4.0           | Only first I-frame will be IDR, other I-frames will be CRA.              |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+Example command lines:
 
 ::
 
@@ -525,6 +666,49 @@ EncTools
 ExtBRC
 ******
 
+To achive better quality with Intel GPU H.265/HEVC encoder running ExtBRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | n2.8           | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -minrate $bitrate -maxrate $bitrate`` | n2.8           | This triggers CBR.                                                       |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((2 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 2 seconds is recommended    |
+|                                                       |                | for CBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $bitrate``                       | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR & VBR common settings                                                                                                                         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extbrc 1``                                         | n4.3           | This enabled ExtBRC Software BRC                                         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bf 7``                                             | n2.8           | B-Pyramid is ON by default (to be explicit, add ``-b_strategy 1``, but   |
+|                                                       |                | the setting is supported in ffmpeg master for HEVC). ``-bf 7`` enables   |
+|                                                       |                | full 3 level B-Pyramid.                                                  |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-refs 4``                                           | n2.8           | 4 reference are recommended for high quality HEVC encoding.              |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | n2.7           | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+Example command lines:
+
 ::
 
   # VBR (encoding from YUV with ffmpeg-qsv)
@@ -587,6 +771,43 @@ ExtBRC
 
 AV1
 ---
+
+To achive better quality with Intel GPU AV1 encoder running Hardware BRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | patched        | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | patched        | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | patched        | This is initial buffer delay. You can vary this per your needs.          |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -minrate $bitrate -maxrate $bitrate`` | patched        | This triggers CBR.                                                       |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((2 * $bitrate))``                        | patched        | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 2 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $bitrate``                       | patched        | This is initial buffer delay. You can vary this per your needs.          |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR & VBR common settings                                                                                                                         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b_strategy 1 -bf 7``                               | patched        | These 2 settings activate full 3 level B-Pyramid.                        |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | patched        | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+Example command lines:
 
 ::
 
