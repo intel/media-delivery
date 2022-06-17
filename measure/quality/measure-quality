@@ -37,6 +37,7 @@ fi
 
 eval set -- "$PARSED"
 
+errlog="error.log"
 bdr_limit=1000000
 width=0
 height=0
@@ -276,6 +277,14 @@ function set_err() {
   local sts=$1
   if [[ "$err" -eq 0 ]]; then
     err=$sts
+  fi
+}
+
+function log_err() {
+  err=$(echo $?)
+  local cmd=$1
+  if [[ "$err" -ne 0 ]]; then
+    echo "$cmd error" >> $errlog
   fi
 }
 
@@ -959,34 +968,34 @@ if [ "$skip_encoding" = "no" ]; then
   for b in ${bitrates[@]}; do
     if [ "$is_yuv" = "no" ]; then
       if [ "$skip_reference" = "no" ] && [ "$use_gold_ref" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $b $options_ref
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $b $options_ref
+        if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $b $options_ref; log_err "ffmpeg ref cbr transcode"; fi
+        if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $b $options_ref; log_err "ffmpeg ref vbr transcode"; fi
       fi
       if [ "$skip_ffmpeg" = "no" ]; then
         std=$(get_param $file "stream" "codec_name")
         case $std in h264|hevc|mpeg2|vc1|av1);; *) std=UNSUPPORTED;; esac
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $b $tu $options_qsv
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $b $tu $options_qsv
+        if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $b $tu $options_qsv; log_err "ffmpeg qsv cbr transcode"; fi
+        if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $b $tu $options_qsv; log_err "ffmpeg qsv vbr transcode"; fi
       fi
       if [ "$skip_msdk" = "no" ]; then
         raw=$(get_raw_stream_info $file)
         if [ -n "$raw" ]; then
-          [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $raw $b $tu $options_smt
-          [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $raw $b $tu $options_smt
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $raw $b $tu $options_smt; log_err "smt cbr transcode"; fi
+          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $raw $b $tu $options_smt; log_err "smt vbr transcode"; fi
         fi
       fi
     else
       if [ "$skip_reference" = "no" ] && [ "$use_gold_ref" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $options_ref
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $options_ref
+        if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $options_ref; log_err "ffmpeg ref cbr encode"; fi
+        if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $options_ref; log_err "ffmpeg ref vbr encode"; fi
       fi
       if [ "$skip_ffmpeg" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_qsv
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_qsv
+        if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_qsv; log_err "ffmpeg qsv cbr encode"; fi
+        if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_qsv; log_err "ffmpeg qsv vbr encode"; fi
       fi
       if [ "$skip_msdk" = "no" ]; then
-        [ "$skip_cbr" = "no" ] && $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_smt
-        [ "$skip_vbr" = "no" ] && $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_smt
+        if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_smt; log_err "smt cbr encode"; fi
+        if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_smt; log_err "smt vbr encode"; fi
       fi
     fi
   done
