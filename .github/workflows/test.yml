@@ -58,7 +58,7 @@ jobs:
         export MDS_DEMO=cdn
         export TEST_ENCTOOLS=${{inputs.test_enctools}}
         for d in renderD128 renderD129; do \
-          if fgrep -i 0x56a1 /sys/class/drm/$d/device/device; then \
+          if grep -iq '56a1\|56c0' /sys/class/drm/$d/device/device; then \
             export DEVICE=/dev/dri/$d; \
           fi; \
         done
