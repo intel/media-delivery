@@ -107,7 +107,6 @@ cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   [ $status -eq 0 ]
 }
 
-
 @test "measure quality: encode 5 frames of a predefined YUV video with AV1" {
   run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
     /bin/bash -c "set -ex; \
@@ -319,6 +318,170 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
     WAR.h265; \
     result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+#low-delay
+@test "measure quality: encode 5 frames of a user-defined YUV video with AVC in low-delay mode" {
+  run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
+    measure quality -w 480 -h 270 -f 24 --use-lowdelay \
+    --nframes 5 --skip-metrics --skip-bdrate \
+    WAR.yuv; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: encode 5 frames of a user-defined YUV video with HEVC in low-delay mode" {
+  run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
+    measure quality -w 480 -h 270 -f 24 --use-lowdelay \
+    --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
+    WAR.yuv; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: encode 5 frames of a user-defined YUV video with AV1 in low-delay mode" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh AV1Profile0);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
+    measure quality -w 480 -h 270 -f 24 --use-lowdelay \
+    --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
+    WAR.yuv; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: encode 5 frames of a predefined YUV video with AVC in low-delay mode" {
+  run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
+    measure quality --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
+    ParkScene_1280x720_24.yuv; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: encode 5 frames of a predefined YUV video with HEVC in low-delay mode" {
+  run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
+    measure quality --codec HEVC --use-lowdelay --nframes 5 --skip-metrics --skip-bdrate \
+    ParkScene_1280x720_24.yuv; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: encode 5 frames of a predefined YUV video with AV1 in low-delay mode" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh AV1Profile0);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
+    measure quality --codec AV1 --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
+    ParkScene_1280x720_24.yuv; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: transcode 5 frames of a user-defined raw H.264 video stream into AVC stream in low-delay mode" {
+  run docker_run /bin/bash -c "set -ex; $subs; $get264; \
+    measure quality --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
+    WAR.h264; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: transcode 5 frames of a user-defined raw H.264 video stream into HEVC stream in low-delay mode" {
+  run docker_run /bin/bash -c "set -ex; $subs; $get264; \
+    measure quality --codec HEVC --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
+    WAR.h264; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: transcode 5 frames of a user-defined raw H.264 video stream into AV1 stream in low-delay mode" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh AV1Profile0);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  run docker_run /bin/bash -c "set -ex; $subs; $get264; \
+    measure quality --codec AV1 --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
+    WAR.h264; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: transcode 5 frames of a user-defined raw HEVC video stream into AVC stream in low-delay mode" {
+  run docker_run /bin/bash -c "set -ex; $subs; $get265; \
+    measure quality --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
+    WAR.h265; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: transcode 5 frames of a user-defined raw HEVC video stream into HEVC stream in low-delay mode" {
+  run docker_run /bin/bash -c "set -ex; $subs; $get265; \
+    measure quality --codec HEVC --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
+    WAR.h265; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: transcode 5 frames of a user-defined raw HEVC video stream into AV1 stream in low-delay mode" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh AV1Profile0);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  run docker_run /bin/bash -c "set -ex; $subs; $get265; \
+    measure quality --codec AV1 --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
+    WAR.h265; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 15 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+@test "measure quality: transcode 5 frames of a user-defined raw AV1 video stream into AV1 stream in low-delay mode" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh AV1Profile0);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  run docker_run /bin/bash -c "set -ex; $subs; $getav1; \
+    measure quality --codec AV1 --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
+    WAR.ivf; \
+    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 10 ]]"
   print_output
   [ $status -eq 0 ]
 }
