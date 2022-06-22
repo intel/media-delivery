@@ -4,6 +4,7 @@
 | --------------------------- | ------------------------------------------------------------------------------------------- | -------------- |
 | `-c:v vp9_qsv`              | [655ff47](https://github.com/FFmpeg/FFmpeg/commit/655ff4708bfe160447b07d0cbae6b710666f0139) | n4.3           |
 | `-async_depth <int>`        | [655ff47](https://github.com/FFmpeg/FFmpeg/commit/655ff4708bfe160447b07d0cbae6b710666f0139) | n4.3           |
+| `-extra_hw_frames <int>`    | [655ff47](https://github.com/FFmpeg/FFmpeg/commit/655ff4708bfe160447b07d0cbae6b710666f0139) | n4.3           |
 | `-gpu_copy 0\|1\|2`         | [5345965](https://github.com/FFmpeg/FFmpeg/commit/5345965b3f088ad5acd5151bec421c97470675a4) | n4.3           |
 
 # VP9 Encoding
