@@ -4,6 +4,7 @@
 | --------------------------- | ------------------------------------------------------------------------------------------- | -------------- |
 | `-c:v mpeg2_qsv`            | [bf52f77](https://github.com/FFmpeg/FFmpeg/commit/bf52f773913cf74bdf0d2c8c2cb4473fa1b7801e) | n2.8           |
 | `-async_depth <int>`        | [bf52f77](https://github.com/FFmpeg/FFmpeg/commit/bf52f773913cf74bdf0d2c8c2cb4473fa1b7801e) | n2.8           |
+| `-extra_hw_frames <int>`    | [5b14529](https://github.com/FFmpeg/FFmpeg/commit/5b145290df2998a9836a93eb925289c6c8b63af0) | n4.0           |
 | `-gpu_copy 0\|1\|2`         | [5345965](https://github.com/FFmpeg/FFmpeg/commit/5345965b3f088ad5acd5151bec421c97470675a4) | n4.3           |
 
 # MPEG2 Encoding

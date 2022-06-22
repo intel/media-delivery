@@ -4,6 +4,7 @@
 | --------------------------- | ------------------------------------------------------------------------------------------- | -------------- |
 | `-c:v mjpeg_qsv`            | [7555cfd](https://github.com/FFmpeg/FFmpeg/commit/7555cfd29b7150a9c59f8a757ae0e5804a369644) | n4.3           |
 | `-async_depth <int>`        | [7555cfd](https://github.com/FFmpeg/FFmpeg/commit/7555cfd29b7150a9c59f8a757ae0e5804a369644) | n4.3           |
+| `-extra_hw_frames <int>`    | [5b14529](https://github.com/FFmpeg/FFmpeg/commit/5b145290df2998a9836a93eb925289c6c8b63af0) | n4.0           |
 | `-gpu_copy 0\|1\|2`         | [5345965](https://github.com/FFmpeg/FFmpeg/commit/5345965b3f088ad5acd5151bec421c97470675a4) | n4.3           |
 
 # MJPEG Encoding
