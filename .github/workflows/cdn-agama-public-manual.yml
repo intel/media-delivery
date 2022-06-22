@@ -53,18 +53,18 @@ jobs:
       on: dg1
       kernel: prelim
 
-  test-dg2:
+  test-atsm:
     needs: build
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
     with:
       repo: intel/media-delivery
       image: ${{needs.build.outputs.image}}
       test_enctools: 'ON'
-      on: dg2
+      on: atsm
       kernel: linux
 
   deploy:
-    needs: [build, test-gen9, test-dg1, test-dg2]
+    needs: [build, test-gen9, test-dg1, test-atsm]
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       repo: intel/media-delivery

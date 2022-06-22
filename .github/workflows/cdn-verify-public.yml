@@ -133,7 +133,7 @@ jobs:
       on: dg1
       kernel: prelim
 
-  test-dg2-ver:
+  test-atsm-ver:
     needs: [prepare, build-ver]
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
     with:
@@ -141,7 +141,7 @@ jobs:
       pr: ${{needs.prepare.outputs.pr}}
       image: ${{needs.build-ver.outputs.image}}
       test_enctools: 'ON'
-      on: dg2
+      on: atsm
       kernel: linux
 
   deploy-rolling:
