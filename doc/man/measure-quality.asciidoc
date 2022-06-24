@@ -132,7 +132,7 @@ exceptional complexity:
 | DinnerScene_1920x1080_60.yuv | 1, 1.5, 2, 3, 4
 | Sintel_trailer_o537n480_1920x1080_24.yuv | 0.5, 1, 2, 6, 9
 | crowd_run_1280x720_50.yuv | 6, 8, 10, 12, 15
-| park_joy_1280x720_50.yuv | 6 8, 10, 12, 15
+| park_joy_1280x720_50.yuv | 6, 8, 10, 12, 15
 |===
 
 * In case of HEVC encoding:
@@ -145,7 +145,7 @@ exceptional complexity:
 | DinnerScene_1920x1080_60.yuv | 3, 7, 11, 15, 20
 | Sintel_trailer_o537n480_1920x1080_24.yuv | 0.5, 1, 2, 6, 9
 | crowd_run_1280x720_50.yuv | 6, 8, 10, 12, 15
-| park_joy_1280x720_50.yuv | 6 8, 10, 12, 15
+| park_joy_1280x720_50.yuv | 6, 8, 10, 12, 15
 |===
 
 * In case of AV1 encoding:
@@ -158,8 +158,21 @@ exceptional complexity:
 | DinnerScene_1920x1080_60.yuv | 3, 7, 11, 15, 20
 | Sintel_trailer_o537n480_1920x1080_24.yuv | 0.5, 1, 2, 6, 9
 | crowd_run_1280x720_50.yuv | 6, 8, 10, 12, 15
-| park_joy_1280x720_50.yuv | 6 8, 10, 12, 15
+| park_joy_1280x720_50.yuv | 6, 8, 10, 12, 15
 |===
+
+All adjusted bitrates are the same for low delay setting except for the following 3 predefined sequences:
+
+* AVC, HEVC, and AV1 encoding:
++
+|===
+| Stream | Bitrates (Mbps)
+
+| DinnerScene_1920x1080_60.yuv | 1, 1.5, 3, 4.5, 7.5
+| crowd_run_1280x720_50.yuv | 3, 4.5, 7.5, 10, 12
+| park_joy_1280x720_50.yuv | 3, 4.5, 7.5, 10, 12
+|===
+
 
 OUTPUT ARTIFACTS
 ----------------
