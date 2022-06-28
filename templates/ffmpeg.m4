@@ -25,11 +25,18 @@ DECLARE(`FFMPEG_VER',`bea841a')
 DECLARE(`FFMPEG_ENABLE_MFX',`1.x')
 
 define(`FFMPEG_BUILD_DEPS',`ca-certificates gcc g++ git dnl
-  ifelse(FFMPEG_ENABLE_MFX,1.x,libmfx-dev,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl-dev)) dnl
-  libva-dev libx264-dev libx265-dev make patch pkg-config yasm')
-define(`FFMPEG_INSTALL_DEPS',`intel-media-va-driver-non-free libigfxcmrt7 libmfx1 dnl
-  ifelse(FFMPEG_ENABLE_MFX,2.x,libmfxgen1 libvpl2) dnl
-  libva-drm2 libx264-155 libx265-179 libxcb-shm0')
+  ifdef(`BUILD_MSDK',,ifelse(FFMPEG_ENABLE_MFX,1.x,libmfx-dev)) dnl
+  ifdef(`BUILD_ONEVPLGPU',,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl-dev)) dnl
+  ifdef(`BUILD_LIBVA2',,libva-dev) dnl
+  libx264-dev libx265-dev make patch pkg-config yasm')
+
+define(`FFMPEG_INSTALL_DEPS',`dnl
+  ifdef(`BUILD_MEDIA_DRIVER',,intel-media-va-driver-non-free libigfxcmrt7) dnl
+  ifdef(`BUILD_MSDK',,libmfx1) dnl
+  ifdef(`BUILD_ONEVPLGPU',,ifelse(FFMPEG_ENABLE_MFX,2.x,libmfxgen1)) dnl
+  ifdef(`BUILD_ONEVPL',,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl2)) dnl
+  ifdef(`BUILD_LIBVA2',,libva-drm2) dnl
+  libx264-155 libx265-179 libxcb-shm0')
 
 define(`BUILD_FFMPEG',
 RUN git clone https://github.com/ffmpeg/ffmpeg BUILD_HOME/ffmpeg && \

@@ -23,7 +23,9 @@
 # To update, modify the template and regenerate.
 
 ARG IMAGE=ubuntu:20.04
-FROM $IMAGE AS content
+FROM $IMAGE AS base
+
+FROM base as content
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -35,11 +37,193 @@ RUN mkdir -p /downloads && cd /downloads && \
   wget --progress=bar:force https://repositories.intel.com/media/usage.txt && \
   wget --progress=bar:force https://repositories.intel.com/media/WAR_TRAILER_HiQ_10_withAudio.mp4
 
-FROM ubuntu:20.04 as build
+FROM base as build
 
 RUN mkdir -p /opt/build && mkdir -p /opt/dist
 
 ENV PKG_CONFIG_PATH=/opt/intel/samples/lib/pkgconfig
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    cmake && \
+  rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    automake \
+    ca-certificates \
+    gcc \
+    libdrm-dev \
+    libtool \
+    make \
+    pkg-config \
+    wget \
+    libx11-dev \
+    libxext-dev \
+    libxfixes-dev \
+     && \
+  rm -rf /var/lib/apt/lists/*
+# build libva2
+ARG LIBVA2_REPO=https://github.com/intel/libva/archive/2.14.0.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${LIBVA2_REPO} | tar xz
+RUN cd /opt/build/libva-2.14.0 && \
+  ./autogen.sh --prefix=/opt/intel/samples --libdir=/opt/intel/samples/lib && \
+  make -j$(nproc) && \
+  make install DESTDIR=/opt/dist && \
+  make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    g++ \
+    make \
+    wget && \
+  rm -rf /var/lib/apt/lists/*
+
+# build gmmlib
+ARG GMMLIB_REPO=https://github.com/intel/gmmlib/archive/intel-gmmlib-22.1.4.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${GMMLIB_REPO} | tar xz
+RUN cd /opt/build/gmmlib-intel-gmmlib-22.1.4 && mkdir build && cd build && \
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
+    -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
+    .. && \
+  make -j$(nproc) && \
+  make install DESTDIR=/opt/dist && \
+  make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    g++ \
+    make \
+    pkg-config \
+    wget && \
+  rm -rf /var/lib/apt/lists/*
+# build media driver
+ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-22.4.3.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${MEDIA_DRIVER_REPO} | tar xz
+RUN cd /opt/build/media-driver-intel-media-22.4.3 && mkdir build && cd build && \
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
+    -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
+    -DENABLE_PRODUCTION_KMD=ON \
+    .. && \
+  make -j$(nproc) && \
+  make install DESTDIR=/opt/dist && \
+  make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    automake \
+    ca-certificates \
+    gcc \
+    g++ \
+    libdrm-dev \
+    libtool \
+    make \
+    pkg-config \
+    wget && \
+  rm -rf /var/lib/apt/lists/*
+# build libva2-utils
+ARG LIBVA2_UTILS_REPO=https://github.com/intel/libva-utils/archive/2.14.0.tar.gz
+RUN cd /opt/build && wget -O - ${LIBVA2_UTILS_REPO} | tar xz
+RUN cd /opt/build/libva-utils-2.14.0 && \
+  ./autogen.sh --prefix=/opt/intel/samples --libdir=/opt/intel/samples/lib && \
+  make -j$(nproc) && \
+  make install DESTDIR=/opt/dist && \
+  make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    automake \
+    ca-certificates \
+    gcc \
+    g++ \
+    make \
+    pkg-config \
+    wget \
+    cmake \
+    dh-autoreconf && \
+  rm -rf /var/lib/apt/lists/*
+ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v2022.1.5.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${ONEVPL_REPO} | tar xz
+
+COPY patches/libvpl2 /opt/build/oneVPL-2022.1.5
+RUN cd /opt/build/oneVPL-2022.1.5 && { set -e; \
+  for patch_file in $(find -iname "*.patch" | sort -n); do \
+    echo "Applying: ${patch_file}"; \
+    patch -p1 < ${patch_file}; \
+  done; }
+# build oneVPL
+RUN cd /opt/build/oneVPL-2022.1.5 && \
+    mkdir build && cd build && \
+    cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
+      -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
+      .. && \
+    make -j$(nproc) && \
+    make install DESTDIR=/opt/dist && \
+    make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    gcc \
+    g++ \
+    wget \
+    pkg-config \
+    cmake \
+    make && \
+  rm -rf /var/lib/apt/lists/*
+ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-22.4.3.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${ONEVPLGPU_REPO} | tar xz
+# build oneVPL gpu
+RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-22.4.3 && \
+    mkdir -p _build && cd _build && \
+    cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
+    -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
+    -DMFX_ENABLE_AENC=ON \
+    .. && \
+    make -j$(nproc) && \
+    make install DESTDIR=/opt/dist && \
+    make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    gcc \
+    g++ \
+    make \
+    pkg-config \
+    wget && \
+  rm -rf /var/lib/apt/lists/*
+# build media sdk
+ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-22.4.3.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${MSDK_REPO} | tar xz
+RUN cd /opt/build/MediaSDK-intel-mediasdk-22.4.3 && \
+  mkdir -p build && cd build && \
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
+    -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
+    -DBUILD_SAMPLES=OFF \
+    -DBUILD_TUTORIALS=OFF \
+    .. && \
+  make -j$(nproc) && \
+  make install DESTDIR=/opt/dist && \
+  make install
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -110,8 +294,6 @@ RUN apt-get update && \
     gcc \
     g++ \
     git \
-    libmfx-dev \
-    libva-dev \
     libx264-dev \
     libx265-dev \
     make \
@@ -123,6 +305,13 @@ RUN git clone https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg && \
   cd /opt/build/ffmpeg && \
   git checkout bea841a
 
+COPY patches/ffmpeg /opt/build/ffmpeg
+RUN cd /opt/build/ffmpeg && { set -e; \
+  for patch_file in $(find -iname "*.patch" | sort -n); do \
+    echo "Applying: ${patch_file}"; \
+    patch -p1 < ${patch_file}; \
+  done; }
+
 RUN cd /opt/build/ffmpeg && \
   ./configure \
   --prefix=/opt/intel/samples \
@@ -131,7 +320,7 @@ RUN cd /opt/build/ffmpeg && \
   --disable-doc \
   --enable-shared \
   --enable-vaapi \
-  --enable-libmfx \
+  --enable-libvpl \
   --enable-gpl \
   --enable-libx264 \
   --enable-libx265 \
@@ -196,7 +385,7 @@ RUN cd /opt/build/igt \
 
 
 # Ok, here goes the final image end-user will actually see
-FROM ubuntu:20.04
+FROM base
 
 LABEL vendor="Intel Corporation"
 
@@ -204,12 +393,12 @@ COPY --from=content /downloads /opt/data/embedded
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libdrm2 \
+    libx11-6 \
+    libxext6 \
+    libxfixes3 \
     python3 \
     python3-pip \
-    intel-media-va-driver-non-free \
-    libigfxcmrt7 \
-    libmfx1 \
-    libva-drm2 \
     libx264-155 \
     libx265-179 \
     libxcb-shm0 \
@@ -224,12 +413,10 @@ RUN apt-get update && \
     python3-numpy \
     socat \
     tmux \
-    vainfo \
     curl \
     sudo \
     vim \
-    wget \
-     && \
+    wget && \
   rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /opt/dist /
@@ -315,6 +502,7 @@ ENTRYPOINT ["/usr/bin/demo-bash"]
 # ... end of custom installation rules
 
 # Custom component environment variables, if any...
+ENV ONEVPL_SEARCH_PATH=/opt/intel/samples/lib/
 # ... end of custom environment variables
 
 

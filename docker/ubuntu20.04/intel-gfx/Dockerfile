@@ -259,6 +259,7 @@ RUN apt-get update && \
 COPY --from=build /opt/dist /
 RUN echo "/opt/intel/samples/lib" >> /etc/ld.so.conf.d/all-libs.conf && ldconfig
 
+# Custom component installation rules, if any...
 COPY --from=build /opt/wheel /opt/wheel
 RUN python3 -m pip install --no-deps --prefix=/opt/intel/samples /opt/wheel/* && rm -rf /opt/wheel
 
@@ -335,6 +336,11 @@ CMD ["/usr/bin/hello-bash"]
 # demo-bash will execute whatever command is provided by the user making
 # sure that environment settings are correct.
 ENTRYPOINT ["/usr/bin/demo-bash"]
+# ... end of custom installation rules
+
+# Custom component environment variables, if any...
+# ... end of custom environment variables
+
 
 USER user
 WORKDIR /home/user
