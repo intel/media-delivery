@@ -1,0 +1,52 @@
+name: dkms
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'How to name docker (ex.: dkms-vX)?'
+        required: true
+  push:
+    branches:
+    - master
+    paths-ignore:
+    - '.github/workflows/**'
+    - '!.github/workflows/dkms.yml'
+    - '!.github/workflows/build.yml'
+    - '!.github/workflows/test.yml'
+    - '!.github/workflows/deploy.yml'
+  pull_request:
+    branches:
+    - master
+    paths-ignore:
+    - '.github/workflows/**'
+    - '!.github/workflows/dkms.yml'
+    - '!.github/workflows/build.yml'
+    - '!.github/workflows/test.yml'
+    - '!.github/workflows/deploy.yml'
+
+jobs:
+  build:
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
+    with:
+      gfx_repo_key: ''
+      gfx_repo: ''
+      flavor: dkms
+      dockerfile: docker/ubuntu20.04/dkms/Dockerfile
+
+  deploy-push:
+    if: github.event_name == 'push'
+    needs: build
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
+    with:
+      image: ${{needs.build.outputs.image}}
+      gta-asset-name: dkms
+
+  deploy-release:
+    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
+    with:
+      image: ${{needs.build.outputs.image}}
+      gta-asset-name: ${{github.event.inputs.name}}
+
