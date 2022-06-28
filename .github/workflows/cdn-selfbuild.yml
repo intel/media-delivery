@@ -1,0 +1,79 @@
+name: cdn-selfbuild
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'How to name docker (ex.: selfbuild-vX)?'
+        required: true
+  push:
+    branches:
+    - master
+    paths-ignore:
+    - '.github/workflows/**'
+    - '!.github/workflows/cdn-selfbuild.yml'
+    - '!.github/workflows/build.yml'
+    - '!.github/workflows/test.yml'
+    - '!.github/workflows/deploy.yml'
+  pull_request:
+    branches:
+    - master
+    paths-ignore:
+    - '.github/workflows/**'
+    - '!.github/workflows/cdn-selfbuild.yml'
+    - '!.github/workflows/build.yml'
+    - '!.github/workflows/test.yml'
+    - '!.github/workflows/deploy.yml'
+
+jobs:
+  build:
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
+    with:
+      gfx_repo_key: ''
+      gfx_repo: ''
+      flavor: selfbuild
+      dockerfile: docker/ubuntu20.04/selfbuild/Dockerfile
+
+  test-gen9:
+    needs: build
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    with:
+      image: ${{needs.build.outputs.image}}
+      test_enctools: 'OFF'
+      on: gen9
+      kernel: linux
+
+  test-dg1:
+    needs: build
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    with:
+      image: ${{needs.build.outputs.image}}
+      test_enctools: 'ON'
+      on: dg1
+      kernel: prelim
+
+  test-atsm:
+    needs: build
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
+    with:
+      image: ${{needs.build.outputs.image}}
+      test_enctools: 'ON'
+      on: atsm
+      kernel: linux
+
+  deploy-push:
+    if: github.event_name == 'push'
+    needs: [build, test-gen9, test-dg1, test-atsm]
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
+    with:
+      image: ${{needs.build.outputs.image}}
+      gta-asset-name: selfbuild
+
+  deploy-release:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [build, test-gen9, test-dg1, test-atsm]
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
+    with:
+      image: ${{needs.build.outputs.image}}
+      gta-asset-name: ${{github.event.inputs.name}}
+

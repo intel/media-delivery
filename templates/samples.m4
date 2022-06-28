@@ -25,11 +25,13 @@ include(intel-gpu-tools.m4)
 DECLARE(`DEVEL',yes)
 
 define(`SAMPLES_INSTALL_DEPS',`dnl
-  ifelse(USE_VPL_TOOLS,yes,libvpl-tools,libmfx-tools) dnl
+  ifdef(`BUILD_ONEVPL',,ifelse(USE_VPL_TOOLS,yes,libvpl-tools)) dnl
+  ifdef(`BUILD_MSDK',,ifelse(USE_VPL_TOOLS,no,libmfx-tools)) dnl
   libnginx-mod-http-lua libnginx-mod-rtmp dnl
   linux-tools-generic nginx pciutils psmisc dnl
   python3 python3-matplotlib python3-numpy dnl
-  socat tmux vainfo dnl
+  socat tmux dnl
+  ifdef(`BUILD_LIBVA2',,vainfo) dnl
   ifelse(DEVEL,yes,`curl sudo vim wget')')
 
 define(`INSTALL_SAMPLES',`dnl
@@ -103,7 +105,8 @@ CMD ["/usr/bin/hello-bash"]
 
 # demo-bash will execute whatever command is provided by the user making
 # sure that environment settings are correct.
-ENTRYPOINT ["/usr/bin/demo-bash"]') # define(INSTALL_SAMPLES)
+ENTRYPOINT ["/usr/bin/demo-bash"]
+') # define(INSTALL_SAMPLES)
 
 REG(SAMPLES)
 

@@ -275,12 +275,18 @@ ifelse($2,`',,
 COPY --from=$2 BUILD_DESTDIR /
 RUN echo "BUILD_LIBDIR" >> /etc/ld.so.conf.d/all-libs.conf && ldconfig)
 
-SET_ENV_VARS_COMPONENTS(ARGS(COMPONENTS_LIST))dnl
+# Custom component installation rules, if any...
 pushdef(`_install_mode',$1)dnl
 pushdef(`_install_from',$2)dnl
 INSTALL_COMPONENTS(ARGS(COMPONENTS_LIST))dnl
 popdef(`_install_from')dnl
-popdef(`_install_mode')')
+popdef(`_install_mode')dnl
+# ... end of custom installation rules
+
+# Custom component environment variables, if any...
+SET_ENV_VARS_COMPONENTS(ARGS(COMPONENTS_LIST))dnl
+# ... end of custom environment variables
+')
 
 # Registers component given in ``$1`` argument to be built and/or isntalled.
 define(`REG',`dnl

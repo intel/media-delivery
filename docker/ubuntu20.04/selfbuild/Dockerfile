@@ -25,21 +25,6 @@
 ARG IMAGE=ubuntu:20.04
 FROM $IMAGE AS base
 
-RUN apt-get update && \
-  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    curl ca-certificates gpg-agent software-properties-common libnss3-tools unzip wget && \
-  rm -rf /var/lib/apt/lists/*
-
-COPY assets/embargo/setup-certs.sh /tmp/
-RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
-
-ARG INTEL_GFX_KEY_URL="https://repositories.gfxs.intel.com/internal/intel-graphics.key"
-RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi
-
-ARG INTEL_GFX_APT_REPO="deb https://repositories.gfxs.intel.com/internal/ubuntu focal-embargo-untested main"
-RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
-
-
 FROM base as content
 
 RUN apt-get update && \
@@ -57,6 +42,188 @@ FROM base as build
 RUN mkdir -p /opt/build && mkdir -p /opt/dist
 
 ENV PKG_CONFIG_PATH=/opt/intel/samples/lib/pkgconfig
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    cmake && \
+  rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    automake \
+    ca-certificates \
+    gcc \
+    libdrm-dev \
+    libtool \
+    make \
+    pkg-config \
+    wget \
+    libx11-dev \
+    libxext-dev \
+    libxfixes-dev \
+     && \
+  rm -rf /var/lib/apt/lists/*
+# build libva2
+ARG LIBVA2_REPO=https://github.com/intel/libva/archive/2.14.0.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${LIBVA2_REPO} | tar xz
+RUN cd /opt/build/libva-2.14.0 && \
+  ./autogen.sh --prefix=/opt/intel/samples --libdir=/opt/intel/samples/lib && \
+  make -j$(nproc) && \
+  make install DESTDIR=/opt/dist && \
+  make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    g++ \
+    make \
+    wget && \
+  rm -rf /var/lib/apt/lists/*
+
+# build gmmlib
+ARG GMMLIB_REPO=https://github.com/intel/gmmlib/archive/intel-gmmlib-22.1.4.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${GMMLIB_REPO} | tar xz
+RUN cd /opt/build/gmmlib-intel-gmmlib-22.1.4 && mkdir build && cd build && \
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
+    -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
+    .. && \
+  make -j$(nproc) && \
+  make install DESTDIR=/opt/dist && \
+  make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    g++ \
+    make \
+    pkg-config \
+    wget && \
+  rm -rf /var/lib/apt/lists/*
+# build media driver
+ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-22.4.3.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${MEDIA_DRIVER_REPO} | tar xz
+RUN cd /opt/build/media-driver-intel-media-22.4.3 && mkdir build && cd build && \
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
+    -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
+    -DENABLE_PRODUCTION_KMD=ON \
+    .. && \
+  make -j$(nproc) && \
+  make install DESTDIR=/opt/dist && \
+  make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    automake \
+    ca-certificates \
+    gcc \
+    g++ \
+    libdrm-dev \
+    libtool \
+    make \
+    pkg-config \
+    wget && \
+  rm -rf /var/lib/apt/lists/*
+# build libva2-utils
+ARG LIBVA2_UTILS_REPO=https://github.com/intel/libva-utils/archive/2.14.0.tar.gz
+RUN cd /opt/build && wget -O - ${LIBVA2_UTILS_REPO} | tar xz
+RUN cd /opt/build/libva-utils-2.14.0 && \
+  ./autogen.sh --prefix=/opt/intel/samples --libdir=/opt/intel/samples/lib && \
+  make -j$(nproc) && \
+  make install DESTDIR=/opt/dist && \
+  make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    automake \
+    ca-certificates \
+    gcc \
+    g++ \
+    make \
+    pkg-config \
+    wget \
+    cmake \
+    dh-autoreconf && \
+  rm -rf /var/lib/apt/lists/*
+ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v2022.1.5.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${ONEVPL_REPO} | tar xz
+
+COPY patches/libvpl2 /opt/build/oneVPL-2022.1.5
+RUN cd /opt/build/oneVPL-2022.1.5 && { set -e; \
+  for patch_file in $(find -iname "*.patch" | sort -n); do \
+    echo "Applying: ${patch_file}"; \
+    patch -p1 < ${patch_file}; \
+  done; }
+# build oneVPL
+RUN cd /opt/build/oneVPL-2022.1.5 && \
+    mkdir build && cd build && \
+    cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
+      -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
+      .. && \
+    make -j$(nproc) && \
+    make install DESTDIR=/opt/dist && \
+    make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    gcc \
+    g++ \
+    wget \
+    pkg-config \
+    cmake \
+    make && \
+  rm -rf /var/lib/apt/lists/*
+ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-22.4.3.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${ONEVPLGPU_REPO} | tar xz
+# build oneVPL gpu
+RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-22.4.3 && \
+    mkdir -p _build && cd _build && \
+    cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
+    -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
+    -DMFX_ENABLE_AENC=ON \
+    .. && \
+    make -j$(nproc) && \
+    make install DESTDIR=/opt/dist && \
+    make install
+
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    gcc \
+    g++ \
+    make \
+    pkg-config \
+    wget && \
+  rm -rf /var/lib/apt/lists/*
+# build media sdk
+ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-22.4.3.tar.gz
+RUN cd /opt/build && \
+  wget -O - ${MSDK_REPO} | tar xz
+RUN cd /opt/build/MediaSDK-intel-mediasdk-22.4.3 && \
+  mkdir -p build && cd build && \
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
+    -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
+    -DBUILD_SAMPLES=OFF \
+    -DBUILD_TUTORIALS=OFF \
+    .. && \
+  make -j$(nproc) && \
+  make install DESTDIR=/opt/dist && \
+  make install
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -127,8 +294,6 @@ RUN apt-get update && \
     gcc \
     g++ \
     git \
-    libvpl-dev \
-    libva-dev \
     libx264-dev \
     libx265-dev \
     make \
@@ -228,20 +393,17 @@ COPY --from=content /downloads /opt/data/embedded
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libdrm2 \
+    libx11-6 \
+    libxext6 \
+    libxfixes3 \
     python3 \
     python3-pip \
-    intel-media-va-driver-non-free \
-    libigfxcmrt7 \
-    libmfx1 \
-    libmfxgen1 \
-    libvpl2 \
-    libva-drm2 \
     libx264-155 \
     libx265-179 \
     libxcb-shm0 \
     less \
     man-db \
-    libvpl-tools \
     libnginx-mod-http-lua \
     libnginx-mod-rtmp \
     linux-tools-generic \
@@ -252,12 +414,10 @@ RUN apt-get update && \
     python3-numpy \
     socat \
     tmux \
-    vainfo \
     curl \
     sudo \
     vim \
-    wget \
-     && \
+    wget && \
   rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /opt/dist /
@@ -343,6 +503,7 @@ ENTRYPOINT ["/usr/bin/demo-bash"]
 # ... end of custom installation rules
 
 # Custom component environment variables, if any...
+ENV ONEVPL_SEARCH_PATH=/opt/intel/samples/lib/
 # ... end of custom environment variables
 
 
