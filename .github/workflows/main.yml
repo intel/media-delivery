@@ -38,9 +38,17 @@ jobs:
     - name: Building CDN demo w/ Ubuntu native pkgs
       run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu20.04/native/Dockerfile -t intel-media-delivery-cdn .
 
+  cdn-selfbuild:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Building CDN against selfbuild stack
+      run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu20.04/selfbuild/Dockerfile -t intel-media-delivery-cdn .
+
   edge-native-pkgs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Building Edge demo w/ Ubuntu native pkgs
       run: docker build --build-arg SAMPLE=edge --no-cache --force-rm -f docker/ubuntu20.04/native/Dockerfile -t intel-media-delivery-edge .
+
