@@ -52,3 +52,10 @@ jobs:
     - name: Building Edge demo w/ Ubuntu native pkgs
       run: docker build --build-arg SAMPLE=edge --no-cache --force-rm -f docker/ubuntu20.04/native/Dockerfile -t intel-media-delivery-edge .
 
+  dkms:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Building DKMS pkgs
+      run: docker build --build-arg SAMPLE=edge --no-cache --force-rm -f docker/ubuntu20.04/dkms/Dockerfile -t dkms .
+
