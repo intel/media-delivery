@@ -100,6 +100,7 @@ RUN apt-get update && \
     ca-certificates \
     g++ \
     make \
+    patch \
     pkg-config \
     wget && \
   rm -rf /var/lib/apt/lists/*

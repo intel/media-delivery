@@ -42,7 +42,7 @@ DECLARE(`MEDIA_DRIVER_SRC_REPO',https://github.com/intel/media-driver/archive/ME
 DECLARE(`ENABLE_PRODUCTION_KMD',OFF)
 
 ifelse(OS_NAME,ubuntu,`dnl
-define(`MEDIA_DRIVER_BUILD_DEPS',`ca-certificates g++ make pkg-config wget')
+define(`MEDIA_DRIVER_BUILD_DEPS',`ca-certificates g++ make patch pkg-config wget')
 ')
 
 ifelse(OS_NAME,centos,`dnl
