@@ -22,6 +22,7 @@ include(defs.m4)dnl
 divert(-1)
 define(`USE_VPL_TOOLS',yes)
 define(`ONEVPL_PATCH_PATH',patches/libvpl2)
+define(`MEDIA_DRIVER_PATCH_PATH',patches/media-driver)
 define(`MFX_ENABLE_AENC',ON)
 define(`ENABLE_PRODUCTION_KMD',ON)
 divert(0)dnl
