@@ -34,7 +34,7 @@ RUN apt-get update && \
     ca-certificates git && \
   rm -rf /var/lib/apt/lists/*
 
-# build pmt backports
+# build firmware
 ARG INTEL_GPU_FW_REPO=https://github.com/intel-gpu/intel-gpu-firmware.git
 RUN cd /opt/build && \
   git clone ${INTEL_GPU_FW_REPO} && \
