@@ -100,6 +100,7 @@ RUN apt-get update && \
     ca-certificates \
     g++ \
     make \
+    patch \
     pkg-config \
     wget && \
   rm -rf /var/lib/apt/lists/*
@@ -107,6 +108,13 @@ RUN apt-get update && \
 ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-22.4.3.tar.gz
 RUN cd /opt/build && \
   wget -O - ${MEDIA_DRIVER_REPO} | tar xz
+
+COPY patches/media-driver /opt/build/media-driver-intel-media-22.4.3
+RUN cd /opt/build/media-driver-intel-media-22.4.3 && { set -e; \
+  for patch_file in $(find -iname "*.patch" | sort -n); do \
+    echo "Applying: ${patch_file}"; \
+    patch -p1 < ${patch_file}; \
+  done; }
 RUN cd /opt/build/media-driver-intel-media-22.4.3 && mkdir build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \

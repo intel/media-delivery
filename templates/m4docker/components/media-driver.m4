@@ -42,7 +42,7 @@ DECLARE(`MEDIA_DRIVER_SRC_REPO',https://github.com/intel/media-driver/archive/ME
 DECLARE(`ENABLE_PRODUCTION_KMD',OFF)
 
 ifelse(OS_NAME,ubuntu,`dnl
-define(`MEDIA_DRIVER_BUILD_DEPS',`ca-certificates g++ make pkg-config wget')
+define(`MEDIA_DRIVER_BUILD_DEPS',`ca-certificates g++ make patch pkg-config wget')
 ')
 
 ifelse(OS_NAME,centos,`dnl
@@ -55,6 +55,7 @@ define(`BUILD_MEDIA_DRIVER',`dnl
 ARG MEDIA_DRIVER_REPO=MEDIA_DRIVER_SRC_REPO
 RUN cd BUILD_HOME && \
   wget -O - ${MEDIA_DRIVER_REPO} | tar xz
+ifdef(`MEDIA_DRIVER_PATCH_PATH',`PATCH(BUILD_HOME/media-driver-MEDIA_DRIVER_VER,MEDIA_DRIVER_PATCH_PATH)')dnl
 RUN cd BUILD_HOME/media-driver-MEDIA_DRIVER_VER && mkdir build && cd build && \
   ifelse(OS_NAME,centos,ifelse(OS_VERSION,7,scl enable devtoolset-9 -- ))cmake \
     -DCMAKE_BUILD_TYPE=Release \
