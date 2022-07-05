@@ -557,11 +557,11 @@ function get_coding_commandline_options() {
   elif [ "$codec" = "AV1" ]; then
     if [ "$preset" = "best" ]; then
       if [ "$use_lowdelay" = "yes" ]; then
-        options_qsv+="-bf 0 -refs 3 -g 9999"
-        options_smt+="-num_ref 3 -gop_size 9999 -dist 1"
+        options_qsv+="-bf 0 -g 9999"
+        options_smt+="-gop_size 9999 -dist 1"
       else
-        options_qsv+="-b_strategy 1 -bf 7 -refs 3 -g 256"
-        options_smt+="-bref -dist 8 -num_ref 3 -gop_size 256 -MemType::system"
+        options_qsv+="-b_strategy 1 -bf 7 -g 256"
+        options_smt+="-bref -dist 8 -gop_size 256 -MemType::system"
       fi
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
