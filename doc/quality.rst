@@ -816,7 +816,7 @@ Example command lines:
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -refs 3 -g 256 \
+    -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -g 256 \
     -vsync passthrough -y $output
 
   # CBR (encoding from YUV with ffmpeg-qsv)
@@ -824,45 +824,45 @@ Example command lines:
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -rc_init_occupancy $bufsize -b_strategy 1 -bf 7 -refs 3 -g 256 \
+    -rc_init_occupancy $bufsize -b_strategy 1 -bf 7 -g 256 \
     -vsync passthrough -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -refs 3 -g 256 \
+    -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -g 256 \
     -vsync passthrough -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -rc_init_occupancy $bufsize -b_strategy 1 -bf 7 -refs 3 -g 256 \
+    -rc_init_occupancy $bufsize -b_strategy 1 -bf 7 -g 256 \
     -vsync passthrough -y $output
 
   # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
-    -bref -dist 8 -num_ref 3 -gop_size 256 -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
+    -bref -dist 8 -gop_size 256 -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) \
     -MaxKbps $((bitrateKb * 2)) -o::av1 $output
 
   # CBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
-    -bref -dist 8 -num_ref 3 -gop_size 256 -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
+    -bref -dist 8 -gop_size 256 -hrd $(($bitrateKb / 4)) -InitialDelayInKB $(($bitrateKb / 8)) \
     -o::av1 $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
-    -vbr -n $numframes -bref -dist 8 -num_ref 3 -gop_size 256 -dist 8 -hrd $(($bitrateKb / 2)) \
+    -vbr -n $numframes -bref -dist 8 -gop_size 256 -dist 8 -hrd $(($bitrateKb / 2)) \
     -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::av1 $output
 
   # CBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
-    -cbr -n $numframes -bref -dist 8 -num_ref 3 -gop_size 256 -dist 8 -hrd $(($bitrateKb / 4)) \
+    -cbr -n $numframes -bref -dist 8 -gop_size 256 -dist 8 -hrd $(($bitrateKb / 4)) \
     -InitialDelayInKB $(($bitrateKb / 8)) -o::av1 $output
 
    
