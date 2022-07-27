@@ -2,7 +2,7 @@
 
 | Feature                     | Commit ID                                                                                   | FFmpeg Version |
 | --------------------------- | ------------------------------------------------------------------------------------------- | -------------- |
-| `AVFilmGrainParams`         | [8ca06a8](https://github.com/FFmpeg/FFmpeg/commit/8ca06a8148db1b5e8394b2941790fcae29a84f46) | n5.1 (upcoming)|
+| `AVFilmGrainParams`         | [8ca06a8](https://github.com/FFmpeg/FFmpeg/commit/8ca06a8148db1b5e8394b2941790fcae29a84f46) | n5.1           |
 | `-c:v av1_qsv`              | [cc25ae5](https://github.com/FFmpeg/FFmpeg/commit/cc25ae5d8ad2cef2dc8a21b828e89e5077b9dae3) | n4.4           |
 | `-async_depth <int>`        | [cc25ae5](https://github.com/FFmpeg/FFmpeg/commit/cc25ae5d8ad2cef2dc8a21b828e89e5077b9dae3) | n4.4           |
 | `-extra_hw_frames <int>`    | [5b14529](https://github.com/FFmpeg/FFmpeg/commit/5b145290df2998a9836a93eb925289c6c8b63af0) | n4.0           |
