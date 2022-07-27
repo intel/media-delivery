@@ -55,7 +55,7 @@
 | `-rc_init_occupancy <int>`  | [3358380](https://github.com/FFmpeg/FFmpeg/commit/33583803e107b6d532def0f9d949364b01b6ad5a) | n4.3           |
 | `-rdo -1\|0\|1`             | | not supported |
 | `-refs <int>`               | [fcbfdee](https://github.com/FFmpeg/FFmpeg/commit/fcbfdeeabe21cb0925313dab6079c50318a7bc71) | n4.3           |
-| `-tile_cols <int>`          | [80801e5](https://github.com/FFmpeg/FFmpeg/commit/80801e570566976195f515216de4403cdcf4f7a3) | n5.1 (upcoming)|
-| `-tile_rows <int>`          | [80801e5](https://github.com/FFmpeg/FFmpeg/commit/80801e570566976195f515216de4403cdcf4f7a3) | n5.1 (upcoming)|
+| `-tile_cols <int>`          | [80801e5](https://github.com/FFmpeg/FFmpeg/commit/80801e570566976195f515216de4403cdcf4f7a3) | n5.1           |
+| `-tile_rows <int>`          | [80801e5](https://github.com/FFmpeg/FFmpeg/commit/80801e570566976195f515216de4403cdcf4f7a3) | n5.1           |
 | `-strict <int>`             | | not supported |
 
