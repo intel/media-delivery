@@ -171,82 +171,166 @@ function test_expect() {
   [ "$frames" -eq "$stream_frames" ]
 }
 
-function test_ffmpeg_capture() {
-  local type=$1
-  echo "# type=$type" >&3
+h264="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
+  -c copy -vframes 48 -y /tmp/WAR_h264.mp4"
 
+@test "demo vod/avc from mp4/h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
   opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
 
-  run docker_run_opts "$opts" \
-    demo --exit $type/WAR_TRAILER_HiQ_10_withAudio
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $h264; ln -s /tmp/WAR_h264.mp4 /opt/data/content/; \
+    demo --exit vod/avc/WAR_h264;"
   [ $status -eq 0 ]
 
-  test_expect $type WAR_TRAILER_HiQ_10_withAudio 3443
+  test_expect vod/avc WAR_h264 48
 }
 
-@test "demo vod/avc capture" {
-  test_ffmpeg_capture "vod/avc"
-}
-
-@test "demo vod/hevc capture" {
+@test "demo vod/hevc from mp4/h264" {
   if [ $MDS_DEMO != "cdn" ]; then
     skip "note: mode not supported for '$MDS_DEMO' demo"
   fi
-  test_ffmpeg_capture "vod/hevc"
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $h264; ln -s /tmp/WAR_h264.mp4 /opt/data/content/; \
+    demo --exit vod/hevc/WAR_h264;"
+  [ $status -eq 0 ]
+
+  test_expect vod/hevc WAR_h264 48
 }
 
-@test "demo vod/avc-enctools capture" {
+@test "demo vod/avc-enctools from mp4/h264" {
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $h264; ln -s /tmp/WAR_h264.mp4 /opt/data/content/; \
+    demo --exit vod/avc-enctools/WAR_h264;"
+  [ $status -eq 0 ]
+
+  test_expect vod/avc-enctools WAR_h264 48
+}
+
+@test "demo vod/hevc-enctools from mp4/h264" {
   if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
   if [ $MDS_DEMO != "cdn" ]; then
     skip "note: mode not supported for '$MDS_DEMO' demo"
   fi
-  test_ffmpeg_capture "vod/avc-enctools"
-}
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
 
-@test "demo vod/hevc-enctools capture" {
-  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
-  if [ $MDS_DEMO != "cdn" ]; then
-    skip "note: mode not supported for '$MDS_DEMO' demo"
-  fi
-  test_ffmpeg_capture "vod/hevc-enctools"
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $h264; ln -s /tmp/WAR_h264.mp4 /opt/data/content/; \
+    demo --exit vod/hevc-enctools/WAR_h264;"
+  [ $status -eq 0 ]
+
+  test_expect vod/hevc-enctools WAR_h264 48
 }
 
 h265="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
   -c:v h264_qsv -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
-  -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 20 \
-  -y /tmp/WAR.mp4"
+  -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 48 \
+  -y /tmp/WAR_h265.mp4"
 
 @test "demo vod/avc from mp4/h265" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
-    set -ex; $h265; ln -s /tmp/WAR.mp4 /opt/data/content/; \
-    demo --exit vod/avc/WAR;"
+    set -ex; $h265; ln -s /tmp/WAR_h265.mp4 /opt/data/content/; \
+    demo --exit vod/avc/WAR_h265;"
   [ $status -eq 0 ]
 
-  test_expect vod/avc WAR 20
+  test_expect vod/avc WAR_h265 48
+}
+
+@test "demo vod/hevc from mp4/h265" {
+  if [ $MDS_DEMO != "cdn" ]; then
+    skip "note: mode not supported for '$MDS_DEMO' demo"
+  fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $h265; ln -s /tmp/WAR_h265.mp4 /opt/data/content/; \
+    demo --exit vod/hevc/WAR_h265;"
+  [ $status -eq 0 ]
+
+  test_expect vod/hevc WAR_h265 48
+}
+
+@test "demo vod/avc-enctools from mp4/h265" {
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $h265; ln -s /tmp/WAR_h265.mp4 /opt/data/content/; \
+    demo --exit vod/avc-enctools/WAR_h265;"
+  [ $status -eq 0 ]
+
+  test_expect vod/avc-enctools WAR_h265 48
+}
+
+@test "demo vod/hevc-enctools from mp4/h265" {
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  if [ $MDS_DEMO != "cdn" ]; then
+    skip "note: mode not supported for '$MDS_DEMO' demo"
+  fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
+  opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+
+  run docker_run_opts "$opts" /bin/bash -c " \
+    set -ex; $h265; ln -s /tmp/WAR_h265.mp4 /opt/data/content/; \
+    demo --exit vod/hevc-enctools/WAR_h265;"
+  [ $status -eq 0 ]
+
+  test_expect vod/hevc-enctools WAR_h265 48
 }
 
 noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
-  -c:v copy -vframes 20 -an -y /tmp/WAR_noaudio.mp4"
+  -c:v copy -vframes 48 -an -y /tmp/WAR_noaudio.mp4"
 
 @test "demo vod/avc from noaudio" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
     demo --exit vod/avc/WAR_noaudio;"
   [ $status -eq 0 ]
 
-  test_expect vod/avc WAR_noaudio 20
+  test_expect vod/avc WAR_noaudio 48
 }
 
 @test "demo vod/hevc from noaudio" {
@@ -256,13 +340,15 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
     demo --exit vod/hevc/WAR_noaudio;"
   [ $status -eq 0 ]
 
-  test_expect vod/hevc WAR_noaudio 20
+  test_expect vod/hevc WAR_noaudio 48
 }
 
 @test "demo vod/avc-enctools from noaudio" {
@@ -270,13 +356,15 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
     demo --exit vod/avc-enctools/WAR_noaudio;"
   [ $status -eq 0 ]
 
-  test_expect vod/avc-enctools WAR_noaudio 20
+  test_expect vod/avc-enctools WAR_noaudio 48
 }
 
 @test "demo vod/hevc-enctools from noaudio" {
@@ -287,11 +375,13 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
+  opts+=" $(get_security_opts)"
+  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
     demo --exit vod/hevc-enctools/WAR_noaudio;"
   [ $status -eq 0 ]
 
-  test_expect vod/hevc-enctools WAR_noaudio 20
+  test_expect vod/hevc-enctools WAR_noaudio 48
 }
