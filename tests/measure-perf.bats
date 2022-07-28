@@ -36,13 +36,18 @@ rawh264="ffmpeg -an -hwaccel qsv -qsv_device $DEVICE \
   -c:v h264_qsv -preset medium -profile:v high -b:v 1000000 -vframes 20 \
   -y /tmp/WAR.h264"
 
-# prepare raw 2160p h264 file, high resolution and fps=60 is needed to
+# prepare raw 2160p hevc file, high resolution and fps=60 is needed to
 # reduce test time
 rawh265="ffmpeg -an -hwaccel qsv -qsv_device $DEVICE \
   -c:v h264_qsv -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -vf scale_qsv=w=-1:h=2160,vpp_qsv=framerate=60 \
   -c:v hevc_qsv -preset medium -profile:v main -b:v 1000000 -vframes 20 \
   -y /tmp/WAR.hevc"
+
+# prepare raw AV1 stream from an mp4 container
+rawav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
+  -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 -y -vframes 20 \
+  -c:v av1_qsv -preset medium -b:v 15M -vsync 0 /tmp/WAR.ivf "
 
 # add mp4 file for mp4 check out
 submp4="ffmpeg -i \
@@ -133,6 +138,35 @@ function get_perf_opts() {
     [ "$npng" -ge 4 ] # we should have at least one picture for each performance
   fi
 }
+
+@test "measure perf raw av1" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh AV1Profile0);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$rawav1" "measure perf /tmp/WAR.ivf")"
+  print_output
+  if ! kernel_ge_4_16; then
+    [ $status -ne 0 ]
+  else
+    [ $status -eq 0 ]
+
+    ptmp=$tmp/measure/perf
+    nout=$(find $ptmp/output_SMT -name "*.ivf" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_FFMPEG -name "*.ivf" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nlines=$(cat $ptmp/msperf_FFMPEG_AV1-AV1_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ] # we expect header and result lines
+    npng=$(find $ptmp -name "*.png" | wc -l)
+    [ "$npng" -ge 4 ] # we should have at least one picture for each performance
+  fi
+}
+
 
 @test "measure perf --skip-perf raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
