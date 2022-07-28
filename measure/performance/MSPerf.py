@@ -332,7 +332,7 @@ def main():
         # command line based on resolution
         ######################################################################################################
         try:
-            cmdline_config_hevc2avc_exist = cmdline_config_avc2avc_exist = cmdline_config_hevc2hevc_exist = cmdline_config_avc2hevc_exist = cmdline_config_decode_hevc_exist = cmdline_config_decode_avc_exist = False
+            cmdline_config_hevc2avc_exist = cmdline_config_avc2avc_exist = cmdline_config_hevc2hevc_exist = cmdline_config_avc2hevc_exist = cmdline_config_av12av1_exist = cmdline_config_decode_hevc_exist = cmdline_config_decode_avc_exist = False
             with open(required_information_file, 'r') as configfile:
                 for workloadline in configfile:
                     if (not re.search("^#", str(workloadline))):
@@ -340,6 +340,7 @@ def main():
                         if (re.search(r"avc-avc:", str(workloadline))):  cmdline_config_avc2avc_exist = True
                         if (re.search(r"hevc-hevc:", str(workloadline))):  cmdline_config_hevc2hevc_exist = True
                         if (re.search(r"avc-hevc:", str(workloadline))):  cmdline_config_avc2hevc_exist = True
+                        if (re.search(r"av1-av1:", str(workloadline))):  cmdline_config_av12av1_exist = True
                         if (re.search(r"decode-hevc:", str(workloadline))):  cmdline_config_decode_hevc_exist = True
                         if (re.search(r"decode-avc:", str(workloadline))):  cmdline_config_decode_avc_exist = True
                         if (re.search(r"^720p_hevc-avc:\s", str(workloadline))): performance_cmdline_720p_hevc2avc = workloadline.replace("720p_hevc-avc: ", "")
@@ -354,6 +355,9 @@ def main():
                         if (re.search(r"^720p_avc-hevc:\s", str(workloadline))): performance_cmdline_720p_avc2hevc = workloadline.replace("720p_avc-hevc: ", "")
                         if (re.search(r"^1080p_avc-hevc:\s", str(workloadline))): performance_cmdline_1080p_avc2hevc = workloadline.replace("1080p_avc-hevc: ", "")
                         if (re.search(r"^2160p_avc-hevc:\s", str(workloadline))): performance_cmdline_2160p_avc2hevc = workloadline.replace("2160p_avc-hevc: ", "")
+                        if (re.search(r"^720p_av1-av1:\s", str(workloadline))): performance_cmdline_720p_av12av1 = workloadline.replace("720p_av1-av1: ", "")
+                        if (re.search(r"^1080p_av1-av1:\s", str(workloadline))): performance_cmdline_1080p_av12av1 = workloadline.replace("1080p_av1-av1: ", "")
+                        if (re.search(r"^2160p_av1-av1:\s", str(workloadline))): performance_cmdline_2160p_av12av1 = workloadline.replace("2160p_av1-av1: ", "")
                         if (re.search(r"decode-hevc:\s",str(workloadline))): performance_cmdline_decode_hevc = workloadline.replace("decode-hevc: ", "")
                         if (re.search(r"decode-avc:\s",str(workloadline))): performance_cmdline_decode_avc = workloadline.replace("decode-avc: ", "")
         except:
@@ -368,6 +372,7 @@ def main():
                      "AVC-AVC",
                      "HEVC-HEVC",
                      "AVC-HEVC",
+                     "AV1-AV1",
                      "DECODE-HEVC",
                      "DECODE-AVC"]
 
@@ -386,6 +391,8 @@ def main():
             elif performance_tag == "HEVC-HEVC" and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_hevc2hevc_exist:
                 sequence_mode = "TRANSCODE"
             elif performance_tag == "AVC-HEVC" and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_avc2hevc_exist:
+                sequence_mode = "TRANSCODE"
+            elif performance_tag == "AV1-AV1" and (encode_codec == "all" or encode_codec == "av1") and cmdline_config_av12av1_exist:
                 sequence_mode = "TRANSCODE"
             elif performance_tag == "DECODE-HEVC" and density_decode and cmdline_config_decode_hevc_exist:
                 sequence_mode = "DECODE"
@@ -473,6 +480,9 @@ def main():
                         continue
                 elif (performance_tag == "AVC-HEVC") and (encode_codec == "all" or encode_codec == "hevc"):  # AVC-HEVC measure sequence
                     if performance_object_list[curContent].codec != "h264":  # skip if its not h264 input clip
+                        continue
+                elif (performance_tag == "AV1-AV1") and (encode_codec == "all" or encode_codec == "av1"):  # AV1-AV1 measure sequence
+                    if performance_object_list[curContent].codec != "av1":  # skip if its not av1 input clip
                         continue
                 elif (performance_tag == "DECODE-HEVC"): # Decode-HEVC measure sequence
                     if performance_object_list[curContent].codec != "hevc":  # skip if its not HEVC input clip
@@ -571,6 +581,13 @@ def main():
                                 dispatch_cmdline = performance_cmdline_1080p_avc2hevc
                             elif performance_object_list[curContent].encode_bitrate == "4k_bitrate":
                                 dispatch_cmdline = performance_cmdline_2160p_avc2hevc
+                        elif performance_tag == "AV1-AV1" and (encode_codec == "all" or encode_codec == "av1"): # AV1-AV1 measure sequence
+                            if performance_object_list[curContent].encode_bitrate == "sd_bitrate":
+                                dispatch_cmdline = performance_cmdline_720p_av12av1
+                            elif performance_object_list[curContent].encode_bitrate == "hd_bitrate":
+                                dispatch_cmdline = performance_cmdline_1080p_av12av1
+                            elif performance_object_list[curContent].encode_bitrate == "4k_bitrate":
+                                dispatch_cmdline = performance_cmdline_2160p_av12av1
                         elif performance_tag == "DECODE-HEVC": # DECODE HEVC
                             dispatch_cmdline = performance_cmdline_decode_hevc
                         elif performance_tag == "DECODE-AVC": # DECODE AVC
@@ -599,6 +616,12 @@ def main():
                                     transcode_input_clip = "-fps " + str(fps_constraint) + " " + transcode_input_clip
 
                                 dispatch_cmdline = dispatch_cmdline.replace("-i::h264 <>", transcode_input_clip)
+                            elif performance_object_list[curContent].codec == "av1" or "ivf":
+                                transcode_input_clip = "-i::av1 " + content_path + key
+                                if not no_fps_limit:
+                                    transcode_input_clip = "-fps " + str(fps_constraint) + " " + transcode_input_clip
+
+                                dispatch_cmdline = dispatch_cmdline.replace("-i::av1 <>", transcode_input_clip)
 
                         elif (sequence_mode == "DECODE"): # SMT Decode
                             transcode_input_clip = "-i " + content_path + key
@@ -624,6 +647,7 @@ def main():
                             transcode_output_clip = local_output_path + clip_name + "_" + clip_resolution + "_" + str(m)
                             dispatch_cmdline = dispatch_cmdline.replace("-o::h264 <>", "-o::h264 " + transcode_output_clip)
                             dispatch_cmdline = dispatch_cmdline.replace("-o::h265 <>", "-o::h265 " + transcode_output_clip)
+                            dispatch_cmdline = dispatch_cmdline.replace("-o::av1 <>", "-o::av1 " + transcode_output_clip)
 
                         # Adding Transcode_Output_Log file and Multiple Device knobs
                         if (ffmpeg_mode):
@@ -1435,7 +1459,7 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
     ffprobe_cmd   += "-of default=noprint_wrappers=1 -i " + filepath + filename.rstrip() + " | grep -E '^height=|^r_frame_rate=|^codec_name=' " + " > " + ffprobe_dump
     os.system(ffprobe_cmd)
     height = encode_bitrate = ffprobe_frame_rate = ffprobe_codec_name = 0
-    content_supported_codec     = ["h264", "hevc"]
+    content_supported_codec     = ["h264", "hevc", "av1"]
     with open(ffprobe_dump, "r") as ffprobedump_fh:
         for content_profile_line in ffprobedump_fh:
             content_profile_line_split  = content_profile_line.rstrip().split("=")
@@ -1454,6 +1478,8 @@ def ffmpegffprobeCheck(output_log_handle, filepath, filename, out_temp_path, deb
                 any_frame_rates_found = eval(value)
                 if any_frame_rates_found != "0":
                     ffprobe_frame_rate  = round(float(any_frame_rates_found), 2)
+                    if (ffprobe_frame_rate== 1000.0): # ffprobe issue for av1 frame rate
+                        ffprobe_frame_rate = 60.0
             elif (attribute == "codec_name"):
                 if (str(value) in content_supported_codec):
                     ffprobe_codec_name  = str(value)

@@ -111,17 +111,38 @@ Coding bitrates for H.265/HEVC video performance assessment:
 | 720p       | Low           | 1.5             |
 +------------+---------------+-----------------+
 
+Coding bitrates for AV1 video performance assessment:
+
++------------+---------------+-----------------+
+| Resolution | Setting       | Bitrates (Mb/s) |
++============+===============+=================+
+| 4K         | Low           | 9               |
++------------+---------------+-----------------+
+| 1080p      | Low           | 3               |
++------------+---------------+-----------------+
+| 720p       | Low           | 1.5             |
++------------+---------------+-----------------+
+
 
 Command Lines
 -------------
 
-In the following sections you can find command lines used for high quality H.264/AVC and H.265/HEVC video
+In the following sections you can find command lines used for high quality H.264/AVC, H.265/HEVC and AV1 video
 transccoding with Intel® Media SDK `Sample Multi Transcode (SMT) <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
 and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration
 into FFmpeg) which we use in performance assessments.
 
 Intel Media SDK sample-multi-transcode
 --------------------------------------
+
+AV1-AV1
+********
+
+::
+
+  720p_av1-av1: sample_multi_transcode  -i::av1 <> -hw -async 1 -u 4 -n 2000 -gop_size 256 -dist 8 -vbr -b 1000 -hrd 1000 -InitialDelayInKB 500 -n 3000 -override_decoder_framerate 60 -o::av1 <>.ivf -p <> 
+  1080p_av1-av1: sample_multi_transcode  -i::av1 <> -hw -async 1 -u 4 -n 2000 -gop_size 256 -dist 8 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -n 3000 -override_decoder_framerate 60 -o::av1 <>.ivf -p <>
+  2160p_av1-av1: sample_multi_transcode  -i::av1 <> -hw -async 1 -u 4 -n 2000 -gop_size 256 -dist 8 -vbr -b 9000 -hrd 4500 -InitialDelayInKB 2250 -n 3000 -override_decoder_framerate 60 -o::av1 <>.ivf -p <>
 
 HEVC-AVC
 ********
@@ -161,6 +182,16 @@ AVC-HEVC
 
 ffmpeg-qsv
 ----------
+
+AV1-AV1
+********
+
+::
+
+  720p_av1-av1: ffmpeg -y -hwaccel qsv -c:v av1_qsv -i <> -c:v av1_qsv -b:v 1500k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -async_depth 1 -maxrate 3000k -bufsize 6000k -y <>.ivf -report
+  1080p_av1-av1: ffmpeg -y -hwaccel qsv -c:v av1_qsv -i <> -c:v av1_qsv -b:v 3000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -async_depth 1 -maxrate 6000k -bufsize 12000k -y <>.ivf -report
+  2160p_av1-av1: ffmpeg -y -hwaccel qsv -c:v av1_qsv -i <> -c:v av1_qsv -b:v 9000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -async_depth 1 -maxrate 18000k -bufsize 36000k -y <>.ivf -report
+
 
 HEVC-AVC
 ********
