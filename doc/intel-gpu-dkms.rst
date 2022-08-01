@@ -7,7 +7,7 @@ This article describes setup of these KMDs targeting the following GPUs:
 * DG2
 * ATS-M
 
-Overall, the following items should be taken care of:
+Overall, the following should be taken care of:
 
 * `Intel GPU Firmware <https://github.com/intel-gpu/intel-gpu-firmware>`_
 * `Backport of i915 Graphics Driver <https://github.com/intel-gpu/intel-gpu-i915-backports>`_
@@ -18,19 +18,11 @@ DKMS packages are being built against specific kernel version. Please, refer to 
 in above projects for the full list of supported Operating Systems and kernels. In this
 article we will demonstrate installation for the specific version of Ubuntu 20.04 OEM kernel.
 
-First, install the following Ubuntu 20.04 OEM kernel (this kernel version corresponds to the
-version used below to build DKMS packages)::
+How to Generate DKMS Packages
+-----------------------------
 
-  sudo apt-get update
-  sudo apt-get install linux-headers-5.14.0-1033-oem linux-image-unsigned-5.14.0-1033-oem
-
-Once done, check kernel boot order in grub to make sure to boot into the installed kernel,
-adjust if needed, then reboot::
-
-  sudo reboot
-
-Clone media-delivery repository and use helper docker (see `Dockerfile <../docker/ubuntu20.04/dkms/Dockerfile>`_)
-to build Intel GPU DKMS packages. Run the following from the top level of media-delivery
+To generate DKMS packages you can use helper docker (see `Dockerfile <../docker/ubuntu20.04/dkms/Dockerfile>`_)
+available in media-delivery repository. Run the following from the top level of media-delivery
 cloned copy::
 
   docker build \
@@ -39,26 +31,59 @@ cloned copy::
     --tag dkms \
     .
 
-Copy Intel GPU DKMS to the host system::
+Copy Intel GPU DKMS packages to the host system::
 
   sudo mkdir -p /opt/packages/
   sudo chown -R $(id -u):$(id -g) /opt/packages
   docker run -it --rm -u $(id -u):$(id -g) -v /opt/packages/:/opt/packages/ dkms \
     /bin/bash -c "cp -rd /opt/dist/* /opt/packages/"
 
+How to Install
+--------------
+
+First, install the following Ubuntu 20.04 OEM kernel (this kernel version corresponds to the
+version used below to build DKMS packages) and its headers::
+
+  sudo apt-get update
+  sudo apt-get install linux-headers-5.14.0-1042-oem linux-image-unsigned-5.14.0-1042-oem
+
+Once done, check kernel boot order in grub to make sure to boot into the installed kernel,
+adjust if needed, then reboot::
+
+  sudo reboot
+
 Install Intel GPU Firmware and DKMS packages::
+
+  sudo apt-get install dkms bison flex
 
   sudo mkdir -p /lib/firmware/updates/i915/
   sudo cp /opt/packages/firmware/*.bin /lib/firmware/updates/i915/
-  sudo dpkg -i /opt/packages/intel-gpgpu-dkms-ubuntu-5.14-oem_5606.220414.0_all.deb
-  sudo dpkg -i /opt/packages/intel-platform-cse-dkms-2022.7.deb
-  sudo dpkg -i /opt/packages/intel-platform-pmt-dkms-2021.21.deb
+  sudo dpkg -i /opt/packages/intel-i915-dkms_0.5834.220609.0.5.17.0.1011+i1-1_all.deb \
+    /opt/packages/intel-platform-cse-dkms-2022.28.deb \
+    /opt/packages/intel-platform-pmt-dkms-2021.21.deb
 
 Once done, reboot::
 
   sudo reboot
 
 That's it. Now you should be able to use Intel GPU targeted by these DKMS packages (DG2 or ATS-M).
+
+How to Update
+-------------
+
+To install new version of DKMS packages, just follow the usual installation steps. Package
+manager will first automatically uninstall previous version, then install a new one.
+
+When updating the entire kernel, make sure to install the corresponding kernel headers. DKMS
+installation actually builds the modules for which kernel headers are required. So, when
+updating the kernel, make sure to always install both kernel and its headers. For example,
+to update from Ubuntu 20.04 5.14.0-1042-oem to 5.14.0-1047-oem kernel do::
+
+  sudo apt-get update
+  sudo apt-get install linux-headers-5.14.0-1047-oem linux-image-unsigned-5.14.0-1047-oem
+
+Verify
+------
 
 To verify that DKMS were installed correctly, check ``dmesg`` logs right after the boot. First,
 verify that DKMS driver backports got recognized and loaded::

@@ -30,11 +30,11 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`CSE_BACKPORTS_VER',56c6bad)
+DECLARE(`CSE_BACKPORTS_VER',22WW32_392_UBUNTU514)
 DECLARE(`CSE_BACKPORTS_SRC',https://github.com/intel-gpu/intel-gpu-cse-backports.git)
 
 ifelse(OS_NAME,ubuntu,`
-define(`CSE_BACKPORTS_BUILD_DEPS',`ca-certificates dkms git make linux-headers-KERNEL_VER')
+define(`CSE_BACKPORTS_BUILD_DEPS',`ca-certificates build-essential debhelper dkms git make')
 ')
 
 define(`BUILD_CSE_BACKPORTS',`

@@ -30,11 +30,11 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`PMT_BACKPORTS_VER',d37196f)
+DECLARE(`PMT_BACKPORTS_VER',22WW32_392_UBUNTU514)
 DECLARE(`PMT_BACKPORTS_SRC',https://github.com/intel-gpu/intel-gpu-pmt-backports.git)
 
 ifelse(OS_NAME,ubuntu,`
-define(`PMT_BACKPORTS_BUILD_DEPS',`ca-certificates dkms git make linux-headers-KERNEL_VER')
+define(`PMT_BACKPORTS_BUILD_DEPS',`ca-certificates build-essential debhelper devscripts dkms git make')
 ')
 
 define(`BUILD_PMT_BACKPORTS',`

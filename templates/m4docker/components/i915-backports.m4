@@ -30,12 +30,14 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`I915_BACKPORTS_VER',d68ff53)
+DECLARE(`I915_BACKPORTS_VER',29f0f36)
 DECLARE(`I915_BACKPORTS_SRC',https://github.com/intel-gpu/intel-gpu-i915-backports.git)
 
 ifelse(OS_NAME,ubuntu,`
-define(`I915_BACKPORTS_BUILD_DEPS',`ca-certificates build-essential debhelper dkms git make linux-headers-KERNEL_VER')
+define(`I915_BACKPORTS_BUILD_DEPS',`ca-certificates build-essential debhelper devscripts dkms git make')
 ')
+
+dnl build-essential debhelper devscripts dkms
 
 define(`BUILD_I915_BACKPORTS',`
 # build i915 backports
@@ -44,8 +46,8 @@ RUN cd BUILD_HOME && \
   git clone ${I915_BACKPORTS_REPO} && \
   cd intel-gpu-i915-backports && \
   git checkout I915_BACKPORTS_VER && \
-  dpkg-buildpackage && \
-  mv BUILD_HOME/intel-gpgpu-dkms-ubuntu* BUILD_DESTDIR
+  make i915dkmsdeb-pkg && \
+  mv BUILD_HOME/intel-i915-dkms* BUILD_DESTDIR
 ')
 
 REG(I915_BACKPORTS)
