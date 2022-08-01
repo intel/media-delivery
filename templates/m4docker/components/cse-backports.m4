@@ -30,7 +30,7 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`CSE_BACKPORTS_VER',c334b88)
+DECLARE(`CSE_BACKPORTS_VER',56c6bad)
 DECLARE(`CSE_BACKPORTS_SRC',https://github.com/intel-gpu/intel-gpu-cse-backports.git)
 
 ifelse(OS_NAME,ubuntu,`
