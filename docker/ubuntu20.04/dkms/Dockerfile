@@ -39,12 +39,12 @@ ARG INTEL_GPU_FW_REPO=https://github.com/intel-gpu/intel-gpu-firmware.git
 RUN cd /opt/build && \
   git clone ${INTEL_GPU_FW_REPO} && \
   cd intel-gpu-firmware && \
-  git checkout 0db8236 && \
+  git checkout 6a88f8d && \
   cp -rd firmware /opt/dist
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    ca-certificates build-essential debhelper dkms git make linux-headers-5.14.0-1033-oem && \
+    ca-certificates build-essential debhelper devscripts dkms git make && \
   rm -rf /var/lib/apt/lists/*
 
 # build i915 backports
@@ -52,13 +52,13 @@ ARG I915_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-i915-backports.gi
 RUN cd /opt/build && \
   git clone ${I915_BACKPORTS_REPO} && \
   cd intel-gpu-i915-backports && \
-  git checkout d68ff53 && \
-  dpkg-buildpackage && \
-  mv /opt/build/intel-gpgpu-dkms-ubuntu* /opt/dist
+  git checkout 29f0f36 && \
+  make i915dkmsdeb-pkg && \
+  mv /opt/build/intel-i915-dkms* /opt/dist
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    ca-certificates dkms git make linux-headers-5.14.0-1033-oem && \
+    ca-certificates build-essential debhelper dkms git make && \
   rm -rf /var/lib/apt/lists/*
 
 # build cse backports
@@ -66,13 +66,13 @@ ARG CSE_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-cse-backports.git
 RUN cd /opt/build && \
   git clone ${CSE_BACKPORTS_REPO} && \
   cd intel-gpu-cse-backports && \
-  git checkout 56c6bad && \
+  git checkout 22WW32_392_UBUNTU514 && \
   BUILD_VERSION=1 make -f Makefile.dkms dkmsdeb-pkg && \
   mv /opt/build/intel-gpu-cse-backports/*.deb /opt/dist
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    ca-certificates dkms git make linux-headers-5.14.0-1033-oem && \
+    ca-certificates build-essential debhelper devscripts dkms git make && \
   rm -rf /var/lib/apt/lists/*
 
 # build pmt backports
@@ -80,7 +80,7 @@ ARG PMT_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-pmt-backports.git
 RUN cd /opt/build && \
   git clone ${PMT_BACKPORTS_REPO} && \
   cd intel-gpu-pmt-backports && \
-  git checkout d37196f && \
+  git checkout 22WW32_392_UBUNTU514 && \
   BUILD_VERSION=1 make -f Makefile.dkms dkmsdeb-pkg && \
   mv /opt/build/intel-gpu-pmt-backports/*.deb /opt/dist
 
