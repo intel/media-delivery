@@ -30,7 +30,7 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`PMT_BACKPORTS_VER',6f34627)
+DECLARE(`PMT_BACKPORTS_VER',d37196f)
 DECLARE(`PMT_BACKPORTS_SRC',https://github.com/intel-gpu/intel-gpu-pmt-backports.git)
 
 ifelse(OS_NAME,ubuntu,`

@@ -66,7 +66,7 @@ ARG CSE_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-cse-backports.git
 RUN cd /opt/build && \
   git clone ${CSE_BACKPORTS_REPO} && \
   cd intel-gpu-cse-backports && \
-  git checkout c334b88 && \
+  git checkout 56c6bad && \
   BUILD_VERSION=1 make -f Makefile.dkms dkmsdeb-pkg && \
   mv /opt/build/intel-gpu-cse-backports/*.deb /opt/dist
 
@@ -80,7 +80,7 @@ ARG PMT_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-pmt-backports.git
 RUN cd /opt/build && \
   git clone ${PMT_BACKPORTS_REPO} && \
   cd intel-gpu-pmt-backports && \
-  git checkout 6f34627 && \
+  git checkout d37196f && \
   BUILD_VERSION=1 make -f Makefile.dkms dkmsdeb-pkg && \
   mv /opt/build/intel-gpu-pmt-backports/*.deb /opt/dist
 
