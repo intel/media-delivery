@@ -56,7 +56,7 @@ if ! groups 2>/dev/null | grep -q "$device_grp"; then
   exit -1
 fi
 
-if ! capsh --print | grep Current | grep -q cap_sys_admin; then
+if ! capsh --print | grep Bounding | grep -q cap_sys_admin; then
   echo "error: no CAP_SYS_ADMIN capability (required to get GPU% metrics)" >&2
   echo "error:   if you run under docker, rerun with:" >&2
   echo "error:     --cap-add SYS_ADMIN" >&2
