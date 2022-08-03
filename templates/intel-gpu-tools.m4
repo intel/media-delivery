@@ -43,7 +43,7 @@ DECLARE(`IGT_VER',`1869d560c550ac273f495076ead46f8a337fc20b')
 define(`IGT_BUILD_DEPS',`ca-certificates gcc bison flex git libcairo-dev libdrm-dev dnl
   libdw-dev libkmod-dev libpciaccess-dev libpixman-1-dev libprocps-dev libudev-dev dnl
   meson pkg-config')
-define(`IGT_INSTALL_DEPS',`')
+define(`IGT_INSTALL_DEPS',`libglib2.0-0')
 
 define(`BUILD_IGT',dnl
 ARG IGT_REPO=https://gitlab.freedesktop.org/drm/igt-gpu-tools.git
