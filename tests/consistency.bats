@@ -67,6 +67,12 @@ END
   [ $status -eq 0 ]
 }
 
+@test "intel_gpu_top is ready" {
+  run docker_run intel_gpu_top -h
+  print_output
+  [ $status -eq 0 ]
+}
+
 @test "linux perf is ready" {
   run docker_run perf list
   print_output

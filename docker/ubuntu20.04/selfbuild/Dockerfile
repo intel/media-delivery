@@ -412,6 +412,7 @@ RUN apt-get update && \
     libxcb-shm0 \
     less \
     man-db \
+    libglib2.0-0 \
     libnginx-mod-http-lua \
     libnginx-mod-rtmp \
     linux-tools-generic \
