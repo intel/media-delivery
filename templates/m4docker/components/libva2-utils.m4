@@ -32,7 +32,7 @@ include(begin.m4)
 
 include(libva2.m4)
 
-DECLARE(`LIBVA2_UTILS_VER',2.14.0)
+DECLARE(`LIBVA2_UTILS_VER',2.15.0)
 
 ifelse(OS_NAME,ubuntu,`dnl
 define(`LIBVA2_UTILS_BUILD_DEPS',`automake ca-certificates gcc g++ libdrm-dev libtool make pkg-config wget')
