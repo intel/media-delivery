@@ -32,7 +32,7 @@ include(begin.m4)
 include(libva2.m4)
 include(onevpl.m4)
 
-DECLARE(`ONEVPL_GPU_VER',22.4.3)
+DECLARE(`ONEVPL_GPU_VER',22.5.0)
 DECLARE(`MFX_ENABLE_AENC',OFF)
 
 ifelse(OS_NAME,ubuntu,`

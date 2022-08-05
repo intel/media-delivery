@@ -64,10 +64,10 @@ RUN apt-get update && \
      && \
   rm -rf /var/lib/apt/lists/*
 # build libva2
-ARG LIBVA2_REPO=https://github.com/intel/libva/archive/2.14.0.tar.gz
+ARG LIBVA2_REPO=https://github.com/intel/libva/archive/2.15.0.tar.gz
 RUN cd /opt/build && \
   wget -O - ${LIBVA2_REPO} | tar xz
-RUN cd /opt/build/libva-2.14.0 && \
+RUN cd /opt/build/libva-2.15.0 && \
   ./autogen.sh --prefix=/opt/intel/samples --libdir=/opt/intel/samples/lib && \
   make -j$(nproc) && \
   make install DESTDIR=/opt/dist && \
@@ -82,10 +82,10 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 
 # build gmmlib
-ARG GMMLIB_REPO=https://github.com/intel/gmmlib/archive/intel-gmmlib-22.1.4.tar.gz
+ARG GMMLIB_REPO=https://github.com/intel/gmmlib/archive/intel-gmmlib-22.1.7.tar.gz
 RUN cd /opt/build && \
   wget -O - ${GMMLIB_REPO} | tar xz
-RUN cd /opt/build/gmmlib-intel-gmmlib-22.1.4 && mkdir build && cd build && \
+RUN cd /opt/build/gmmlib-intel-gmmlib-22.1.7 && mkdir build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
@@ -105,17 +105,17 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build media driver
-ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-22.4.3.tar.gz
+ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-22.5.0.tar.gz
 RUN cd /opt/build && \
   wget -O - ${MEDIA_DRIVER_REPO} | tar xz
 
-COPY patches/media-driver /opt/build/media-driver-intel-media-22.4.3
-RUN cd /opt/build/media-driver-intel-media-22.4.3 && { set -e; \
+COPY patches/media-driver /opt/build/media-driver-intel-media-22.5.0
+RUN cd /opt/build/media-driver-intel-media-22.5.0 && { set -e; \
   for patch_file in $(find -iname "*.patch" | sort -n); do \
     echo "Applying: ${patch_file}"; \
     patch -p1 < ${patch_file}; \
   done; }
-RUN cd /opt/build/media-driver-intel-media-22.4.3 && mkdir build && cd build && \
+RUN cd /opt/build/media-driver-intel-media-22.5.0 && mkdir build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
@@ -139,9 +139,9 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build libva2-utils
-ARG LIBVA2_UTILS_REPO=https://github.com/intel/libva-utils/archive/2.14.0.tar.gz
+ARG LIBVA2_UTILS_REPO=https://github.com/intel/libva-utils/archive/2.15.0.tar.gz
 RUN cd /opt/build && wget -O - ${LIBVA2_UTILS_REPO} | tar xz
-RUN cd /opt/build/libva-utils-2.14.0 && \
+RUN cd /opt/build/libva-utils-2.15.0 && \
   ./autogen.sh --prefix=/opt/intel/samples --libdir=/opt/intel/samples/lib && \
   make -j$(nproc) && \
   make install DESTDIR=/opt/dist && \
@@ -191,11 +191,11 @@ RUN apt-get update && \
     cmake \
     make && \
   rm -rf /var/lib/apt/lists/*
-ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-22.4.3.tar.gz
+ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-22.5.0.tar.gz
 RUN cd /opt/build && \
   wget -O - ${ONEVPLGPU_REPO} | tar xz
 # build oneVPL gpu
-RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-22.4.3 && \
+RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-22.5.0 && \
     mkdir -p _build && cd _build && \
     cmake \
     -DCMAKE_BUILD_TYPE=Release \
@@ -217,10 +217,10 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build media sdk
-ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-22.4.3.tar.gz
+ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-22.5.0.tar.gz
 RUN cd /opt/build && \
   wget -O - ${MSDK_REPO} | tar xz
-RUN cd /opt/build/MediaSDK-intel-mediasdk-22.4.3 && \
+RUN cd /opt/build/MediaSDK-intel-mediasdk-22.5.0 && \
   mkdir -p build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
