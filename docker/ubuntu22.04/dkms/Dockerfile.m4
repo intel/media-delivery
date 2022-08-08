@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Intel Corporation
+# Copyright (c) 2022 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,6 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(ubuntu20.04)
-add_subdirectory(ubuntu22.04)
+include(begin.m4)
+DECLARE(`KERNEL_VER',5.17.0-1011-oem)
+include(intel-gpu-firmware.m4)
+include(i915-backports.m4)
+include(cse-backports.m4)
+include(pmt-backports.m4)
+include(end.m4)
+PREAMBLE
+
+ARG IMAGE=OS_NAME:OS_VERSION
+FROM $IMAGE AS base
+
+BUILD_ALL
 

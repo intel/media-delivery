@@ -21,15 +21,32 @@ article we will demonstrate installation for the specific version of Ubuntu 20.0
 How to Generate DKMS Packages
 -----------------------------
 
-To generate DKMS packages you can use helper docker (see `Dockerfile <../docker/ubuntu20.04/dkms/Dockerfile>`_)
-available in media-delivery repository. Run the following from the top level of media-delivery
-cloned copy::
+To generate DKMS packages you can use helper dockers available in media-delivery repository:
 
++--------------+-------------------------------------------------------------------------------+
+| OS           | Dockerfile                                                                    |
++==============+===============================================================================+
+| Ubuntu 20.04 | `docker/ubuntu20.04/dkms/Dockerfile <../docker/ubuntu20.04/dkms/Dockerfile>`_ |
++--------------+-------------------------------------------------------------------------------+
+| Ubuntu 22.04 | `docker/ubuntu22.04/dkms/Dockerfile <../docker/ubuntu22.04/dkms/Dockerfile>`_ |
++--------------+-------------------------------------------------------------------------------+
+
+Run the following from the top level of media-delivery cloned copy::
+
+  # To build DKMS for Ubuntu 20.04
   docker build \
     $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
     --file docker/ubuntu20.04/dkms/Dockerfile \
     --tag dkms \
     .
+
+  # To build DKMS for Ubuntu 22.04
+  docker build \
+    $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
+    --file docker/ubuntu22.04/dkms/Dockerfile \
+    --tag dkms \
+    .
+
 
 Copy Intel GPU DKMS packages to the host system::
 
@@ -45,7 +62,12 @@ First, install the following Ubuntu 20.04 OEM kernel (this kernel version corres
 version used below to build DKMS packages) and its headers::
 
   sudo apt-get update
+
+  # for Ubuntu 20.04
   sudo apt-get install linux-headers-5.14.0-1042-oem linux-image-unsigned-5.14.0-1042-oem
+
+  # for Ubuntu 22.04
+  sudo apt-get install linux-image-unsigned-5.17.0-1011-oem linux-headers-5.17.0-1011-oem
 
 Once done, check kernel boot order in grub to make sure to boot into the installed kernel,
 adjust if needed, then reboot::
@@ -58,9 +80,9 @@ Install Intel GPU Firmware and DKMS packages::
 
   sudo mkdir -p /lib/firmware/updates/i915/
   sudo cp /opt/packages/firmware/*.bin /lib/firmware/updates/i915/
-  sudo dpkg -i /opt/packages/intel-i915-dkms_0.5834.220609.0.5.17.0.1011+i1-1_all.deb \
-    /opt/packages/intel-platform-cse-dkms-2022.28.deb \
-    /opt/packages/intel-platform-pmt-dkms-2021.21.deb
+  sudo dpkg -i /opt/packages/intel-i915-dkms_*.deb \
+    /opt/packages/intel-platform-cse-dkms-*.deb \
+    /opt/packages/intel-platform-pmt-dkms-*.deb
 
 Once done, reboot::
 
