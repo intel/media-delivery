@@ -18,6 +18,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(ubuntu20.04)
-add_subdirectory(ubuntu22.04)
+file(GLOB_RECURSE srcs
+  ${CMAKE_SOURCE_DIR}/templates/*.m4
+  ${CMAKE_CURRENT_SOURCE_DIR}/defs.m4)
+
+set(M4FLAGS ${M4FLAGS} -E
+  -I ${CMAKE_SOURCE_DIR}/templates
+  -I ${CMAKE_SOURCE_DIR}/templates/m4docker/system
+  -I ${CMAKE_SOURCE_DIR}/templates/m4docker/components
+  -I ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile
+  DEPENDS ${srcs}
+    ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile.m4
+  COMMAND ${M4} ${M4FLAGS} -D OS_NAME=ubuntu -D OS_VERSION=22.04
+    ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile.m4 > ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile
+  VERBATIM
+  )
+
+add_custom_target(ubuntu22.04-dockerfiles ALL DEPENDS
+  ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile)
 

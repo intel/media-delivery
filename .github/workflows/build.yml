@@ -3,6 +3,11 @@ name: build
 on:
   workflow_call:
     inputs:
+      os:
+        description: 'What is the target OS?'
+        required: false
+        type: string
+        default: 'ubuntu:20.04'
       # NOTE: repo/pr pair might correspond to other repo which
       # we want to build (specifically - intel/media-delivery).
       # As such, there might be actually 2 pairs at the same time:
@@ -43,7 +48,7 @@ on:
         value: ${{ jobs.build.outputs.tagname }}
 
 env:
-  BASE_IMAGE: dockerv2-gsae-fm.gfx-assets.fm.intel.com/ubuntu:20.04
+  BASE_IMAGE: dockerv2-gsae-fm.gfx-assets.fm.intel.com/${{ inputs.os }}
   REGISTRY: dockerv2-gsae-fm.gfx-assets.fm.intel.com/solutions
   http_proxy: http://proxy-dmz.intel.com:912
   https_proxy: http://proxy-dmz.intel.com:912
@@ -65,7 +70,8 @@ jobs:
         pr=${{inputs.pr}}
         priv_pr=${{github.event.pull_request.number}}
 
-        tagname="$REGISTRY/intel-media-delivery/cdn/"
+        tagname="$REGISTRY/intel-media-delivery/${{ inputs.os }}/cdn/"
+        tagname=${tagname/:/-}
         if [ "${{inputs.repo}}" = "intel/media-delivery" ]; then
           tagname+=public/
         else

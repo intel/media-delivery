@@ -26,7 +26,7 @@ on:
     - '!.github/workflows/deploy.yml'
 
 jobs:
-  build:
+  build-u2004:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
     with:
       gfx_repo_key: ''
@@ -34,17 +34,42 @@ jobs:
       flavor: dkms
       dockerfile: docker/ubuntu20.04/dkms/Dockerfile
 
-  deploy-push:
+  build-u2204:
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/build.yml@master
+    with:
+      os: ubuntu:22.04
+      gfx_repo_key: ''
+      gfx_repo: ''
+      flavor: dkms
+      dockerfile: docker/ubuntu22.04/dkms/Dockerfile
+
+  deploy-push-u2004:
     if: github.event_name == 'push'
-    needs: build
+    needs: build-u2004
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       image: ${{needs.build.outputs.image}}
       gta-asset-name: dkms
 
-  deploy-release:
+  deploy-push-u2204:
+    if: github.event_name == 'push'
+    needs: build-u2204
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
+    with:
+      image: ${{needs.build.outputs.image}}
+      gta-asset-name: dkms
+
+  deploy-release-u2004:
     if: github.event_name == 'workflow_dispatch'
-    needs: build
+    needs: build-u2004
+    uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
+    with:
+      image: ${{needs.build.outputs.image}}
+      gta-asset-name: ${{github.event.inputs.name}}
+
+  deploy-release-u2204:
+    if: github.event_name == 'workflow_dispatch'
+    needs: build-u2204
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       image: ${{needs.build.outputs.image}}
