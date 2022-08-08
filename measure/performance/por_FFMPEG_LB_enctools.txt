@@ -1,0 +1,16 @@
+#HEVC-AVC
+720p_hevc-avc: ffmpeg -hwaccel qsv -c:v hevc_qsv -i <> -c:v h264_qsv -b:v 1500k -preset medium -g 256 -look_ahead_depth 40 -extbrc 1 -adaptive_i 1 -adaptive_b 1 -b_strategy 1 -bf 7 -refs 5 -strict -1 -async_depth 1 -maxrate 4000k -bufsize 8000k -y <>.h264 -report
+1080p_hevc-avc: ffmpeg -hwaccel qsv -c:v hevc_qsv -i <> -c:v h264_qsv -b:v 3000k -preset medium -g 256 -look_ahead_depth 40 -extbrc 1 -adaptive_i 1 -adaptive_b 1 -b_strategy 1 -bf 7 -refs 5 -strict -1 -async_depth 1 -maxrate 6000k -bufsize 12000k -y <>.h264 -report
+2160p_hevc-avc: ffmpeg -hwaccel qsv -c:v hevc_qsv -i <> -c:v h264_qsv -b:v 9000k -preset medium -g 256 -look_ahead_depth 40 -extbrc 1 -adaptive_i 1 -adaptive_b 1 -b_strategy 1 -bf 7 -refs 5 -strict -1 -async_depth 1 -maxrate 20000k -bufsize 40000k -y <>.h264 -report
+#AVC-AVC
+720p_avc-avc: ffmpeg -hwaccel qsv -c:v h264_qsv -i <> -c:v h264_qsv -b:v 1500k -preset medium -g 256 -look_ahead_depth 40 -extbrc 1 -adaptive_i 1 -adaptive_b 1 -b_strategy 1 -bf 7 -refs 5 -strict -1 -async_depth 1 -maxrate 4000k -bufsize 8000k -y <>.h264 -report
+1080p_avc-avc: ffmpeg -hwaccel qsv -c:v h264_qsv -i <> -c:v h264_qsv -b:v 3000k -preset medium -g 256 -look_ahead_depth 40 -extbrc 1 -adaptive_i 1 -adaptive_b 1 -b_strategy 1 -bf 7 -refs 5 -strict -1 -async_depth 1 -maxrate 6000k -bufsize 12000k -y <>.h264 -report
+2160p_avc-avc: ffmpeg -hwaccel qsv -c:v h264_qsv -i <> -c:v h264_qsv -b:v 9000k -preset medium -g 256 -look_ahead_depth 40 -extbrc 1 -adaptive_i 1 -adaptive_b 1 -b_strategy 1 -bf 7 -refs 5  -strict -1 -async_depth 1 -maxrate 20000k -bufsize 40000k -y <>.h264 -report
+#HEVC-HEVC
+720p_hevc-hevc: ffmpeg -hwaccel qsv -c:v hevc_qsv -i <> -c:v hevc_qsv -b:v 1500k -preset medium -g 256 -look_ahead_depth 40 -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -idr_interval begin_only -strict -1 -async_depth 1 -maxrate 3000k -bufsize 6000k -y <>.h265 -report
+1080p_hevc-hevc: ffmpeg -hwaccel qsv -c:v hevc_qsv -i <> -c:v hevc_qsv -b:v 3000k -preset medium -g 256 -look_ahead_depth 40 -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -idr_interval begin_only -strict -1 -async_depth 1 -maxrate 6000k -bufsize 12000k -y <>.h265 -report
+2160p_hevc-hevc: ffmpeg -hwaccel qsv -c:v hevc_qsv -i <> -c:v hevc_qsv -b:v 9000k -preset veryfast -g 256 -look_ahead_depth 40 -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -idr_interval begin_only -strict -1 -async_depth 1 -maxrate 18000k -bufsize 36000k -y <>.h265 -report
+#AVC-HEVC
+720p_avc-hevc: ffmpeg -hwaccel qsv -c:v h264_qsv -i <> -c:v hevc_qsv -b:v 1500k -preset medium -g 256 -look_ahead_depth 40 -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -idr_interval begin_only -strict -1 -async_depth 1 -maxrate 3000k -bufsize 6000k -y <>.h265 -report
+1080p_avc-hevc: ffmpeg -hwaccel qsv -c:v h264_qsv -i <> -c:v hevc_qsv -b:v 3000k -preset medium -g 256 -look_ahead_depth 40 -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -idr_interval begin_only -strict -1 -async_depth 1 -maxrate 6000k -bufsize 12000k -y <>.h265 -report
+2160p_avc-hevc: ffmpeg -hwaccel qsv -c:v h264_qsv -i <> -c:v hevc_qsv -b:v 9000k -preset veryfast -g 256 -look_ahead_depth 40 -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -idr_interval begin_only -strict -1 -async_depth 1 -maxrate 18000k -bufsize 36000k -y <>.h265 -report

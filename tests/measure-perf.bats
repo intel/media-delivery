@@ -167,6 +167,71 @@ function get_perf_opts() {
   fi
 }
 
+@test "measure perf raw h264 with AVC Enc Tools" {
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$rawh264" "measure perf --use-enctools /tmp/WAR.h264")"
+  print_output
+  if ! kernel_ge_4_16; then
+    [ $status -ne 0 ]
+  else
+    [ $status -eq 0 ]
+
+    ptmp=$tmp/measure/perf
+    nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_SMT -name "*.h265" | wc -l)
+    [ "$nout" -gt 0 ]
+    nout=$(find $ptmp/output_FFMPEG -name "*.h264" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_FFMPEG -name "*.h265" | wc -l)
+    [ "$nout" -gt 0 ]
+    nlines=$(cat $ptmp/msperf_FFMPEG_AVC-AVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ] # we expect header and result lines
+    nlines=$(cat $ptmp/msperf_FFMPEG_AVC-HEVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    nlines=$(cat $ptmp/msperf_SMT_AVC-AVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    nlines=$(cat $ptmp/msperf_SMT_AVC-HEVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    npng=$(find $ptmp -name "*.png" | wc -l)
+    [ "$npng" -ge 4 ] # we should have at least one picture for each performance
+  fi
+}
+
+@test "measure perf raw h265 with HEVC Enc Tools" {
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$rawh265" "measure perf --use-enctools /tmp/WAR.hevc")"
+  print_output
+  if ! kernel_ge_4_16; then
+    [ $status -ne 0 ]
+  else
+    [ $status -eq 0 ]
+
+    ptmp=$tmp/measure/perf
+    nout=$(find $ptmp/output_SMT -name "*.h264" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_SMT -name "*.h265" | wc -l)
+    [ "$nout" -gt 0 ]
+    nout=$(find $ptmp/output_FFMPEG -name "*.h264" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_FFMPEG -name "*.h265" | wc -l)
+    [ "$nout" -gt 0 ]
+    nlines=$(cat $ptmp/msperf_FFMPEG_HEVC-AVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ] # we expect header and result lines
+    nlines=$(cat $ptmp/msperf_FFMPEG_HEVC-HEVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    nlines=$(cat $ptmp/msperf_SMT_HEVC-AVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    nlines=$(cat $ptmp/msperf_SMT_HEVC-HEVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    npng=$(find $ptmp -name "*.png" | wc -l)
+    [ "$npng" -ge 4 ] # we should have at least one picture for each performance
+  fi
+}
 
 @test "measure perf --skip-perf raw h264" {
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
