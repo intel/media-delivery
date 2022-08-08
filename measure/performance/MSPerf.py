@@ -103,6 +103,7 @@ def main():
     parser.add_argument('--enable-debugfs', '--enable_debugfs', action='store_true', default=False, help='enabling further analysis tools such as  CPU_mem, GPU_mem, etc')
     parser.add_argument('--density-decode', '--density_decode', action='store_true', default=False, help='Enabling Density Decode support, HEVC and AVC')
     parser.add_argument('--use-vdenc', '--use_vdenc', action='store_true', default=False,help='Enabling Fixed Function VDENC and LowPower mode')
+    parser.add_argument('--use-enctools', '--use_enctools', action='store_true', default=False, help='Enabling Enc tools default config file ')
     parser.add_argument('-c', '--codec', help='To choose Encoder Codec type, AVC or HEVC, Default will execute all')
     parser.add_argument('-s', '--startStreams', help='To set starting of multi stream performance measurement, e.g. --startStreams 720p:8,1080p:5,2160p:2 or all:2, Default=all:1')
     parser.add_argument('-e', '--endStreams', help='To set ending number of multi stream performance measurement, e.g. --endStreams 5, Default=NoLimit')
@@ -319,11 +320,18 @@ def main():
     for performance_applications in range (2):
         required_information_file = os.path.dirname(os.path.realpath(__file__))
         if (performance_applications == 0) and not skip_msdk:
-            required_information_file += "/por_SMT_LB.txt"
             ffmpeg_mode = False
             performance_app_tag = "SMT"
+            if not ARGS.use_enctools:
+                required_information_file += "/por_SMT_LB.txt"
+            else:
+                required_information_file += "/por_SMT_LB_enctools.txt"
+
         elif (performance_applications == 1) and not skip_ffmpeg:
-            required_information_file += "/por_FFMPEG_LB.txt"
+            if not ARGS.use_enctools:
+                required_information_file += "/por_FFMPEG_LB.txt"
+            else:
+                required_information_file += "/por_FFMPEG_LB_enctools.txt"
             ffmpeg_mode = True
             performance_app_tag = "FFMPEG"
         else:
@@ -393,7 +401,11 @@ def main():
             elif performance_tag == "AVC-HEVC" and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_avc2hevc_exist:
                 sequence_mode = "TRANSCODE"
             elif performance_tag == "AV1-AV1" and (encode_codec == "all" or encode_codec == "av1") and cmdline_config_av12av1_exist:
-                sequence_mode = "TRANSCODE"
+                if not ARGS.use_enctools:
+                    sequence_mode = "TRANSCODE"
+                else:
+                    printLog(output_log_handle, " ERROR : Perf Config file , AV1 CODEC with Enctools not supported" )
+                    continue
             elif performance_tag == "DECODE-HEVC" and density_decode and cmdline_config_decode_hevc_exist:
                 sequence_mode = "DECODE"
             elif performance_tag == "DECODE-AVC" and density_decode and cmdline_config_decode_avc_exist:
