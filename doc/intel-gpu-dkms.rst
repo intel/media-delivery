@@ -76,7 +76,7 @@ adjust if needed, then reboot::
 
 Install Intel GPU Firmware and DKMS packages::
 
-  sudo apt-get install dkms bison flex
+  sudo apt-get install dkms bison flex gawk
 
   sudo mkdir -p /lib/firmware/updates/i915/
   sudo cp /opt/packages/firmware/*.bin /lib/firmware/updates/i915/
