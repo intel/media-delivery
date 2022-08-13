@@ -135,7 +135,7 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/ffmpeg/ffmpeg /opt/build/ffmpeg && \
   cd /opt/build/ffmpeg && \
-  git checkout bea841a
+  git checkout f6a36c7
 
 COPY patches/ffmpeg /opt/build/ffmpeg
 RUN cd /opt/build/ffmpeg && { set -e; \

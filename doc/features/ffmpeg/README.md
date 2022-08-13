@@ -7,6 +7,29 @@
 * [MPEG2](./mpeg2.md)
 * [VP9](./vp9.md)
 
+# Media SDK and oneVPL backends
+
+FFmpeg QSV plugins can be built against either
+  [Media SDK](https://github.com/Intel-Media-SDK/MediaSDK) or
+  [oneVPL](https://github.com/oneapi-src/oneVPL) libraries.
+Some features might be available under one backend and not available under the
+other. This documentation will point out such features (if nothing noted in feature
+description - assume that it's supported under both backends).
+
+Not all versions of ffmpeg support both backends. Refer to the table below.
+
+| Backend   | FFmpeg versions    |
+| --------- | ------------------ |
+| Media SDK | n2.6+              |
+| oneVPL    | [master@7158f1e](https://github.com/FFmpeg/FFmpeg/commit/7158f1e)+ |
+
+Mind the following component versions requirements for oneVPL backend in ffmpeg-qsv:
+
+* [oneVPL v2022.1.5](https://github.com/oneapi-src/oneVPL/releases/tag/v2022.1.5) or later
+* [oneVPL GPU 22.5.2](https://github.com/oneapi-src/oneVPL-intel-gpu/releases/tag/intel-onevpl-22.5.2) or later
+* [libva 2.15.0](https://github.com/intel/libva/releases/tag/2.15.0) or later
+* [media-driver 22.5.2](https://github.com/intel/media-driver/releases/tag/intel-media-22.5.2) or later
+
 ## BRC modes selection
 
 There are few BRC modes which can be used by QSV encoders (all except MJPEG). Mind

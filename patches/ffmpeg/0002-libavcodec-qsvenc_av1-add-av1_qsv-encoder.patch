@@ -1,7 +1,7 @@
-From 4da668aa28e9b1418b1a33ecc2a9ef74ee377a04 Mon Sep 17 00:00:00 2001
+From 2dd369e70c2f59715f3b6d86e5a5a2e37c01df6e Mon Sep 17 00:00:00 2001
 From: "Chen,Wenbin" <wenbin.chen@intel.com>
 Date: Thu, 8 Apr 2021 13:09:47 +0800
-Subject: [PATCH 12/13] libavcodec/qsvenc_av1: add av1_qsv encoder
+Subject: [PATCH 2/3] libavcodec/qsvenc_av1: add av1_qsv encoder
 
 It is available when libvpl is enabled
 
@@ -15,17 +15,17 @@ Signed-off-by: Haihao Xiang <haihao.xiang@intel.com>
  configure               |   4 +
  libavcodec/Makefile     |   1 +
  libavcodec/allcodecs.c  |   1 +
- libavcodec/qsvenc.c     | 219 ++++++++++++++++++++++++++++++++++++++++-
+ libavcodec/qsvenc.c     | 195 ++++++++++++++++++++++++++++++++++-
  libavcodec/qsvenc.h     |   7 +-
- libavcodec/qsvenc_av1.c | 252 ++++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 480 insertions(+), 4 deletions(-)
+ libavcodec/qsvenc_av1.c | 267 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 471 insertions(+), 4 deletions(-)
  create mode 100644 libavcodec/qsvenc_av1.c
 
 diff --git a/configure b/configure
-index c71b4c5..1ddffd1 100755
+index 090ccf2..6ecceef 100755
 --- a/configure
 +++ b/configure
-@@ -3240,6 +3240,8 @@ vp9_qsv_encoder_select="qsvenc"
+@@ -3258,6 +3258,8 @@ vp9_qsv_encoder_select="qsvenc"
  vp9_v4l2m2m_decoder_deps="v4l2_m2m vp9_v4l2_m2m"
  wmv3_crystalhd_decoder_select="crystalhd"
  av1_qsv_decoder_select="qsvdec"
@@ -34,9 +34,9 @@ index c71b4c5..1ddffd1 100755
  
  # parsers
  aac_parser_select="adts_header mpeg4audio"
-@@ -6571,6 +6573,8 @@ elif enabled libvpl; then
-         warn "build FFmpeg against oneVPL 2.6+, OPAQUE memory, multi-frame encode, user plugins\n"\
-              "and LA_EXT rate control mode in FFmpeg QSV won't be supported." ||
+@@ -6606,6 +6608,8 @@ elif enabled libvpl; then
+ # is extracted from "vpl >= 2.6"
+     check_pkg_config libmfx "vpl >= 2.6" "mfxvideo.h mfxdispatcher.h" MFXLoad || \
              die "ERROR: libvpl >= 2.6 not found"
 +
 +    check_cc MFX_EXTBUFF_AV1_BITSTREAM_PARAM "mfxdefs.h mfxstructures.h" "MFX_EXTBUFF_AV1_BITSTREAM_PARAM"
@@ -44,10 +44,10 @@ index c71b4c5..1ddffd1 100755
  
  if enabled libmfx; then
 diff --git a/libavcodec/Makefile b/libavcodec/Makefile
-index 1905258..d64385a 100644
+index 83901bb..a1da3df 100644
 --- a/libavcodec/Makefile
 +++ b/libavcodec/Makefile
-@@ -236,6 +236,7 @@ OBJS-$(CONFIG_AURA_DECODER)            += cyuv.o
+@@ -243,6 +243,7 @@ OBJS-$(CONFIG_AURA_DECODER)            += cyuv.o
  OBJS-$(CONFIG_AURA2_DECODER)           += aura.o
  OBJS-$(CONFIG_AV1_DECODER)             += av1dec.o
  OBJS-$(CONFIG_AV1_CUVID_DECODER)       += cuviddec.o
@@ -56,23 +56,23 @@ index 1905258..d64385a 100644
  OBJS-$(CONFIG_AVRP_DECODER)            += r210dec.o
  OBJS-$(CONFIG_AVRP_ENCODER)            += r210enc.o
 diff --git a/libavcodec/allcodecs.c b/libavcodec/allcodecs.c
-index 74049af..44a2132 100644
+index c94e2d5..0479d7e 100644
 --- a/libavcodec/allcodecs.c
 +++ b/libavcodec/allcodecs.c
-@@ -807,6 +807,7 @@ extern const AVCodec ff_libaom_av1_decoder;
- extern const AVCodec ff_av1_decoder;
- extern const AVCodec ff_av1_cuvid_decoder;
- extern const AVCodec ff_av1_qsv_decoder;
-+extern const AVCodec ff_av1_qsv_encoder;
- extern const AVCodec ff_libopenh264_encoder;
- extern const AVCodec ff_libopenh264_decoder;
- extern const AVCodec ff_h264_amf_encoder;
+@@ -820,6 +820,7 @@ extern const FFCodec ff_libaom_av1_decoder;
+ extern const FFCodec ff_av1_decoder;
+ extern const FFCodec ff_av1_cuvid_decoder;
+ extern const FFCodec ff_av1_qsv_decoder;
++extern const FFCodec ff_av1_qsv_encoder;
+ extern const FFCodec ff_libopenh264_encoder;
+ extern const FFCodec ff_libopenh264_decoder;
+ extern const FFCodec ff_h264_amf_encoder;
 diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
-index 483a58a..a2d3c3a 100644
+index ab35004..f1621f1 100644
 --- a/libavcodec/qsvenc.c
 +++ b/libavcodec/qsvenc.c
-@@ -90,6 +90,14 @@ static const struct profile_names vp9_profiles[] = {
- #endif
+@@ -82,6 +82,14 @@ static const struct profile_names vp9_profiles[] = {
+     { MFX_PROFILE_VP9_3,                        "vp9 3"                     },
  };
  
 +static const struct profile_names av1_profiles[] = {
@@ -86,7 +86,7 @@ index 483a58a..a2d3c3a 100644
  typedef struct QSVPacket {
      AVPacket        pkt;
      mfxSyncPoint   *sync;
-@@ -122,6 +130,11 @@ static const char *print_profile(enum AVCodecID codec_id, mfxU16 profile)
+@@ -114,6 +122,11 @@ static const char *print_profile(enum AVCodecID codec_id, mfxU16 profile)
          num_profiles = FF_ARRAY_ELEMS(vp9_profiles);
          break;
  
@@ -98,25 +98,19 @@ index 483a58a..a2d3c3a 100644
      default:
          return "unknown";
      }
-@@ -482,6 +495,115 @@ static void dump_video_mjpeg_param(AVCodecContext *avctx, QSVEncContext *q)
+@@ -437,6 +450,93 @@ static void dump_video_mjpeg_param(AVCodecContext *avctx, QSVEncContext *q)
             info->FrameInfo.FrameRateExtD, info->FrameInfo.FrameRateExtN);
  }
  
++#if QSV_HAVE_EXT_AV1_PARAM
 +static void dump_video_av1_param(AVCodecContext *avctx, QSVEncContext *q,
 +                                 mfxExtBuffer **coding_opts)
 +{
 +    mfxInfoMFX *info = &q->param.mfx;
-+
-+#if QSV_HAVE_EXT_AV1_PARAM
 +    mfxExtAV1TileParam *av1_tile_param = (mfxExtAV1TileParam *)coding_opts[0];
 +    mfxExtAV1BitstreamParam *av1_bs_param = (mfxExtAV1BitstreamParam *)coding_opts[1];
-+#endif
-+#if QSV_HAVE_CO2
 +    mfxExtCodingOption2 *co2 = (mfxExtCodingOption2*)coding_opts[2];
-+#endif
-+#if QSV_HAVE_CO3
 +    mfxExtCodingOption3 *co3 = (mfxExtCodingOption3*)coding_opts[3];
-+#endif
 +
 +    av_log(avctx, AV_LOG_VERBOSE, "profile: %s; level: %"PRIu16"\n",
 +           print_profile(avctx->codec_id, info->CodecProfile), info->CodecLevel);
@@ -133,26 +127,20 @@ index 483a58a..a2d3c3a 100644
 +           info->TargetUsage, print_ratecontrol(info->RateControlMethod));
 +
 +    if (info->RateControlMethod == MFX_RATECONTROL_CBR ||
-+        info->RateControlMethod == MFX_RATECONTROL_VBR) {
++        info->RateControlMethod == MFX_RATECONTROL_VBR)
 +        av_log(avctx, AV_LOG_VERBOSE,
 +               "BufferSizeInKB: %"PRIu16"; InitialDelayInKB: %"PRIu16"; TargetKbps: %"PRIu16"; MaxKbps: %"PRIu16"; BRCParamMultiplier: %"PRIu16"\n",
 +               info->BufferSizeInKB, info->InitialDelayInKB, info->TargetKbps, info->MaxKbps, info->BRCParamMultiplier);
-+    } else if (info->RateControlMethod == MFX_RATECONTROL_CQP) {
++    else if (info->RateControlMethod == MFX_RATECONTROL_CQP)
 +        av_log(avctx, AV_LOG_VERBOSE, "QPI: %"PRIu16"; QPP: %"PRIu16"; QPB: %"PRIu16"\n",
 +               info->QPI, info->QPP, info->QPB);
-+    }
-+#if QSV_HAVE_ICQ
-+    else if (info->RateControlMethod == MFX_RATECONTROL_ICQ) {
++    else if (info->RateControlMethod == MFX_RATECONTROL_ICQ)
 +        av_log(avctx, AV_LOG_VERBOSE, "ICQQuality: %"PRIu16"\n", info->ICQQuality);
-+    }
-+#endif
-+    else {
++    else
 +        av_log(avctx, AV_LOG_VERBOSE, "Unsupported ratecontrol method: %d \n", info->RateControlMethod);
-+    }
 +
 +    av_log(avctx, AV_LOG_VERBOSE, "NumRefFrame: %"PRIu16"\n", info->NumRefFrame);
 +
-+#if QSV_HAVE_CO2
 +    av_log(avctx, AV_LOG_VERBOSE,
 +           "IntRefType: %"PRIu16"; IntRefCycleSize: %"PRIu16
 +           "; IntRefQPDelta: %"PRId16"; IntRefCycleDist: %"PRId16"\n",
@@ -167,12 +155,7 @@ index 483a58a..a2d3c3a 100644
 +           print_threestate(co2->BitrateLimit), print_threestate(co2->MBBRC),
 +           print_threestate(co2->ExtBRC));
 +
-+#if QSV_HAVE_VDENC
 +    av_log(avctx, AV_LOG_VERBOSE, "VDENC: %s\n", print_threestate(info->LowPower));
-+#endif
-+
-+#if QSV_VERSION_ATLEAST(1, 8)
-+    av_log(avctx, AV_LOG_VERBOSE, "\n");
 +
 +    av_log(avctx, AV_LOG_VERBOSE, "BRefType: ");
 +    switch (co2->BRefType) {
@@ -189,38 +172,39 @@ index 483a58a..a2d3c3a 100644
 +    default:                av_log(avctx, AV_LOG_VERBOSE, "unknown");   break;
 +    }
 +    av_log(avctx, AV_LOG_VERBOSE, "\n");
-+#endif
 +
-+#if QSV_VERSION_ATLEAST(1, 9)
 +    av_log(avctx, AV_LOG_VERBOSE,
 +           "MinQPI: %"PRIu8"; MaxQPI: %"PRIu8"; MinQPP: %"PRIu8"; MaxQPP: %"PRIu8"; MinQPB: %"PRIu8"; MaxQPB: %"PRIu8"\n",
 +           co2->MinQPI, co2->MaxQPI, co2->MinQPP, co2->MaxQPP, co2->MinQPB, co2->MaxQPB);
-+#endif
-+#endif /* QSV_HAVE_CO2 */
 +
 +    av_log(avctx, AV_LOG_VERBOSE, "FrameRateExtD: %"PRIu32"; FrameRateExtN: %"PRIu32" \n",
 +           info->FrameInfo.FrameRateExtD, info->FrameInfo.FrameRateExtN);
 +
-+#if QSV_HAVE_EXT_AV1_PARAM
 +    av_log(avctx, AV_LOG_VERBOSE,
 +           "NumTileRows: %"PRIu16"; NumTileColumns: %"PRIu16"; NumTileGroups: %"PRIu16"\n",
 +           av1_tile_param->NumTileRows, av1_tile_param->NumTileColumns, av1_tile_param->NumTileGroups);
 +
 +    av_log(avctx, AV_LOG_VERBOSE, "WriteIVFHeaders: %s \n",
 +           print_threestate(av1_bs_param->WriteIVFHeaders));
-+#endif
 +}
++#endif
 +
  static int select_rc_mode(AVCodecContext *avctx, QSVEncContext *q)
  {
      const char *rc_desc;
-@@ -820,9 +942,16 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+@@ -743,15 +843,22 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
      case MFX_RATECONTROL_CQP:
          quant = avctx->global_quality / FF_QP2LAMBDA;
  
 -        q->param.mfx.QPI = av_clip(quant * fabs(avctx->i_quant_factor) + avctx->i_quant_offset, 0, 51);
 -        q->param.mfx.QPP = av_clip(quant, 0, 51);
 -        q->param.mfx.QPB = av_clip(quant * fabs(avctx->b_quant_factor) + avctx->b_quant_offset, 0, 51);
+         q->old_global_quality = avctx->global_quality;
+         q->old_i_quant_factor = avctx->i_quant_factor;
+         q->old_i_quant_offset = avctx->i_quant_offset;
+         q->old_b_quant_factor = avctx->b_quant_factor;
+         q->old_b_quant_offset = avctx->b_quant_offset;
+ 
 +        if (avctx->codec_id == AV_CODEC_ID_AV1) {
 +            q->param.mfx.QPI = av_clip_uintp2(quant * fabs(avctx->i_quant_factor) + avctx->i_quant_offset, 8);
 +            q->param.mfx.QPP = av_clip_uintp2(quant, 8);
@@ -231,17 +215,14 @@ index 483a58a..a2d3c3a 100644
 +            q->param.mfx.QPB = av_clip(quant * fabs(avctx->b_quant_factor) + avctx->b_quant_offset, 0, 51);
 +        }
 +
- 
          break;
  #if QSV_HAVE_AVBR
-@@ -957,6 +1086,17 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+     case MFX_RATECONTROL_AVBR:
+@@ -885,6 +992,14 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
              q->extco2.Header.BufferSz = sizeof(q->extco2);
  
              q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extco2;
 +        } else if (avctx->codec_id == AV_CODEC_ID_AV1) {
-+            // AV1e has better quality when enable B_PYRAMID, so
-+            // enable it by default
-+            q->extco2.BRefType = MFX_B_REF_PYRAMID;
 +            if (q->b_strategy >= 0)
 +                q->extco2.BRefType = q->b_strategy ? MFX_B_REF_PYRAMID : MFX_B_REF_OFF;
 +
@@ -250,38 +231,44 @@ index 483a58a..a2d3c3a 100644
 +
 +            q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extco2;
          }
- #endif
  
-@@ -1036,6 +1176,21 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+         if (avctx->codec_id == AV_CODEC_ID_H264) {
+@@ -957,6 +1072,27 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+         q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extvp9param;
      }
- #endif
  
 +#if QSV_HAVE_EXT_AV1_PARAM
 +    if (avctx->codec_id == AV_CODEC_ID_AV1) {
-+        q->extav1tileparam.Header.BufferId = MFX_EXTBUFF_AV1_TILE_PARAM;
-+        q->extav1tileparam.Header.BufferSz = sizeof(q->extav1tileparam);
-+        q->extav1tileparam.NumTileColumns  = q->tile_cols;
-+        q->extav1tileparam.NumTileRows     = q->tile_rows;
-+        q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extav1tileparam;
++        if (QSV_RUNTIME_VERSION_ATLEAST(q->ver, 2, 5)) {
++            q->extav1tileparam.Header.BufferId = MFX_EXTBUFF_AV1_TILE_PARAM;
++            q->extav1tileparam.Header.BufferSz = sizeof(q->extav1tileparam);
++            q->extav1tileparam.NumTileColumns  = q->tile_cols;
++            q->extav1tileparam.NumTileRows     = q->tile_rows;
++            q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extav1tileparam;
 +
-+        q->extav1bsparam.Header.BufferId = MFX_EXTBUFF_AV1_BITSTREAM_PARAM;
-+        q->extav1bsparam.Header.BufferSz = sizeof(q->extav1bsparam);
-+        q->extav1bsparam.WriteIVFHeaders = MFX_CODINGOPTION_OFF;
-+        q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extav1bsparam;
++            q->extav1bsparam.Header.BufferId = MFX_EXTBUFF_AV1_BITSTREAM_PARAM;
++            q->extav1bsparam.Header.BufferSz = sizeof(q->extav1bsparam);
++            q->extav1bsparam.WriteIVFHeaders = MFX_CODINGOPTION_OFF;
++            q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->extav1bsparam;
++        } else {
++            av_log(avctx, AV_LOG_ERROR,
++                   "This version of runtime doesn't support AV1 encoding\n");
++            return AVERROR_UNKNOWN;
++        }
 +    }
 +#endif
 +
- #if QSV_HAVE_EXT_HEVC_TILES
      if (avctx->codec_id == AV_CODEC_ID_HEVC) {
          q->exthevctiles.Header.BufferId = MFX_EXTBUFF_HEVC_TILES;
-@@ -1159,6 +1314,61 @@ static int qsv_retrieve_enc_vp9_params(AVCodecContext *avctx, QSVEncContext *q)
+         q->exthevctiles.Header.BufferSz = sizeof(q->exthevctiles);
+@@ -1079,6 +1215,56 @@ static int qsv_retrieve_enc_vp9_params(AVCodecContext *avctx, QSVEncContext *q)
      return 0;
  }
  
 +static int qsv_retrieve_enc_av1_params(AVCodecContext *avctx, QSVEncContext *q)
 +{
-+    int ret = 0;
 +#if QSV_HAVE_EXT_AV1_PARAM
++    int ret = 0;
 +    mfxExtAV1TileParam av1_extend_tile_buf = {
 +         .Header.BufferId = MFX_EXTBUFF_AV1_TILE_PARAM,
 +         .Header.BufferSz = sizeof(av1_extend_tile_buf),
@@ -290,34 +277,29 @@ index 483a58a..a2d3c3a 100644
 +         .Header.BufferId = MFX_EXTBUFF_AV1_BITSTREAM_PARAM,
 +         .Header.BufferSz = sizeof(av1_bs_param),
 +    };
-+#endif
 +
-+#if QSV_HAVE_CO2
 +    mfxExtCodingOption2 co2 = {
 +        .Header.BufferId = MFX_EXTBUFF_CODING_OPTION2,
 +        .Header.BufferSz = sizeof(co2),
 +    };
-+#endif
 +
-+#if QSV_HAVE_CO3
 +    mfxExtCodingOption3 co3 = {
 +        .Header.BufferId = MFX_EXTBUFF_CODING_OPTION3,
 +        .Header.BufferSz = sizeof(co3),
 +    };
-+#endif
 +
 +    mfxExtBuffer *ext_buffers[] = {
-+#if QSV_HAVE_EXT_AV1_PARAM
 +        (mfxExtBuffer*)&av1_extend_tile_buf,
 +        (mfxExtBuffer*)&av1_bs_param,
-+#endif
-+#if QSV_HAVE_CO2
 +        (mfxExtBuffer*)&co2,
-+#endif
-+#if QSV_HAVE_CO3
 +        (mfxExtBuffer*)&co3,
-+#endif
 +    };
++
++    if (!QSV_RUNTIME_VERSION_ATLEAST(q->ver, 2, 5)) {
++        av_log(avctx, AV_LOG_ERROR,
++               "This version of runtime doesn't support AV1 encoding\n");
++        return AVERROR_UNKNOWN;
++    }
 +
 +    q->param.ExtParam    = ext_buffers;
 +    q->param.NumExtParam = FF_ARRAY_ELEMS(ext_buffers);
@@ -329,14 +311,14 @@ index 483a58a..a2d3c3a 100644
 +
 +    q->packet_size = q->param.mfx.BufferSizeInKB * q->param.mfx.BRCParamMultiplier * 1000;
 +    dump_video_av1_param(avctx, q, ext_buffers);
-+
++#endif
 +    return 0;
 +}
 +
  static int qsv_retrieve_enc_params(AVCodecContext *avctx, QSVEncContext *q)
  {
      AVCPBProperties *cpb_props;
-@@ -1517,6 +1727,9 @@ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q)
+@@ -1425,6 +1611,9 @@ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q)
      case AV_CODEC_ID_VP9:
          ret = qsv_retrieve_enc_vp9_params(avctx, q);
          break;
@@ -347,21 +329,21 @@ index 483a58a..a2d3c3a 100644
          ret = qsv_retrieve_enc_params(avctx, q);
          break;
 diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
-index c9ba792..bd48188 100644
+index 1df4e26..e3c9231 100644
 --- a/libavcodec/qsvenc.h
 +++ b/libavcodec/qsvenc.h
-@@ -46,6 +46,7 @@
- #define QSV_HAVE_EXT_HEVC_PARAM QSV_VERSION_ATLEAST(1, 15)
- #define QSV_HAVE_EXT_VP9_PARAM QSV_VERSION_ATLEAST(1, 26)
+@@ -39,6 +39,7 @@
+ #include "qsv_internal.h"
+ 
  #define QSV_HAVE_EXT_VP9_TILES QSV_VERSION_ATLEAST(1, 29)
 +#define QSV_HAVE_EXT_AV1_PARAM QSV_VERSION_ATLEAST(2, 5)
  
- #define QSV_HAVE_TRELLIS QSV_VERSION_ATLEAST(1, 8)
- #define QSV_HAVE_MAX_SLICE_SIZE QSV_VERSION_ATLEAST(1, 9)
-@@ -146,6 +147,10 @@ typedef struct QSVEncContext {
- #if QSV_HAVE_EXT_VP9_PARAM
+ #if defined(_WIN32) || defined(__CYGWIN__)
+ #define QSV_HAVE_AVBR   1
+@@ -140,6 +141,10 @@ typedef struct QSVEncContext {
+     mfxExtHEVCTiles exthevctiles;
+     mfxExtHEVCParam exthevcparam;
      mfxExtVP9Param  extvp9param;
- #endif
 +#if QSV_HAVE_EXT_AV1_PARAM
 +    mfxExtAV1TileParam extav1tileparam;
 +    mfxExtAV1BitstreamParam extav1bsparam;
@@ -369,21 +351,21 @@ index c9ba792..bd48188 100644
  
  #if QSV_HAVE_OPAQUE
      mfxExtOpaqueSurfaceAlloc opaque_alloc;
-@@ -156,7 +161,7 @@ typedef struct QSVEncContext {
+@@ -149,7 +154,7 @@ typedef struct QSVEncContext {
+ 
      mfxExtVideoSignalInfo extvsi;
  
-     mfxExtBuffer  *extparam_internal[3 + QSV_HAVE_CO2 + QSV_HAVE_CO3 + (QSV_HAVE_MF * 2) +
--                                     QSV_HAVE_EXT_HEVC_PARAM];
-+                                     QSV_HAVE_EXT_HEVC_PARAM + QSV_HAVE_EXT_AV1_PARAM * 2];
+-    mfxExtBuffer  *extparam_internal[6 + (QSV_HAVE_MF * 2)];
++    mfxExtBuffer  *extparam_internal[6 + (QSV_HAVE_MF * 2) + QSV_HAVE_EXT_AV1_PARAM * 2];
      int         nb_extparam_internal;
  
      mfxExtBuffer **extparam;
 diff --git a/libavcodec/qsvenc_av1.c b/libavcodec/qsvenc_av1.c
 new file mode 100644
-index 0000000..7c80836
+index 0000000..e8fd466
 --- /dev/null
 +++ b/libavcodec/qsvenc_av1.c
-@@ -0,0 +1,252 @@
+@@ -0,0 +1,267 @@
 +/*
 + * Intel MediaSDK QSV based AV1 encoder
 + *
@@ -416,7 +398,8 @@ index 0000000..7c80836
 +#include "av1.h"
 +
 +#include "avcodec.h"
-+#include "internal.h"
++#include "codec_internal.h"
++#include "bsf.h"
 +#include "qsv.h"
 +#include "qsvenc.h"
 +
@@ -427,7 +410,7 @@ index 0000000..7c80836
 +    AVFifo *packet_fifo;
 +    int64_t parsed_packet_offset;
 +    AVPacket output_pkt;
-+    int load_plugin;
++    int64_t last_pts;
 +} QSVAV1EncContext;
 +
 +static av_cold int qsv_enc_init(AVCodecContext *avctx)
@@ -490,14 +473,16 @@ index 0000000..7c80836
 +    return 0;
 +}
 +
-+static int qsv_reorder_bitstream(QSVAV1EncContext *q, AVPacket *pkt, int *got_packet)
++static int qsv_reorder_bitstream(AVCodecContext *avctx, QSVAV1EncContext *q,
++                                 AVPacket *pkt, int *got_packet)
 +{
 +    int ret = 0;
 +    int64_t offset = 0;
 +    QSVEncContext *enc_ctx = &q->qsv;
 +    AVPacket pkt_tmp, *output_pkt = &q->output_pkt;
 +    if (!output_pkt->data) {
-+        ret = av_new_packet(output_pkt, enc_ctx->packet_size);
++        ret = av_new_packet(output_pkt,
++                            enc_ctx->packet_size * enc_ctx->param.mfx.NumRefFrame);
 +        if (ret < 0)
 +            return ret;
 +        output_pkt->size = 0;
@@ -529,6 +514,14 @@ index 0000000..7c80836
 +            if (ret < 0)
 +                return ret;
 +            av_packet_move_ref(pkt, output_pkt);
++            // Timestamp need to be calculated because pkt is reorded.
++            if (pkt->pts <= q->last_pts) {
++                int64_t duration = av_rescale_q(1,
++                        (AVRational){avctx->framerate.den, avctx->framerate.num},
++                        avctx->time_base);
++                q->last_pts = pkt->dts = pkt->pts = q->last_pts + duration;
++            } else
++                q->last_pts = pkt->dts = pkt->pts;
 +            *got_packet = 1;
 +        }
 +        q->parsed_packet_offset += offset;
@@ -554,7 +547,7 @@ index 0000000..7c80836
 +    if (ret < 0)
 +        return ret;
 +
-+    ret = qsv_reorder_bitstream(q, pkt, got_packet);
++    ret = qsv_reorder_bitstream(avctx, q, pkt, got_packet);
 +    if (ret < 0)
 +        return ret;
 +
@@ -597,6 +590,7 @@ index 0000000..7c80836
 +#define VE AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM
 +static const AVOption options[] = {
 +    QSV_COMMON_OPTS
++    QSV_OPTION_B_STRATEGY
 +    { "profile", NULL, OFFSET(qsv.profile), AV_OPT_TYPE_INT, { .i64 = MFX_PROFILE_UNKNOWN }, 0, INT_MAX, VE, "profile" },
 +        { "unknown" , NULL, 0, AV_OPT_TYPE_CONST, { .i64 = MFX_PROFILE_UNKNOWN      }, INT_MIN, INT_MAX,     VE, "profile" },
 +        { "main"    , NULL, 0, AV_OPT_TYPE_CONST, { .i64 = MFX_PROFILE_AV1_MAIN     }, INT_MIN, INT_MAX,     VE, "profile" },
@@ -612,28 +606,31 @@ index 0000000..7c80836
 +    .version    = LIBAVUTIL_VERSION_INT,
 +};
 +
-+static const AVCodecDefault qsv_enc_defaults[] = {
++static const FFCodecDefault qsv_enc_defaults[] = {
++    { "g",         "-1"   },
++    { "bf",        "-1"   },
++    { "refs",      "0"    },
 +    { NULL },
 +};
 +
-+AVCodec ff_av1_qsv_encoder = {
-+    .name           = "av1_qsv",
-+    .long_name      = NULL_IF_CONFIG_SMALL("AV1 (Intel Quick Sync Video acceleration)"),
++FFCodec ff_av1_qsv_encoder = {
++    .p.name           = "av1_qsv",
++    .p.long_name      = NULL_IF_CONFIG_SMALL("AV1 (Intel Quick Sync Video acceleration)"),
 +    .priv_data_size = sizeof(QSVAV1EncContext),
-+    .type           = AVMEDIA_TYPE_VIDEO,
-+    .id             = AV_CODEC_ID_AV1,
++    .p.type           = AVMEDIA_TYPE_VIDEO,
++    .p.id             = AV_CODEC_ID_AV1,
 +    .init           = qsv_enc_init,
-+    .encode2        = qsv_enc_frame,
++    FF_CODEC_ENCODE_CB(qsv_enc_frame),
 +    .close          = qsv_enc_close,
-+    .capabilities   = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_HYBRID,
-+    .pix_fmts       = (const enum AVPixelFormat[]){ AV_PIX_FMT_NV12,
++    .p.capabilities   = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_HYBRID,
++    .p.pix_fmts       = (const enum AVPixelFormat[]){ AV_PIX_FMT_NV12,
 +                                                    AV_PIX_FMT_P010,
 +                                                    AV_PIX_FMT_QSV,
 +                                                    AV_PIX_FMT_NONE },
-+    .priv_class     = &class,
++    .p.priv_class     = &class,
 +    .defaults       = qsv_enc_defaults,
 +    .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
-+    .wrapper_name   = "qsv",
++    .p.wrapper_name   = "qsv",
 +    .hw_configs     = ff_qsv_enc_hw_configs,
 +};
 -- 
