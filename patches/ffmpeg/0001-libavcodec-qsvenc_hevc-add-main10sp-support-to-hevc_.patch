@@ -1,0 +1,150 @@
+From b86eb4a847aa08a4554fc2be8ac5105588847ec2 Mon Sep 17 00:00:00 2001
+From: "Chen,Wenbin" <wenbin.chen@intel.com>
+Date: Thu, 26 Aug 2021 16:52:50 +0800
+Subject: [PATCH 1/3] libavcodec/qsvenc_hevc: add main10sp support to hevc_qsv
+
+Main10sp is a combination of Main10 and one_pic_only flag.
+This profile encode 10bit single still picture.
+A option "main10sp" is added to ffmpeg-qsv. This option
+set MFX_PROFILE_HEVC_MAIN10  profile and
+MFX_HEVC_CONSTR_REXT_ONE_PICTURE_ONLY flag to enable main10sp
+in ffmpeg-qsv.
+
+Signed-off-by: Wenbin Chen <wenbin.chen@intel.com>
+---
+ libavcodec/qsvenc.c      | 33 +++++++++++++++++++++++++++++++--
+ libavcodec/qsvenc.h      |  6 +++++-
+ libavcodec/qsvenc_hevc.c |  3 +++
+ 3 files changed, 39 insertions(+), 3 deletions(-)
+
+diff --git a/libavcodec/qsvenc.c b/libavcodec/qsvenc.c
+index 4831640..ab35004 100644
+--- a/libavcodec/qsvenc.c
++++ b/libavcodec/qsvenc.c
+@@ -185,6 +185,7 @@ static void dump_video_param(AVCodecContext *avctx, QSVEncContext *q,
+     mfxExtCodingOption3 *co3 = NULL;
+     mfxExtHEVCTiles *exthevctiles = NULL;
+     const char *tmp_str = NULL;
++    mfxExtHEVCParam *exthevcparam = NULL;
+ 
+     if (q->co2_idx > 0)
+         co2 = (mfxExtCodingOption2*)coding_opts[q->co2_idx];
+@@ -195,6 +196,8 @@ static void dump_video_param(AVCodecContext *avctx, QSVEncContext *q,
+     if (q->exthevctiles_idx > 0)
+         exthevctiles = (mfxExtHEVCTiles *)coding_opts[q->exthevctiles_idx];
+ 
++    if (q->exthevcparam_idx > 0)
++        exthevcparam = (mfxExtHEVCParam *)coding_opts[q->exthevcparam_idx];
+     av_log(avctx, AV_LOG_VERBOSE, "profile: %s; level: %"PRIu16"\n",
+            print_profile(avctx->codec_id, info->CodecProfile), info->CodecLevel);
+ 
+@@ -343,6 +346,12 @@ static void dump_video_param(AVCodecContext *avctx, QSVEncContext *q,
+         av_log(avctx, AV_LOG_VERBOSE, "NumTileColumns: %"PRIu16"; NumTileRows: %"PRIu16"\n",
+                exthevctiles->NumTileColumns, exthevctiles->NumTileRows);
+     }
++
++    if (exthevcparam &&
++        exthevcparam->GeneralConstraintFlags == MFX_HEVC_CONSTR_REXT_ONE_PICTURE_ONLY &&
++        avctx->codec_id == AV_CODEC_ID_HEVC &&
++        info->CodecProfile == MFX_PROFILE_HEVC_MAIN10)
++        av_log(avctx, AV_LOG_VERBOSE, "Main10sp (Main10 profile and one_pic_only flag): enable\n");
+ }
+ 
+ static void dump_video_vp9_param(AVCodecContext *avctx, QSVEncContext *q,
+@@ -956,6 +965,18 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
+         q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->exthevctiles;
+     }
+ 
++    if (avctx->codec_id == AV_CODEC_ID_HEVC && q->main10sp) {
++        if (QSV_RUNTIME_VERSION_ATLEAST(q->ver, 2, 0)) {
++            q->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
++            q->exthevcparam.Header.BufferId = MFX_EXTBUFF_HEVC_PARAM;
++            q->exthevcparam.Header.BufferSz = sizeof(q->exthevcparam);
++            q->exthevcparam.GeneralConstraintFlags = MFX_HEVC_CONSTR_REXT_ONE_PICTURE_ONLY;
++            q->extparam_internal[q->nb_extparam_internal++] = (mfxExtBuffer *)&q->exthevcparam;
++        } else
++            av_log(avctx, AV_LOG_WARNING,
++                   "This version of runtime doesn't support 10bit single still picture\n");
++    }
++
+     q->extvsi.VideoFullRange = (avctx->color_range == AVCOL_RANGE_JPEG);
+     q->extvsi.ColourDescriptionPresent = 0;
+ 
+@@ -1098,12 +1119,16 @@ static int qsv_retrieve_enc_params(AVCodecContext *avctx, QSVEncContext *q)
+          .Header.BufferSz = sizeof(hevc_tile_buf),
+     };
+ 
+-    mfxExtBuffer *ext_buffers[6];
++    mfxExtHEVCParam hevc_param_buf = {
++        .Header.BufferId = MFX_EXTBUFF_HEVC_PARAM,
++        .Header.BufferSz = sizeof(hevc_param_buf),
++    };
+ 
++    mfxExtBuffer *ext_buffers[7];
+     int need_pps = avctx->codec_id != AV_CODEC_ID_MPEG2VIDEO;
+     int ret, ext_buf_num = 0, extradata_offset = 0;
+ 
+-    q->co2_idx = q->co3_idx = q->exthevctiles_idx = -1;
++    q->co2_idx = q->co3_idx = q->exthevctiles_idx = q->exthevcparam_idx = -1;
+     ext_buffers[ext_buf_num++] = (mfxExtBuffer*)&extradata;
+     ext_buffers[ext_buf_num++] = (mfxExtBuffer*)&co;
+ 
+@@ -1125,6 +1150,10 @@ static int qsv_retrieve_enc_params(AVCodecContext *avctx, QSVEncContext *q)
+         q->exthevctiles_idx = ext_buf_num;
+         ext_buffers[ext_buf_num++] = (mfxExtBuffer*)&hevc_tile_buf;
+     }
++    if (avctx->codec_id == AV_CODEC_ID_HEVC && QSV_RUNTIME_VERSION_ATLEAST(q->ver, 2, 0)) {
++        q->exthevcparam_idx = ext_buf_num;
++        ext_buffers[ext_buf_num++] = (mfxExtBuffer*)&hevc_param_buf;
++    }
+ 
+     q->param.ExtParam    = ext_buffers;
+     q->param.NumExtParam = ext_buf_num;
+diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
+index d35a131..1df4e26 100644
+--- a/libavcodec/qsvenc.h
++++ b/libavcodec/qsvenc.h
+@@ -138,6 +138,7 @@ typedef struct QSVEncContext {
+     mfxExtMultiFrameControl extmfc;
+ #endif
+     mfxExtHEVCTiles exthevctiles;
++    mfxExtHEVCParam exthevcparam;
+     mfxExtVP9Param  extvp9param;
+ 
+ #if QSV_HAVE_OPAQUE
+@@ -148,7 +149,7 @@ typedef struct QSVEncContext {
+ 
+     mfxExtVideoSignalInfo extvsi;
+ 
+-    mfxExtBuffer  *extparam_internal[5 + (QSV_HAVE_MF * 2)];
++    mfxExtBuffer  *extparam_internal[6 + (QSV_HAVE_MF * 2)];
+     int         nb_extparam_internal;
+ 
+     mfxExtBuffer **extparam;
+@@ -235,6 +236,9 @@ typedef struct QSVEncContext {
+     float old_i_quant_offset;
+     float old_b_quant_factor;
+     float old_b_quant_offset;
++
++    int exthevcparam_idx;
++    int main10sp;
+ } QSVEncContext;
+ 
+ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q);
+diff --git a/libavcodec/qsvenc_hevc.c b/libavcodec/qsvenc_hevc.c
+index e11f5de..53bbab6 100644
+--- a/libavcodec/qsvenc_hevc.c
++++ b/libavcodec/qsvenc_hevc.c
+@@ -271,6 +271,9 @@ static const AVOption options[] = {
+     { "int_ref_qp_delta",   "QP difference for the refresh MBs",                 OFFSET(qsv.int_ref_qp_delta),        AV_OPT_TYPE_INT, { .i64 = INT16_MIN }, INT16_MIN,  INT16_MAX, VE },
+     { "int_ref_cycle_dist",   "Distance between the beginnings of the intra-refresh cycles in frames",  OFFSET(qsv.int_ref_cycle_dist),      AV_OPT_TYPE_INT, { .i64 = -1 }, -1, INT16_MAX, VE },
+ 
++#if QSV_ONEVPL
++    { "main10sp", "This profile allow to encode 10 bit single still picture", OFFSET(qsv.main10sp), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, VE},
++#endif
+     { NULL },
+ };
+ 
+-- 
+1.8.3.1
+

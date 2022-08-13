@@ -10,6 +10,7 @@ This project provides samples to demonstrate the use of Intel GPU in
 simplified real-life scenarios involving media streams delivery. It
 leverages a Software Stack which consists of the following ingredients:
 
+* `oneVPL <https://github.com/oneapi-src/oneVPL>`_
 * `Intel Media SDK <https://github.com/Intel-Media-SDK/MediaSDK>`_
 * `Intel Media Driver <https://github.com/intel/media-driver>`_
 * `FFmpeg <http://ffmpeg.org/>`_ w/ enabled `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
