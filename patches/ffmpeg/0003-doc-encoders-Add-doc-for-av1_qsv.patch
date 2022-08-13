@@ -1,0 +1,42 @@
+From e6607989db80e0146bb5276cf9a0885ac1aa70d8 Mon Sep 17 00:00:00 2001
+From: Wenbin Chen <wenbin.chen@intel.com>
+Date: Fri, 11 Mar 2022 10:40:16 +0800
+Subject: [PATCH 3/3] doc/encoders: Add doc for av1_qsv
+
+Add doc for av1_qsv.
+
+Signed-off-by: Wenbin Chen <wenbin.chen@intel.com>
+---
+ doc/encoders.texi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/doc/encoders.texi b/doc/encoders.texi
+index 6d73f74..f53ccd4 100644
+--- a/doc/encoders.texi
++++ b/doc/encoders.texi
+@@ -3677,6 +3677,22 @@ Number of columns for tiled encoding (requires libmfx >= 1.29).
+ Number of rows for tiled encoding (requires libmfx  >= 1.29).
+ @end table
+ 
++@subsection AV1 Options
++These options are used by av1_qsv (requires libvpl).
++@table @option
++@item @var{profile}
++@table @samp
++@item unknown
++@item main
++@end table
++
++@item @var{tile_cols}
++Number of columns for tiled encoding.
++
++@item @var{tile_rows}
++Number of rows for tiled encoding.
++@end table
++
+ @section snow
+ 
+ @subsection Options
+-- 
+1.8.3.1
+
