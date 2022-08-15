@@ -105,17 +105,17 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build media driver
-ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-22.5.0.tar.gz
+ARG MEDIA_DRIVER_REPO=https://github.com/intel/media-driver/archive/intel-media-22.5.2.tar.gz
 RUN cd /opt/build && \
   wget -O - ${MEDIA_DRIVER_REPO} | tar xz
 
-COPY patches/media-driver /opt/build/media-driver-intel-media-22.5.0
-RUN cd /opt/build/media-driver-intel-media-22.5.0 && { set -e; \
+COPY patches/media-driver /opt/build/media-driver-intel-media-22.5.2
+RUN cd /opt/build/media-driver-intel-media-22.5.2 && { set -e; \
   for patch_file in $(find -iname "*.patch" | sort -n); do \
     echo "Applying: ${patch_file}"; \
     patch -p1 < ${patch_file}; \
   done; }
-RUN cd /opt/build/media-driver-intel-media-22.5.0 && mkdir build && cd build && \
+RUN cd /opt/build/media-driver-intel-media-22.5.2 && mkdir build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
@@ -159,18 +159,18 @@ RUN apt-get update && \
     cmake \
     dh-autoreconf && \
   rm -rf /var/lib/apt/lists/*
-ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v2022.1.5.tar.gz
+ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v2022.2.0.tar.gz
 RUN cd /opt/build && \
   wget -O - ${ONEVPL_REPO} | tar xz
 
-COPY patches/libvpl2 /opt/build/oneVPL-2022.1.5
-RUN cd /opt/build/oneVPL-2022.1.5 && { set -e; \
+COPY patches/libvpl2 /opt/build/oneVPL-2022.2.0
+RUN cd /opt/build/oneVPL-2022.2.0 && { set -e; \
   for patch_file in $(find -iname "*.patch" | sort -n); do \
     echo "Applying: ${patch_file}"; \
     patch -p1 < ${patch_file}; \
   done; }
 # build oneVPL
-RUN cd /opt/build/oneVPL-2022.1.5 && \
+RUN cd /opt/build/oneVPL-2022.2.0 && \
     mkdir build && cd build && \
     cmake \
       -DCMAKE_BUILD_TYPE=Release \
@@ -191,11 +191,11 @@ RUN apt-get update && \
     cmake \
     make && \
   rm -rf /var/lib/apt/lists/*
-ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-22.5.0.tar.gz
+ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-22.5.2.tar.gz
 RUN cd /opt/build && \
   wget -O - ${ONEVPLGPU_REPO} | tar xz
 # build oneVPL gpu
-RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-22.5.0 && \
+RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-22.5.2 && \
     mkdir -p _build && cd _build && \
     cmake \
     -DCMAKE_BUILD_TYPE=Release \
@@ -217,10 +217,10 @@ RUN apt-get update && \
     wget && \
   rm -rf /var/lib/apt/lists/*
 # build media sdk
-ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-22.5.0.tar.gz
+ARG MSDK_REPO=https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-22.5.2.tar.gz
 RUN cd /opt/build && \
   wget -O - ${MSDK_REPO} | tar xz
-RUN cd /opt/build/MediaSDK-intel-mediasdk-22.5.0 && \
+RUN cd /opt/build/MediaSDK-intel-mediasdk-22.5.2 && \
   mkdir -p build && cd build && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
