@@ -37,7 +37,7 @@ include(cmake.m4)
 include(libva2.m4)
 include(gmmlib.m4)
 
-DECLARE(`MEDIA_DRIVER_VER',intel-media-22.5.0)
+DECLARE(`MEDIA_DRIVER_VER',intel-media-22.5.2)
 DECLARE(`MEDIA_DRIVER_SRC_REPO',https://github.com/intel/media-driver/archive/MEDIA_DRIVER_VER.tar.gz)
 DECLARE(`ENABLE_PRODUCTION_KMD',OFF)
 
