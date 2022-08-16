@@ -179,7 +179,7 @@ h264="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $h264; ln -s /tmp/WAR_h264.mp4 /opt/data/content/; \
@@ -197,7 +197,7 @@ h264="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $h264; ln -s /tmp/WAR_h264.mp4 /opt/data/content/; \
@@ -215,7 +215,7 @@ h264="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $h264; ln -s /tmp/WAR_h264.mp4 /opt/data/content/; \
@@ -231,7 +231,7 @@ h264="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $h264; ln -s /tmp/WAR_h264.mp4 /opt/data/content/; \
@@ -250,7 +250,7 @@ h264="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $h264; ln -s /tmp/WAR_h264.mp4 /opt/data/content/; \
@@ -270,7 +270,7 @@ h265="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $h265; ln -s /tmp/WAR_h265.mp4 /opt/data/content/; \
@@ -288,7 +288,7 @@ h265="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $h265; ln -s /tmp/WAR_h265.mp4 /opt/data/content/; \
@@ -306,7 +306,7 @@ h265="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $h265; ln -s /tmp/WAR_h265.mp4 /opt/data/content/; \
@@ -322,7 +322,7 @@ h265="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $h265; ln -s /tmp/WAR_h265.mp4 /opt/data/content/; \
@@ -341,7 +341,7 @@ h265="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $h265; ln -s /tmp/WAR_h265.mp4 /opt/data/content/; \
@@ -359,7 +359,7 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
@@ -377,7 +377,7 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
@@ -395,7 +395,7 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
@@ -411,7 +411,7 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
@@ -430,7 +430,7 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
   opts+=" $(get_security_opts)"
-  opts+=" --pids-limit 100 --memory $((400*1024*1024)) --cpu-shares 100"
+  opts+=" --pids-limit 200 --memory $((400*1024*1024)) --cpu-shares 100"
 
   run docker_run_opts "$opts" /bin/bash -c " \
     set -ex; $noaudio; ln -s /tmp/WAR_noaudio.mp4 /opt/data/content/; \
