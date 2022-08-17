@@ -120,7 +120,7 @@ RUN cd /opt/build/media-driver-intel-media-22.5.0 && mkdir build && cd build && 
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt/intel/samples \
     -DCMAKE_INSTALL_LIBDIR=/opt/intel/samples/lib \
-    -DENABLE_PRODUCTION_KMD=OFF \
+    -DENABLE_PRODUCTION_KMD=ON \
     .. && \
   make -j$(nproc) && \
   make install DESTDIR=/opt/dist && \
