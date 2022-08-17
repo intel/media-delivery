@@ -51,11 +51,21 @@ To build default sample (`CDN`_) targeting stack defined by `Intel Graphics Pack
 Use ``--build-arg SAMPLE=$SAMPLE`` docker build argument to specify other
 sample to build.
 
-To build sample targeting DG2/ATS-M stack self-built from open source projects, run::
+To build sample targeting Gen8+ legacy upstreamed platforms via stack self-built from open
+source projects, run::
 
   docker build \
     $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
     --file docker/ubuntu20.04/selfbuild/Dockerfile \
+    --tag intel-media-delivery \
+    .
+
+
+To build sample targeting DG2/ATS-M stack self-built from open source projects, run::
+
+  docker build \
+    $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
+    --file docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile \
     --tag intel-media-delivery \
     .
 
@@ -64,22 +74,25 @@ by origin of the Intel media stack components included into the docker image whi
 which Intel GPUs and media codec features will be supported. Some media stacks might
 also require special host setup instruction. See table below.
 
-+--------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-| Dockerfile                                 | Intel media stack origin               | Supported Intel GPUs                           | Host setup instructions                    |
-+============================================+========================================+================================================+============================================+
-| `docker/ubuntu20.04/selfbuild/Dockerfile`_ | Self-built from open source            | DG2, ATS-M                                     | `Intel GPU DKMS <doc/intel-gpu-dkms.rst>`_ |
-+--------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-| `docker/ubuntu20.04/native/Dockerfile`_    | Ubuntu 20.04                           | Gen8+, check Ubuntu 20.04 documentation        | Use any Linux distribution which           |
-|                                            |                                        |                                                | supports required platform                 |
-+--------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-| `docker/ubuntu20.04/intel-gfx/Dockerfile`_ | `Intel Graphics Package Repository`_   | `Intel® Iris® Xe MAX Graphics`_ (formerly DG1) | `DG1 Setup Instruction`_                   |
-+                                            +                                        +------------------------------------------------+--------------------------------------------+
-|                                            |                                        | Platforms starting from Gen8 and prior to DG1  | Use any Linux distribution which           |
-|                                            |                                        |                                                | supports required platform                 |
-+--------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-| `docker/ubuntu20.04/intel-gfx/Dockerfile`_ | Custom, specified via                  | Depends on the custom stack. Contact supplier.                                              |
-|                                            | ``--build-arg INTEL_GFX_APT_REPO=...`` |                                                                                             |
-+--------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
+| Dockerfile                                         | Intel media stack origin               | Supported Intel GPUs                           | Host setup instructions                    |
++====================================================+========================================+================================================+============================================+
+| `docker/ubuntu20.04/selfbuild/Dockerfile`_         | Self-built from open source            | Gen8+ (legacy upstreamed platforms)            | Use any Linux distribution which           |
+|                                                    |                                        |                                                | supports required platform                 |
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
+| `docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile`_ | Self-built from open source            | DG2, ATS-M                                     | `Intel GPU DKMS <doc/intel-gpu-dkms.rst>`_ |
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
+| `docker/ubuntu20.04/native/Dockerfile`_            | Ubuntu 20.04                           | Gen8+, check Ubuntu 20.04 documentation        | Use any Linux distribution which           |
+|                                                    |                                        |                                                | supports required platform                 |
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
+| `docker/ubuntu20.04/intel-gfx/Dockerfile`_         | `Intel Graphics Package Repository`_   | `Intel® Iris® Xe MAX Graphics`_ (formerly DG1) | `DG1 Setup Instruction`_                   |
++                                                    +                                        +------------------------------------------------+--------------------------------------------+
+|                                                    |                                        | Platforms starting from Gen8 and prior to DG1  | Use any Linux distribution which           |
+|                                                    |                                        |                                                | supports required platform                 |
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
+| `docker/ubuntu20.04/intel-gfx/Dockerfile`_         | Custom, specified via                  | Depends on the custom stack. Contact supplier.                                              |
+|                                                    | ``--build-arg INTEL_GFX_APT_REPO=...`` |                                                                                             |
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
 
 **Caveat:** current master branch is in active development to support DG2 and ATS-M GPUs
 via custom media stack (contact us for more details). Mind that latest release at
@@ -98,6 +111,7 @@ to interact with the service(s) running inside the container:
 2. `ffmpeg <http://ffmpeg.org/>`_ to be able to receive and save streaming videos
 
 .. _docker/ubuntu20.04/selfbuild/Dockerfile: docker/ubuntu20.04/selfbuild/Dockerfile
+.. _docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile: docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile
 .. _docker/ubuntu20.04/native/Dockerfile: docker/ubuntu20.04/native/Dockerfile
 .. _docker/ubuntu20.04/intel-gfx/Dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
 

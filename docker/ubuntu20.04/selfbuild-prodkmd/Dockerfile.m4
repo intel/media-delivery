@@ -24,7 +24,7 @@ define(`USE_VPL_TOOLS',yes)
 define(`ONEVPL_PATCH_PATH',patches/libvpl2)
 define(`MEDIA_DRIVER_PATCH_PATH',patches/media-driver)
 define(`MFX_ENABLE_AENC',ON)
-define(`ENABLE_PRODUCTION_KMD',OFF)
+define(`ENABLE_PRODUCTION_KMD',ON)
 divert(0)dnl
 include(begin.m4)
 include(content.m4)
