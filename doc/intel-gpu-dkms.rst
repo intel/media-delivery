@@ -151,7 +151,7 @@ host setup we just did, execute (from the top level of media-delivery cloned cop
 
   docker build \
     $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
-    --file docker/ubuntu20.04/selfbuild/Dockerfile \
+    --file docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile \
     --tag intel-media-delivery \
     .
 
