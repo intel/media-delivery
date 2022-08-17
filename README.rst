@@ -39,20 +39,8 @@ Each sample is available in a form of `Docker <https://docker.com>`_ container
 which you need to build locally. Please, use Linux distro for the build and
 Docker version 17.05 or later (see `install instructions <https://docs.docker.com/install/>`_).
 
-To build default sample (`CDN`_) targeting stack defined by `Intel Graphics Package Repository`_
-(see below) run::
-
-  docker build \
-    $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
-    --file docker/ubuntu20.04/intel-gfx/Dockerfile \
-    --tag intel-media-delivery \
-    .
-
-Use ``--build-arg SAMPLE=$SAMPLE`` docker build argument to specify other
-sample to build.
-
-To build sample targeting Gen8+ legacy upstreamed platforms via stack self-built from open
-source projects, run::
+To build default sample (`CDN`_) targeting Gen8+ legacy upstreamed platforms via stack
+self-built from open source projects, run::
 
   docker build \
     $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
@@ -60,6 +48,8 @@ source projects, run::
     --tag intel-media-delivery \
     .
 
+Use ``--build-arg SAMPLE=$SAMPLE`` docker build argument to specify other
+sample to build.
 
 To build sample targeting DG2/ATS-M stack self-built from open source projects, run::
 
@@ -77,30 +67,17 @@ also require special host setup instruction. See table below.
 +----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
 | Dockerfile                                         | Intel media stack origin               | Supported Intel GPUs                           | Host setup instructions                    |
 +====================================================+========================================+================================================+============================================+
-| `docker/ubuntu20.04/selfbuild/Dockerfile`_         | Self-built from open source            | Gen8+ (legacy upstreamed platforms)            | Use any Linux distribution which           |
-|                                                    |                                        |                                                | supports required platform                 |
+| `docker/ubuntu20.04/selfbuild/Dockerfile`_         | Self-built from open source            | Gen8+ (legacy upstreamed platforms), such as   | Use any Linux distribution which           |
+|                                                    |                                        | SKL, KBL, CFL, TGL, DG1, etc.                  | supports required platform                 |
 +----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
 | `docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile`_ | Self-built from open source            | DG2, ATS-M                                     | `Intel GPU DKMS <doc/intel-gpu-dkms.rst>`_ |
 +----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
 | `docker/ubuntu20.04/native/Dockerfile`_            | Ubuntu 20.04                           | Gen8+, check Ubuntu 20.04 documentation        | Use any Linux distribution which           |
 |                                                    |                                        |                                                | supports required platform                 |
 +----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-| `docker/ubuntu20.04/intel-gfx/Dockerfile`_         | `Intel Graphics Package Repository`_   | `Intel® Iris® Xe MAX Graphics`_ (formerly DG1) | `DG1 Setup Instruction`_                   |
-+                                                    +                                        +------------------------------------------------+--------------------------------------------+
-|                                                    |                                        | Platforms starting from Gen8 and prior to DG1  | Use any Linux distribution which           |
-|                                                    |                                        |                                                | supports required platform                 |
-+----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
 | `docker/ubuntu20.04/intel-gfx/Dockerfile`_         | Custom, specified via                  | Depends on the custom stack. Contact supplier.                                              |
 |                                                    | ``--build-arg INTEL_GFX_APT_REPO=...`` |                                                                                             |
 +----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-
-**Caveat:** current master branch is in active development to support DG2 and ATS-M GPUs
-via custom media stack (contact us for more details). Mind that latest release at
-`Intel Graphics Package Repository`_ is known to contain some outdated packages (for
-example, libvpl) which might have issues affecting our sample command lines modified for
-DG2 and ATS-M support. If you use our samples from latest master to run on DG1 or other
-legacy platforms and see some issues, please, let us know. As a mitigation you can use
-latest tagged release: `Media Delivery Software Stack v2 <https://github.com/intel/media-delivery/releases/tag/v2>`_.
 
 To use some of the examples below you might wish to install the following tools on your
 host (or some other system capable of reaching the container over network) to be able
@@ -115,10 +92,7 @@ to interact with the service(s) running inside the container:
 .. _docker/ubuntu20.04/native/Dockerfile: docker/ubuntu20.04/native/Dockerfile
 .. _docker/ubuntu20.04/intel-gfx/Dockerfile: docker/ubuntu20.04/intel-gfx/Dockerfile
 
-.. _Intel Graphics Package Repository: https://dgpu-docs.intel.com/
-
 .. _Intel® Iris® Xe MAX Graphics: https://www.intel.com/content/www/us/en/products/discrete-gpus/iris-xe-max.html
-.. _DG1 Setup Instruction: https://dgpu-docs.intel.com/devices/iris-xe-max-graphics/index.html
 
 Contibuting
 -----------
@@ -471,7 +445,6 @@ Further reading
 * `Tests <tests/readme.rst>`_
 
 * `General Purpose GPU Drivers for Linux* Operating Systems <https://intel.com/linux-graphics-drivers>`_
-* `GPGPU Documentation <https://dgpu-docs.intel.com/>`_
 * `Intel Media SDK <https://github.com/Intel-Media-SDK/MediaSDK>`_
 * `Intel Media Driver <https://github.com/intel/media-driver>`_
 
