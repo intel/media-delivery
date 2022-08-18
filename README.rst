@@ -383,56 +383,68 @@ Known limitations
   (i.e. .mp4, .ts, etc.), hence both measure-quality and measure-perf will
   run measurements only with ffmpeg-qsv path for such streams.
 
-Tips for best performance
--------------------------
+Recommended coding options (High-quality and Performance)
+---------------------------------------------------------
 
-Due to its flexible interface, ffmpeg supports many video transcode pipelines.
-The ffmpeg command lines below illustrate good practices in using
-`ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel Quick Sync Video
-- Intel Media SDK integration into ffmpeg). The use of "extbrc" demonstrates the use
-of developer configurable bitrate control, pyramid coding and other quality optimizations.
-For the details on ffmpeg-qsv supported features, read `ffmpeg-qsv capabilites <doc/features/ffmpeg/>`_.
+Intel’s advanced software bitrate controller (dubbed “EncTools”) has been
+designed to boost GPU video quality for AVC, HEVC and (comming soon) AV1 using various
+compression efficiency technologies and content adaptive quality optimization
+tools while at the same time having minimal impact on the coding performance
+(speed). EncTools technology includes tools such as adaptive pyramid quantization,
+persistence adaptive quantization, low power look ahead, advanced scene change
+detection and `more <doc/quality.rst#enctools-and-extbrc>`_.
 
-**Example 1: AVC VBR Encode**::
+The recommended random access transcoding ffmpeg-qsv (Intel GPU integration with
+ffmpeg) command lines optimized for high quality and performance are given below:
 
-  ffmpeg -hwaccel qsv \
-    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
-    -i $inputyuv -vframes $numframes -y \
-    -c:v h264_qsv -preset medium -profile:v high \
+**AVC/H.264**::
+
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} \
+    -look_ahead_depth 8 -extbrc 1 -b_strategy 1 \
+    -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
+    -vsync passthrough -y $output
+
+**HEVC/H.265**::
+
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} \
+    -look_ahead_depth 8 -extbrc 1 -b_strategy 1 \
+    -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
+    -vsync passthrough -y $output
 
-**Example 2: AVC CBR Encode**::
+**AV1 (HW-based BRC, EncTools coming soon)**::
 
-  ffmpeg -hwaccel qsv \
-    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
-    -i $inputyuv -vframes $numframes -y \
-    -c:v h264_qsv -preset medium -profile:v high \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -vsync 0 $output
-
-**Example 3: HEVC VBR Encode**::
-
-  ffmpeg -hwaccel qsv \
-    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
-    -i $inputyuv -vframes $numframes -y \
-    -c:v hevc_qsv -preset medium -profile:v main \
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+    -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -g 256 \
+    -vsync passthrough -y $output
 
+Extra quality boost can be achieved with use of low power look ahead (by setting
+“-look_ahead_depth 40” option) at the expense of a slight performance impact (10-20%).
 
-**Example 4: HEVC CBR Encode**::
+For best single stream performance or low density use case with high resolutions such as
+4K, “-async_depth 2” option is recommended (yielding only negligible quality loss 
+compared to “-async_depth 1”).
 
-  ffmpeg -hwaccel qsv \
-    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
-    -i $inputyuv -vframes $numframes -y \
-    -c:v hevc_qsv -preset medium -profile:v main \
-    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -g 256 -extbrc 1 -refs 5 -bf 7 -vsync 0 $output
+Recommendations for more specific use cases as well as additional information on
+developer configurable bitrate controllers and available advanced coding options
+are provided in the supplementary `Video Quality document <doc/quality.rst>`_.
 
-The noted good practices are used throughout the project within demo
-examples and quality and performance measuring tools. See the following
-document on the further details:
+For more details on ffmpeg-qsv supported features, see `ffmpeg-qsv capabilites <doc/features/ffmpeg#readme>`_.
+
+For more information on how to engage with Intel GPU encoding, decoding and transcoding
+as well as deal with multiple GPUs, please refer to
+`ffmpeg-qsv multi-GPU selection document <https://github.com/Intel-Media-SDK/MediaSDK/wiki/FFmpeg-QSV-Multi-GPU-Selection-on-Linux>`_.
+
+The recommended good practices are used throughout this project: in the demo examples
+as well as in the quality and performance measuring tools. The following links provide
+additional information:
 
 * `Video Quality Command Lines and Measuring Methodology <doc/quality.rst>`_
 * `Video Performance Command Linux and Measuring Methodology <doc/performance.rst>`_
