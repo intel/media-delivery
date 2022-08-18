@@ -52,7 +52,7 @@ ARG I915_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-i915-backports.gi
 RUN cd /opt/build && \
   git clone ${I915_BACKPORTS_REPO} && \
   cd intel-gpu-i915-backports && \
-  git checkout 29f0f36 && \
+  git checkout UBUNTU2204_22WW32_392_5834_220609.0 && \
   make i915dkmsdeb-pkg && \
   mv /opt/build/intel-i915-dkms* /opt/dist
 
