@@ -64,10 +64,10 @@ version used below to build DKMS packages) and its headers::
   sudo apt-get update
 
   # for Ubuntu 20.04
-  sudo apt-get install linux-headers-5.14.0-1042-oem linux-image-unsigned-5.14.0-1042-oem
+  sudo apt-get install linux-headers-5.14.0-1045-oem linux-image-unsigned-5.14.0-1045-oem
 
   # for Ubuntu 22.04
-  sudo apt-get install linux-image-unsigned-5.17.0-1011-oem linux-headers-5.17.0-1011-oem
+  sudo apt-get install linux-image-unsigned-5.17.0-1013-oem linux-headers-5.17.0-1013-oem
 
 Once done, check kernel boot order in grub to make sure to boot into the installed kernel,
 adjust if needed, then reboot::
