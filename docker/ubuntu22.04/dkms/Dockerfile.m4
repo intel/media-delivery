@@ -19,7 +19,6 @@
 # SOFTWARE.
 
 include(begin.m4)
-DECLARE(`KERNEL_VER',5.17.0-1011-oem)
 include(intel-gpu-firmware.m4)
 include(i915-backports.m4)
 include(cse-backports.m4)
