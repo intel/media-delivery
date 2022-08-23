@@ -33,6 +33,17 @@ Key topics we are covering:
 Explore more containers, models and tools on the
 `Intel® oneContainer Portal <https://software.intel.com/containers>`_.
 
+Hardware requirements
+---------------------
+
+Media Delivery Software Stack requires Gen8+ Intel integrated or discrete GPU.
+
+Active validation is done for the following GPU products:
+
+* Intel® Data Center GPU Flex Series (formerly known as Arctic Sound-M)
+
+Media Delivery Software Stack is supported in maintanence mode for other GPU products.
+
 Build and Setup
 ---------------
 
