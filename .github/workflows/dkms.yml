@@ -48,7 +48,7 @@ jobs:
     needs: build-u2004
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
-      image: ${{needs.build.outputs.image}}
+      image: ${{needs.build-u2004.outputs.image}}
       gta-asset-name: dkms
 
   deploy-push-u2204:
@@ -56,7 +56,7 @@ jobs:
     needs: build-u2204
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
-      image: ${{needs.build.outputs.image}}
+      image: ${{needs.build-u2204.outputs.image}}
       gta-asset-name: dkms
 
   deploy-release-u2004:
@@ -64,7 +64,7 @@ jobs:
     needs: build-u2004
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
-      image: ${{needs.build.outputs.image}}
+      image: ${{needs.build-u2004.outputs.image}}
       gta-asset-name: ${{github.event.inputs.name}}
 
   deploy-release-u2204:
@@ -72,6 +72,6 @@ jobs:
     needs: build-u2204
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
-      image: ${{needs.build.outputs.image}}
+      image: ${{needs.build-u2204.outputs.image}}
       gta-asset-name: ${{github.event.inputs.name}}
 
