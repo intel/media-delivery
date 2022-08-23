@@ -4,8 +4,7 @@ Intel GPU DKMS
 It is required to install special Kernel Mode Drivers (KMD) to enable support of some new Intel GPUs.
 This article describes setup of these KMDs targeting the following GPUs:
 
-* DG2
-* ATS-M
+* Intel® Data Center GPU Flex Series (formerly known as Arctic Sound-M)
 
 Overall, the following should be taken care of:
 
