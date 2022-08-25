@@ -117,18 +117,18 @@ def main():
     global ARGS
     ARGS = parser.parse_args()
 
-    ################################# Baremetal or Docker/Container check ##################################
-    artifacts_path_docker           = "/opt/data/artifacts"
-    artifacts_path_baremetal        = os.getenv("HOME")
-    isInsideContainer               = os.system("grep docker /proc/1/cgroup -qa")
+    ################################# Set artifacts path ##################################################
+    artifacts_path_default          = os.getenv("HOME")
+    artifacts                       = os.getenv("ARTIFACTS")
 
     if str(ARGS.outdir) != "None":
         artifacts_path_users = os.path.realpath(ARGS.outdir)
         artifact_path = artifacts_path_users + "/"
-    elif isInsideContainer == 0:
-        artifact_path = artifacts_path_docker  + "/measure/perf/"
+    elif str(artifacts) != "None":
+        artifact_path = artifacts  + "/measure/perf/"
     else:
-        artifact_path = artifacts_path_baremetal  + "/measure/perf/"
+        artifact_path = artifacts_path_default  + "/measure/perf/"
+
 
     ################################# Multiple Device default/user overwrite check #########################
     os_env_DEVICE = "/dev/dri/renderD128"

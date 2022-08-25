@@ -45,6 +45,8 @@ fi
 
 CONTAINER_NAME=media-delivery-killme
 
+ARTIFACTS="/opt/data/artifacts"
+
 _TMP=`pwd`/mds_bats
 
 function setup() {
