@@ -41,7 +41,7 @@ source /etc/demo.env
 
 # to be able to pass variables to watch we need to export them
 export no_proxy=localhost
-export ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-client
+export OUTDIR=/opt/data/artifacts/ffmpeg-hls-client
 
 if tty -s; then
   export _tty=1
@@ -49,26 +49,26 @@ else
   export _tty=0
 fi
 export _exit=0
-export _scheduled=$ARTIFACTS/scheduled
-export _done=$ARTIFACTS/done
+export _scheduled=$OUTDIR/scheduled
+export _done=$OUTDIR/done
 
 if [ "$1" = "--exit" ]; then
   shift
   export _exit=1
 fi
 
-rm -rf $ARTIFACTS
-mkdir -p $ARTIFACTS
+rm -rf $OUTDIR
+mkdir -p $OUTDIR
 
 function run() {
   local name=$1
   shift
 
-  "$@" >$ARTIFACTS/$name.log 2>&1 &
+  "$@" >$OUTDIR/$name.log 2>&1 &
   local pid=$!
-  echo "$pid:$name:$ARTIFACTS/$name.log" >> $ARTIFACTS/scheduled
+  echo "$pid:$name:$OUTDIR/$name.log" >> $OUTDIR/scheduled
   wait $pid
-  echo "$pid:$name:$ARTIFACTS/$name.log:$?" >> $ARTIFACTS/done
+  echo "$pid:$name:$OUTDIR/$name.log:$?" >> $OUTDIR/done
 }
 
 for s in $@; do
@@ -85,9 +85,9 @@ for s in $@; do
 
   # $name could actually be: <type>/<name>
   # So, we need to create <type> folder(s) to be able to place outputs and logs
-  mkdir -p $(dirname $ARTIFACTS/$name)
+  mkdir -p $(dirname $OUTDIR/$name)
 
-  cmd=(ffmpeg -hide_banner -i $stream -c copy -y $ARTIFACTS/$name.mkv)
+  cmd=(ffmpeg -hide_banner -i $stream -c copy -y $OUTDIR/$name.mkv)
   run $name "${cmd[@]}" </dev/null >/dev/null 2>&1 &
 done
 
@@ -119,7 +119,7 @@ function watch_pids() {
         fi
       fi
 
-      size=$(du -sh $ARTIFACTS/$name.mkv 2>/dev/null | awk '{print $1}')
+      size=$(du -sh $OUTDIR/$name.mkv 2>/dev/null | awk '{print $1}')
 
       line=$(cat $log | sed 's/\r/\n/g' | grep frame= | tail -1)
       # frame= x fps= xx ...
@@ -144,7 +144,7 @@ function watch_pids() {
   if [ $_tty -ne 1 ]; then
     echo "Date: $(date)"
   fi
-  echo "Output and logs path: $ARTIFACTS"
+  echo "Output and logs path: $OUTDIR"
   echo "Total clients: $((running+completed))"
   echo "Running clients: $running"
   echo -ne "$running_reports"

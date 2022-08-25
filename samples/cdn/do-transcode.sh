@@ -53,8 +53,8 @@ addlog "$0 $@: DEVICE=${DEVICE}"
 
 source /etc/demo.env
 
-ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-server
-mkdir -p $ARTIFACTS
+OUTDIR=/opt/data/artifacts/ffmpeg-hls-server
+mkdir -p $OUTDIR
 
 # Let's parse incoming URL request which is expected to be: "/<type>/<stream>/index.m3u8"
 tmp=$1
@@ -79,14 +79,14 @@ function request_valid() {
 if ! request_valid; then
   addlog "nothing to do for the stream: $1"
   addlog "$0 $@: end"
-  cp $LOGFILE $ARTIFACTS/
+  cp $LOGFILE $OUTDIR/
   exit 0
 fi
 
 if [ -d /var/www/hls/$type/$stream ]; then
   addlog "already publishing: $1"
   addlog "$0 $@: end"
-  cp $LOGFILE $ARTIFACTS/
+  cp $LOGFILE $OUTDIR/
   exit 0
 fi
 
@@ -106,7 +106,7 @@ fi
 
 if [ "$to_play" = "" ]; then
   addlog "no such stream to play: $stream"
-  cp $LOGFILE $ARTIFACTS/
+  cp $LOGFILE $OUTDIR/
   addlog "$0 $@: end"
   exit 0
 fi
@@ -139,13 +139,13 @@ audio="$(get_param a $to_play codec_name)"
 addlog "stream: dec_codec=$dec_codec, dec_plugin=$dec_plugin, audio=$audio"
 
 function run() {
-  mkdir -p $ARTIFACTS/$type
-  echo "$@" >$ARTIFACTS/$type/$stream.log
-  "$@" >>$ARTIFACTS/$type/$stream.log 2>&1 &
+  mkdir -p $OUTDIR/$type
+  echo "$@" >$OUTDIR/$type/$stream.log
+  "$@" >>$OUTDIR/$type/$stream.log 2>&1 &
   pid=$!
-  echo "$pid:$type/$stream:$ARTIFACTS/$type/$stream.log" >> $ARTIFACTS/scheduled
+  echo "$pid:$type/$stream:$OUTDIR/$type/$stream.log" >> $OUTDIR/scheduled
   wait $pid
-  echo "$pid:$type/$stream:$ARTIFACTS/$type/$stream.log:$?" >> $ARTIFACTS/done
+  echo "$pid:$type/$stream:$OUTDIR/$type/$stream.log:$?" >> $OUTDIR/done
 }
 
 hls_time=4 # 4 seconds HLS fragment
@@ -280,4 +280,4 @@ else
 fi
 
 addlog "$0 $@: end"
-cp $LOGFILE $ARTIFACTS/
+cp $LOGFILE $OUTDIR/

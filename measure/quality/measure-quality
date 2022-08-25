@@ -53,10 +53,10 @@ tu=medium
 nframes=0
 dry_run=no
 buffer_delay=250 #250 milliseconds
-if grep docker /proc/1/cgroup -qa; then
-  outdir="/opt/data/artifacts"
-else
+if [ -z "$ARTIFACTS" ]; then
   outdir="$HOME"
+else
+  outdir="$ARTIFACTS"
 fi
 outdir+="/measure/quality"
 outprefix=""
