@@ -20,10 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-export ARTIFACTS=/opt/data/artifacts/ffmpeg-hls-server
+export OUTDIR=/opt/data/artifacts/ffmpeg-hls-server
 
-export _scheduled=$ARTIFACTS/scheduled
-export _done=$ARTIFACTS/done
+export _scheduled=$OUTDIR/scheduled
+export _done=$OUTDIR/done
 
 function watch_server() {
   running=0
@@ -61,7 +61,7 @@ function watch_server() {
 
   echo "nginx server monitor"
   echo "===================="
-  echo "Logs path: $ARTIFACTS"
+  echo "Logs path: $OUTDIR"
   echo "Total requests: $((running+completed))"
   echo "Running requests: $running"
   echo -ne "$running_reports"

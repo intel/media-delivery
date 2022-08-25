@@ -29,7 +29,7 @@ subs="ffmpeg -i \
 @test "measure quality: transcode 50 frames, calculate metrics, measure bdrate and check measuring artifacts" {
   run docker_run /bin/bash -c "set -ex; $subs; \
     measure quality --nframes 50 --bitrates 0.1:0.2:0.3:0.4:0.5 WAR.mp4; \
-    result=\$(cat /opt/data/artifacts/measure/quality/*{.metrics,bdrate} | grep -v :: | wc -l); \
+    result=\$(cat ${ARTIFACTS}/measure/quality/*{.metrics,bdrate} | grep -v :: | wc -l); \
     [[ \$result = 24 ]]"
   print_output
   [ $status -eq 0 ]
@@ -44,7 +44,7 @@ cyuv="ffmpeg -i WAR.mp4 \
     measure quality -w 480 -h 270 -f 24 \
     --nframes 5 --skip-metrics --skip-bdrate \
     WAR.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -55,7 +55,7 @@ cyuv="ffmpeg -i WAR.mp4 \
     measure quality -w 480 -h 270 -f 24 \
     --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
     WAR.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -72,7 +72,7 @@ cyuv="ffmpeg -i WAR.mp4 \
     measure quality -w 480 -h 270 -f 24 \
     --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     WAR.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -91,7 +91,7 @@ cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     measure quality --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -101,7 +101,7 @@ cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -117,7 +117,7 @@ cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     measure quality --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -130,7 +130,7 @@ get264="ffmpeg -i WAR.mp4 -vcodec copy -an WAR.h264"
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
     measure quality --nframes 5 --skip-metrics --skip-bdrate \
     WAR.h264; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -140,7 +140,7 @@ get264="ffmpeg -i WAR.mp4 -vcodec copy -an WAR.h264"
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
     measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
     WAR.h264; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -156,7 +156,7 @@ get264="ffmpeg -i WAR.mp4 -vcodec copy -an WAR.h264"
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
     measure quality --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     WAR.h264; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -169,7 +169,7 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --nframes 5 --skip-metrics --skip-bdrate \
     WAR.h265; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -179,7 +179,7 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
     WAR.h265; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -195,7 +195,7 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     WAR.h265; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -214,7 +214,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $getav1; \
     measure quality --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     WAR.ivf; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 20 ]]"
   print_output
   [ $status -eq 0 ]
@@ -231,7 +231,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
     measure quality -w 480 -h 270 -f 24 \
     --nframes 5 --skip-metrics --skip-bdrate --use-vdenc \
     WAR.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -248,7 +248,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
     measure quality -w 480 -h 270 -f 24 \
     --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-vdenc \
     WAR.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -260,7 +260,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
     measure quality -w 480 -h 270 -f 24 \
     --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -272,7 +272,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
     measure quality -w 480 -h 270 -f 24 \
     --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -283,7 +283,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
     measure quality --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.h264; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -294,7 +294,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
     measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.h264; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -305,7 +305,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.h265; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -316,7 +316,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.h265; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
   [ $status -eq 0 ]
@@ -328,7 +328,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
     measure quality -w 480 -h 270 -f 24 --use-lowdelay \
     --nframes 5 --skip-metrics --skip-bdrate \
     WAR.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -339,7 +339,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
     measure quality -w 480 -h 270 -f 24 --use-lowdelay \
     --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
     WAR.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -356,7 +356,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
     measure quality -w 480 -h 270 -f 24 --use-lowdelay \
     --codec AV1 --nframes 5 --skip-metrics --skip-bdrate \
     WAR.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -366,7 +366,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     measure quality --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -376,7 +376,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     measure quality --codec HEVC --use-lowdelay --nframes 5 --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -392,7 +392,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
     measure quality --codec AV1 --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
     ParkScene_1280x720_24.yuv; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -402,7 +402,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
     measure quality --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
     WAR.h264; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -412,7 +412,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
     measure quality --codec HEVC --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
     WAR.h264; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -428,7 +428,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $get264; \
     measure quality --codec AV1 --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
     WAR.h264; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -438,7 +438,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
     WAR.h265; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -448,7 +448,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --codec HEVC --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
     WAR.h265; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -464,7 +464,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --codec AV1 --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
     WAR.h265; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 15 ]]"
   print_output
   [ $status -eq 0 ]
@@ -480,7 +480,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
   run docker_run /bin/bash -c "set -ex; $subs; $getav1; \
     measure quality --codec AV1 --nframes 5 --use-lowdelay --skip-metrics --skip-bdrate \
     WAR.ivf; \
-    result=\$(find /opt/data/artifacts/measure/quality/ -not -empty -type f -ls | wc -l); \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 10 ]]"
   print_output
   [ $status -eq 0 ]
