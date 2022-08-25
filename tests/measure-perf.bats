@@ -71,7 +71,7 @@ function get_perf_opts() {
   else
     opts+=" $(get_security_opts)"
   fi
-  opts+=" -v $tmp:/opt/data/artifacts"
+  opts+=" -v $tmp:${ARTIFACTS}"
   echo "$opts $(get_mounts $opts)"
 }
 
