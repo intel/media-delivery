@@ -243,7 +243,10 @@ encoding tools can be disabled by engaging SMT or FFmpeg-QSV flags, such as, for
 
 ::
 
-  # triggers EncTools:
+  # triggers EncTools without low power lookahead (performance boost):
+  ffmpeg <...> -g 256 -bf 7 -extbrc 1 -look_ahead_depth 8 <...>
+
+  # triggers EncTools with low power lookahead (quality boost):
   ffmpeg <...> -g 256 -bf 7 -extbrc 1 -look_ahead_depth 40 <...>
 
   # triggers ExtBRC:
@@ -354,8 +357,10 @@ To achive better quality with Intel GPU H.264/AVC encoder running EncTools BRC w
 | ``-bitrate_limit 0``                                  | n3.0           | This disables target bitrate limitations that exist in MediaSDK/VPL for  |
 |                                                       |                | AVC encoding                                                             |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-extbrc 1 -look_ahead_depth 40``                    | n3.0           | This enables EncTools Software BRC (need to have look ahead depth > than |
-|                                                       |                | miniGOP size which is equal to bf+1).                                    |
+| ``-extbrc 1 -look_ahead_depth $lad``                  | n3.0           | This enables EncTools Software BRC when look ahead depth > than 0. Need  |
+|                                                       |                | to have look ahead depth > than miniGOP size to enable low power look    |
+|                                                       |                | ahead too (miniGOP size is equal to bf+1). The recommended values for    |
+|                                                       |                | `$lad` are: 8 (for performance boost) and 40 (for quality boost)         |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ``-b_strategy 1 -bf 7``                               | n3.0           | These 2 settings activate full 3 level B-Pyramid.                        |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
@@ -379,7 +384,7 @@ Example command lines:
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
-    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
     -vsync passthrough -y $output
 
@@ -388,7 +393,7 @@ Example command lines:
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
-    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
     -vsync passthrough -y $output
 
@@ -396,7 +401,7 @@ Example command lines:
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
-    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
     -vsync passthrough -y $output
 
@@ -404,14 +409,14 @@ Example command lines:
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
-    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
     -vsync passthrough -y $output
 
   # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -vbr -n $numframes \
-    -w $width -h $height -override_encoder_framerate $framerate -lowpower:${LOWPOWER:-on} -lad 40 \
+    -w $width -h $height -override_encoder_framerate $framerate -lowpower:${LOWPOWER:-on} -lad $lad \
     -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
     -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
@@ -419,7 +424,7 @@ Example command lines:
   # CBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -cbr -n $numframes \
-    -w $width -h $height  -override_encoder_framerate $framerate -lowpower:${LOWPOWER:-on} -lad 40 \
+    -w $width -h $height  -override_encoder_framerate $framerate -lowpower:${LOWPOWER:-on} -lad $lad \
     -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
     -InitialDelayInKB $(($bitrateKb / 8)) -o::h264 $output
@@ -427,14 +432,14 @@ Example command lines:
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::${inputcodec} $input -hw -async 1 \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -vbr -n $numframes \
-    -lowpower:${LOWPOWER:-on} -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
+    -lowpower:${LOWPOWER:-on} -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
     -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
 
   # CBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::${inputcodec} $input -hw -async 1 \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -cbr -n $numframes \
-    -lowpower:${LOWPOWER:-on} -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
+    -lowpower:${LOWPOWER:-on} -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
     -InitialDelayInKB $(($bitrateKb / 8)) -o::h264 $output
 
@@ -581,8 +586,10 @@ To achive better quality with Intel GPU H.265/HEVC encoder running EncTools BRC 
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | CBR & VBR common settings                                                                                                                         |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-extbrc 1 -look_ahead_depth 40``                    | n5.0           | This enables EncTools Software BRC (need to have look ahead depth > than |
-|                                                       |                | miniGOP size which is equal to bf+1).                                    |
+| ``-extbrc 1 -look_ahead_depth $lad``                  | n5.0           | This enables EncTools Software BRC when look ahead depth > than 0. Need  |
+|                                                       |                | to have look ahead depth > than miniGOP size to enable low power look    |
+|                                                       |                | ahead too (miniGOP size is equal to bf+1). The recommended values for    |
+|                                                       |                | `$lad` are: 8 (for performance boost) and 40 (for quality boost)         |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ``-b_strategy 1 -bf 7``                               | master         | These 2 settings activate full 3 level B-Pyramid.                        |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
@@ -605,7 +612,7 @@ Example command lines:
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
     -vsync passthrough -y $output
 
@@ -614,7 +621,7 @@ Example command lines:
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
     -vsync passthrough -y $output
 
@@ -622,7 +629,7 @@ Example command lines:
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
-    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
     -vsync passthrough -y $output
 
@@ -630,35 +637,35 @@ Example command lines:
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
-    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
     -vsync passthrough -y $output
 
   # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
-    -lowpower:${LOWPOWER:-on} -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
+    -lowpower:${LOWPOWER:-on} -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
     -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
 
   # CBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -cbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
-    -lowpower:${LOWPOWER:-on} -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
+    -lowpower:${LOWPOWER:-on} -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
     -InitialDelayInKB $(($bitrateKb / 8)) -o::h265 $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-on} \
-    -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
+    -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
     -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h265 $output
 
   # CBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -cbr -n $numframes -lowpower:${LOWPOWER:-on} \
-    -lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
+    -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 4)) \
     -InitialDelayInKB $(($bitrateKb / 8)) -o::h265 $output
 

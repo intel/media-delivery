@@ -291,6 +291,10 @@ ENCODING OPTIONS
 --buffer-delay <int>::
 	Sets encoding buffer delay in milliseconds for low-delay mode (default: `250`).
 
+--enctools-lad <int>::
+	Sets the EncTools low power look ahead depth (default: `40`).
+        To use EncTools with boosted performance, set depth to 8. Minimum value is 1.
+
 --ref-preset veryslow|slower|slow|medium|fast|faster|veryfast::
 	Sets a target usage preset for the reference encoder (default: `veryslow`).
 	If low-delay mode is enabled, default is set to `medium`.
@@ -344,7 +348,7 @@ WORKING MODE OPTIONS
 	Use precomputed golden references for BD-rate computation (disabled by default).
 
 --use-enctools::
-	Use enctools BRC for encoding (disabled by default). If enabled, it forces low power VDEnc hardware mode.
+	Use EncTools BRC for encoding (disabled by default). If enabled, it forces low power VDEnc hardware mode.
 
 --use-lowdelay::
 	Measure quality for low-delay/low-latency mode (disabled by default).

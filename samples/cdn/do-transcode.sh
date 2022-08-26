@@ -219,7 +219,7 @@ elif [ "$type" = "vod/avc-enctools" ]; then
     $accel $dec_plugin -re -extra_hw_frames 64 -i $to_play $as
     -c:v h264_qsv -profile:v high -preset medium -async_depth 1
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize -rc_init_occupancy $initbuf
-      -look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1
+      -look_ahead_depth 8 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1
       -bf 7 -refs 5 -g 256 -strict -1 -bitrate_limit 0
     -f hls -hls_time $hls_time -hls_playlist_type event
     -master_pl_name index.m3u8
@@ -239,7 +239,7 @@ elif [ "$type" = "vod/hevc-enctools" ]; then
     $accel $dec_plugin -re -extra_hw_frames 64 -i $to_play $as
     -c:v hevc_qsv -profile:v main -preset medium -async_depth 1
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize -rc_init_occupancy $initbuf
-      -look_ahead_depth 40 -extbrc 1 -b_strategy 1
+      -look_ahead_depth 8 -extbrc 1 -b_strategy 1
       -bf 7 -refs 4 -g 256 -strict -1
     -f hls -hls_time $hls_time -hls_playlist_type event
     -master_pl_name index.m3u8
