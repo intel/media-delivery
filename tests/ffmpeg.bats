@@ -62,7 +62,7 @@ xcode_avc_avc_et="ffmpeg -y -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD1
     -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 -c:a copy \
     -c:v h264_qsv -profile:v high -preset medium -async_depth 1 \
     -b:v 3000000 -maxrate 6000000 -bufsize 12000000 -rc_init_occupancy 6000000 \
-    -look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 \
+    -look_ahead_depth 8 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 \
     -bf 7 -refs 5 -g 256 -strict -1 -bitrate_limit 0 WAR_audio_avc_et.mp4"
 
 @test "ffmpeg-qsv avc-avc transcoding: transcode long sequence avc-avc using ffmpeg-qsv with encTools" {
@@ -81,7 +81,7 @@ xcode_avc_hevc_et="ffmpeg -y -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD
     -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 -c:a copy \
     -c:v hevc_qsv -profile:v main -preset medium -async_depth 1 \
     -b:v 3000000 -maxrate 6000000 -bufsize 12000000 -rc_init_occupancy 6000000 \
-    -look_ahead_depth 40 -extbrc 1 -b_strategy 1 \
+    -look_ahead_depth 8 -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 5 -g 256 -strict -1 WAR_audio_hevc_et.mp4"
 
 @test "ffmpeg-qsv avc-hevc transcoding: transcode long sequence avc-hevc using ffmpeg-qsv with encTools" {

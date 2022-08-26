@@ -28,7 +28,8 @@ LONGOPTIONS+=",width:,height:,fourcc:,framerate:,progressive,interlaced"
 LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-ms-ssim,skip-vmaf"
 LONGOPTIONS+=",skip-encoding,skip-ffmpeg,skip-msdk,skip-cbr,skip-vbr"
 LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate,use-vdenc,use-gold-ref"
-LONGOPTIONS+=",use-enctools,use-lowdelay,nframes:,dry-run,outdir:,outprefix:"
+LONGOPTIONS+=",use-enctools,enctools-lad:,use-lowdelay,nframes:,dry-run"
+LONGOPTIONS+=",outdir:,outprefix:"
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -52,6 +53,7 @@ tu=medium
 
 nframes=0
 dry_run=no
+enctools_lad=40
 buffer_delay=250 #250 milliseconds
 if [ -z "$ARTIFACTS" ]; then
   outdir="$HOME"
@@ -119,6 +121,10 @@ while true; do
             ;;
         --buffer-delay)
             buffer_delay=$2
+            shift 2
+            ;;
+        --enctools-lad)
+            enctools_lad=$2
             shift 2
             ;;
         --tu)
@@ -521,10 +527,8 @@ function get_coding_commandline_options() {
         options_smt+="-extbrc::off -num_ref 5 -gop_size 9999 -dist 1 -AdaptiveI:off -AdaptiveB:off -NalHrdConformance:on -VuiNalHrdParameters:on"
       else
         if [ "$use_enctools" = "yes" ]; then
-          options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1"
-          options_smt+="-lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
-
-
+          options_qsv+="-look_ahead_depth ${enctools_lad} -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1"
+          options_smt+="-lad ${enctools_lad} -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
         else
           options_qsv+="-extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256"
           options_smt+="-extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
@@ -542,8 +546,8 @@ function get_coding_commandline_options() {
         options_smt+="-extbrc::off -num_ref 4 -gop_size 9999 -dist 1 -AdaptiveI:off -AdaptiveB:off -NalHrdConformance:on -VuiNalHrdParameters:on"
       else
         if [ "$use_enctools" = "yes" ]; then
-          options_qsv+="-look_ahead_depth 40 -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1"
-          options_smt+="-lad 40 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+          options_qsv+="-look_ahead_depth ${enctools_lad} -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1"
+          options_smt+="-lad ${enctools_lad} -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
         else
           options_qsv+="-extbrc 1 -bf 7 -refs 4 -g 256"
           options_smt+="-extbrc::implicit -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
