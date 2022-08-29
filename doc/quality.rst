@@ -374,8 +374,9 @@ To achive better quality with Intel GPU H.264/AVC encoder running EncTools BRC w
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ``-strict -1``                                        | n3.0           | Disables HRD compliance.                                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-
-Example command lines:
+| ``-extra_hw_frames $lad``                             | n4.0           | Add extra GPU decoder frame surfaces.  This is currently needed for      |
+|                                                       |                | transcoding with look ahead (set this option to look ahead depth value)  |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 
 ::
 
@@ -398,7 +399,7 @@ Example command lines:
     -vsync passthrough -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
-  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
@@ -406,7 +407,7 @@ Example command lines:
     -vsync passthrough -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
-  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * $bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
@@ -602,6 +603,9 @@ To achive better quality with Intel GPU H.265/HEVC encoder running EncTools BRC 
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ``-idr_interval begin_only``                          | n4.0           | Only first I-frame will be IDR, other I-frames will be CRA.              |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extra_hw_frames $lad``                             | n4.0           | Add extra GPU decoder frame surfaces.  This is currently needed for      |
+|                                                       |                | transcoding with look ahead (set this option to look ahead depth value)  |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 
 Example command lines:
 
@@ -626,7 +630,7 @@ Example command lines:
     -vsync passthrough -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
-  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
@@ -634,7 +638,7 @@ Example command lines:
     -vsync passthrough -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
-  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * $bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \

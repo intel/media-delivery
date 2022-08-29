@@ -58,7 +58,7 @@ xcode_avc_hevc="ffmpeg -y -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128
 ########################################
 # AVC-AVC long encTools transcoding test
 ########################################
-xcode_avc_avc_et="ffmpeg -y -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v h264_qsv -extra_hw_frames 64 \
+xcode_avc_avc_et="ffmpeg -y -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v h264_qsv -extra_hw_frames 8 \
     -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 -c:a copy \
     -c:v h264_qsv -profile:v high -preset medium -async_depth 1 \
     -b:v 3000000 -maxrate 6000000 -bufsize 12000000 -rc_init_occupancy 6000000 \
@@ -77,7 +77,7 @@ xcode_avc_avc_et="ffmpeg -y -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD1
 #########################################
 # AVC-HEVC long encTools transcoding test
 #########################################
-xcode_avc_hevc_et="ffmpeg -y -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v h264_qsv -extra_hw_frames 64 \
+xcode_avc_hevc_et="ffmpeg -y -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v h264_qsv -extra_hw_frames 8 \
     -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 -c:a copy \
     -c:v hevc_qsv -profile:v main -preset medium -async_depth 1 \
     -b:v 3000000 -maxrate 6000000 -bufsize 12000000 -rc_init_occupancy 6000000 \
