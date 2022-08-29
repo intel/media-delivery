@@ -399,7 +399,7 @@ ffmpeg) command lines optimized for high quality and performance are given below
 
 **AVC/H.264**::
 
-  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames 8 -an -i $input \
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} \
@@ -409,7 +409,7 @@ ffmpeg) command lines optimized for high quality and performance are given below
 
 **HEVC/H.265**::
 
-  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames 8 -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} \
@@ -427,6 +427,9 @@ ffmpeg) command lines optimized for high quality and performance are given below
 
 Extra quality boost can be achieved with use of low power look ahead (by setting
 “-look_ahead_depth 40” option) at the expense of a slight performance impact (10-20%).
+The use of "-extra_hw_frames" option is currently required for transcoding with look ahead
+due to the increased GPU memory requirements. Please set the value for "-extra_hw_frames"
+to be the same as the number of lookahead frames.
 
 For best single stream performance or low density use case with high resolutions such as
 4K, “-async_depth 2” option is recommended (yielding only negligible quality loss 
