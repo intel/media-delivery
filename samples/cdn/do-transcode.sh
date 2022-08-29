@@ -216,7 +216,7 @@ elif [ "$type" = "vod/avc-enctools" ]; then
     a0=",a:0"
   fi
   cmd=(ffmpeg
-    $accel $dec_plugin -re -extra_hw_frames 64 -i $to_play $as
+    $accel $dec_plugin -re -extra_hw_frames 8 -i $to_play $as
     -c:v h264_qsv -profile:v high -preset medium -async_depth 1
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize -rc_init_occupancy $initbuf
       -look_ahead_depth 8 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1
@@ -236,7 +236,7 @@ elif [ "$type" = "vod/hevc-enctools" ]; then
     a0=",a:0"
   fi
   cmd=(ffmpeg
-    $accel $dec_plugin -re -extra_hw_frames 64 -i $to_play $as
+    $accel $dec_plugin -re -extra_hw_frames 8 -i $to_play $as
     -c:v hevc_qsv -profile:v main -preset medium -async_depth 1
       -b:v $bitrate -maxrate $maxrate -bufsize $bufsize -rc_init_occupancy $initbuf
       -look_ahead_depth 8 -extbrc 1 -b_strategy 1

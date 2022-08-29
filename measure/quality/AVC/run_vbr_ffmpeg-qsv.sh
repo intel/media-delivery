@@ -49,6 +49,11 @@ shift
 options=$@
 shift
 
+# extra HW frames WA
+if ! [[ "${file##*.}" =~ (yuv|YUV) ]]; then
+  opts=($options) && [[ ${opts[0]} = "-look_ahead_depth" ]] && rawvideo="-extra_hw_frames ${opts[1]}"
+fi
+
 bitrate=$(python3 -c 'print(int('$bitrate_Mbps' * 1000000))')
 maxrate=$(python3 -c 'print(int('$bitrate' * 2))') # 2*bitrate
 bufsize=$(python3 -c 'print(int('$bitrate' * 4))') # 4sec
