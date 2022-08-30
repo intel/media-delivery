@@ -123,6 +123,30 @@ Coding bitrates for AV1 video performance assessment:
 | 720p       | Low           | 1.5             |
 +------------+---------------+-----------------+
 
+EncTools and ExtBRC
+-------------------
+**EncTools** is Intel’s new software based (SW) BRC which includes a suite of adaptive encoding tools
+designed to improve video quality (thus a name EncTools).
+
+**ExtBRC** is Intel’s legacy SW BRC.
+
+EncTools are engaged automatically with enabling external BRC (extbrc 1) and setting lookahead depth >= 1.
+Positive lookahead depth will automatically enable EncTools BRC and all adaptive encoding tools. For low
+power lookahead to engage with EncTools BRC, lookahead depth should be > mini-GoP size. Several adaptive
+encoding tools can be disabled by engaging SMT or FFmpeg-QSV flags, such as, for example, AdaptiveI off
+(disable scene cut detection) and AdaptiveB off (disable adaptive mini-GoP). More information on
+the individual coding tools of EncTools BRC can be found `here <quality.rst#enctools-and-extbrc>`_.
+
+::
+
+  # triggers EncTools without low power lookahead (performance boost):
+  ffmpeg <...> -g 256 -bf 7 -extbrc 1 -look_ahead_depth 8 <...>
+
+  # triggers EncTools with low power lookahead (quality boost):
+  ffmpeg <...> -g 256 -bf 7 -extbrc 1 -look_ahead_depth 40 <...>
+
+  # triggers ExtBRC:
+  ffmpeg <...> -g 256 -bf 7 -extbrc 1 -look_ahead_depth 0 <...>
 
 Command Lines
 -------------
@@ -132,99 +156,275 @@ transccoding with Intel® Media SDK `Sample Multi Transcode (SMT) <https://githu
 and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration
 into FFmpeg) which we use in performance assessments.
 
-Intel Media SDK sample-multi-transcode
---------------------------------------
+H.264/AVC
+---------
 
-AV1-AV1
+EncTools
 ********
 
+To achieve better performance with Intel GPU H.264/AVC encoder running EncTools BRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | n2.8           | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bitrate_limit 0``                                  | n3.0           | This disables target bitrate limitations that exist in MediaSDK/VPL for  |
+|                                                       |                | AVC encoding                                                             |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extbrc 1 -look_ahead_depth $lad``                  | n3.0           | This enables EncTools Software BRC when look ahead depth > than 0. Need  |
+|                                                       |                | to have look ahead depth > than miniGOP size to enable low power look    |
+|                                                       |                | ahead too (miniGOP size is equal to bf+1). The recommended values for    |
+|                                                       |                | `$lad` are: 8 (for performance boost) and 40 (for quality boost)         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b_strategy 1 -bf 7``                               | n3.0           | These 2 settings activate full 3 level B-Pyramid.                        |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-refs 5``                                           | n2.7           | 5 references are important to trigger Long Term Reference (LTR) coding   |
+|                                                       |                | feature.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | n2.7           | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-adaptive_i 1 -adaptive_b 1``                       | n3.0           | Ensures to enable scene change detection and adaptive miniGOP.           |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-strict -1``                                        | n3.0           | Disables HRD compliance.                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extra_hw_frames $lad``                             | n4.0           | Add extra GPU decoder frame surfaces.  This is currently needed for      |
+|                                                       |                | transcoding with look ahead (set this option to look ahead depth value)  |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
 ::
 
-  720p_av1-av1: sample_multi_transcode  -i::av1 <> -hw -async 1 -u 4 -n 2000 -gop_size 256 -dist 8 -vbr -b 1000 -hrd 1000 -InitialDelayInKB 500 -n 3000 -override_decoder_framerate 60 -o::av1 <>.ivf -p <> 
-  1080p_av1-av1: sample_multi_transcode  -i::av1 <> -hw -async 1 -u 4 -n 2000 -gop_size 256 -dist 8 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -n 3000 -override_decoder_framerate 60 -o::av1 <>.ivf -p <>
-  2160p_av1-av1: sample_multi_transcode  -i::av1 <> -hw -async 1 -u 4 -n 2000 -gop_size 256 -dist 8 -vbr -b 9000 -hrd 4500 -InitialDelayInKB 2250 -n 3000 -override_decoder_framerate 60 -o::av1 <>.ivf -p <>
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
+    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
+    -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
+    -vsync passthrough -y $output
 
-HEVC-AVC
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -vbr -n $numframes \
+    -lowpower:${LOWPOWER:-on} -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
+
+ExtBRC
+******
+
+To achieve better performance with Intel GPU H.264/AVC encoder running ExtBRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | n2.8           | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bitrate_limit 0``                                  | n3.0           | This disables target bitrate limitations that exist in MediaSDK/VPL for  |
+|                                                       |                | AVC encoding                                                             |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extbrc 1``                                         |                | This enabled ExtBRC Software BRC                                         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b_strategy 1 -bf 7``                               | n3.0           | These 2 settings activate full 3 level B-Pyramid.                        |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-refs 5``                                           | n2.7           | 5 references are important to trigger Long Term Reference (LTR) coding   |
+|                                                       |                | feature.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | n2.7           | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+Example command lines:
+
+::
+
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v h264_qsv -preset h264_qsv -profile:v high -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
+    -vsync passthrough -y $output
+
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-off} \
+    -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
+
+H.265/HEVC Transcode
+--------------------
+
+EncTools
 ********
 
-::
+To achieve performance with Intel GPU H.265/HEVC encoder running EncTools BRC we recommend the following settings:
 
-  720p_hevc-avc: sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 2000 -hrd 1000 -InitialDelayInKB 500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
-  1080p_hevc-avc: sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
-  2160p_hevc-avc: sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 10000 -hrd 5000 -InitialDelayInKB 2500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | n2.8           | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extbrc 1 -look_ahead_depth $lad``                  | n5.0           | This enables EncTools Software BRC when look ahead depth > than 0. Need  |
+|                                                       |                | to have look ahead depth > than miniGOP size to enable low power look    |
+|                                                       |                | ahead too (miniGOP size is equal to bf+1). The recommended values for    |
+|                                                       |                | `$lad` are: 8 (for performance boost) and 40 (for quality boost)         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b_strategy 1 -bf 7``                               | master         | These 2 settings activate full 3 level B-Pyramid.                        |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-refs 4``                                           | n2.8           | 4 reference are recommended for high quality HEVC encoding.              |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | n2.8           | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-strict -1``                                        | n5.0           | Disables HRD compliance.                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-idr_interval begin_only``                          | n4.0           | Only first I-frame will be IDR, other I-frames will be CRA.              |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extra_hw_frames $lad``                             | n4.0           | Add extra GPU decoder frame surfaces.  This is currently needed for      |
+|                                                       |                | transcoding with look ahead (set this option to look ahead depth value)  |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 
-AVC-AVC
-*******
-
-::
-
-  720p_avc-avc: sample_multi_transcode -i::h264 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 2000 -hrd 1000 -InitialDelayInKB 500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
-  1080p_avc-avc: sample_multi_transcode -i::h264 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
-  2160p_avc-avc: sample_multi_transcode -i::h264 <> -hw -async 1 -u 4 -gop_size 256 -dist 8 -num_ref 5 -vbr -b 10000 -hrd 5000 -InitialDelayInKB 2500 -extbrc::implicit -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
-
-HEVC-HEVC
-*********
-
-::
-
-  720p_hevc-hevc: sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -num_ref 5 -vbr -b 1500 -hrd 750 -InitialDelayInKB 325 -extbrc::on -o::h265 <>.h265 -p <>
-  1080p_hevc-hevc: sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::on -o::h265 <>.h265 -p <>
-  2160p_hevc-hevc: sample_multi_transcode -i::h265 <> -hw -async 1 -u 4 -gop_size 256 -num_ref 5 -vbr -b 9000 -hrd 4500 -InitialDelayInKB 2250 -extbrc::on -o::h265 <>.h265 -p <>
-
-AVC-HEVC
-********
-
-::
-
-  720p_avc-hevc: sample_multi_transcode -i::h264 <> -hw -async 1 -u 4 -gop_size 256 -num_ref 5 -vbr -b 1500 -hrd 750 -InitialDelayInKB 325 -extbrc::on -o::h265 <>.h265 -p <>
-  1080p_avc-hevc: sample_multi_transcode -i::h264 <> -hw -async 1 -u 4 -gop_size 256 -num_ref 5 -vbr -b 3000 -hrd 1500 -InitialDelayInKB 750 -extbrc::on -o::h265 <>.h265 -p <>
-  2160p_avc-hevc: sample_multi_transcode -i::h264 <> -hw -async 1 -u 7 -gop_size 256 -num_ref 5 -vbr -b 9000 -hrd 4500 -InitialDelayInKB 2250 -extbrc::on -o::h265 <>.h265 -p <>
-
-ffmpeg-qsv
-----------
-
-AV1-AV1
-********
-
-::
-
-  720p_av1-av1: ffmpeg -y -hwaccel qsv -c:v av1_qsv -i <> -c:v av1_qsv -b:v 1500k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -async_depth 1 -maxrate 3000k -bufsize 6000k -y <>.ivf -report
-  1080p_av1-av1: ffmpeg -y -hwaccel qsv -c:v av1_qsv -i <> -c:v av1_qsv -b:v 3000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -async_depth 1 -maxrate 6000k -bufsize 12000k -y <>.ivf -report
-  2160p_av1-av1: ffmpeg -y -hwaccel qsv -c:v av1_qsv -i <> -c:v av1_qsv -b:v 9000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -async_depth 1 -maxrate 18000k -bufsize 36000k -y <>.ivf -report
-
-
-HEVC-AVC
-********
+Example command lines:
 
 ::
 
-  720p_hevc-avc: ffmpeg -y -hwaccel qsv -c:v hevc_qsv -i <> -c:v h264_qsv -b:v 2000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 4000k -bufsize 8000k -y <>.h264 -report
-  1080p_hevc-avc: ffmpeg -y -hwaccel qsv -c:v hevc_qsv -i <> -c:v h264_qsv -b:v 3000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 6000k -bufsize 12000k -y <>.h264 -report
-  2160p_hevc-avc: ffmpeg -y -hwaccel qsv -c:v hevc_qsv -i <> -c:v h264_qsv -b:v 10000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 20000k -bufsize 40000k -y <>.h264 -report
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
+    -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
+    -vsync passthrough -y $output
 
-AVC-AVC
-*******
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-on} \
+    -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h265 $output
+
+
+ExtBRC
+******
+
+To achieve better performance with Intel GPU H.265/HEVC encoder running ExtBRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | n2.8           | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extbrc 1``                                         | n4.3           | This enabled ExtBRC Software BRC                                         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bf 7``                                             | n2.8           | B-Pyramid is ON by default (to be explicit, add ``-b_strategy 1``, but   |
+|                                                       |                | the setting is supported in ffmpeg master for HEVC). ``-bf 7`` enables   |
+|                                                       |                | full 3 level B-Pyramid.                                                  |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-refs 4``                                           | n2.8           | 4 reference are recommended for high quality HEVC encoding.              |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | n2.7           | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+Example command lines:
 
 ::
 
-  720p_avc-avc: ffmpeg -y -hwaccel qsv -c:v h264_qsv -i <> -c:v h264_qsv -b:v 2000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 4000k -bufsize 8000k -y <>.h264 -report
-  1080p_avc-avc: ffmpeg -y -hwaccel qsv -c:v h264_qsv -i <> -c:v h264_qsv -b:v 3000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 6000k -bufsize 12000k -y <>.h264 -report
-  2160p_avc-avc: ffmpeg -y -hwaccel qsv -c:v h264_qsv -i <> -c:v h264_qsv -b:v 10000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 20000k -bufsize 40000k -y <>.h264 -report
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
+    -vsync passthrough -y $output
 
-HEVC-HEVC
-*********
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-off} \
+    -extbrc::implicit -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
+    -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) \
+    -o::h265 $output
+
+AV1 Transcode
+-------------
+
+To achieve better performance with Intel GPU AV1 encoder running Hardware BRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | patched        | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | patched        | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | patched        | This is initial buffer delay. You can vary this per your needs.          |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b_strategy 1 -bf 7``                               | patched        | These 2 settings activate full 3 level B-Pyramid.                        |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | patched        | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+Example command lines:
 
 ::
 
-  720p_hevc-hevc: ffmpeg -y -hwaccel qsv -c:v hevc_qsv -i <> -c:v hevc_qsv -b:v 1500k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 3000k -bufsize 6000k -y <>.h265 -report
-  1080p_hevc-hevc: ffmpeg -y -hwaccel qsv -c:v hevc_qsv -i <> -c:v hevc_qsv -b:v 3000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 6000k -bufsize 12000k -y <>.h265 -report
-  2160p_hevc-hevc: ffmpeg -y -hwaccel qsv -c:v hevc_qsv -i <> -c:v hevc_qsv -b:v 9000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 18000k -bufsize 36000k -y <>.h265 -report
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -g 256 \
+    -vsync passthrough -y $output
 
-AVC-HEVC
-********
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
+    -vbr -n $numframes -bref -dist 8 -gop_size 256 -dist 8 -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::av1 $output
 
-::
+Links
+-----
 
-  720p_avc-hevc: ffmpeg -y -hwaccel qsv -c:v h264_qsv -i <> -c:v hevc_qsv -b:v 1500k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 3000k -bufsize 6000k -y <>.h265 -report
-  1080p_avc-hevc: ffmpeg -y -hwaccel qsv -c:v h264_qsv -i <> -c:v hevc_qsv -b:v 3000k -preset medium -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 6000k -bufsize 12000k -y <>.h265 -report
-  2160p_avc-hevc: ffmpeg -y -hwaccel qsv -c:v h264_qsv -i <> -c:v hevc_qsv -b:v 9000k -preset veryfast -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -async_depth 1 -maxrate 18000k -bufsize 36000k -y <>.h265 -report
+* `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
+* `Intel Media SDK Sample Multi-Transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
