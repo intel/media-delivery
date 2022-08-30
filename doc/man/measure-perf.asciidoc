@@ -227,6 +227,10 @@ PROCESSING OPTIONS
 --use-vdenc::
 	Run each workload by using fixed function video encode.
 
+--use-enctools::
+        Use EncTools BRC for encoding (disabled by default). If enabled, it forces low power VDEnc hardware mode.
+
+
 PREREQUISITES
 -------------
 ffmpeg::
