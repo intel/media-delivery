@@ -325,7 +325,7 @@ H.264/AVC
 EncTools
 ********
 
-To achive better quality with Intel GPU H.264/AVC encoder running EncTools BRC we recommend the following settings:
+To achieve better quality with Intel GPU H.264/AVC encoder running EncTools BRC we recommend the following settings:
 
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
@@ -446,7 +446,7 @@ Example command lines:
 ExtBRC
 ******
 
-To achive better quality with Intel GPU H.264/AVC encoder running ExtBRC we recommend the following settings:
+To achieve better quality with Intel GPU H.264/AVC encoder running ExtBRC we recommend the following settings:
 
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
@@ -557,7 +557,7 @@ H.265/HEVC
 EncTools
 ********
 
-To achive better quality with Intel GPU H.265/HEVC encoder running EncTools BRC we recommend the following settings:
+To achieve better quality with Intel GPU H.265/HEVC encoder running EncTools BRC we recommend the following settings:
 
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
@@ -673,7 +673,7 @@ Example command lines:
 ExtBRC
 ******
 
-To achive better quality with Intel GPU H.265/HEVC encoder running ExtBRC we recommend the following settings:
+To achieve better quality with Intel GPU H.265/HEVC encoder running ExtBRC we recommend the following settings:
 
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
@@ -779,7 +779,7 @@ Example command lines:
 AV1
 ---
 
-To achive better quality with Intel GPU AV1 encoder running Hardware BRC we recommend the following settings:
+To achieve better quality with Intel GPU AV1 encoder running Hardware BRC we recommend the following settings:
 
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
