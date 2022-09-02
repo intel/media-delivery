@@ -35,11 +35,15 @@ if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
   shift
   framerate=$1
   shift
-  rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
+  format=$1
+  shift
+  rawvideo="-f rawvideo -pix_fmt $format -s:v ${width}x${height} -r $framerate"
 else
   nframes=$1
   shift
   std=$1
+  shift
+  format=$1
   shift
 fi
 bitrate_Mbps=$1
@@ -62,6 +66,9 @@ initbuf=$(python3 -c 'print(int('$bufsize' / 2))') # 1/2 buffer
 vframes="-frames:v $nframes"
 [[ "$nframes" = "0" ]] && vframes=""
 
+profile="main"
+[[ "$format" = "p010le" ]] && profile="main10"
+
 DEVICE=${DEVICE:-/dev/dri/renderD128}
 if [ -z "$rawvideo" ] && [ "$std" != "UNSUPPORTED" ]; then
   dev="-hwaccel qsv -qsv_device $DEVICE -c:v ${std}_qsv"
@@ -71,7 +78,7 @@ fi
 
 cmd=(ffmpeg $dev -an \
   $rawvideo -i $file $vframes \
-  -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+  -c:v hevc_qsv -preset $preset -profile:v $profile -async_depth 1 \
   -b:v $bitrate -maxrate $bitrate -minrate $bitrate \
   -bufsize $bufsize -rc_init_occupancy $initbuf \
   $options \

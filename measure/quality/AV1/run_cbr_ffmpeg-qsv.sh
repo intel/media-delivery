@@ -35,11 +35,15 @@ if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
   shift
   framerate=$1
   shift
-  rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
+  format=$1
+  shift
+  rawvideo="-f rawvideo -pix_fmt $format -s:v ${width}x${height} -r $framerate"
 else
   nframes=$1
   shift
   std=$1
+  shift
+  format=$1
   shift
 fi
 bitrate_Mbps=$1

@@ -33,10 +33,10 @@ Search is done in the root `<folder>` and all subfolders.
 +
 In this case the quality measure is run only for the specified stream. If the stream is in YUV format,
 then its characteristics must be specified via command line optins (`-w`, `-h`, `-f`,
-etc.). The script accepts only 8-bit I420 YUV input streams. If the input stream is uncompressed YUV or
-elementary compressed bitstream (e.g. standard compliant h264), quality will be measured
-using both ffmpeg-qsv and Media SDK Sample Multi-Transcode. On the other hand, a stream
-encapsulated in a container (e.g. MP4, TS, etc.) will be measured only using
+etc.). The script accepts 8-bit I420 YUV input streams and 10-bit P010LE YUV input streams. If the
+input stream is uncompressed YUV or elementary compressed bitstream (e.g. standard compliant h264),
+quality will be measured using both ffmpeg-qsv and Media SDK Sample Multi-Transcode. On the other
+hand, a stream encapsulated in a container (e.g. MP4, TS, etc.) will be measured only using
 ffmpeg-qsv (since Sample Multi-Transcode does not support containers).
 
 3. Run quality measure for the pre-defined sequence
@@ -80,6 +80,24 @@ following pre-defined streams you may skip specifying its characteristics:
 | WITCHER3_1920x1080_60.yuv | 1920x1080 | 60 | 600 | cc082ec495a47085ba1c08b99e4de2e4 | https://media.xiph.org/video/derf/
 |===
 
++
+------------
+    measure quality --pix-fmt p010le <pre-defined-sequence.yuv>
+------------
++
+HEVC also supports an additional set of predefined 10-bit sequences when using --pix-fmt p010le:
++
+|===
+| Sequence | Resolution | FPS | Frames | MD5 | Source
+
+| BalloonFestival_1920x1080p_25_10b_pq_709_ct2020_p010le.yuv | 1920x1080 | 24 | 240 | ad3174f083a5138a9572a3c8d9a58440 | JVET Test Suite
+| CrowdRun_1920x1080_50_p010le.yuv | 1920x1080 | 50 | 500 | b9da42e538b4fb34724da13084b9e399 | JVET Test Suite
+| Hurdles_1920x1080p_50_10b_pq_709_ct2020_p010le.yuv | 1920x1080 | 50 | 500 | 28f166b2cf09005eecbf33db03b426d1 | JVET Test Suite
+| Market3_1920x1080p_50_10b_pq_709_ct2020_p010le.yuv | 1920x1080 | 50 | 400 | b74a2813a6b19485b01bf113b978e077 | JVET Test Suite
+| MarketPlace_1920x1080_60fps_p010le.yuv | 1920x1080 | 60 | 600 | ca55c798f502cc860d5ee66772f5ce01 | JVET Test Suite
+| Starting_1920x1080p_50_10b_pq_709_ct2020_p010le.yuv | 1920x1080 | 50 | 500 | 7d04491468b82db2ccbb7a4f822a0ef7 | JVET Test Suite
+|===
+
 Script checks whether the input stream is YUV by the following file
 extensions: '.yuv', '.YUV'. Any other file is considered to be an encoded
 bitstream (either raw or in a container).
@@ -121,6 +139,19 @@ h| H.264/AVC h| H.265/HEVC h| AV1 h| H.264/AVC h| H.265/HEVC h| AV1
 | Witcher | 1920x1080 | 2, 3, 6, 12, 24 | 2, 3, 6, 9, 15 | 2, 3, 6, 9, 15 | 2, 3, 6, 12, 24 | 2, 3, 6, 9, 15 | 2, 3, 6, 9, 15 
 |===
 
+* Default bitrates for predefined 10-bit sequences
++
+|===
+| Sequence | Resolution | H.265/HEVC
+
+| BalloonFestival_10b | 1920x1080 | 2, 3, 6, 9, 15 
+| CrowdRun_10b | 1920x1080 | 15, 20, 25, 30, 35 
+| Hurdles_10b | 1920x1080 | 2, 3, 6, 9, 15 
+| Market3_10b | 1920x1080 | 2, 3, 6, 9, 15 
+| MarketPlace_10b | 1920x1080 | 2, 3, 6, 9, 15 
+| Starting_10b | 1920x1080 | 2, 3, 6, 9, 15 
+|===
+
 * Default bitrates for user-defined sequences (High Quality and Low Delay use cases):
 +
 |===
@@ -154,7 +185,7 @@ along with the corresponding command line triggers:
 |===
 | Use case | Codec | Golden Reference | Trigger
 
-.6+|High Quality
+.8+|High Quality
 
 .2+|AVC
 
@@ -163,12 +194,16 @@ along with the corresponding command line triggers:
 |x264-veryslow
 |--use-gold-ref --ref-preset veryslow
 
-.2+|HEVC
+.4+|HEVC
 
 |x265-medium (default)
 |--use-gold-ref
+|x265-medium-10bit
+|--use-gold-ref --pix-fmt p010le
 |x265-veryslow
 |--use-gold-ref --ref-preset veryslow
+|x265-veryslow-10bit
+|--use-gold-ref --ref-preset veryslow --pix-fmt p010le
 
 .2+|AV1
 
@@ -403,13 +438,16 @@ INPUT STREAM OPTIONS
 Only valid for YUV input stream.
 
 --width|-w <uint>::
-	Stream width
+	Input width
 
 --height|-h <uint>::
-	Stream height
+	Input height
 
 --framerate|-f <uint>::
-	Stream framerate
+	Input framerate
+
+--pix-fmt yuv420p|p010le::
+	Input pixel format (default: `yuv420p`)
 
 PREREQUISITES
 -------------

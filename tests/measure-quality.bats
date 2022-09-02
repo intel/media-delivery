@@ -26,9 +26,29 @@ load utils
 subs="ffmpeg -i \
   /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -s 480x270 -sws_flags lanczos -vframes 100 WAR.mp4"
+
 @test "measure quality: transcode 50 frames, calculate metrics, measure bdrate and check measuring artifacts" {
   run docker_run /bin/bash -c "set -ex; $subs; \
     measure quality --nframes 50 --bitrates 0.1:0.2:0.3:0.4:0.5 WAR.mp4; \
+    result=\$(cat ${ARTIFACTS}/measure/quality/*{.metrics,bdrate} | grep -v :: | wc -l); \
+    [[ \$result = 24 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+# convert to 10bit HEVC mp4
+getmp4hevc10b="ffmpeg -i WAR.mp4 \
+  -pix_fmt p010le -c:v libx265 -preset medium -b:v 15M -vsync passthrough WAR_10bit.mp4"
+
+@test "measure quality: transcode 50 frames of 10bit mp4 video, calculate metrics, measure bdrate and check measuring artifacts" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh HEVCMain10);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  run docker_run /bin/bash -c "set -ex; $subs; $getmp4hevc10b; \
+    measure quality --pix-fmt p010le --codec HEVC --nframes 100 --bitrates 0.5:1:1.5:2:3 WAR_10bit.mp4; \
     result=\$(cat ${ARTIFACTS}/measure/quality/*{.metrics,bdrate} | grep -v :: | wc -l); \
     [[ \$result = 24 ]]"
   print_output
@@ -107,6 +127,26 @@ cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
   [ $status -eq 0 ]
 }
 
+# mock BalloonFestival: subsample to 1080p
+cyuv210b="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 -c:v rawvideo -pix_fmt p010le \
+  -vframes 240 -vsync passthrough BalloonFestival_1920x1080p_25_10b_pq_709_ct2020_p010le.yuv"
+
+@test "measure quality: encode 5 frames of a predefined YUV 10bit video with HEVC" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh HEVCMain10);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  run docker_run /bin/bash -c "set -ex; $cyuv210b; \
+    measure quality --codec HEVC --pix-fmt p010le --nframes 5 --skip-metrics --skip-bdrate \
+    BalloonFestival_1920x1080p_25_10b_pq_709_ct2020_p010le.yuv; \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 30 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
 @test "measure quality: encode 5 frames of a predefined YUV video with AV1" {
   run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
     /bin/bash -c "set -ex; \
@@ -179,6 +219,25 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
     measure quality --codec HEVC --nframes 5 --skip-metrics --skip-bdrate \
     WAR.h265; \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 30 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+# get raw HEVC 10bit stream from an mp4 container
+get26510b="ffmpeg -i WAR_10bit.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vsync 0 WAR_10bit.h265"
+
+@test "measure quality: transcode 5 frames of a user-defined raw HEVC 10bit video stream into HEVC 10bit stream" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh HEVCMain10);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  run docker_run /bin/bash -c "set -ex; $subs; $getmp4hevc10b; $get26510b; \
+    measure quality --codec HEVC --nframes 5 --pix-fmt p010le --skip-metrics --skip-bdrate \
+    WAR_10bit.h265; \
     result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
@@ -272,6 +331,28 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
     measure quality -w 480 -h 270 -f 24 \
     --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
     WAR.yuv; \
+    result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
+    [[ \$result = 30 ]]"
+  print_output
+  [ $status -eq 0 ]
+}
+
+# get 10bit yuv from mp4
+cyuv10b="ffmpeg -i WAR.mp4 \
+  -c:v rawvideo -pix_fmt p010le -vsync passthrough WAR_10bit.yuv"
+
+@test "measure quality: encode 5 frames of a YUV 10bit video with HEVC encTools" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh HEVCMain10);
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  run docker_run /bin/bash -c "set -ex; $subs; $cyuv10b; \
+    measure quality -w 480 -h 270 --pix-fmt p010le -f 24 \
+    --codec HEVC --nframes 5 --skip-metrics --skip-bdrate --use-enctools \
+    WAR_10bit.yuv; \
     result=\$(find ${ARTIFACTS}/measure/quality/ -not -empty -type f -ls | wc -l); \
     [[ \$result = 30 ]]"
   print_output
