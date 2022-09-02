@@ -25,7 +25,7 @@ measure_quality=$0
 OPTIONS="w:h:f:o:"
 LONGOPTIONS="codec:,preset:,bitrates:,tu:,buffer-delay:,ref-preset:"
 LONGOPTIONS+=",width:,height:,framerate:,nframes:,enctools-lad:"
-LONGOPTIONS+=",outdir:,outprefix:,fourcc:,progressive,interlaced"
+LONGOPTIONS+=",outdir:,outprefix:,pix-fmt:"
 LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-ms-ssim,skip-vmaf"
 LONGOPTIONS+=",skip-encoding,skip-ffmpeg,skip-msdk,skip-cbr,skip-vbr"
 LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate,use-vdenc,use-gold-ref"
@@ -43,9 +43,8 @@ errlog="error.log"
 bdr_limit=1000000
 width=0
 height=0
-fourcc=I420
+pix_fmt=yuv420p
 framerate=0
-progressive=yes
 
 codec=AVC
 preset=best
@@ -96,17 +95,9 @@ while true; do
             framerate=$2
             shift 2
             ;;
-        --fourcc)
-            fourcc="$2"
+        --pix-fmt)
+            pix_fmt=$2
             shift 2
-            ;;
-        --progressive)
-            progressive=yes
-            shift
-            ;;
-        --interlaced)
-            progressive=no
-            shift
             ;;
         --codec)
             codec=$2
@@ -272,6 +263,23 @@ else
   esac
 fi
 
+# make sure pixel format is supported
+case ${pix_fmt} in
+  yuv420p|p010le) ;;
+  *)
+    echo "error: unsupported pixel format ${pix_fmt}" >&2
+    exit -1
+    ;;
+esac
+if [ "$pix_fmt" = "p010le" ] && [ "$codec" = "AVC" ]; then
+  echo "error: AVC does not currently support pixel format ${pix_fmt}" >&2
+  exit -1
+fi
+if [ "$pix_fmt" = "p010le" ] && [ "$codec" = "AV1" ]; then
+  echo "error: AV1 does not currently support pixel format ${pix_fmt}" >&2
+  exit -1
+fi
+
 # low delay use-case only tests CBR mode
 if [ "${use_lowdelay}" = "yes" ]; then
   skip_vbr=yes
@@ -290,10 +298,14 @@ else
   fi
 fi
 
+if [ "$pix_fmt" = "p010le" ]; then
+  ref_bit="-10bit"
+fi
+
 # make sure gold references are available for user selected reference codec/preset
 if [ "$use_gold_ref" = "yes" ]; then
   path=$(dirname $(readlink -f $0))
-  ref_path="$path/REF/${use_case}/${codec}/${ref_codec}-${ref_preset}${ref_ext}"
+  ref_path="$path/REF/${use_case}/${codec}/${ref_codec}-${ref_preset}${ref_ext}${ref_bit}"
   if ! [ -e "$ref_path" ]; then
     echo "warning: golden references not available for the selected preset" >&2
     use_gold_ref=no
@@ -443,9 +455,7 @@ function run() {
     $measure_quality \
       --codec=$codec --preset=$preset --bitrates=$bitrates --tu=$tu --buffer-delay=$buffer_delay --ref-preset=$ref_preset \
       --width=$width --height=$height --framerate=$framerate --nframes=$nframes --enctools-lad $enctools_lad \
-      --outdir=$outdir --outprefix=$outprefix --fourcc=$fourcc \
-      $(if_no $progressive "--interlaced") \
-      $(if_yes $progressive "--progressive") \
+      --outdir=$outdir --outprefix=$outprefix --pix-fmt=$pix_fmt \
       $(if_yes $skip_metrics "--skip-metrics") \
       $(if_yes $skip_psnr "--skip-psnr") \
       $(if_yes $skip_ssim "--skip-ssim") \
@@ -599,8 +609,13 @@ function get_coding_commandline_options() {
         options_smt+="-dist 1 -num_ref 4 -gop_size 9999 -NalHrdConformance:on -VuiNalHrdParameters:on"
       else
         if [ "$use_enctools" = "yes" ]; then
-          options_qsv+="-look_ahead_depth ${enctools_lad} -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1"
-          options_smt+="-lad ${enctools_lad} -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+          if [ "$pix_fmt" = "p010le" ]; then
+            options_qsv+="-look_ahead_depth ${enctools_lad} -extbrc 1 -adaptive_i 1 -adaptive_b 0 -b_strategy 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1"
+            options_smt+="-lad ${enctools_lad} -extbrc::implicit -AdaptiveI:on -AdaptiveB:off -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+          else
+            options_qsv+="-look_ahead_depth ${enctools_lad} -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1"
+            options_smt+="-lad ${enctools_lad} -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+          fi
         else
           options_qsv+="-extbrc 1 -bf 7 -refs 4 -g 256"
           options_smt+="-extbrc::implicit -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system"
@@ -950,6 +965,18 @@ function get_preset_stream() {
   fi
 }
 
+function get_preset_stream_10bit() {
+  local ind=$1
+  if   [[ $ind = 1  ]]; then echo "BalloonFestival_1920x1080p_25_10b_pq_709_ct2020_p010le.yuv" "BalloonFestival_1080p" 1920 1080 24 240
+  elif [[ $ind = 2  ]]; then echo "CrowdRun_1920x1080_50_p010le.yuv" "CrowdRun_1080p" 1920 1080 50 500
+  elif [[ $ind = 3  ]]; then echo "Hurdles_1920x1080p_50_10b_pq_709_ct2020_p010le.yuv" "Hurdles_1080p" 1920 1080 50 500
+  elif [[ $ind = 4  ]]; then echo "Market3_1920x1080p_50_10b_pq_709_ct2020_p010le.yuv" "Market3_1080p" 1920 1080 50 400
+  elif [[ $ind = 5  ]]; then echo "MarketPlace_1920x1080_60fps_p010le.yuv" "MarketPlace_1080p" 1920 1080 60 600
+  elif [[ $ind = 6  ]]; then echo "Starting_1920x1080p_50_10b_pq_709_ct2020_p010le.yuv" "Starting_1080p" 1920 1080 50 500
+  else echo ""
+  fi
+}
+
 function is_preset_stream() {
   local file=$1
   local stream=""
@@ -957,7 +984,11 @@ function is_preset_stream() {
 
   while :
   do
-    stream=$(get_preset_stream $i | cut -d " " -f1)
+    if [ "$pix_fmt" = "p010le" ]; then
+      stream=$(get_preset_stream_10bit $i | cut -d " " -f1)
+    else
+      stream=$(get_preset_stream $i | cut -d " " -f1)
+    fi
     [ -z "$stream" ] && break
     if [[ $stream = $file ]]; then
       echo "yes"
@@ -1010,7 +1041,11 @@ if [[ -d "$file" ||
   i=1
   while :
   do
-    stream=$(get_preset_stream $i)
+    if [ "$pix_fmt" = "p010le" ]; then
+      stream=$(get_preset_stream_10bit $i)
+    else
+      stream=$(get_preset_stream $i)
+    fi
     [ -z "$stream" ] && break
     [ "$nframes" -gt "0" ] && stream=$(echo $stream | sed s/'\w*$'/$nframes/)
     run $stream
@@ -1100,58 +1135,60 @@ fi
 if [ "$skip_encoding" = "no" ]; then
   for b in ${bitrates[@]}; do
     if [ "$is_yuv" = "no" ]; then
+      # compressed stream input
       if [ "$skip_reference" = "no" ] && [ "$use_gold_ref" = "no" ]; then
         if [ "$use_lowdelay" = "yes" ]; then
-          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-ref-ld.sh $dry_run $file $outprefix $nframes $b $buffer_delay $options_ref; log_err "ffmpeg ref ld transcode"; fi
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-ref-ld.sh $dry_run $file $outprefix $nframes $pix_fmt $b $buffer_delay $options_ref; log_err "ffmpeg ref ld transcode"; fi
         else
-          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $b $options_ref; log_err "ffmpeg ref cbr transcode"; fi
-          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $b $options_ref; log_err "ffmpeg ref vbr transcode"; fi
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $pix_fmt $b $options_ref; log_err "ffmpeg ref cbr transcode"; fi
+          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $nframes $pix_fmt $b $options_ref; log_err "ffmpeg ref vbr transcode"; fi
         fi
       fi
       if [ "$skip_ffmpeg" = "no" ]; then
         std=$(get_param $file "stream" "codec_name")
         case $std in h264|hevc|mpeg2|vc1|av1);; *) std=UNSUPPORTED;; esac
         if [ "$use_lowdelay" = "yes" ]; then
-          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-qsv-ld.sh $dry_run $file $outprefix $nframes $std $b $tu $buffer_delay $options_qsv; log_err "ffmpeg qsv ld transcode"; fi
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-qsv-ld.sh $dry_run $file $outprefix $nframes $std $pix_fmt $b $tu $buffer_delay $options_qsv; log_err "ffmpeg qsv ld transcode"; fi
         else
-          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $b $tu $options_qsv; log_err "ffmpeg qsv cbr transcode"; fi
-          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $b $tu $options_qsv; log_err "ffmpeg qsv vbr transcode"; fi
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $pix_fmt $b $tu $options_qsv; log_err "ffmpeg qsv cbr transcode"; fi
+          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $nframes $std $pix_fmt $b $tu $options_qsv; log_err "ffmpeg qsv vbr transcode"; fi
         fi
       fi
       if [ "$skip_msdk" = "no" ]; then
         raw=$(get_raw_stream_info $file)
         if [ -n "$raw" ]; then
           if [ "$use_lowdelay" = "yes" ]; then
-            if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_sample-multi-transcode-ld.sh $dry_run $file $outprefix $nframes $raw $b $tu $buffer_delay $options_smt; log_err "smt ld transcode"; fi
+            if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_sample-multi-transcode-ld.sh $dry_run $file $outprefix $nframes $raw $pix_fmt $b $tu $buffer_delay $options_smt; log_err "smt ld transcode"; fi
           else
-            if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $raw $b $tu $options_smt; log_err "smt cbr transcode"; fi
-            if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $raw $b $tu $options_smt; log_err "smt vbr transcode"; fi
+            if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $raw $pix_fmt $b $tu $options_smt; log_err "smt cbr transcode"; fi
+            if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $nframes $raw $pix_fmt $b $tu $options_smt; log_err "smt vbr transcode"; fi
           fi
         fi
       fi
     else
+      # raw yuv input
       if [ "$skip_reference" = "no" ] && [ "$use_gold_ref" = "no" ]; then
         if [ "$use_lowdelay" = "yes" ]; then
-          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-ref-ld.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $buffer_delay $options_ref; log_err "ffmpeg ref ld encode"; fi
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-ref-ld.sh $dry_run $file $outprefix $width $height $nframes $framerate $pix_fmt $b $buffer_delay $options_ref; log_err "ffmpeg ref ld encode"; fi
         else
-          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $options_ref; log_err "ffmpeg ref cbr encode"; fi
-          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $options_ref; log_err "ffmpeg ref vbr encode"; fi
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $pix_fmt $b $options_ref; log_err "ffmpeg ref cbr encode"; fi
+          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-ref.sh $dry_run $file $outprefix $width $height $nframes $framerate $pix_fmt $b $options_ref; log_err "ffmpeg ref vbr encode"; fi
         fi
       fi
       if [ "$skip_ffmpeg" = "no" ]; then
         if [ "$use_lowdelay" = "yes" ]; then
-          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-qsv-ld.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $buffer_delay $options_qsv; log_err "ffmpeg qsv ld encode"; fi
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-qsv-ld.sh $dry_run $file $outprefix $width $height $nframes $framerate $pix_fmt $b $tu $buffer_delay $options_qsv; log_err "ffmpeg qsv ld encode"; fi
         else
-          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_qsv; log_err "ffmpeg qsv cbr encode"; fi
-          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_qsv; log_err "ffmpeg qsv vbr encode"; fi
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $pix_fmt $b $tu $options_qsv; log_err "ffmpeg qsv cbr encode"; fi
+          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_ffmpeg-qsv.sh $dry_run $file $outprefix $width $height $nframes $framerate $pix_fmt $b $tu $options_qsv; log_err "ffmpeg qsv vbr encode"; fi
         fi
       fi
       if [ "$skip_msdk" = "no" ]; then
         if [ "$use_lowdelay" = "yes" ]; then
-          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_sample-multi-transcode-ld.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $buffer_delay $options_smt; log_err "smt ld encode"; fi
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_sample-multi-transcode-ld.sh $dry_run $file $outprefix $width $height $nframes $framerate $pix_fmt $b $tu $buffer_delay $options_smt; log_err "smt ld encode"; fi
         else
-          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_smt; log_err "smt cbr encode"; fi
-          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $width $height $nframes $framerate $b $tu $options_smt; log_err "smt vbr encode"; fi
+          if [ "$skip_cbr" = "no" ]; then $path/$codec/run_cbr_sample-multi-transcode.sh $dry_run $file $outprefix $width $height $nframes $framerate $pix_fmt $b $tu $options_smt; log_err "smt cbr encode"; fi
+          if [ "$skip_vbr" = "no" ]; then $path/$codec/run_vbr_sample-multi-transcode.sh $dry_run $file $outprefix $width $height $nframes $framerate $pix_fmt $b $tu $options_smt; log_err "smt vbr encode"; fi
         fi
       fi
     fi
@@ -1193,7 +1230,7 @@ if [ "$skip_metrics" = "no" ]; then
         out=${outprefix}_${b}Mbps_${rc}_${apps[i]}.$ext
         [[ ! -f $out ]] && continue
         if [ "$is_yuv" = "yes" ]; then
-          rawvideo="-f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate"
+          rawvideo="-f rawvideo -pix_fmt ${pix_fmt} -s:v ${width}x${height} -r $framerate"
         fi
 
         metrics=""

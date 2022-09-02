@@ -34,12 +34,21 @@ if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
   shift
   framerate=$1
   shift
-  std="i420"
-  rawvideo="-w $width -h $height -override_encoder_framerate $framerate"
+  format=$1
+  shift
+  if [[ "$format" = "p010le" ]]; then
+    std="p010"
+    rawvideo="-msb10 -w $width -h $height -override_encoder_framerate $framerate"
+  else
+    std="i420"
+    rawvideo="-w $width -h $height -override_encoder_framerate $framerate"
+  fi
 else
   nframes=$1
   shift
   std=$1
+  shift
+  format=$1
   shift
 fi
 bitrate_Mbps=$1
