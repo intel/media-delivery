@@ -30,6 +30,10 @@ Key topics we are covering:
 * Quality and Performance measuring infrastructure for data collection
 * Intel GPU Performance monitoring
 
+Review quality and performance benchmark data for specific platforms `here <doc/benchmarks/readme.rst>`_:
+
+* `Accelerating media delivery with Intel® Iris® Xe MAX graphics <doc/benchmarks/intel-iris-xe-max-graphics/intel-iris-xe-max-graphics.md>`_
+
 Explore more containers, models and tools on the
 `Intel® oneContainer Portal <https://software.intel.com/containers>`_.
 
@@ -107,7 +111,7 @@ to interact with the service(s) running inside the container:
 .. _Intel® Iris® Xe MAX Graphics: https://www.intel.com/content/www/us/en/products/discrete-gpus/iris-xe-max.html
 
 Contributing
------------
+------------
 
 Feedback and contributions are welcome. Please, help improve the project by submitting
 issues and pull requests with fixes.
