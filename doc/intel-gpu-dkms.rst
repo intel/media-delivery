@@ -4,7 +4,7 @@ Intel GPU DKMS
 It is required to install special Kernel Mode Drivers (KMD) to enable support of some new Intel GPUs.
 This article describes setup of these KMDs targeting the following GPUs:
 
-* Intel® Data Center GPU Flex Series (formerly known as Arctic Sound-M)
+* Intel® Data Center GPU Flex Series (products formerly Arctic Sound)
 
 Overall, the following should be taken care of:
 
@@ -87,7 +87,7 @@ Once done, reboot::
 
   sudo reboot
 
-That's it. Now you should be able to use Intel GPU targeted by these DKMS packages (DG2 or ATS-M).
+That's it. Now you should be able to use Intel GPU targeted by these DKMS packages.
 
 How to Update
 -------------
@@ -116,7 +116,7 @@ verify that DKMS driver backports got recognized and loaded::
   [    5.685969] [drm] I915 BACKPORTED INIT
   [    9.013124] [drm] I915 SPI BACKPORTED INIT
 
-Then, check that GPU stack got initialized for your platform (DG2 or ATS-M)::
+Then, check that GPU stack got initialized for your platform::
 
   $ dmesg | grep drm
   [    5.685969] [drm] I915 BACKPORTED INIT

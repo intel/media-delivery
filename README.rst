@@ -39,7 +39,7 @@ Media Delivery Software Stack requires Gen8+ Intel integrated or discrete GPU.
 
 Active validation is done for the following GPU products:
 
-* Intel® Data Center GPU Flex Series (formerly known as Arctic Sound-M)
+* Intel® Data Center GPU Flex Series (products formerly Arctic Sound)
 
 Media Delivery Software Stack is supported in maintanence mode for other GPU products.
 
@@ -81,7 +81,7 @@ also require special host setup instruction. See table below.
 | `docker/ubuntu20.04/selfbuild/Dockerfile`_         | Self-built from open source            | Gen8+ (legacy upstreamed platforms), such as   | Use any Linux distribution which           |
 |                                                    |                                        | SKL, KBL, CFL, TGL, DG1, etc.                  | supports required platform                 |
 +----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-| `docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile`_ | Self-built from open source            | DG2, ATS-M                                     | `Intel GPU DKMS <doc/intel-gpu-dkms.rst>`_ |
+| `docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile`_ | Self-built from open source            | Alchemist, ATS-M                               | `Intel GPU DKMS <doc/intel-gpu-dkms.rst>`_ |
 +----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
 | `docker/ubuntu20.04/native/Dockerfile`_            | Ubuntu 20.04                           | Gen8+, check Ubuntu 20.04 documentation        | Use any Linux distribution which           |
 |                                                    |                                        |                                                | supports required platform                 |
