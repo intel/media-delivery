@@ -11,7 +11,7 @@ on:
     - master
     paths-ignore:
     - '.github/workflows/**'
-    - '!.github/workflows/cdn-selfbuild.yml'
+    - '!.github/workflows/cdn-selfbuild-prodkmd.yml'
     - '!.github/workflows/build.yml'
     - '!.github/workflows/test.yml'
     - '!.github/workflows/deploy.yml'
@@ -20,7 +20,7 @@ on:
     - master
     paths-ignore:
     - '.github/workflows/**'
-    - '!.github/workflows/cdn-selfbuild.yml'
+    - '!.github/workflows/cdn-selfbuild-prodkmd.yml'
     - '!.github/workflows/build.yml'
     - '!.github/workflows/test.yml'
     - '!.github/workflows/deploy.yml'
