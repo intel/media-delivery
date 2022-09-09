@@ -105,6 +105,8 @@ def main():
     parser.add_argument('--use-vdenc', '--use_vdenc', action='store_true', default=False,help='Enabling Fixed Function VDENC and LowPower mode')
     parser.add_argument('--use-enctools', '--use_enctools', action='store_true', default=False, help='Enabling Enc tools default config file ')
     parser.add_argument('--enctools-lad', '--enctools_lad', help='Custom Look Ahead Depth , Default=8')
+    parser.add_argument('--tu', '--tu', help='Custom Target Usage preset , Default=medium')
+    parser.add_argument('--async-depth', '--async_depth', help='Custom Async depth , Default depends on resoultion')
     parser.add_argument('-c', '--codec', help='To choose Encoder Codec type, AVC or HEVC, Default will execute all')
     parser.add_argument('-s', '--startStreams', help='To set starting of multi stream performance measurement, e.g. --startStreams 720p:8,1080p:5,2160p:2 or all:2, Default=all:1')
     parser.add_argument('-e', '--endStreams', help='To set ending number of multi stream performance measurement, e.g. --endStreams 5, Default=NoLimit')
@@ -609,16 +611,26 @@ def main():
                         else:
                             break
 
+                        async_default = '2'
+                        if performance_object_list[curContent].encode_bitrate == "hd_bitrate" or performance_object_list[curContent].encode_bitrate == "sd_bitrate" :
+                            async_default = '1' 
                         if (ffmpeg_mode):
                             transcode_input_clip = "-i " + content_path + key
                             if not no_fps_limit:
                                 transcode_input_clip = "-re " + transcode_input_clip
 
                             dispatch_cmdline = dispatch_cmdline.replace("-i <>", transcode_input_clip)
+                            dispatch_cmdline = dispatch_cmdline.replace("-preset <>", "-preset "+ (ARGS.tu if ARGS.tu else 'veryfast' ))
+                            dispatch_cmdline = dispatch_cmdline.replace("-async_depth <>", "-async_depth "+ (ARGS.async_depth if ARGS.async_depth else async_default ))
                             if ARGS.use_enctools:
                                 dispatch_cmdline = dispatch_cmdline.replace("-look_ahead_depth <>", "-look_ahead_depth "+ (ARGS.enctools_lad if ARGS.enctools_lad else '8' ))
                                 dispatch_cmdline = dispatch_cmdline.replace("-extra_hw_frames <>", "-extra_hw_frames "+ (ARGS.enctools_lad if ARGS.enctools_lad else '8' ) )
+                                
                         elif (sequence_mode == "TRANSCODE"): # SMT Transcode
+                            dict_tu = {'veryslow' : '1','slower': '2','slow': '3','medium': '4','fast': '5','faster': '6','veryfast': '7'}
+                            
+                            dispatch_cmdline = dispatch_cmdline.replace("-u <>", "-u "+ (dict_tu[ARGS.tu] if ARGS.tu else '7' ))
+                            dispatch_cmdline = dispatch_cmdline.replace("-async <>", "-async "+ (ARGS.async_depth if ARGS.async_depth else async_default ))
                             if ARGS.use_enctools:
                                 dispatch_cmdline = dispatch_cmdline.replace("-lad <>", "-lad "+ (ARGS.enctools_lad if ARGS.enctools_lad else '8' ) )
                             if performance_object_list[curContent].codec == "hevc":
