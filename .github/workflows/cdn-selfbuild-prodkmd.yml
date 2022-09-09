@@ -67,7 +67,7 @@ jobs:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       image: ${{needs.build.outputs.image}}
-      gta-asset-name: selfbuild
+      gta-asset-name: selfbuild-prodkmd
 
   deploy-release:
     if: github.event_name == 'workflow_dispatch'
