@@ -106,7 +106,7 @@ to interact with the service(s) running inside the container:
 
 .. _Intel® Iris® Xe MAX Graphics: https://www.intel.com/content/www/us/en/products/discrete-gpus/iris-xe-max.html
 
-Contibuting
+Contributing
 -----------
 
 Feedback and contributions are welcome. Please, help improve the project by submitting
