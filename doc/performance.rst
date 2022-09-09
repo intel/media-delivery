@@ -206,14 +206,14 @@ To achieve better performance with Intel GPU H.264/AVC encoder running EncTools 
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
-    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
+    -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth $async_depth \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
     -vsync passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
-  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 \
+  sample_multi_transcode -i::${inputcodec} $input -hw -async $async_depth \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -vbr -n $numframes \
     -lowpower:${LOWPOWER:-on} -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 5 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
@@ -258,13 +258,13 @@ Example command lines:
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
-    -frames:v $numframes -c:v h264_qsv -preset h264_qsv -profile:v high -async_depth 1 \
+    -frames:v $numframes -c:v h264_qsv -preset h264_qsv -profile:v high -async_depth $async_depth \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
     -vsync passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
-  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+  sample_multi_transcode -i::${inputcodec} $input -hw -async $async_depth -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-off} \
     -extbrc::implicit -ExtBrcAdaptiveLTR:on -dist 8 -num_ref 5 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -MemType::system -hrd $(($bitrateKb / 2)) \
@@ -318,14 +318,14 @@ Example command lines:
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
-    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth $async_depth \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
     -vsync passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
-  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+  sample_multi_transcode -i::${inputcodec} $input -hw -async $async_depth -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-on} \
     -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
@@ -369,13 +369,13 @@ Example command lines:
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
-    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
+    -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth $async_depth \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
     -vsync passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
-  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
+  sample_multi_transcode -i::${inputcodec} $input -hw -async $async_depth -device ${DEVICE:-/dev/dri/renderD128} \
     -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-off} \
     -extbrc::implicit -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off \
     -hrd $(($bitrateKb / 2)) -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) \
@@ -412,13 +412,13 @@ Example command lines:
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
-    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth $async_depth \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -g 256 \
     -vsync passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
-  sample_multi_transcode -i::$inputcodec $input -hw -async 1 \
+  sample_multi_transcode -i::$inputcodec $input -hw -async $async_depth \
     -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb \
     -vbr -n $numframes -bref -dist 8 -gop_size 256 -dist 8 -hrd $(($bitrateKb / 2)) \
     -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::av1 $output
