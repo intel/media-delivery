@@ -31,6 +31,23 @@ collect to assist in performance investigations and debug:
 With the `measure-perf <doc/man/measure-perf.asciidoc>` tool it is possible to
 to enable/disable some metrics collection during the measurement.
 
+We evaluate performance on the following streams:
+
+* https://repositories.intel.com/media/bbb_sunflower_1080p_60fps_4Mbps_38kframes.h264
+* https://repositories.intel.com/media/bbb_sunflower_1080p_60fps_4Mbps_38kframes.h265
+* https://repositories.intel.com/media/bbb_sunflower_1080p_60fps_4Mbps_38kframes_av1.ivf
+* https://repositories.intel.com/media/bbb_sunflower_2160p_60fps_8Mbps_38kframes.h264
+* https://repositories.intel.com/media/bbb_sunflower_2160p_60fps_8Mbps_38kframes.h265
+* https://repositories.intel.com/media/bbb_sunflower_2160p_60fps_8Mbps_38kframes_av1.ivf
+
+See the following files for attributions:
+
+* https://repositories.intel.com/media/license_bbb.txt
+
+To verify downloads, use:
+
+* https://repositories.intel.com/media/md5_checksum.txt
+
 Multi-Stream Performance
 ************************
 
