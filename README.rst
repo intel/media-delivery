@@ -32,6 +32,7 @@ Key topics we are covering:
 
 Review quality and performance benchmark data for specific platforms `here <doc/benchmarks/readme.rst>`_:
 
+* `Accelerating Media Delivery with Intel® Data Center GPU Flex Series <doc/benchmarks/intel-data-center-gpu-flex-series/intel-data-center-gpu-flex-series.rst>`_
 * `Accelerating media delivery with Intel® Iris® Xe MAX graphics <doc/benchmarks/intel-iris-xe-max-graphics/intel-iris-xe-max-graphics.md>`_
 
 Explore more containers, models and tools on the
@@ -418,7 +419,7 @@ Recommended coding options (High-quality and Performance)
 ---------------------------------------------------------
 
 Intel’s advanced software bitrate controller (dubbed “EncTools”) has been
-designed to boost GPU video quality for AVC, HEVC and (comming soon) AV1 using various
+designed to boost GPU video quality for AVC, HEVC and (coming soon) AV1 using various
 compression efficiency technologies and content adaptive quality optimization
 tools while at the same time having minimal impact on the coding performance
 (speed). EncTools technology includes tools such as adaptive pyramid quantization,
