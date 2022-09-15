@@ -109,6 +109,23 @@ to interact with the service(s) running inside the container:
 
 .. _Intel® Iris® Xe MAX Graphics: https://www.intel.com/content/www/us/en/products/discrete-gpus/iris-xe-max.html
 
+Virtualization
+--------------
+
+Intel GPUs support 2 types of Virtualization setup:
+
+* GPU Passthrough Virtualization
+
+* GPU SR-IOV Virtualization
+
+The first one, GPU Passthrough Virtualization, is a legacy Virtualization
+Technology which allows exclusive access to GPU from under Virtual Machine (VM).
+GPU SR-IOV Virtualization is a new technology available in modern
+Intel GPUs such as Intel® Data Center GPU Flex Series.
+
+For details on Intel GPU Virtualization setup, please, follow our
+`GPU Virtualization Guide <doc/virtualization.rst>`_.
+
 Contributing
 ------------
 
