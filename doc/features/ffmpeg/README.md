@@ -41,27 +41,40 @@ ffmpeg <...> -c:v mjpeg_qsv -global_quality $quality <...>
 ## Dynamic encoding settings
 
 FFmpeg QSV encoders support setting some encoding parameters dynamically. Refer to each encoder
-documentation for the list of supported settings. In this section we will just list most typical
-dynamic settings.
+documentation for the list of supported settings. In general, dynamic settings сan be divided
+into following categories:
 
-| Feature                             | Mode | QSV Encoders       |
-| ----------------------------------- | ---- | ------------------ |
-| Forced IDR                          |      | All, except mjpeg  |
-| `AV_FRAME_DATA_REGIONS_OF_INTEREST` |      | h264_qsv, hevc_qsv |
-| `AVCodecContext::b_quant_factor`    | CQP  | h264_qsv, hevc_qsv |
-| `AVCodecContext::b_quant_offset`    | CQP  | h264_qsv, hevc_qsv |
-| `AVCodecContext::global_quality`    | CQP  | h264_qsv, hevc_qsv |
-| `AVCodecContext::b_quant_factor`    | CQP  | h264_qsv, hevc_qsv |
-| `AVCodecContext::b_quant_offset`    | CQP  | h264_qsv, hevc_qsv |
+* Dynamic settings which can be set at a frame level via `AVFrame`
+* Dynamic settings which can be set at global context level ("Global" options)
+* Dynamic settings which can be set at private context level ("Custom" options)
 
-Some of these features might be used from ffmpeg command line, others require self-written application.
+Settings on `AVFrame` level might vary depending on the option. For example, to force IDR
+frame you need to set `AV_PICTURE_TYPE_I` in `AVFrame::pict_type` and make sure that forcing
+of IDR is enabled for QSV encoder on initialization stage.
 
-To force IDR frames you need to do 2 things:
+Settings at context level should be done in the following way:
 
-1. Request `AVFrame::pict_type == AV_PICTURE_TYPE_I` on the frame you want to make IDR
-2. Enable QSV encoder (on initialization stage) to actually force IDR on such frames
+```
+int set_parameter(AVCodecContext *avctx)
+{
+  AVDictionary *opts = NULL;
 
-As such, IDR frame insertion ffmpeg command line might look like (insert IDR every 50 frames):
+  av_dict_set(&opts, "key", "value", 0);
+
+  /* set common "Global" option */
+  if ((ret = av_opt_set_dict(avctx, &opts)) < 0)
+    goto fail;
+
+  /* set codec specific "Custom" option */
+  if ((ret = av_opt_set_dict(avctx->priv_data, &opts)) < 0)
+    goto fail;
+}
+```
+
+Some of the dynamic features may be triggered from the ffmpeg command line, others require
+self-written application.
+
+To encode IDR at every 50th frame:
 
     qsvcodec=h264_qsv|hevc_qsv
     ffmpeg <...> -force_key_frames 'expr:gte(n,n_forced*50)' -c:v $qsvcodec -forced_idr 1 -g 300 <...>
