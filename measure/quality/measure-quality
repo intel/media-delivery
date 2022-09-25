@@ -24,12 +24,12 @@ measure_quality=$0
 
 OPTIONS="w:h:f:o:"
 LONGOPTIONS="codec:,preset:,bitrates:,tu:,buffer-delay:,ref-preset:"
-LONGOPTIONS+=",width:,height:,fourcc:,framerate:,progressive,interlaced"
+LONGOPTIONS+=",width:,height:,framerate:,nframes:,enctools-lad:"
+LONGOPTIONS+=",outdir:,outprefix:,fourcc:,progressive,interlaced"
 LONGOPTIONS+=",skip-metrics,skip-psnr,skip-ssim,skip-ms-ssim,skip-vmaf"
 LONGOPTIONS+=",skip-encoding,skip-ffmpeg,skip-msdk,skip-cbr,skip-vbr"
 LONGOPTIONS+=",skip-reference,skip-bdrate,single-bdrate,use-vdenc,use-gold-ref"
-LONGOPTIONS+=",use-enctools,enctools-lad:,use-lowdelay,nframes:,dry-run"
-LONGOPTIONS+=",outdir:,outprefix:"
+LONGOPTIONS+=",use-enctools,use-lowdelay,dry-run"
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -38,6 +38,7 @@ fi
 
 eval set -- "$PARSED"
 
+# Set defaults
 errlog="error.log"
 bdr_limit=1000000
 width=0
@@ -54,7 +55,6 @@ tu=medium
 nframes=0
 dry_run=no
 enctools_lad=40
-buffer_delay=250 #250 milliseconds
 if [ -z "$ARTIFACTS" ]; then
   outdir="$HOME"
 else
@@ -81,6 +81,7 @@ use_gold_ref=no
 use_enctools=no
 use_lowdelay=no
 
+# set user defined options
 while true; do
     case "$1" in
         -w|--width)
@@ -242,8 +243,25 @@ function check_for() {
   fi
 }
 
+# set reference codec based on test codec
+if [ "$codec" = "AVC" ]; then
+  ref_codec=x264
+elif [ "$codec" = "HEVC" ]; then
+  ref_codec=x265
+elif [ "$codec" = "AV1" ]; then
+  ref_codec=x264
+else
+  echo "error: unsupported codec ${codec}" >&2
+  exit -1
+fi
+
+# set use-case
+[[ "$use_lowdelay" = "yes" ]] && use_case=LD || use_case=HQ
+
+# set reference codec preset
 if [ -z ${ref_preset} ]; then
-  [[ "$use_lowdelay" = "no" ]] && ref_preset=veryslow || ref_preset=medium
+  # set default preset to medium for all use-cases
+  ref_preset=medium
 else
   case ${ref_preset} in
     veryfast|faster|fast|medium|slow|slower|veryslow) ;;
@@ -254,18 +272,24 @@ else
   esac
 fi
 
+# make sure gold references are available for user selected reference codec/preset
 if [ "$use_gold_ref" = "yes" ]; then
-  valid=no
-  [[ "$use_lowdelay" = "no"  ]] && [[ "$ref_preset" = "veryslow" ]] && valid=yes
-  [[ "$use_lowdelay" = "yes" ]] && [[ "$ref_preset" = "medium"   ]] && valid=yes
-  if [ "$valid" = "no" ]; then
+  path=$(dirname $(readlink -f $0))
+  ref_path="$path/REF/${use_case}/${codec}/${ref_codec}-${ref_preset}"
+  if ! [ -e "$ref_path" ]; then
     echo "warning: turning off use of golden references for ${ref_preset} preset" >&2
     use_gold_ref=no
   fi
 fi
 
+# low delay use-case only tests CBR mode
 if [ "${use_lowdelay}" = "yes" ]; then
   skip_vbr=yes
+fi
+
+# set buffer delay (in ms) for low delay use-case
+if [ "${use_lowdelay}" = "yes" ]; then
+  [[ "$codec" = "AV1" ]] && buffer_delay=500 || buffer_delay=250
 fi
 
 check_for ffmpeg
@@ -362,7 +386,7 @@ function run() {
   else
     if [ -z $bitrates ]; then
       adjbr=yes
-      # adjusted bitrates for preset sequences with exceptional complaxity
+      # adjusted bitrates for preset sequences with exceptional complexity
       if [ "$prefix" = "CrowdRun_1080p" ] || [ "$prefix" = "ParkJoy_1080p" ]; then
         bitrates="15:20:25:30:35"
       elif [ "$prefix" = "CrowdRun_720p" ] || [ "$prefix" = "ParkJoy_720p" ]; then
@@ -386,16 +410,13 @@ function run() {
       fi
     fi
     $measure_quality \
-      --codec=$codec --preset=$preset --bitrates=$bitrates --tu=$tu \
-      --nframes=$nframes \
-      --width=$width --height=$height --fourcc=$fourcc --framerate=$framerate --outdir=$outdir \
-      --outprefix=$outprefix --buffer-delay=$buffer_delay --ref-preset=$ref_preset \
+      --codec=$codec --preset=$preset --bitrates=$bitrates --tu=$tu --buffer-delay=$buffer_delay --ref-preset=$ref_preset \
+      --width=$width --height=$height --framerate=$framerate --nframes=$nframes --enctools-lad $enctools_lad \
+      --outdir=$outdir --outprefix=$outprefix --fourcc=$fourcc \
       $(if_no $progressive "--interlaced") \
       $(if_yes $progressive "--progressive") \
-      $(if_yes $dry_run "--dry-run") \
       $(if_yes $skip_metrics "--skip-metrics") \
       $(if_yes $skip_psnr "--skip-psnr") \
-      $(if_yes $skip_ssim "--skip-ssim") \
       $(if_yes $skip_ssim "--skip-ssim") \
       $(if_yes $skip_msim "--skip-ms-ssim") \
       $(if_yes $skip_vmaf "--skip-vmaf") \
@@ -411,6 +432,7 @@ function run() {
       $(if_yes $use_gold_ref "--use-gold-ref") \
       $(if_yes $use_enctools "--use-enctools") \
       $(if_yes $use_lowdelay "--use-lowdelay") \
+      $(if_yes $dry_run "--dry-run") \
       -- \
       $stream
     set_err $?
@@ -571,7 +593,7 @@ function get_coding_commandline_options() {
       echo "error: invalid encoding options preset (default, best): $preset" >&2
       exit -1
     fi
-    options_ref+="-preset ${ref_preset}"
+    options_ref+="-preset ${ref_preset} -profile:v high"
   else
     echo "error: invalid codec (AVC|HEVC|AV1): $codec" >&2
     exit -1
@@ -1211,7 +1233,7 @@ if [ "$skip_bdrate" = "no" ] && [ "$dry_run" = "no" ]; then
       test_file=$outprefix.$codec.${rc,,}.$dapp.metrics
       ref_file=$outprefix.$codec.${rc,,}.ffmpeg-ref.metrics
       if [ "$use_gold_ref" = "yes" ]; then
-        [[ "$use_lowdelay" = "yes" ]] && ref_file=$path/REF/${codec}_LD/$ref_file || ref_file=$path/REF/$codec/$ref_file
+        ref_file=$ref_path/$ref_file
       fi
 
       # check requirements for bd-rate calculation
