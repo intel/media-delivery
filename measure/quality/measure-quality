@@ -545,8 +545,8 @@ function get_coding_commandline_options() {
   if [ "$codec" = "AVC" ]; then
     if [ "$preset" = "best" ]; then
       if [ "$use_lowdelay" = "yes" ]; then
-        options_qsv+="-extbrc 0 -bf 0 -refs 5 -g 9999"
-        options_smt+="-extbrc::off -num_ref 5 -gop_size 9999 -dist 1 -AdaptiveI:off -AdaptiveB:off -NalHrdConformance:on -VuiNalHrdParameters:on"
+        options_qsv+="-bf 0 -refs 5 -g 9999 -strict 1"
+        options_smt+="-dist 1 -num_ref 5 -gop_size 9999 -NalHrdConformance:on -VuiNalHrdParameters:on"
       else
         if [ "$use_enctools" = "yes" ]; then
           options_qsv+="-look_ahead_depth ${enctools_lad} -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1"
@@ -564,8 +564,8 @@ function get_coding_commandline_options() {
   elif [ "$codec" = "HEVC" ]; then
     if [ "$preset" = "best" ]; then
       if [ "$use_lowdelay" = "yes" ]; then
-        options_qsv+="-extbrc 0 -bf 0 -refs 4 -g 9999"
-        options_smt+="-extbrc::off -num_ref 4 -gop_size 9999 -dist 1 -AdaptiveI:off -AdaptiveB:off -NalHrdConformance:on -VuiNalHrdParameters:on"
+        options_qsv+="-bf 0 -refs 4 -g 9999 -strict 1"
+        options_smt+="-dist 1 -num_ref 4 -gop_size 9999 -NalHrdConformance:on -VuiNalHrdParameters:on"
       else
         if [ "$use_enctools" = "yes" ]; then
           options_qsv+="-look_ahead_depth ${enctools_lad} -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1"
@@ -584,7 +584,7 @@ function get_coding_commandline_options() {
     if [ "$preset" = "best" ]; then
       if [ "$use_lowdelay" = "yes" ]; then
         options_qsv+="-bf 0 -g 9999"
-        options_smt+="-gop_size 9999 -dist 1"
+        options_smt+="-dist 1 -gop_size 9999"
       else
         options_qsv+="-b_strategy 1 -bf 7 -g 256"
         options_smt+="-bref -dist 8 -gop_size 256 -MemType::system"
