@@ -39,10 +39,10 @@ using both ffmpeg-qsv and Media SDK Sample Multi-Transcode. On the other hand, a
 encapsulated in a container (e.g. MP4, TS, etc.) will be measured only using
 ffmpeg-qsv (since Sample Multi-Transcode does not support containers).
 
-3. Run quality measure for the pre-defined stream
+3. Run quality measure for the pre-defined sequence
 +
 ------------
-    measure quality <pre-defined-stream.yuv>
+    measure quality <pre-defined-sequence.yuv>
 ------------
 +
 This is a simplified variant of the previous mode. If the stream name matches one of the
@@ -119,7 +119,7 @@ given in the following tables:
 | other | 1, 1.5, 3, 4.5, 7.5
 |===
 
-Mind that script uses the following bitrates for some pre-defined streams with
+Mind that script uses the following bitrates for some pre-defined sequences with
 exceptional complexity:
 
 * In case of AVC encoding:
@@ -171,6 +171,57 @@ All adjusted bitrates are the same for low delay setting except for the followin
 | DinnerScene_1920x1080_60.yuv | 1, 1.5, 3, 4.5, 7.5
 | crowd_run_1280x720_50.yuv | 3, 4.5, 7.5, 10, 12
 | park_joy_1280x720_50.yuv | 3, 4.5, 7.5, 10, 12
+|===
+
+Note that for predefined sequences we have included golden reference metrics to remove the burden of
+computing references for BD-rate computation on the fly.
+
+* The list of golden references:
+|===
+| Use case | Codec | Golden Reference | Trigger
+
+.6+|High Quality
+
+.2+|AVC
+
+|x264-medium (default)
+|--use-gold-ref
+|x264-veryslow
+|--use-gold-ref --ref-preset veryslow
+
+.2+|HEVC
+
+|x265-medium (default)
+|--use-gold-ref
+|x265-veryslow
+|--use-gold-ref --ref-preset veryslow
+
+.2+|AV1
+
+|x264-medium (default)
+|--use-gold-ref
+|x264-veryslow
+|--use-gold-ref --ref-preset veryslow
+
+.4+|Low Delay
+
+|AVC
+
+|x264-medium-250ms (default)
+|--use-gold-ref
+
+|HEVC
+
+|x265-medium-250ms (default)
+|--use-gold-ref
+
+.2+|AV1
+
+|x264-medium-500ms (default)
+|--use-gold-ref
+|x264-medium-250ms
+|--use-gold-ref --buffer-delay 250
+
 |===
 
 
@@ -289,7 +340,8 @@ ENCODING OPTIONS
 	Sets a target usage preset (default: `medium`).
 
 --buffer-delay <int>::
-	Sets encoding buffer delay in milliseconds for low-delay mode (default: `250`).
+	Sets encoding buffer delay in milliseconds for low-delay mode (default: `250`
+        for AVC/HEVC and `500` for AV1).
 
 --enctools-lad <int>::
 	Sets the EncTools low power look ahead depth (default: `40`).
@@ -345,7 +397,7 @@ WORKING MODE OPTIONS
 	Force using low power VDEnc hardware mode (disabled by default).
 
 --use-gold-ref::
-	Use precomputed golden references for BD-rate computation (disabled by default).
+	Use precomputed golden references for BD-rate computation of predefined sequences (disabled by default).
 
 --use-enctools::
 	Use EncTools BRC for encoding (disabled by default). If enabled, it forces low power VDEnc hardware mode.
