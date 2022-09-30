@@ -272,16 +272,6 @@ else
   esac
 fi
 
-# make sure gold references are available for user selected reference codec/preset
-if [ "$use_gold_ref" = "yes" ]; then
-  path=$(dirname $(readlink -f $0))
-  ref_path="$path/REF/${use_case}/${codec}/${ref_codec}-${ref_preset}"
-  if ! [ -e "$ref_path" ]; then
-    echo "warning: turning off use of golden references for ${ref_preset} preset" >&2
-    use_gold_ref=no
-  fi
-fi
-
 # low delay use-case only tests CBR mode
 if [ "${use_lowdelay}" = "yes" ]; then
   skip_vbr=yes
@@ -289,7 +279,23 @@ fi
 
 # set buffer delay (in ms) for low delay use-case
 if [ "${use_lowdelay}" = "yes" ]; then
-  [[ "$codec" = "AV1" ]] && buffer_delay=500 || buffer_delay=250
+  if [ -z ${buffer_delay} ]; then
+    [[ "$codec" = "AV1" ]] && buffer_delay=500 || buffer_delay=250
+  fi
+  ref_ext="-${buffer_delay}ms"
+else
+  echo "warning: buffer delay is only available with --use-lowdelay" >&2
+  unset buffer_delay
+fi
+
+# make sure gold references are available for user selected reference codec/preset
+if [ "$use_gold_ref" = "yes" ]; then
+  path=$(dirname $(readlink -f $0))
+  ref_path="$path/REF/${use_case}/${codec}/${ref_codec}-${ref_preset}${ref_ext}"
+  if ! [ -e "$ref_path" ]; then
+    echo "warning: golden references not available for the selected preset" >&2
+    use_gold_ref=no
+  fi
 fi
 
 check_for ffmpeg
@@ -397,7 +403,11 @@ function run() {
         fi
       elif [ "$prefix" = "DinnerScene_1080p" ]; then
         if [ "$use_lowdelay" = "yes" ]; then
-          bitrates="1:1.5:3:4.5:7.5"
+          if [ "$codec" = "AV1" ]; then
+            bitrates="1:1.5:7:11:17"
+          else
+            bitrates="1:1.5:3:4.5:7.5"
+          fi
         else
           if [ "$codec" = "AVC" ]; then
             bitrates="1:1.5:2:3:4"
