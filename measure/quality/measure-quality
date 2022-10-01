@@ -417,8 +417,25 @@ function run() {
         fi
       elif [ "$prefix" = "Sintel_trailer_1080p" ]; then
         bitrates="0.5:1:2:6:9"
+      elif [ "$prefix" = "Bunny_1080p" ]; then
+	if [ "$use_lowdelay" = "yes" ] && [ "$codec" = "AV1" ]; then
+          bitrates="8:9:10:11:12"
+        fi
+      elif [ "$prefix" = "CSGO_1080p" ]; then
+        if [ "$use_lowdelay" = "yes" ] && [ "$codec" = "AV1" ]; then
+    	  bitrates="1.5:2:3:9:15"
+	fi
+      elif [ "$prefix" = "Kimono_1080p" ]; then
+        if [ "$use_lowdelay" = "yes" ] && [ "$codec" = "HEVC" ]; then
+          bitrates="2:3.5:6:9:15"
+        fi
+      elif [ "$prefix" = "RedKayak_1080p" ]; then
+        if [ "$use_lowdelay" = "yes" ] && [ "$codec" = "HEVC" ]; then
+          bitrates="9:12:15:18:22"
+        fi
       fi
     fi
+
     $measure_quality \
       --codec=$codec --preset=$preset --bitrates=$bitrates --tu=$tu --buffer-delay=$buffer_delay --ref-preset=$ref_preset \
       --width=$width --height=$height --framerate=$framerate --nframes=$nframes --enctools-lad $enctools_lad \
@@ -1209,11 +1226,11 @@ if [ "$skip_metrics" = "no" ]; then
 
         if [ "$dry_run" = "no" ]; then
           # calculate bitrate in kbps
-          b=$(stat -c %s $out)                         # filesize
-          b=$(python3 -c 'print('$b' * 8)')            # filesize in bits
-          b=$(python3 -c 'print('$b' / '$nframes')')   # bits per frame
-          b=$(python3 -c 'print('$b' * '$framerate')') # bps
-          b=$(python3 -c 'print('$b' / 1000)')         # kbps
+          b=$(stat -c %s $out)                           # filesize
+          b=$(python3 -c 'print('$b' * 8)')              # filesize in bits
+          b=$(python3 -c 'print('$b' / '$nframes')')     # bits per frame
+          b=$(python3 -c 'print('$b' * '$framerate')')   # bps
+	  b=$(python3 -c 'print(round('$b' / 1000, 4))') # kbps
 
           metrics="$out:$b"
           [[ "$skip_vmaf" = "no" ]] && vmaf=$(cat /tmp/out.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["pooled_metrics"]["vmaf"]["mean"])')
