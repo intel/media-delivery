@@ -236,13 +236,14 @@ For more details about testing methodology in case of Random Access encoding, ch
 
 .. image:: images/AVC_HD_Quality.png
 
-**Caption:** These charts illustrate quality savings as a percent of bitrate saved
-for 8-bit 420 720p and 1080p compressed video streams. Bitrate savings are computed
+**Caption:** These charts illustrate quality assessment of our Intel® Data Center
+GPU Flex Series encoders (in random access use case) expressed as a percent of bitrate
+saved for 8-bit 420 720p and 1080p compressed video streams. Bitrate savings are computed
 as BDRATE (using piecewise linear approach). Each point on the chart is the average
 BDRATE computed across 27 standard short sequences generated in both CBR and VBR.
 The objective visual quality metric used in the BDRATE calculation is Luma PSNR,
-averaged across frames. BDRATE is calculated using baselines of x264 for AVC and AV1
-or x265 medium for HEVC.
+averaged across frames. BDRATE is calculated using baselines of x264 medium for AVC
+and AV1 or x265 medium for HEVC.
 
 .. image:: images/HEVC_HD_Quality_SCurve.png
 
@@ -250,8 +251,10 @@ or x265 medium for HEVC.
 
 .. image:: images/AVC_HD_Quality_SCurve.png
 
-**Caption:** These charts use the same approach but illustrates the consistent
-average bitrate savings of the Intel encoders.
+**Caption:** Using the aforementioned methodology for bitrate savings assessment,
+the above charts show bitrate savings for individual test sequences with respect to
+the reference. Bitrate savings S-curves for Quality and Balanced random access modes
+are shown for the Intel® Data Center GPU Flex Series encoders across different content.
 
 Low Delay Encoding
 ~~~~~~~~~~~~~~~~~~
@@ -265,19 +268,20 @@ For more details about testing methodology in case of Low Delay encoding, check
 
 .. image:: images/AVC_LD_Quality.png
 
-**Caption:** These charts illustrate quality savings as a percent of bitrate saved
-for 8-bit 420 720p and 1080p compressed video streams. Bitrate savings are computed
+**Caption:** These charts illustrate quality assessment of our Intel® Data Center
+GPU Flex Series encoders (in low delay use case) expressed as a percent of bitrate
+saved for 8-bit 420 720p and 1080p compressed video streams. Bitrate savings are computed
 as BDRATE (using piecewise linear approach). Each point on the chart is the average
 BDRATE computed across 27 standard short sequences generated in both CBR and VBR.
 The objective visual quality metric used in the BDRATE calculation is Luma PSNR,
-averaged across frames. BDRATE is calculated using baselines of x264 for AVC and AV1
+averaged across frames. BDRATE is calculated using baselines of x264 medium for AVC and AV1
 or x265 medium for HEVC.
 
 .. image:: images/AV1_AVC_LD_Quality_Comparison.png
 
 **Caption:** This chart uses the same approach but illustrates the consistent
 average bitrate savings of the Intel AV1 encoder over (Intel) AVC and software
-x264* encoders.
+x264 encoder with medium preset and tuned for low delay use case.
 
 .. image:: images/HEVC_LD_Quality_SCurve.png
 
@@ -285,16 +289,18 @@ x264* encoders.
 
 .. image:: images/AVC_LD_Quality_SCurve.png
 
-**Caption:** These charts use the same approach but illustrates the consistent
-average bitrate savings of the Intel encoders.
+**Caption:** Using the aforementioned methodology for bitrate savings assessment,
+the above charts show bitrate savings for individual test sequences with respect to
+the reference. Bitrate savings S-curves for Quality and Balanced low delay modes are
+shown for the the Intel® Data Center GPU Flex Series encoders across different content.
 
 Recommended coding options (High-quality and Performance)
 ---------------------------------------------------------
 
-Bwlow we will provide command line recommendations for ffmpeg transcoding in
+Below we will provide command line recommendations for ffmpeg transcoding in
 Random Access and Low Delay modes.
 
-For more details on ffmpeg-qsv supported features, see `ffmpeg-qsv capabilites <../../features/ffmpeg#readme>`_.
+For more details on ffmpeg-qsv supported features, see `ffmpeg-qsv capabilities <../../features/ffmpeg#readme>`_.
 
 For more information on how to engage with Intel GPU encoding, decoding and transcoding
 as well as deal with multiple GPUs, please refer to
@@ -436,7 +442,7 @@ Intel® Xeon® Gold 6336Y Processor @ 2.4GHz, 1 node, 2 sockets, 24 cores/socket
 1024GB 32-ch 3200 MT/sec, Intel Turbo Boost enabled, Intel Hyper Threading enabled,
 BIOS: 0020P41_CoyotePass_LBG_ICX_UpdateCapsule_prd.bin. Intel® Data Center GPU Flex Series 140,
 ATS_M75_128_B0_ES_023_22WW29_03_GS1792_PC9707A_OP1051_ECC_ON_GFX2267.bin,
-2 devices per-card, both used to compute performance (stream densitry). N concurrent sessions’
+2 devices per-card, both used to compute performance (stream density). N concurrent sessions’
 average fps used for performance stream density report. Data collected on PVT card < 65C Temperature.
 Ubuntu 20.04 LTS, linux-image-unsigned-5.14.0-1045-oem kernel. Commercial products may operate
 at higher or lower frequency.
