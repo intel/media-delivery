@@ -51,12 +51,41 @@ Media Delivery Software Stack is supported in maintanence mode for other GPU pro
 Build and Setup
 ---------------
 
-Each sample is available in a form of `Docker <https://docker.com>`_ container
-which you need to build locally. Please, use Linux distro for the build and
-Docker version 17.05 or later (see `install instructions <https://docs.docker.com/install/>`_).
+Media Delivery Software Stack provides samples for Linux operating systems.
 
-To build default sample (`CDN`_) targeting Gen8+ legacy upstreamed platforms via stack
-self-built from open source projects, run::
+There are few dockerfiles you can use to build samples. They differ
+by versions and origins of the included Intel media stack components. Some
+versions of media stack require special setup for the host.
+
+To setup Media Delivery Software Stack for your GPU refer to below table. First,
+make sure to setup host system appropiately to be able to access desired Intel GPU.
+
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
+| Dockerfile                                         | Intel media stack origin               | Supported Intel GPUs                           | Host setup instructions                    |
++====================================================+========================================+================================================+============================================+
+| `docker/ubuntu20.04/selfbuild/Dockerfile`_         | Self-built from open source            | Gen8+ (legacy upstreamed platforms), such as   | Use any Linux distribution which           |
+|                                                    |                                        | SKL, KBL, CFL, TGL, DG1, etc.                  | supports required platform                 |
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
+| `docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile`_ | Self-built from open source            | Alchemist, ATS-M                               | `Intel GPU DKMS <doc/intel-gpu-dkms.rst>`_ |
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
+| `docker/ubuntu20.04/native/Dockerfile`_            | Ubuntu 20.04                           | Gen8+, check Ubuntu 20.04 documentation        | Use any Linux distribution which           |
+|                                                    |                                        |                                                | supports required platform                 |
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
+| `docker/ubuntu20.04/intel-gfx/Dockerfile`_         | Custom, specified via                  | Depends on the custom stack. Contact supplier.                                              |
+|                                                    | ``--build-arg INTEL_GFX_APT_REPO=...`` |                                                                                             |
++----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
+
+Once host is setup to access GPU, make sure to install docker engine::
+
+  # If you run Ubuntu 20.04 on your host:
+  apt-get install docker.io
+
+You might need to configure proxies for docker daemon, rever to https://docs.docker.com/config/daemon/systemd/. 
+Alternatively, you can use Docker CE engine instead. Please make sure to use
+version 17.05 or later and follow `install instructions <https://docs.docker.com/install/>`_.
+
+After docker got setup clone Media Delivery repository. To build default sample (`CDN`_)
+targeting Gen8+ legacy upstreamed platforms via stack self-built from open source projects, run::
 
   docker build \
     $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
@@ -74,26 +103,6 @@ To build sample targeting DG2/ATS-M stack self-built from open source projects, 
     --file docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile \
     --tag intel-media-delivery \
     .
-
-There are few dockerfiles you can use to build samples. They differ
-by origin of the Intel media stack components included into the docker image which implies
-which Intel GPUs and media codec features will be supported. Some media stacks might
-also require special host setup instruction. See table below.
-
-+----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-| Dockerfile                                         | Intel media stack origin               | Supported Intel GPUs                           | Host setup instructions                    |
-+====================================================+========================================+================================================+============================================+
-| `docker/ubuntu20.04/selfbuild/Dockerfile`_         | Self-built from open source            | Gen8+ (legacy upstreamed platforms), such as   | Use any Linux distribution which           |
-|                                                    |                                        | SKL, KBL, CFL, TGL, DG1, etc.                  | supports required platform                 |
-+----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-| `docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile`_ | Self-built from open source            | Alchemist, ATS-M                               | `Intel GPU DKMS <doc/intel-gpu-dkms.rst>`_ |
-+----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-| `docker/ubuntu20.04/native/Dockerfile`_            | Ubuntu 20.04                           | Gen8+, check Ubuntu 20.04 documentation        | Use any Linux distribution which           |
-|                                                    |                                        |                                                | supports required platform                 |
-+----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
-| `docker/ubuntu20.04/intel-gfx/Dockerfile`_         | Custom, specified via                  | Depends on the custom stack. Contact supplier.                                              |
-|                                                    | ``--build-arg INTEL_GFX_APT_REPO=...`` |                                                                                             |
-+----------------------------------------------------+----------------------------------------+------------------------------------------------+--------------------------------------------+
 
 To use some of the examples below you might wish to install the following tools on your
 host (or some other system capable of reaching the container over network) to be able
