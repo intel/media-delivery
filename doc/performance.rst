@@ -3,6 +3,12 @@ Video Performance
 
 .. contents::
 
+Video Performance Benchmark Data
+--------------------------------
+
+* `Benchmark data for Intel® Data Center GPU Flex Series <benchmarks/intel-data-center-gpu-flex-series/intel-data-center-gpu-flex-series.rst>`_
+* `Benchmark data for Intel® Iris® Xe MAX graphics <benchmarks/intel-iris-xe-max-graphics/intel-iris-xe-max-graphics.md>`_
+
 Video Performance Assessment Methodology
 ----------------------------------------
 
