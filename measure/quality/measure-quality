@@ -615,8 +615,13 @@ function get_coding_commandline_options() {
         options_qsv+="-bf 0 -g 9999"
         options_smt+="-dist 1 -gop_size 9999"
       else
-        options_qsv+="-b_strategy 1 -bf 7 -g 256"
-        options_smt+="-bref -dist 8 -gop_size 256 -MemType::system"
+        if [ "$use_enctools" = "yes" ]; then
+          options_qsv+="-look_ahead_depth ${enctools_lad} -extbrc 1 -adaptive_i 1 -adaptive_b 1 -b_strategy 1 -bf 7 -g 256 -strict -1"
+          options_smt+="-lad ${enctools_lad} -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -bref -dist 8 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
+        else
+          options_qsv+="-b_strategy 1 -bf 7 -g 256"
+          options_smt+="-bref -dist 8 -gop_size 256 -MemType::system"
+        fi
       fi
     elif [[ ! $preset =~ default ]]; then
       echo "error: invalid encoding options preset (default, best): $preset" >&2
