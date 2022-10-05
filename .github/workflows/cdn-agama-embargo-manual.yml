@@ -17,8 +17,13 @@ jobs:
       run: |
         echo "::notice title=agama.version::${{github.event.inputs.agama_embargo_version}}"
         FLAVOR=${{github.event.inputs.agama_embargo_version}}
-        A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/")
-        B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/")
+        if [[ $FLAVOR = hotfix_* ]]; then
+          B=${FLAVOR%.*}
+          A=$(echo ${B: 7} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/")
+        else
+          A=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\1/")
+          B=$(echo ${FLAVOR} | sed -E "s/(.*)-ci-(.*)-[0-9]+$/\2/")
+        fi
         echo "::set-output name=repo::untested/main/$A/$B/focal"
 
   build:
