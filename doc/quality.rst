@@ -335,7 +335,7 @@ enabled by default).
 +------------+----------+-----------+---------+-----------+-------------+------------+------------+
 | AV1        | ExtBRC   | |cross|   | |na|                                                        |
 +            +----------+-----------+                                                             +
-|            | EncTools | |cross|   |                                                             |
+|            | EncTools | |check|   |                                                             |
 +            +----------+-----------+                                                             +
 |            | HW BRC   | |check|   |                                                             |
 +------------+----------+-----------+---------+-----------+-------------+------------+------------+
@@ -807,6 +807,125 @@ Example command lines:
 
 AV1
 ---
+
+EncTools
+********
+
+To achieve better quality with Intel GPU AV1 encoder running EncTools BRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * bitrate))``           | n2.8           | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * bitrate))``                         | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * bitrate))``               | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -minrate $bitrate -maxrate $bitrate`` | n2.8           | This triggers CBR.                                                       |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((2 * bitrate))``                         | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 2 seconds is recommended    |
+|                                                       |                | for CBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $bitrate``                       | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| CBR & VBR common settings                                                                                                                         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extbrc 1 -look_ahead_depth $lad``                  | n3.0           | This enables EncTools Software BRC when look ahead depth > than 0. Need  |
+|                                                       |                | to have look ahead depth > than miniGOP size to enable low power look    |
+|                                                       |                | ahead too (miniGOP size is equal to bf+1). The recommended values for    |
+|                                                       |                | `$lad` are: 8 (for performance boost) and 40 (for quality boost)         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b_strategy 1 -bf 7``                               | n3.0           | These 2 settings activate full 3 level B-Pyramid.                        |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | n2.7           | Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-adaptive_i 1 -adaptive_b 1``                       | n3.0           | Ensures to enable scene change detection and adaptive miniGOP.           |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-strict -1``                                        | n3.0           | Disables HRD compliance.                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extra_hw_frames $lad``                             | n4.0           | Add extra GPU decoder frame surfaces.  This is currently needed for      |
+|                                                       |                | transcoding with look ahead (set this option to look ahead depth value)  |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+::
+
+  # VBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
+    -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
+    -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
+    -vsync passthrough -y $output
+
+  # CBR (encoding from YUV with ffmpeg-qsv)
+  ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
+    -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
+    -vsync passthrough -y $output
+
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
+    -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
+    -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
+    -vsync passthrough -y $output
+
+  # CBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
+    -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
+    -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
+    -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
+    -vsync passthrough -y $output
+
+  # VBR (encoding from YUV with Sample Multi-Transcode)
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -vbr -n $numframes \
+    -w $width -h $height -override_encoder_framerate $framerate -lowpower:${LOWPOWER:-on} -lad $lad \
+    -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -bref -dist 8 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $((bitrateKb / 2)) \
+    -InitialDelayInKB $((bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::av1 $output
+
+  # CBR (encoding from YUV with Sample Multi-Transcode)
+  sample_multi_transcode -i::i420 $inputyuv -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -cbr -n $numframes \
+    -w $width -h $height  -override_encoder_framerate $framerate -lowpower:${LOWPOWER:-on} -lad $lad \
+    -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -bref -dist 8 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $((bitrateKb / 4)) \
+    -InitialDelayInKB $((bitrateKb / 8)) -o::av1 $output
+
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -vbr -n $numframes \
+    -lowpower:${LOWPOWER:-on} -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -bref -dist 8 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $((bitrateKb / 2)) \
+    -InitialDelayInKB $((bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::av1 $output
+
+  # CBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async 1 \
+    -device ${DEVICE:-/dev/dri/renderD128} -u $preset -b $bitrateKb -cbr -n $numframes \
+    -lowpower:${LOWPOWER:-on} -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -bref -dist 8 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $((bitrateKb / 4)) \
+    -InitialDelayInKB $((bitrateKb / 8)) -o::av1 $output
+
+HW BRC
+******
 
 To achieve better quality with Intel GPU AV1 encoder running Hardware BRC we recommend the following settings:
 

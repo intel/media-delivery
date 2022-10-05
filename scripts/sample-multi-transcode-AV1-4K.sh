@@ -51,8 +51,9 @@ for ((i=0; i<$nstreams; i++)); do
   device="${devices[((i % ndevs))]}"
 
   sample_multi_transcode -device $device -i::av1 $stream -hw -async $async -u $preset -n 6000 -gop_size 256 -vbr \
-    -b $bitrate -NalHrdConformance:off -VuiNalHrdParameters:off -bref -hrd $((bitrate / 2)) -InitialDelayInKB $((bitrate / 4)) \
-    -dist 8 -lowpower:on -o::av1 $output 2>&1 | tee $(basename $stream).${nstreams}.${i}.dev$((i % ndevs)).av1.smt.log &
+    -b $bitrate -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $((bitrate / 2)) -InitialDelayInKB $((bitrate / 4)) -MaxKbps $((bitrate * 2)) \
+    -lowpower:on -lad 8 -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -bref -dist 8 \
+    -o::av1 $output 2>&1 | tee $(basename $stream).${nstreams}.${i}.dev$((i % ndevs)).av1.smt.log &
 
 done
 
