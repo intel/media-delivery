@@ -159,7 +159,7 @@ wish to play via demo, you can add this folder to the container as follows::
     <...rest-of-arguments...>
 
 In case you want to access container output artifacts (streams, logs, etc.) you need
-to give write permissions to the container users. The most straight forward
+to give write permissions to the container users. The most straightforward
 way would be::
 
   mkdir $HOME/artifacts && chmod a+w $HOME/artifacts
