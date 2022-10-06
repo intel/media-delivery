@@ -431,7 +431,7 @@ RUN echo "/opt/intel/samples/lib" >> /etc/ld.so.conf.d/all-libs.conf && ldconfig
 
 # Custom component installation rules, if any...
 COPY --from=build /opt/wheel /opt/wheel
-RUN python3 -m pip install --no-deps --prefix=/opt/intel/samples /opt/wheel/* && rm -rf /opt/wheel
+RUN python3 -m pip install --no-deps /opt/wheel/* && rm -rf /opt/wheel
 
 # Restoring man which is excluded from the minimal ubuntu image
 RUN rm -f /usr/bin/man && dpkg-divert --quiet --remove --rename /usr/bin/man

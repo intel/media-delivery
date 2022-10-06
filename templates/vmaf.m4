@@ -52,7 +52,7 @@ RUN cd BUILD_HOME/vmaf/python \
 
 define(`INSTALL_VMAF',dnl
 COPY --from=$2 BUILD_WHEEL BUILD_WHEEL
-RUN python3 -m pip install --no-deps --prefix=BUILD_PREFIX BUILD_WHEEL/* && rm -rf /opt/wheel
+RUN python3 -m pip install --no-deps BUILD_WHEEL/* && rm -rf /opt/wheel
 )
 
 REG(VMAF)
