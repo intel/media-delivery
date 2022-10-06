@@ -35,8 +35,7 @@ to access the device, i.e. he should be added to the group owning the device.
 To achieve that use ``--group-add`` docker run comamnd line option::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
-    xargs getent group | awk -F: '{print $3}')
+  DEVICE_GRP=$(stat --format %g $DEVICE)
   docker run --rm -it \
     --device $DEVICE --group-add $DEVICE_GRP <...rest-of-arguments...>
 
@@ -58,8 +57,7 @@ support ``DEVICE`` environment variable to adjust the device for the entire
 demo::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
-    xargs getent group | awk -F: '{print $3}')
+  DEVICE_GRP=$(stat --format %g $DEVICE)
   docker run --rm -it \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     <...rest-of-arguments...>
@@ -212,8 +210,7 @@ need to mount all the folders which demo is using for write access in a way host
 user will be able to use them. This can be achieved in the following way::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
-    xargs getent group | awk -F: '{print $3}')
+  DEVICE_GRP=$(stat --format %g $DEVICE)
   docker run --rm -it \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN -p 8080:8080 \
@@ -242,8 +239,7 @@ privileges::
   mkdir -p $HOME/output/hls
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
-    xargs getent group | awk -F: '{print $3}')
+  DEVICE_GRP=$(stat --format %g $DEVICE)
   docker run --rm -it \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN -p 8080:8080 \
