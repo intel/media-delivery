@@ -55,5 +55,7 @@ jobs:
           echo "}"; \
         } > docker_image_info.json
         cat docker_image_info.json
-        gta-asset push --no-archive --root-url $ARTIFACTORY $ARTI_PATH $name $tag docker_image_info.json
+        asset_name=${image%/stash*}
+        asset_name=${image#*intel-media-delivery/}
+        gta-asset push --no-archive --root-url $ARTIFACTORY $ARTI_PATH $asset_name/$name $tag docker_image_info.json
 

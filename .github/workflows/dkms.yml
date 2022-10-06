@@ -49,7 +49,7 @@ jobs:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       image: ${{needs.build-u2004.outputs.image}}
-      gta-asset-name: dkms-u2004
+      gta-asset-name: dkms
 
   deploy-push-u2204:
     if: github.event_name == 'push'
@@ -57,7 +57,7 @@ jobs:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       image: ${{needs.build-u2204.outputs.image}}
-      gta-asset-name: dkms-u2204
+      gta-asset-name: dkms
 
   deploy-release-u2004:
     if: github.event_name == 'workflow_dispatch'
@@ -65,7 +65,7 @@ jobs:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       image: ${{needs.build-u2004.outputs.image}}
-      gta-asset-name: ${{github.event.inputs.name}}-u2004
+      gta-asset-name: ${{github.event.inputs.name}}
 
   deploy-release-u2204:
     if: github.event_name == 'workflow_dispatch'
@@ -73,5 +73,5 @@ jobs:
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/deploy.yml@master
     with:
       image: ${{needs.build-u2204.outputs.image}}
-      gta-asset-name: ${{github.event.inputs.name}}-u2204
+      gta-asset-name: ${{github.event.inputs.name}}
 

@@ -48,12 +48,12 @@ ARG INTEL_GFX_APT_REPO="deb INTEL_GFX_URL/ubuntu _tmp main"
 RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
 popdef(`_tmp')')
 
-ifelse(OS_NAME,ubuntu,ifelse(OS_VERSION,20.04,
-`define(`ENABLE_INTEL_GFX_REPO',defn(`_install_ubuntu'))'))
+ifelse(OS_NAME:OS_VERSION,ubuntu:20.04,`define(`ENABLE_INTEL_GFX_REPO',defn(`_install_ubuntu'))')
+ifelse(OS_NAME:OS_VERSION,ubuntu:22.04,`define(`ENABLE_INTEL_GFX_REPO',defn(`_install_ubuntu'))')
 
 popdef(`_install_ubuntu')
 
 ifdef(`ENABLE_INTEL_GFX_REPO',,dnl
-  `ERROR(`Intel Graphics Repositories don't support OS_NAME:OS_VERSION')')
+  `ERROR(`Intel Graphics Repository does not support OS_NAME:OS_VERSION')')
 
 include(end.m4)dnl

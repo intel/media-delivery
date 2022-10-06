@@ -57,6 +57,10 @@ jobs:
         export MDS_LOGS=$(pwd)/_logs
         export MDS_DEMO=cdn
         export TEST_ENCTOOLS=${{inputs.test_enctools}}
+
+        os_ver=$(docker run -it --rm -e MDS_IGNORE_ERRORS=yes $image cat /etc/lsb-release | grep DISTRIB_CODENAME)
+        os_ver=${os_ver#*=}
+
         for d in renderD128 renderD129; do \
           if grep -iq '56a1\|56c0' /sys/class/drm/$d/device/device; then \
             export DEVICE=/dev/dri/$d; \
@@ -65,7 +69,17 @@ jobs:
         echo "  TEST_ENCTOOLS=$TEST_ENCTOOLS"
         echo "  DEVICE=$DEVICE"
         test_status=0
-        bats tests/*.bats || test_status=$?
+        if [[ "$os_ver" = "jammy"]]; then
+          # excluding demo.bats as known to fail on jammy due to missing nginx lua module
+          bats tests/tests/consistency.bats \
+               tests/demo-bash.bats \
+               tests/docs.bats \
+               tests/ffmpeg.bats \
+               tests/measure-perf.bats \
+               tests/measure-quality.bats || test_status=$?
+        else
+          bats tests/*.bats || test_status=$?
+        fi
         docker rmi --force $(docker images -q $image | uniq) || true
         if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
 

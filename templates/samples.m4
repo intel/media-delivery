@@ -24,10 +24,15 @@ include(intel-gpu-tools.m4)
 
 DECLARE(`DEVEL',yes)
 
+dnl NOTE:
+dnl   libnginx-mod-http-lua got dropped from ubuntu:22.04
+dnl   see: https://answers.launchpad.net/ubuntu/+source/nginx/+question/700799
+dnl   This means that our demo won't be available if we build against ubuntu:22.04.
+dnl   Other features (benchmark scripts, ffmpeg, intel_gpu_top) will continue work.
 define(`SAMPLES_INSTALL_DEPS',`dnl
   ifdef(`BUILD_ONEVPL',,ifelse(USE_VPL_TOOLS,yes,libvpl-tools)) dnl
   ifdef(`BUILD_MSDK',,ifelse(USE_VPL_TOOLS,no,libmfx-tools)) dnl
-  libnginx-mod-http-lua libnginx-mod-rtmp dnl
+  ifelse(OS_NAME:OS_VERSION,ubuntu:20.04,libnginx-mod-http-lua) libnginx-mod-rtmp dnl
   linux-tools-generic nginx pciutils psmisc dnl
   python3 python3-matplotlib python3-numpy dnl
   socat tmux dnl

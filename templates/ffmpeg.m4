@@ -36,7 +36,11 @@ define(`FFMPEG_INSTALL_DEPS',`dnl
   ifdef(`BUILD_ONEVPLGPU',,ifelse(FFMPEG_ENABLE_MFX,2.x,libmfxgen1)) dnl
   ifdef(`BUILD_ONEVPL',,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl2)) dnl
   ifdef(`BUILD_LIBVA2',,libva-drm2) dnl
-  libx264-155 libx265-179 libxcb-shm0')
+  ifelse(OS_NAME:OS_VERSION,ubuntu:20.04,libx264-155) dnl
+  ifelse(OS_NAME:OS_VERSION,ubuntu:22.04,libx264-163) dnl
+  ifelse(OS_NAME:OS_VERSION,ubuntu:20.04,libx265-179) dnl
+  ifelse(OS_NAME:OS_VERSION,ubuntu:22.04,libx265-199) dnl
+  libxcb-shm0')
 
 define(`BUILD_FFMPEG',
 RUN git clone https://github.com/ffmpeg/ffmpeg BUILD_HOME/ffmpeg && \
