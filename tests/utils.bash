@@ -100,8 +100,7 @@ function docker_run_opts() {
   local opts=$1
   shift
 
-  local DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
-    xargs getent group | awk -F: '{print $3}')
+  local DEVICE_GRP=$(stat --format %g $DEVICE)
 
   local cmd=(docker run --rm -p 8080:8080 \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
