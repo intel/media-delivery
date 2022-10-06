@@ -119,12 +119,12 @@ These proxy settings will be used to:
 
 Mind that **final image will NOT contain any pre-configured proxy configuration**. This
 applies to package manager configuration as well. This is done for the reason that
-generated image might run under different network settings comparing to where it
+generated image might run under different network settings compared to where it
 was generated.
 
 Thus, if you will run the container under proxy you will need to pass proxy configuration
-into it anew (well, if you will have a need to communicate with the outside network which
-is not the case if you just run demo locally and don't play with the container). This
+into it anew (if you have a need to communicate with the outside network which
+is not the case when you just run demo locally and do not play with the container). This
 can be done by passing proxy host envronment variables as follows::
 
   docker run -it \
@@ -141,8 +141,8 @@ the image assets::
 Container volumes (adding your content, access logs, etc.)
 ----------------------------------------------------------
 
-Containers exposes few volumes which you can use to mount host folders and customize
-samples behavior. See table below for the mount points inside a container and required
+Containers expose few volumes which you can use to mount host folders and customize
+behavior of the samples. See table below for the mount points inside a container and required
 access rights.
 
 =================== ============= ====================================
@@ -153,7 +153,7 @@ Volume              Rights needed Purpose
 /var/www/hls        Read|Write    Access server side generated content
 =================== ============= ====================================
 
-So, for example if you have some local content in a ``$HOME/media/`` folder which you
+For example if you have some local content in a ``$HOME/media/`` folder which you
 wish to play via demo, you can add this folder to the container as follows::
 
   docker run -it \
@@ -161,7 +161,7 @@ wish to play via demo, you can add this folder to the container as follows::
     <...rest-of-arguments...>
 
 In case you want to access container output artifacts (streams, logs, etc.) you need
-to give write permissions to the container users. The most stright forward
+to give write permissions to the container users. The most straight forward
 way would be::
 
   mkdir $HOME/artifacts && chmod a+w $HOME/artifacts
@@ -198,9 +198,9 @@ recommended.
 Managing access rights for container user
 -----------------------------------------
 
-Managing permissions between container and a host might be tricky. Remember that the
+Managing permissions between container and a host can be tricky. The
 user you have under container (by default Media Delivery containers have
-user account named 'user') generally speaking is not the same user you have
+user account named ``user``) is unlikely to match the user you have
 on your host system. Hence, you might have access problems that
 container user can't write to the host folder or it can write there, but
 host user can't delete these files and you are forced to use ``sudo`` to modify

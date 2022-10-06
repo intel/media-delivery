@@ -8,7 +8,7 @@ Overview
 
 Project includes pre-generated dockerfiles in the `docker <../docker>`_
 folder for the key possible setups. If you've done any customizations to the
-dockefiles template sources, regenerate dockerfiles with the following
+dockerfiles template sources, regenerate dockerfiles with the following
 commands::
 
   cmake .
@@ -29,7 +29,7 @@ stored in `templates <../templates>`_ folder.
 Templates Parameters
 --------------------
 
-It is possible to customize dockerfile setup passing some parameters during
+It is possible to customize dockerfile setup by passing parameters during
 Dockerfile generation from templates.
 
 DEVEL

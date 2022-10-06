@@ -93,10 +93,10 @@ How to Update
 -------------
 
 To install new version of DKMS packages, just follow the usual installation steps. Package
-manager will first automatically uninstall previous version, then install a new one.
+manager automatically uninstalls previous version, then installs a new one.
 
 When updating the entire kernel, make sure to install the corresponding kernel headers. DKMS
-installation actually builds the modules for which kernel headers are required. So, when
+installation builds kernel modules which requires corresponding kernel headers. So, when
 updating the kernel, make sure to always install both kernel and its headers. For example,
 to update from Ubuntu 20.04 5.14.0-1042-oem to 5.14.0-1047-oem kernel do::
 

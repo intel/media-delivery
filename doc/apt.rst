@@ -17,7 +17,7 @@ First, build a docker image with APT web server using the following Dockerfile::
       aptly && \
     rm -rf /var/lib/apt/lists/*
 
-  # substituite this with other command to populate /opt/pkgs
+  # substitute this with other command to populate /opt/pkgs
   # directory with required *.deb packages
   COPY pkgs /opt/pkgs
 
