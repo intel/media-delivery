@@ -17,12 +17,19 @@ jobs:
         make -j$(nproc)
         git diff --exit-code
 
-  cdn-intel-pkgs:
+  cdn-intel-pkgs-u20-04:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Building CDN demo w/ Intel pkgs
       run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu20.04/intel-gfx/Dockerfile -t intel-media-delivery-cdn .
+
+  cdn-intel-pkgs-u22-04:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Building CDN demo w/ Intel pkgs
+      run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu22.04/intel-gfx/Dockerfile -t intel-media-delivery-cdn .
 
   cdn-native-pkgs:
     runs-on: ubuntu-latest

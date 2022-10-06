@@ -28,6 +28,14 @@ set(M4FLAGS ${M4FLAGS} -E
   -I ${CMAKE_SOURCE_DIR}/templates/m4docker/components
   -I ${CMAKE_CURRENT_SOURCE_DIR})
 
+add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
+  DEPENDS ${srcs}
+    ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile.m4
+  COMMAND ${M4} ${M4FLAGS} -D OS_NAME=ubuntu -D OS_VERSION=22.04
+    ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile.m4 > ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
+  VERBATIM
+  )
+
 add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile
   DEPENDS ${srcs}
     ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile.m4
@@ -37,5 +45,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile
   )
 
 add_custom_target(ubuntu22.04-dockerfiles ALL DEPENDS
+  ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
   ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile)
 

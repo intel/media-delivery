@@ -33,6 +33,7 @@ include(begin.m4)
 include(ubuntu.m4)
 
 define(`INTEL_GFX_URL',https://repositories.intel.com/graphics)
+DECLARE(`INTEL_GFX_FLAVOR_NAME',main)
 
 pushdef(`_install_ubuntu',`dnl
 pushdef(`_tmp',`ifelse($1,`',UBUNTU_CODENAME(OS_VERSION),UBUNTU_CODENAME(OS_VERSION)-$1)')dnl
@@ -41,16 +42,17 @@ INSTALL_PKGS(PKGS(curl ca-certificates gpg-agent software-properties-common))
 ARG INTEL_GFX_KEY_URL="INTEL_GFX_URL/intel-graphics.key"
 RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi
 
-ARG INTEL_GFX_APT_REPO="deb INTEL_GFX_URL/ubuntu _tmp main"
+ARG INTEL_GFX_FLAVOR=INTEL_GFX_FLAVOR_NAME
+ARG INTEL_GFX_APT_REPO="deb INTEL_GFX_URL/ubuntu _tmp $INTEL_GFX_FLAVOR"
 RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
 popdef(`_tmp')')
 
-ifelse(OS_NAME,ubuntu,ifelse(OS_VERSION,20.04,
-`define(`ENABLE_INTEL_GFX_REPO',defn(`_install_ubuntu'))'))
+ifelse(OS_NAME:OS_VERSION,ubuntu:20.04,`define(`ENABLE_INTEL_GFX_REPO',defn(`_install_ubuntu'))')
+ifelse(OS_NAME:OS_VERSION,ubuntu:22.04,`define(`ENABLE_INTEL_GFX_REPO',defn(`_install_ubuntu'))')
 
 popdef(`_install_ubuntu')
 
 ifdef(`ENABLE_INTEL_GFX_REPO',,dnl
-  `ERROR(`Intel Graphics Repositories don't support OS_NAME:OS_VERSION')')
+  `ERROR(`Intel Graphics Repository does not support OS_NAME:OS_VERSION')')
 
 include(end.m4)dnl
