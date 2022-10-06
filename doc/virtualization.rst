@@ -206,7 +206,7 @@ GPU SR-IOV Virtualization
 Virtual Machine (VM) setup with GPU SR-IOV Virtualization is a type of setup which
 allows non-exclusive time-sliced access to GPU from under VM. GPU SR-IOV Virtualization
 can be used to setup multiple VMs (and a host) with the access to the same GPU. It's
-possible to assign FPU resource limitations to each VM.
+possible to assign GPU resource limitations to each VM.
 
 This variant of GPU virtualization setup requires **host kernel to fully
 support underlying GPU**.
@@ -220,7 +220,7 @@ Host Setup
   GPU Flex Series (products formerly Arctic Sound) under the host.
 
 * Check that desired GPU is detected and find it's device ID and PCI slot (in
-  the example below``56C0`` and ``4d:00.0`` respectively)::
+  the example below ``56C0`` and ``4d:00.0`` respectively)::
 
     $ lspci -nnk | grep -A 3 -E "VGA|Display"
     02:00.0 VGA compatible controller [0300]: ASPEED Technology, Inc. ASPEED Graphics Family [1a03:2000] (rev 41)
