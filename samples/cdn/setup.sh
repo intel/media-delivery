@@ -63,7 +63,6 @@ done
   #   http://localhost:8080/vod/<type>/<stream>.index.m3u8
   echo "export DEMO_STREAM_TYPES=vod/avc:vod/hevc:vod/avc-enctools:vod/hevc-enctools"
   echo "export PATH=\$DEMO_PREFIX/bin:/usr/share/mfx/samples/:\$PATH"
-  echo "export PYTHONUSERBASE=\$DEMO_PREFIX"
   echo "export MANPATH=\$DEMO_PREFIX/share/man:\$MANPATH"
   echo "export LIBVA_DRIVER_NAME=iHD"
   echo "export DEVICE=\${DEVICE:-/dev/dri/renderD128}"
