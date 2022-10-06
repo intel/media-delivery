@@ -161,8 +161,7 @@ permissions allowing access to GPU device(s), file system, etc. The minimal
 set of arguments to start a container looks as follows::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
-    xargs getent group | awk -F: '{print $3}')
+  DEVICE_GRP=$(stat --format %g $DEVICE)
   docker run --rm -it \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \
@@ -197,8 +196,7 @@ parts:
 To get list of streams you will be able to play, execute::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
-    xargs getent group | awk -F: '{print $3}')
+  DEVICE_GRP=$(stat --format %g $DEVICE)
   docker run --rm -it \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \
@@ -236,8 +234,7 @@ to interact with the container in any other way rather than to start and stop it
 This is the simplest demo mode. To run it, execute::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
-    xargs getent group | awk -F: '{print $3}')
+  DEVICE_GRP=$(stat --format %g $DEVICE)
   docker run --rm -it \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \
@@ -268,8 +265,7 @@ With "interactive" demo mode container runs all the services required for stream
 awaits for the user interaction to trigger it. To start demo in this mode, execute::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' \
-    xargs getent group | awk -F: '{print $3}')
+  DEVICE_GRP=$(stat --format %g $DEVICE)
   docker run --rm -it \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \
@@ -314,8 +310,7 @@ how system behaves under different loads. Mind that you can use ``-<n>`` demo
 option to emulate multiple streams available for streaming::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' \
-    xargs getent group | awk -F: '{print $3}')
+  DEVICE_GRP=$(stat --format %g $DEVICE)
   docker run --rm -it \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \
@@ -354,8 +349,7 @@ Effectively, commands lines to try Edge sample are similar to CDN sample.
 For example::
 
   DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' \
-    xargs getent group | awk -F: '{print $3}')
+  DEVICE_GRP=$(stat --format %g $DEVICE)
   docker run --rm -it \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \

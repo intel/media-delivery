@@ -200,8 +200,7 @@ docker build \
   --tag intel-media-delivery \
   .
 DEVICE=${DEVICE:-/dev/dri/renderD128}
-DEVICE_GRP=$(ls -g $DEVICE | awk '{print $3}' | \
-  xargs getent group | awk -F: '{print $3}')
+DEVICE_GRP=$(stat --format %g $DEVICE)
 docker run --rm -it \
   -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
   --cap-add SYS_ADMIN \
