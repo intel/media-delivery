@@ -58,7 +58,7 @@ jobs:
         export MDS_DEMO=cdn
         export TEST_ENCTOOLS=${{inputs.test_enctools}}
 
-        os_ver=$(docker run -it --rm -e MDS_IGNORE_ERRORS=yes $image cat /etc/lsb-release | grep DISTRIB_CODENAME)
+        os_ver=$(docker run --rm -e MDS_IGNORE_ERRORS=yes $image cat /etc/lsb-release 2>/dev/null 2>/dev/null | grep DISTRIB_CODENAME)
         os_ver=${os_ver#*=}
 
         for d in renderD128 renderD129; do \
