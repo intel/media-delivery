@@ -69,16 +69,16 @@ jobs:
         echo "  TEST_ENCTOOLS=$TEST_ENCTOOLS"
         echo "  DEVICE=$DEVICE"
         test_status=0
-        if [[ "$os_ver" = "jammy"]]; then
+        if [[ "$os_ver" = "jammy" ]]; then
           # excluding demo.bats as known to fail on jammy due to missing nginx lua module
           bats tests/tests/consistency.bats \
                tests/demo-bash.bats \
                tests/docs.bats \
                tests/ffmpeg.bats \
                tests/measure-perf.bats \
-               tests/measure-quality.bats || test_status=$?
+               tests/measure-quality.bats || test_status=$?;
         else
-          bats tests/*.bats || test_status=$?
+          bats tests/*.bats || test_status=$?;
         fi
         docker rmi --force $(docker images -q $image | uniq) || true
         if [ $test_status -ne 0 ]; then echo "Test failed"; false; fi
