@@ -41,7 +41,7 @@ jobs:
     needs: build-u2004
     uses: intel-innersource/containers.docker.gpu.media.intel-media-delivery/.github/workflows/test.yml@master
     with:
-      image: ${{needs.build-u20.04.outputs.image}}
+      image: ${{needs.build-u2004.outputs.image}}
       test_enctools: 'ON'
       on: dg1
       kernel: prelim
