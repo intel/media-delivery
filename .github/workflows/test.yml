@@ -71,7 +71,7 @@ jobs:
         test_status=0
         if [[ "$os_ver" = "jammy" ]]; then
           # excluding demo.bats as known to fail on jammy due to missing nginx lua module
-          bats tests/tests/consistency.bats \
+          bats tests/consistency.bats \
                tests/demo-bash.bats \
                tests/docs.bats \
                tests/ffmpeg.bats \
