@@ -18,7 +18,7 @@ jobs:
   cmake:
     runs-on: [self-hosted, osgc-solutions, ubuntu-builder]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: |
         cmake .
         make -j$(nproc)

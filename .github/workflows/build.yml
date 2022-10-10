@@ -61,7 +61,7 @@ jobs:
     outputs:
       tagname: ${{steps.build.outputs.tagname}}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         repository: ${{inputs.repo}}
     - id: build

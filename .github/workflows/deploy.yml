@@ -29,7 +29,7 @@ jobs:
   deploy:
     runs-on: [self-hosted, osgc-solutions, ubuntu, builder]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         repository: ${{inputs.repo}}
     - run: |
