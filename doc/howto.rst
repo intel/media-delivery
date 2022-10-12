@@ -102,8 +102,11 @@ admin guide and ``man capabilities``.
 
 With latest container manager and runtime versions (podman, containerd, runc),
 CAP_PERFMON (added in kernel v5.8) can be used instead of the (too wide) CAP_SYS_ADMIN
-capability. Whether also Docker supports CAP_PERFMON capability, is unclear.
+capability. However, at the moment Docker does not support CAP_PERFMON:
 
+* https://github.com/docker/docs/pull/15050 - CAP_PERFMON removed from release notes
+* https://github.com/moby/moby/pull/42011 - CAP_PERFMON support reverted
+* https://github.com/docker/docs/issues/14124 - original issue reported against CAP_PERFMON support in docker
 
 Working under proxy
 --------------------
