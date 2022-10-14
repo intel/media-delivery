@@ -70,21 +70,24 @@ monitoring data via Linux `perf <https://perf.wiki.kernel.org/index.php/Main_Pag
 kernel subsystem. There are few levels of statistics data being managed by access
 rights. For this demo purposes we collect i915 global metrics, i.e. those
 which describe the whole GPU rather than particular running process. Such
-metrics require CAP_SYS_ADMIN or ``/proc/sys/kernel/perf_event_paranoid<=0``to be
-collected. So, run container as follows to allow GPU metrics collection::
+metrics require CAP_SYS_ADMIN or ``/proc/sys/kernel/perf_event_paranoid<=0`` to be
+collected.
+
+This can be achieved by giving the required capability for the whole container::
 
   docker run --cap-add SYS_ADMIN <...rest-of-arguments...>
 
-This docker run command line works along with the following adjustment of
-the access rights for those applications which will collect perf metrics::
+But if it runs multiple binaries, only the relevant binaries can be set to
+request that capability::
 
   setcap cap_sys_admin+ep $(readlink -f $(which perf))
   setcap cap_sys_admin+ep $(readlink -f $(which intel_gpu_top))
 
-This approach won't work however if you start container with
-``--security-opt="no-new-privileges:true"`` since it will be considered that
-you try to get additional permissions from the executable file. In this
-case, please, adjust paranoid setting on the host system::
+This latter approach requires container to be started with
+``--security-opt="no-new-privileges:false"`` since those executables
+will now request additional permissions after container initialization.
+
+Third option is disabling related security check for the whole host system::
 
   echo 0 | sudo tee /proc/sys/kernel/perf_event_paranoid
 
@@ -95,7 +98,16 @@ i915 Linux perf data. Follow the above BKM to run it.
 
 For further reading on the Linux perf security refer to Linux kernel
 `perf-security <https://www.kernel.org/doc/html/latest/admin-guide/perf-security.html>`_
-admin guide.
+admin guide and ``man capabilities``.
+
+With latest container manager and runtime versions (podman, containerd, runc),
+CAP_PERFMON (added in kernel v5.8) can be used instead of the (too wide) CAP_SYS_ADMIN
+capability. However, at the moment Docker does not support CAP_PERFMON:
+
+* https://github.com/docker/docs/pull/15050 - CAP_PERFMON removed from `Docker release notes
+  <https://github.com/docker/docs/blob/master/engine/release-notes/index.md>`_
+* https://github.com/moby/moby/pull/42011 - CAP_PERFMON support reverted
+* https://github.com/docker/docs/issues/14124 - original issue reported against CAP_PERFMON support in docker
 
 Working under proxy
 --------------------
