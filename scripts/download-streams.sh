@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020 Intel Corporation
+# Copyright (c) 2022 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-export http_proxy=http://proxy-chain.intel.com:911
-export https_proxy=http://proxy-chain.intel.com:911
-unset no_proxy
+wget --no-clobber https://repositories.intel.com/media/md5_checksum.txt
+readarray -t list < <( cat md5_checksum.txt |  awk '{ print $2 }' )
 
-docker build \
-  $(env | grep -E '(_proxy=|_PROXY)' | sed 's/^/--build-arg /') \
-  --build-arg IMAGE=amr-registry.caas.intel.com/vtt-osgc/os/ubuntu:focal \
-  --file docker/ubuntu20.04/intel-gfx/Dockerfile \
-  -t intel-media-delivery \
-  .
+for file in ${list[@]}; do
+  if [[ "$file" =~ "$1" ]]; then
+    wget --no-clobber https://repositories.intel.com/media/$file
+  fi
+done
