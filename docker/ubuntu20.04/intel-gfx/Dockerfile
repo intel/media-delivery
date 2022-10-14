@@ -287,6 +287,9 @@ COPY assets/demo-alive /usr/bin/
 COPY assets/demo-bash /usr/bin/
 COPY assets/hello-bash /usr/bin/
 
+# Installing quick example scripts
+COPY scripts/ /opt/intel/samples/bin/
+
 # Create default container user <user>
 RUN groupadd -r user && useradd -lrm -s /bin/bash -g user user
 RUN usermod -aG sudo user && \
