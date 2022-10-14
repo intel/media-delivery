@@ -55,6 +55,9 @@ COPY assets/demo-alive /usr/bin/
 COPY assets/demo-bash /usr/bin/
 COPY assets/hello-bash /usr/bin/
 
+# Installing quick example scripts
+COPY scripts/ BUILD_PREFIX/bin/
+
 # Create default container user <user>
 RUN groupadd -r user && useradd -lrm -s /bin/bash -g user user
 ifelse(DEVEL,yes,`dnl
