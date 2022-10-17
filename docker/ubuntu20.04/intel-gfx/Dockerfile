@@ -27,17 +27,25 @@ FROM $IMAGE AS base
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    curl ca-certificates gpg-agent software-properties-common libnss3-tools unzip wget && \
+    curl ca-certificates gpg software-properties-common libnss3-tools unzip wget && \
   rm -rf /var/lib/apt/lists/*
 
 COPY assets/embargo/setup-certs.sh /tmp/
 RUN /tmp/setup-certs.sh && rm -rf /tmp/setup-certs.sh
 
 ARG INTEL_GFX_KEY_URL="https://repositories.gfxs.intel.com/internal/intel-graphics.key"
-RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi
-
 ARG INTEL_GFX_APT_REPO="deb https://repositories.gfxs.intel.com/internal/ubuntu focal-embargo-untested main"
-RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
+
+RUN \
+  if [ -n "$INTEL_GFX_KEY_URL" ]; then \
+    local_key=/usr/share/keyrings/intel-gfx.gpg && \
+    curl -s $INTEL_GFX_KEY_URL | gpg --dearmor | tee $local_key >/dev/null && \
+    repo=$(echo $INTEL_GFX_APT_REPO | sed "s@deb @deb [signed-by=$local_key] @") && \
+    echo "$repo" >> /etc/apt/sources.list; \
+  else \
+    echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list; \
+  fi && \
+  apt-get update
 
 
 FROM base as content
