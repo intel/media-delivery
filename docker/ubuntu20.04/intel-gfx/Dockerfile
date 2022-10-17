@@ -31,11 +31,19 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 
 ARG INTEL_GFX_KEY_URL="https://repositories.intel.com/graphics/intel-graphics.key"
-RUN if [ -n "$INTEL_GFX_KEY_URL" ]; then curl -fsSL "$INTEL_GFX_KEY_URL" | apt-key add -; fi
-
 ARG INTEL_GFX_FLAVOR=main
 ARG INTEL_GFX_APT_REPO="deb https://repositories.intel.com/graphics/ubuntu focal $INTEL_GFX_FLAVOR"
-RUN if [ -n "$INTEL_GFX_APT_REPO" ]; then echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list && apt-get update; fi
+
+RUN \
+  if [ -n "$INTEL_GFX_KEY_URL" ]; then \
+    local_key=/usr/share/keyrings/intel-gfx.gpg && \
+    curl -s $INTEL_GFX_KEY_URL | gpg --dearmor | tee $local_key >/dev/null && \
+    repo=$(echo $INTEL_GFX_APT_REPO | sed "s@deb @deb [signed-by=$local_key] @") && \
+    echo "$repo" >> /etc/apt/sources.list; \
+  else \
+    echo "$INTEL_GFX_APT_REPO" >> /etc/apt/sources.list; \
+  fi && \
+  apt-get update
 
 
 FROM base as content
