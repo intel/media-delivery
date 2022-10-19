@@ -63,10 +63,10 @@ version used below to build DKMS packages) and its headers::
   sudo apt-get update
 
   # for Ubuntu 20.04
-  sudo apt-get install linux-headers-5.14.0-1045-oem linux-image-unsigned-5.14.0-1045-oem
+  sudo apt-get install linux-headers-5.14.0-1054-oem linux-image-unsigned-5.14.0-1054-oem
 
   # for Ubuntu 22.04
-  sudo apt-get install linux-image-unsigned-5.17.0-1013-oem linux-headers-5.17.0-1013-oem
+  sudo apt-get install linux-image-unsigned-5.17.0-1020-oem linux-headers-5.17.0-1020-oem
 
 Once done, check kernel boot order in grub to make sure to boot into the installed kernel,
 adjust if needed, then reboot::
@@ -81,7 +81,7 @@ Install Intel GPU Firmware and DKMS packages::
   sudo cp /opt/packages/firmware/*.bin /lib/firmware/updates/i915/
   sudo dpkg -i /opt/packages/intel-i915-dkms_*.deb \
     /opt/packages/intel-platform-cse-dkms-*.deb \
-    /opt/packages/intel-platform-pmt-dkms-*.deb
+    /opt/packages/intel-platform-vsec-dkms-*.deb
 
 Once done, reboot::
 
