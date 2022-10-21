@@ -6,22 +6,51 @@ Generating Dockerfiles
 Overview
 --------
 
-Project includes pre-generated dockerfiles in the `docker <../docker>`_
-folder for the key possible setups. If you've done any customizations to the
-dockerfiles template sources, regenerate dockerfiles with the following
-commands::
+Dockerfiles in this project are generated from the `templates <../templates>`_
+written in `m4 <https://www.gnu.org/software/m4/>`_ macro language. Do not
+update dockerfiles directly, but modify templates and generate
+dockerfiles as follows::
 
   cmake .
   make
 
+Above will regenerate and overwrite dockerfiles located at `docker <../docker>`_
+folder. Please, make sure to commit both template and dockerfile changes
+when providing pull requests for reviews.
+
 Dockerfiles Templates Structure
 -------------------------------
 
-Top level Dockerfile templates are located in the subfolders of
-`docker <../docker>`_ folder:
+Top level ``Dockerfile.m4`` templates and dockerfiles generated from them are
+located in the subfolders of `docker <../docker>`_ folder::
 
-* `docker/ubuntu20.04/native/Dockerfile.m4 <../docker/ubuntu20.04/native/Dockerfile>`_
-* `docker/ubuntu20.04/intel-gfx/Dockerfile.m4 <../docker/ubuntu20.04/intel-gfx/Dockerfile>`_
+  $ tree docker
+  docker
+  ├── CMakeLists.txt
+  ├── ubuntu20.04
+  │   ├── CMakeLists.txt
+  │   ├── dkms
+  │   │   ├── Dockerfile
+  │   │   └── Dockerfile.m4
+  │   ├── intel-gfx
+  │   │   ├── Dockerfile
+  │   │   └── Dockerfile.m4
+  │   ├── native
+  │   │   ├── Dockerfile
+  │   │   └── Dockerfile.m4
+  │   ├── selfbuild
+  │   │   ├── Dockerfile
+  │   │   └── Dockerfile.m4
+  │   └── selfbuild-prodkmd
+  │       ├── Dockerfile
+  │       └── Dockerfile.m4
+  └── ubuntu22.04
+      ├── CMakeLists.txt
+      └── dkms
+          ├── Dockerfile
+          └── Dockerfile.m4
+
+  8 directories, 12 files
 
 These templates include component ingredients defined in the .m4 files
 stored in `templates <../templates>`_ folder.
@@ -29,7 +58,7 @@ stored in `templates <../templates>`_ folder.
 Templates Parameters
 --------------------
 
-It is possible to customize dockerfile setup by passing parameters during
+It is possible to customize dockerfiles by passing parameters during
 Dockerfile generation from templates.
 
 DEVEL
@@ -49,3 +78,4 @@ VMAF_VER
 
   VMAF version to build. Use one of the VMAF release tags from https://github.com/Netflix/vmaf/releases
   or branch name or commit id.
+
