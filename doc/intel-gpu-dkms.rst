@@ -83,9 +83,20 @@ Install Intel GPU Firmware and DKMS packages::
     /opt/packages/intel-platform-cse-dkms-*.deb \
     /opt/packages/intel-platform-pmt-dkms-*.deb
 
-Once done, reboot::
+Some systems running Intel® Data Center GPU Flex Series might require to be booted
+with ``pci=realloc=off`` Linux kernel cmdline option to be able to detect this GPU card.
+Add this option as follows::
 
-  sudo reboot
+  if ! grep "pci=realloc" /etc/default/grub; then
+    sudo sed -ine \
+      's,^GRUB_CMDLINE_LINUX_DEFAULT="\([^"]*\)",GRUB_CMDLINE_LINUX_DEFAULT="\1 pci=realloc=off",g' \
+      /etc/default/grub
+  fi
+  grep GRUB_CMDLINE_LINUX_DEFAULT /etc/default/grub
+
+Once done, update grub and reboot::
+
+  sudo update-grub && sudo reboot
 
 That's it. Now you should be able to use Intel GPU targeted by these DKMS packages.
 
