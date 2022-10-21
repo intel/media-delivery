@@ -34,7 +34,7 @@ collect to assist in performance investigations and debug:
 * Memory footprint and utilization%
 * GPU frequency timeline data
 
-With the `measure-perf <doc/man/measure-perf.asciidoc>` tool it is possible to
+With the `measure-perf <man/measure-perf.asciidoc>` tool it is possible to
 to enable/disable some metrics collection during the measurement.
 
 We evaluate performance on the following streams:
