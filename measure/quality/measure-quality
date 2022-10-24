@@ -284,8 +284,10 @@ if [ "${use_lowdelay}" = "yes" ]; then
   fi
   ref_ext="-${buffer_delay}ms"
 else
-  echo "warning: buffer delay is only available with --use-lowdelay" >&2
-  unset buffer_delay
+  if ! [ -z ${buffer_delay} ]; then
+    echo "warning: buffer delay is only available with --use-lowdelay" >&2
+    unset buffer_delay
+  fi
 fi
 
 # make sure gold references are available for user selected reference codec/preset
@@ -652,7 +654,7 @@ function get_file_extension() {
   if [ "$codec" = "AVC" ]; then echo "h264"
   elif [ "$codec" = "HEVC" ]; then echo "h265"
   elif [ "$codec" = "AV1" ]; then
-    if [ "$app" = "REF" ]; then echo "h265"
+    if [ "$app" = "REF" ]; then echo "h264"
     else
       [[ "$app" = "SMT" ]] && echo "av1" || echo "ivf"
     fi
