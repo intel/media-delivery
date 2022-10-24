@@ -36,7 +36,7 @@ include(centos-scl.m4)
 include(cmake.m4)
 include(libva2.m4)
 
-DECLARE(`MSDK_VER',intel-mediasdk-22.5.2)
+DECLARE(`MSDK_VER',intel-mediasdk-22.6.0)
 DECLARE(`MSDK_SRC_REPO',https://github.com/Intel-Media-SDK/MediaSDK/archive/MSDK_VER.tar.gz)
 DECLARE(`MSDK_BUILD_SAMPLES',OFF)
 

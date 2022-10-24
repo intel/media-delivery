@@ -30,7 +30,7 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`ONEVPL_VER',2022.2.0)
+DECLARE(`ONEVPL_VER',2022.2.4)
 
 ifelse(OS_NAME,ubuntu,dnl
 `define(`ONEVPL_BUILD_DEPS',`automake ca-certificates gcc g++ make pkg-config wget cmake dh-autoreconf')'
