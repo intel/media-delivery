@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020 Intel Corporation
+# Copyright (c) 2020-2022 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,9 +20,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# This script is called from nginx server when client requests HLS stream.
-# Script sends transcoding request to the socat server which just executes whatever
-# bash commands it has received.
+# This script is called from the sample HTTP socat server when client requests
+# HLS stream. Script parses incoming HTTP request and treats it as a transcoding
+# request.
+#
+# /dev/stdin is used to read incoming HTTP request
+# /dev/stdout is used to write HTTP response
 
-cmd="source /etc/demo.env; do-transcode.sh $1;"
-echo $cmd | socat -t 20 TCP:localhost:1234 -
+source /etc/demo.env
+
+while IFS= read -r line; do
+  if [[ "$line" =~ GET.* ]]; then
+    stream=$(echo "$line" | cut -f2 -d\ )
+    (do-transcode.sh "$stream" </dev/null >/dev/null 2>&1) &
+
+    n=0
+    while [[ ! -s "/var/www/hls/$stream" && "$n" -lt 10 ]]; do sleep 1; $((++n)); done
+
+    if [ -f "/var/www/hls/$stream" ]; then
+      echo "HTTP/1.1 200 OK"
+      echo "Content-Type: application/vnd.apple.mpegurl"
+      echo ""
+      cat /var/www/hls/$stream
+    else
+      echo "HTTP/1.1 404 Not Found"
+    fi
+    exit
+  fi
+done
+

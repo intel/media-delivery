@@ -216,7 +216,6 @@ RUN apt-get update && \
     less \
     man-db \
     libglib2.0-0 \
-    libnginx-mod-http-lua \
     linux-tools-generic \
     nginx \
     pciutils \

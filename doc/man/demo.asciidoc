@@ -102,13 +102,12 @@ NETWORK PORTS
 	`docker run`.
 
 1234::
-	Port used by simple socat server capable to execute incoming bash
-	scripts. Nginx uses this server to schedule transcoding tasks for
-	the incoming HLS requests. For this demo this is internal port and
-	there is no need to publish it out of container. However, in real
-	deployments you will likely wish to scale the sample and move
-	socat server (or some other server with the same purpose) to a
-	separate container (which likely will run on a separate GPU-capable
+	Port used by simple socat server to schedule incoming HLS transcoding
+	requests. Nginx forwards requests to this server for execution. For this
+	demo this is internal port and there is no need to publish it out of
+	container. However, in real deployments you will likely wish to scale the
+	sample and move socat server (or some other server with the same purpose)
+	to a separate container (which likely will run on a separate GPU-capable
 	machine). In such a case you will eventually need to publish the
 	port.
 

@@ -240,7 +240,6 @@ RUN apt-get update && \
     man-db \
     libglib2.0-0 \
     libvpl-tools \
-    libnginx-mod-http-lua \
     linux-tools-generic \
     nginx \
     pciutils \
