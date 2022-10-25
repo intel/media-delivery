@@ -189,7 +189,7 @@ function start_nginx() {
   fi
 }
 
-socat -t 20 TCP-LISTEN:1234,fork EXEC:/bin/bash </dev/null >/dev/null 2>&1 &
+socat -t 20 TCP-LISTEN:1234,fork EXEC:$(which nginx-trigger-streaming.sh) </dev/null >/dev/null 2>&1 &
 echo "$!" >/tmp/socat.pid
 
 if tty -s; then
