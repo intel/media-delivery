@@ -11,57 +11,57 @@
 
 # AV1 Encoding
 
-Not supported by upstream ffmpeg yet. Required patches are available here:
+Recommended version of VPL runtime is [intel-onevpl-22.6.0](https://github.com/oneapi-src/oneVPL-intel-gpu/releases/tag/intel-onevpl-22.6.0)
+or later. Earlier versions also support AV1, but the following patches were missing:
 
-* https://github.com/intel-media-ci/cartwheel-ffmpeg
-
-QSV AV1 encoder requires ffmpeg built against [oneVPL](https://github.com/oneapi-src/oneVPL) library.
-
-The following table corresponds to [cartwheel-ffmpeg@53a3f44](https://github.com/intel-media-ci/cartwheel-ffmpeg/commit/53a3f442436c471afef579c81965a2f47a675be4).
+* [19d0fc9](https://github.com/oneapi-src/oneVPL-intel-gpu/commit/19d0fc9) Open source av1 enctools
+* [dc7fd15](https://github.com/oneapi-src/oneVPL-intel-gpu/commit/dc7fd15) Output entire temporal unit for AV1 
 
 | Feature                     | Commit ID                                                                                   | FFmpeg Version |
 | --------------------------- | ------------------------------------------------------------------------------------------- | -------------- |
-| `-c:v av1_qsv`              | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-adaptive_b -1\|0\|1`      | | not supported |
-| `-adaptive_i -1\|0\|1`      | | not supported |
-| `-async_depth <int>`        | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-avbr_accuracy <int>`      | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-avbr_convergence <int>`   | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-b:v <int>`                | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-b_strategy <int>`         | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-b_qfactor <float>`        | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-b_qoffset <float>`        | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-c:v av1_qsv`              | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-adaptive_b -1\|0\|1`      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-adaptive_i -1\|0\|1`      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-async_depth <int>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-avbr_accuracy <int>`      | | not supported |
+| `-avbr_convergence <int>`   | | not supported |
+| `-b:v <int>`                | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-b_strategy <int>`         | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-b_qfactor <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-b_qoffset <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
 | `-bitrate_limit <int>`      | | not supported |
-| `-bufsize <int>`            | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-bufsize <int>`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
 | `-dblk_idc 0\|1\|2`         | | not supported |
-| `-extbrc -1\|0\|1`          | | not supported |
-| `-forced_idr 0\|1`          | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-g <int>`                  | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-global_quality <int>`     | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-i_qfactor <float>`        | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-i_qoffset <float>`        | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-extbrc -1\|0\|1`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-forced_idr 0\|1`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-g <int>`                  | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-global_quality <int>`     | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-i_qfactor <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-i_qoffset <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-look_ahead_depth <int>`   | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
 | `-low_delay_brc 0\|1`       | | not supported |
-| `-low_power 0\|1`           | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-low_power 0\|1`           | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
 | `-max_frame_size <int>`     | | not supported |
 | `-max_frame_size_i <int>`   | | not supported |
 | `-max_frame_size_p <int>`   | | not supported |
 | `-max_slice_size <int>`     | | not supported |
-| `-maxrate <int>`            | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-maxrate <int>`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
 | `-mbbrc -1\|0\|1`           | | not supported |
 | `-p_strategy 0\|1\|2`       | | not supported |
-| `-preset veryfast`          | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-preset faster`            | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-preset fast`              | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-preset medium`            | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-preset slow`              | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-preset slower`            | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-preset veryslow`          | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-profile unknown`          | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-profile main`             | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-q <int>`                  | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-rc_init_occupancy <int>`  | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-preset veryfast`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-preset faster`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-preset fast`              | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-preset medium`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-preset slow`              | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-preset slower`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-preset veryslow`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-profile unknown`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-profile main`             | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-q <int>`                  | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-rc_init_occupancy <int>`  | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
 | `-rdo -1\|0\|1`             | | not supported |
-| `-refs <int>`               | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-refs <int>`               | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
 | `-strict <int>`             | | not supported |
-| `-tile_cols <int>`          | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
-| `-tile_rows <int>`          | 0058-libavcodec-qsvenc_av1-add-av1_qsv-encoder.patch | patched |
+| `-tile_cols <int>`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-tile_rows <int>`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+
