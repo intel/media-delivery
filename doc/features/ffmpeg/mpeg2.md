@@ -15,8 +15,8 @@
 | `-adaptive_b 0\|1`          | | not supported |
 | `-adaptive_i 0\|1`          | | not supported |
 | `-async_depth <int>`        | [3a85397](https://github.com/FFmpeg/FFmpeg/commit/3a85397e8bb477eb34678d9edc52893f57003226) | n2.8           |
-| `-avbr_accuracy <int>`      | [3a85397](https://github.com/FFmpeg/FFmpeg/commit/3a85397e8bb477eb34678d9edc52893f57003226) | n2.8           |
-| `-avbr_convergence <int>`   | [3a85397](https://github.com/FFmpeg/FFmpeg/commit/3a85397e8bb477eb34678d9edc52893f57003226) | n2.8           |
+| `-avbr_accuracy <int>`      | [a5b6e29](https://github.com/FFmpeg/FFmpeg/commit/a5b6e292271f18d309389e7672e362332dc7dd7c) | n2.8-n5.1      |
+| `-avbr_convergence <int>`   | [a5b6e29](https://github.com/FFmpeg/FFmpeg/commit/a5b6e292271f18d309389e7672e362332dc7dd7c) | n2.8-n5.1      |
 | `-b:v <int>`                | [3a85397](https://github.com/FFmpeg/FFmpeg/commit/3a85397e8bb477eb34678d9edc52893f57003226) | n2.8           |
 | `-b_strategy <int>`         | | not supported |
 | `-b_qfactor <float>`        | [3a85397](https://github.com/FFmpeg/FFmpeg/commit/3a85397e8bb477eb34678d9edc52893f57003226) | n2.8           |
@@ -55,4 +55,10 @@
 | `-refs <int>`               | [3a85397](https://github.com/FFmpeg/FFmpeg/commit/3a85397e8bb477eb34678d9edc52893f57003226) | n2.8           |
 | `-rdo -1\|0\|1`             | [fc4c27c](https://github.com/FFmpeg/FFmpeg/commit/fc4c27c4edfc6a5f9bc7c696e823652474a65ce8) | n3.0           |
 | `-strict <int>`             | | not supported |
+
+Notes:
+
+* AVBR options (`-avbr_accuracy` and `-avbr_convergence`) were exposed in ffmpeg versions n4.3-n5.1. Recently
+  it was clarified (see [a5b6e29](https://github.com/FFmpeg/FFmpeg/commit/a5b6e292271f18d309389e7672e362332dc7dd7c))
+  as not supported in modern versions of VPL/MSDK runtimes.
 
