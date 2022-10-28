@@ -165,7 +165,7 @@ You might need to further configure docker as follows:
 
     # Below assumes unaltered default docker installation when
     # /etc/docker/daemon.json does not exist
-    echo "{"data-root": "/mnt/newlocation"}" | sudo tee /etc/docker/daemon.json
+    echo "{\"data-root\": \"/mnt/newlocation\"}" | sudo tee /etc/docker/daemon.json
     sudo systemctl daemon-reload
     sudo systemctl restart docker
 
