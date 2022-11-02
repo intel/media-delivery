@@ -190,9 +190,6 @@ h264="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
 }
 
 @test "demo vod/hevc from mp4/h264" {
-  if [ $MDS_DEMO != "cdn" ]; then
-    skip "note: mode not supported for '$MDS_DEMO' demo"
-  fi
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
@@ -225,9 +222,6 @@ h264="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
 
 @test "demo vod/hevc-enctools from mp4/h264" {
   if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
-  if [ $MDS_DEMO != "cdn" ]; then
-    skip "note: mode not supported for '$MDS_DEMO' demo"
-  fi
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
@@ -263,9 +257,6 @@ h265="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
 }
 
 @test "demo vod/hevc from mp4/h265" {
-  if [ $MDS_DEMO != "cdn" ]; then
-    skip "note: mode not supported for '$MDS_DEMO' demo"
-  fi
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
@@ -298,9 +289,6 @@ h265="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
 
 @test "demo vod/hevc-enctools from mp4/h265" {
   if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
-  if [ $MDS_DEMO != "cdn" ]; then
-    skip "note: mode not supported for '$MDS_DEMO' demo"
-  fi
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
@@ -334,9 +322,6 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
 }
 
 @test "demo vod/hevc from noaudio" {
-  if [ $MDS_DEMO != "cdn" ]; then
-    skip "note: mode not supported for '$MDS_DEMO' demo"
-  fi
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"
@@ -369,9 +354,6 @@ noaudio="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 \
 
 @test "demo vod/hevc-enctools from noaudio" {
   if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
-  if [ $MDS_DEMO != "cdn" ]; then
-    skip "note: mode not supported for '$MDS_DEMO' demo"
-  fi
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
   opts="-u $(id -u):$(id -g) -v $tmp:/opt/data/artifacts"
   opts+=" $(get_mounts $opts)"

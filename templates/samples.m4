@@ -27,7 +27,7 @@ DECLARE(`DEVEL',yes)
 define(`SAMPLES_INSTALL_DEPS',`dnl
   ifdef(`BUILD_ONEVPL',,ifelse(USE_VPL_TOOLS,yes,libvpl-tools)) dnl
   ifdef(`BUILD_MSDK',,ifelse(USE_VPL_TOOLS,no,libmfx-tools)) dnl
-  libnginx-mod-http-lua libnginx-mod-rtmp dnl
+  libnginx-mod-http-lua dnl
   linux-tools-generic nginx pciutils dnl
   python3 python3-matplotlib python3-numpy dnl
   socat tmux dnl

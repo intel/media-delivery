@@ -131,8 +131,7 @@ This sample can be built with ``--build-arg SAMPLE=cdn`` which is the default.
 
 "CDN" sample uses ffmpeg to generate HLS stream which is better scalable approach
 comparing to an alternative to use Nginx `RTMP module <https://github.com/arut/nginx-rtmp-module>`_.
-(we provide `Edge`_ sample for this alternative approach). See "CDN" sample architecture
-diagram below.
+See "CDN" sample architecture diagram below.
 
 .. image:: pic/cdn-demo-architecture.png
 
@@ -164,34 +163,4 @@ manage these many nodes and orchestration server. This sample however intentiona
 avoids scaling examples and focuses on streaming configuration basics and key aspects
 of GPU accelerated offloads. For the bigger scale CDN sample, please, take a look on
 Open Visual Cloud `CDN Transcode Sample <https://github.com/OpenVisualCloud/CDN-Transcode-Sample>`_.
-
-Edge
-~~~~
-
-This sample can be built with ``--build-arg SAMPLE=edge``.
-
-"Edge" sample is using Nginx `RTMP module <https://github.com/arut/nginx-rtmp-module>`_
-to generate HLS stream. FFmpeg is still used to transcode the stream, but it
-does not produce HLS stream. Instead it sends transcoded stream to RTMP
-server which actually breaks the stream into fragments and creates HLS
-stream. One of the downsides of using RTMP module is that it has limited
-codec capabilities. Specifically, as of now H.265 video is not supported.
-See "Edge" sample architecture diagram below.
-
-.. image:: pic/edge-demo-architecture.png
-
-Effectively, commands lines to try Edge sample are similar to CDN sample.
-For example::
-
-  DEVICE=${DEVICE:-/dev/dri/renderD128}
-  DEVICE_GRP=$(stat --format %g $DEVICE)
-  docker run --rm -it \
-    -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
-    --cap-add SYS_ADMIN \
-    -p 8080:8080 \
-    intel-media-delivery demo -4 \
-      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-1/index.m3u8
-      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-2/index.m3u8
-      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-3/index.m3u8
-      http://localhost:8080/vod/avc/WAR_TRAILER_HiQ_10_withAudio-4/index.m3u8
 
