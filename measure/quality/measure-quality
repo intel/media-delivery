@@ -413,6 +413,8 @@ function run() {
         else
           if [ "$codec" = "AVC" ]; then
             bitrates="1:1.5:2:3:4"
+          elif [ "$codec" = "AV1" ]; then
+            bitrates="0.5:1:2:7:11"
           else
             bitrates="3:7:11:15:20"
           fi
