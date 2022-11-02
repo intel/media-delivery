@@ -231,7 +231,7 @@ to the container so you can copy transcoded streams back to the host)::
   DEVICE=${DEVICE:-/dev/dri/renderD128}
   DEVICE_GRP=$(stat --format %g $DEVICE)
   mkdir -p /tmp/media-delivery && chmod -R 777 /tmp/media-delivery
-  docker run --rm -it /tmp/media-delivery:/opt/media-delivery \
+  docker run --rm -it -v /tmp/media-delivery:/opt/media-delivery \
     -e DEVICE=$DEVICE --device $DEVICE --group-add $DEVICE_GRP \
     --cap-add SYS_ADMIN \
     -p 8080:8080 \
