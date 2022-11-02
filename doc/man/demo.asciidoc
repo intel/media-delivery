@@ -57,8 +57,7 @@ script which is available as a health check command under docker.
 
 PROTOCOLS/CODECS
 ----------------
-Currently, only HLS streaming protocol is supported for both CDN and Edge demos.
-Under CDN demo, the AVC and HEVC codecs are supported, while Edge demo only supports AVC.
+Currently, only HLS streaming protocol with AVC and HEVC codecs is supported for the CDN demo.
 Invoking the specific protocol/codec can be accomplished with HTTP link formatting.
 The following HTTP link format is used:
 

@@ -24,13 +24,6 @@ jobs:
     - name: Building CDN demo w/ Intel pkgs
       run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu20.04/intel-gfx/Dockerfile -t intel-media-delivery-cdn .
 
-  edge-intel-pkgs:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Building Edge demo w/ Intel pkgs
-      run: docker build --build-arg SAMPLE=edge --no-cache --force-rm -f docker/ubuntu20.04/intel-gfx/Dockerfile -t intel-media-delivery-edge .
-
   cdn-native-pkgs:
     runs-on: ubuntu-latest
     steps:
@@ -52,24 +45,17 @@ jobs:
     - name: Building CDN against selfbuild stack
       run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile -t intel-media-delivery-cdn .
 
-  edge-native-pkgs:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Building Edge demo w/ Ubuntu native pkgs
-      run: docker build --build-arg SAMPLE=edge --no-cache --force-rm -f docker/ubuntu20.04/native/Dockerfile -t intel-media-delivery-edge .
-
   dkms-u2004:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Building DKMS pkgs
-      run: docker build --build-arg SAMPLE=edge --no-cache --force-rm -f docker/ubuntu20.04/dkms/Dockerfile -t dkms .
+      run: docker build --no-cache --force-rm -f docker/ubuntu20.04/dkms/Dockerfile -t dkms .
 
   dkms-u2204:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Building DKMS pkgs
-      run: docker build --build-arg SAMPLE=edge --no-cache --force-rm -f docker/ubuntu22.04/dkms/Dockerfile -t dkms .
+      run: docker build --no-cache --force-rm -f docker/ubuntu22.04/dkms/Dockerfile -t dkms .
 

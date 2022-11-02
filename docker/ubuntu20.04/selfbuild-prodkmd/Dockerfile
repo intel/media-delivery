@@ -414,7 +414,6 @@ RUN apt-get update && \
     man-db \
     libglib2.0-0 \
     libnginx-mod-http-lua \
-    libnginx-mod-rtmp \
     linux-tools-generic \
     nginx \
     pciutils \

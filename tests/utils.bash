@@ -35,10 +35,6 @@ if [ ! -e $DEVICE ]; then
   exit 1
 fi
 
-if [ -z "${MDS_DEMO}" ]; then
-  MDS_DEMO="cdn"
-fi
-
 if [ -z "${TIMEOUT}" ]; then
 TIMEOUT=300
 fi
