@@ -238,10 +238,10 @@ to the container so you can copy transcoded streams back to the host)::
     intel-media-delivery
 
 Once inside a container you can run the included software and scripts. To start,
-we recommend running simple `scipts <./scripts/>`_ which will showcase basic
+we recommend running simple `scripts <./scripts/>`_ which will showcase basic
 transcoding capabilities. These scripts will download sample video clips, though
 you can supply your own as a script argument if needed. If you work under proxy
-do not forget to add it to your environment (via `export https_proxy=<...>```).
+do not forget to add it to your environment (via ``export https_proxy=<...>``).
 
 * Below commands will run single transcoding session (1080p or 4K) and produce
   output files which you can copy to the host and review::
@@ -299,6 +299,50 @@ scripts and software which can be tried next:
 
 For the more complex samples, check out `Open Visual Cloud <https://01.org/openvisualcloud>`_ and
 their full scale `CDN Transcode Sample <https://github.com/OpenVisualCloud/CDN-Transcode-Sample>`_.
+
+Running 8K with Intel® Deep Link Hyper Encode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Intel® Deep Link Hyper Encode Technology was designed to boost transcode performance to achieve 
+8K60 real-time throughput.  Currently supported via Sample Multi Transcode application, this 
+technology was tested on Intel® Data Center GPU Flex 140 card (2 GPU nodes). Media delivery 
+container can be used to check two different flavors of this approach:
+
+- 1 GPU node solution (encoder and decoder workloads are shared between 2 VDBOX engines of a 
+  single GPU node and encoding is parallelized on a GOP level)
+- 2 GPU node solution (encoder and decoder workloads use 4 VDBOX engines of 2 GPU nodes and 
+  encoding is parallelized on a GOP level)
+
+Simple example scripts are provided allowing for a quick test of 8k60 transcoding at the user’s 
+end.  First, start docker with mapping **multiple GPU nodes** (mind ``--device /dev/dri`` vs
+``--device $DEVICE`` as in previous examples) as follows::
+
+  DEVICE=${DEVICE:-/dev/dri/renderD128}
+  DEVICE_GRP=$(stat --format %g $DEVICE)
+  mkdir -p /tmp/media-delivery && chmod -R 777 /tmp/media-delivery
+  docker run --rm -it -v /tmp/media-delivery:/opt/media-delivery \
+    -e DEVICE=$DEVICE --device /dev/dri --group-add $DEVICE_GRP \
+    --cap-add SYS_ADMIN \
+    -p 8080:8080 \
+    intel-media-delivery 
+
+Once inside the container, simple scripts can be used to showcase Intel® Deep Link Hyper 
+Encode Technology. If you work behind a firewall, please add HTTPS proxy to your environment 
+(via ``export https_proxy=<...>``) before running the scripts.
+
+* Use the following commands to run single 8K transcoding session using either of the two flavors::
+
+    # AV1 to AV1:
+    sample-multi-transcode-AV1-8K-hyperenc1gpu.sh
+    sample-multi-transcode-AV1-8K-hyperenc2gpu.sh
+
+    # HEVC to HEVC
+    sample-multi-transcode-HEVC-8K-hyperenc1gpu.sh
+    sample-multi-transcode-HEVC-8K-hyperenc2gpu.sh
+
+More information on Intel® Deep Link Hyper Encode Technology can be found here:
+
+* `Accelerating Media Delivery with Intel® Data Center GPU Flex Series <doc/benchmarks/intel-data-center-gpu-flex-series/intel-data-center-gpu-flex-series.rst>`_ 
 
 Contributing
 ------------
