@@ -89,8 +89,7 @@ Host Setup
   legacy GPU Passthrough Virtualization. For ATS-M this instruction was validated
   with the following kernels:
 
-  * 5.14.0-1045-oem
-  * 5.15.0-46-generic
+  * 5.15.0-50-generic
 
 * Check that desired GPU is detected and find it's device ID and PCI slot (in
   the example below``56C0`` and ``4d:00.0`` respectively)::
@@ -127,9 +126,9 @@ Host Setup
 
     $ lspci -nnk | grep -A 3 -i 56C0
     4d:00.0 Display controller [0380]: Intel Corporation Device [8086:56c0] (rev 08)
-            Subsystem: Intel Corporation Device [8086:4905]
-            Kernel driver in use: vfio-pci
-            Kernel modules: i915, intel_pmt
+        Subsystem: Intel Corporation Device [8086:4905]
+        Kernel driver in use: vfio-pci
+        Kernel modules: intel_vsec, i915
 
 * Install virtualization environment::
 
@@ -172,7 +171,7 @@ VM Setup
   via SSH don't forget to install ``openssh-server``. SSH access should be possible
   from the host as follows::
 
-    ssh -p 10022:localhost
+    ssh -p 10022 localhost
 
   Mind that we also forward port ``8080`` which is required for Media Delivery demo to run.
 
@@ -231,22 +230,26 @@ Host Setup
     4d:00.0 Display controller [0380]: Intel Corporation Device [8086:56c0] (rev 08)
             Subsystem: Intel Corporation Device [8086:4905]
             Kernel driver in use: i915
-            Kernel modules: i915, intel_pmt
+            Kernel modules: i915, intel_vsec
 
     $ DEVID=56C0
     $ PCISLOT=4d:00.0
 
-* Enable SR-IOV support (mind special option currently needed for i915 driver: ``i915.enable_guc=7``)::
+* Enable SR-IOV support by specifying number of virtual GPU cards (VFs) you want to get (mind
+  ``i915.mfx_vfs`` option)::
 
     # This will add the following options to Linux cmdline:
-    #   intel_iommu=on iommu=pt i915.enable_guc=7
+    #   intel_iommu=on iommu=pt i915.max_vfs=31
     #
     if ! grep "intel_iommu=on" /etc/default/grub | grep -iq "8086:56C0"; then
     sudo sed -ine \
-      's,^GRUB_CMDLINE_LINUX_DEFAULT="\([^"]*\)",GRUB_CMDLINE_LINUX_DEFAULT="\1 intel_iommu=on iommu=pt i915.enable_guc=7",g' \
+      's,^GRUB_CMDLINE_LINUX_DEFAULT="\([^"]*\)",GRUB_CMDLINE_LINUX_DEFAULT="\1 intel_iommu=on iommu=pt i915.max_vfs=31",g' \
       /etc/default/grub
     fi
     grep GRUB_CMDLINE_LINUX_DEFAULT /etc/default/grub
+
+  Note: older versions of i915 kernel driver did require ``i915.enable_guc=7`` option to enable
+  SRIOV support. Some versions might support both and report ``enable_guc`` as deprecated. See
 
 * Update grub and reboot::
 
@@ -308,11 +311,11 @@ that such resource allocation will make GPU basically unusable from the host.
     4d:00.0 Display controller [0380]: Intel Corporation Device [8086:56c0] (rev 08)
             Subsystem: Intel Corporation Device [8086:4905]
             Kernel driver in use: i915
-            Kernel modules: i915, intel_pmt
+            Kernel modules: i915, intel_vsec
     4d:00.1 Display controller [0380]: Intel Corporation Device [8086:56c0] (rev 08)
             Subsystem: Intel Corporation Device [8086:4905]
             Kernel driver in use: vfio-pci
-            Kernel modules: i915, intel_pmt
+            Kernel modules: i915, intel_vsec
 
 VM Setup
 ~~~~~~~~
@@ -349,7 +352,7 @@ VM Setup
   via SSH don't forget to install ``openssh-server``. SSH access should be possible
   from the host as follows::
 
-    ssh -p 10022:localhost
+    ssh -p 10022 localhost
 
   Mind that we also forward port ``8080`` which is required for Media Delivery demo to run.
 
@@ -461,4 +464,12 @@ Troubleshoot Tips
         ens2:
           dhcp4: true
       version: 2
+
+Known Limitations
+-----------------
+
+* `intel-gpu-i915-backports#57 <https://github.com/intel-gpu/intel-gpu-i915-backports/issues/57>`_:
+  VNC connection to VM might get broken (will stuck not showing user prompt) both for Passthrough
+  and SR-IOV install Intel DKMS modules of 476.14 series over 5.15.0-generic-50 (or later Ubuntu
+  kernel version).
 

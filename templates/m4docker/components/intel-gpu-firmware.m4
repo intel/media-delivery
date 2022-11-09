@@ -30,7 +30,7 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`INTEL_GPU_FW_VER',22WW33_419.38)
+DECLARE(`INTEL_GPU_FW_VER',22WW45.5_476.14)
 DECLARE(`INTEL_GPU_FW_SRC',https://github.com/intel-gpu/intel-gpu-firmware.git)
 
 ifelse(OS_NAME,ubuntu,`
