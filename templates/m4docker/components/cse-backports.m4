@@ -30,8 +30,8 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-ifelse(OS_NAME:OS_VERSION,ubuntu:20.04,`DECLARE(`CSE_BACKPORTS_VER',22WW33_419.38_UBUNTU514)')
-ifelse(OS_NAME:OS_VERSION,ubuntu:22.04,`DECLARE(`CSE_BACKPORTS_VER',22WW33_419.38_UBUNTU517)')
+dnl This tag covers support for 5.17.0-oem kernel and 5.15.0-x-generic Ubuntu kernels
+DECLARE(`CSE_BACKPORTS_VER_DEFAULT',22WW45.5_476.14.1_UBUNTU517)
 
 DECLARE(`CSE_BACKPORTS_SRC',https://github.com/intel-gpu/intel-gpu-cse-backports.git)
 
@@ -42,10 +42,11 @@ define(`CSE_BACKPORTS_BUILD_DEPS',`ca-certificates build-essential debhelper dkm
 define(`BUILD_CSE_BACKPORTS',`
 # build cse backports
 ARG CSE_BACKPORTS_REPO=CSE_BACKPORTS_SRC
+ARG CSE_BACKPORTS_VER=CSE_BACKPORTS_VER_DEFAULT
 RUN cd BUILD_HOME && \
   git clone ${CSE_BACKPORTS_REPO} && \
   cd intel-gpu-cse-backports && \
-  git checkout CSE_BACKPORTS_VER && \
+  git checkout ${CSE_BACKPORTS_VER} && \
   BUILD_VERSION=1 make -f Makefile.dkms dkmsdeb-pkg && \
   mv BUILD_HOME/intel-gpu-cse-backports/*.deb BUILD_DESTDIR
 ')

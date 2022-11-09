@@ -39,7 +39,7 @@ ARG INTEL_GPU_FW_REPO=https://github.com/intel-gpu/intel-gpu-firmware.git
 RUN cd /opt/build && \
   git clone ${INTEL_GPU_FW_REPO} && \
   cd intel-gpu-firmware && \
-  git checkout 22WW33_419.38 && \
+  git checkout 22WW45.5_476.14 && \
   cp -rd firmware /opt/dist
 
 RUN apt-get update && \
@@ -49,10 +49,11 @@ RUN apt-get update && \
 
 # build i915 backports
 ARG I915_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-i915-backports.git
+ARG I915_BACKPORTS_VER=I915_22WW45.5_476.14_6213_220914.5
 RUN cd /opt/build && \
   git clone ${I915_BACKPORTS_REPO} && \
   cd intel-gpu-i915-backports && \
-  git checkout UBUNTU2204_22WW34_419_5949_220707.2 && \
+  git checkout ${I915_BACKPORTS_VER} && \
   make i915dkmsdeb-pkg && \
   mv /opt/build/intel-i915-dkms* /opt/dist
 
@@ -63,10 +64,11 @@ RUN apt-get update && \
 
 # build cse backports
 ARG CSE_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-cse-backports.git
+ARG CSE_BACKPORTS_VER=22WW45.5_476.14.1_UBUNTU517
 RUN cd /opt/build && \
   git clone ${CSE_BACKPORTS_REPO} && \
   cd intel-gpu-cse-backports && \
-  git checkout 22WW33_419.38_UBUNTU517 && \
+  git checkout ${CSE_BACKPORTS_VER} && \
   BUILD_VERSION=1 make -f Makefile.dkms dkmsdeb-pkg && \
   mv /opt/build/intel-gpu-cse-backports/*.deb /opt/dist
 
@@ -77,11 +79,12 @@ RUN apt-get update && \
 
 # build pmt backports
 ARG PMT_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-pmt-backports.git
+ARG PMT_BACKPORTS_VER=22WW45.5_476.14_UBUNTU517
 RUN cd /opt/build && \
   git clone ${PMT_BACKPORTS_REPO} && \
   cd intel-gpu-pmt-backports && \
-  git checkout 22WW33_419.38_UBUNTU517 && \
-  BUILD_VERSION=1 make -f Makefile.dkms dkmsdeb-pkg && \
+  git checkout ${PMT_BACKPORTS_VER} && \
+  BUILD_VERSION=1 make -f Makefile.dkms OS_TYPE=ubuntu_22.04 dkmsdeb-pkg && \
   mv /opt/build/intel-gpu-pmt-backports/*.deb /opt/dist
 
 

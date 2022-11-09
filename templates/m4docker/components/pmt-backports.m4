@@ -30,8 +30,8 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-ifelse(OS_NAME:OS_VERSION,ubuntu:20.04,`DECLARE(`PMT_BACKPORTS_VER',22WW33_419.38_UBUNTU514)')
-ifelse(OS_NAME:OS_VERSION,ubuntu:22.04,`DECLARE(`PMT_BACKPORTS_VER',22WW33_419.38_UBUNTU517)')
+dnl This tag covers support for 5.17.0-oem kernel and 5.15.0-x-generic Ubuntu kernels
+DECLARE(`PMT_BACKPORTS_VER_DEFAULT',22WW45.5_476.14_UBUNTU517)
 
 DECLARE(`PMT_BACKPORTS_SRC',https://github.com/intel-gpu/intel-gpu-pmt-backports.git)
 
@@ -42,11 +42,12 @@ define(`PMT_BACKPORTS_BUILD_DEPS',`ca-certificates build-essential debhelper dev
 define(`BUILD_PMT_BACKPORTS',`
 # build pmt backports
 ARG PMT_BACKPORTS_REPO=PMT_BACKPORTS_SRC
+ARG PMT_BACKPORTS_VER=PMT_BACKPORTS_VER_DEFAULT
 RUN cd BUILD_HOME && \
   git clone ${PMT_BACKPORTS_REPO} && \
   cd intel-gpu-pmt-backports && \
-  git checkout PMT_BACKPORTS_VER && \
-  BUILD_VERSION=1 make -f Makefile.dkms dkmsdeb-pkg && \
+  git checkout ${PMT_BACKPORTS_VER} && \
+  BUILD_VERSION=1 make -f Makefile.dkms OS_TYPE=OS_NAME`_'OS_VERSION dkmsdeb-pkg && \
   mv BUILD_HOME/intel-gpu-pmt-backports/*.deb BUILD_DESTDIR
 ')
 
