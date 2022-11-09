@@ -107,3 +107,16 @@ To set Region of Interest (ROI) you can use [addroi](https://ffmpeg.org/ffmpeg-f
     qsvcodec=h264_qsv|hevc_qsv
     ffmpeg <...> -vf "addroi=0:0:960:540:-1/2" -c:v $qsvcodec <...>
 
+To configure skip frames mode attach `"qsv_skip_frame"` frame metadata:
+
+    filter="[0:v]trim=start_frame=0:end_frame=100,setpts=PTS-STARTPTS[v0];"
+    filter+="[0:v]trim=start_frame=100:end_frame=200,setpts=PTS-STARTPTS[v1];"
+    filter+="[0:v]trim=start_frame=200:end_frame=300,setpts=PTS-STARTPTS[v2];"
+    filter+="[v1]metadata=mode=add:key=qsv_skip_frame:value=1[v1m];"
+    filter+="[v0][v1m][v2]concat=n=3:v=1"
+
+    qsvcodec=h264_qsv|hevc_qsv
+    skip_mode=no_skip|insert_dummy|insert_nothing|brc_only
+
+    ffmpeg <...> -filter_complex "$filter" -c:v $qsvcodec -skip_frame $skip_mode output.264
+
