@@ -24,7 +24,9 @@
 ########### Scott.Rowe@intel.com Measure Perf ####################################
 import subprocess, sys, os, re, argparse, time, statistics, signal
 
-temp_path = "/tmp/perf/"
+os_env_DEVICE = os.environ.get('DEVICE' , "/dev/dri/renderD128")
+device_name=os_env_DEVICE.split('/')[3]
+temp_path = "/tmp/perf_" + device_name + "/"
 
 ###################################################################
 # This shell script is currently not being Run/Execute on this automation.
@@ -42,7 +44,6 @@ for dispatch_cmdline in d:
         continue
     else:
         mediacmd_temp.append(dispatch_cmdline)
-
 d.close()
 
 #Execute Media MultiStreams
@@ -54,7 +55,7 @@ cpu_mem_monitor_cmd = "top -b -d 0.01 -i > " + temp_path + clip_session_iter_tag
 top_cpu_mem_process = subprocess.Popen(cpu_mem_monitor_cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
 #Monitor GPU_MEM Utilization
-gpu_mem_monitor_cmd = "watch -n 0.01 -t -c 'sudo cat /sys/kernel/debug/dri/0/i915_gem_objects >> " + temp_path + clip_session_iter_tag + "_GemObjectSummary.txt 2>&1' &"
+gpu_mem_monitor_cmd = "watch -n 0.01 -t -c 'sudo cat /sys/kernel/debug/dri/"+str(int(device_name[-3:])-128)+"/i915_gem_objects >> " + temp_path + clip_session_iter_tag + "_GemObjectSummary.txt 2>&1' &"
 gem_gpu_mem_process     = subprocess.Popen(gpu_mem_monitor_cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 gem_gpu_mem_process_pid = gem_gpu_mem_process.pid
 
