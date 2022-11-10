@@ -33,7 +33,7 @@
 # Performance automation flow: (by intel pnp silicon lab)
 ##################################################################################
 import subprocess, sys, os, re, argparse, time, statistics, signal, getpass
-
+global temp_path
 ########### James.Iwan@intel.com MSPerf ######################################
 class MediaContent:
     width = encode_bitrate = fps_target = performance_stream = performance_fps = init_stream_number = linux_perf_cmdlines = 0
@@ -134,10 +134,8 @@ def main():
 
 
     ################################# Multiple Device default/user overwrite check #########################
-    os_env_DEVICE = "/dev/dri/renderD128"
-    for k, v in os.environ.items():
-        if k == "DEVICE":
-            os_env_DEVICE = os.environ['DEVICE']
+    os_env_DEVICE = os.environ.get('DEVICE' , "/dev/dri/renderD128")
+    device_name=os_env_DEVICE.split('/')[3]
 
     ################################# Variable Assignment #################################################
     starting_streamnumber           = str(ARGS.startStreams) if ARGS.startStreams else "all:1"
@@ -157,7 +155,7 @@ def main():
     fps_target                      = float(ARGS.fps_target) if ARGS.fps_target else 0
     script_root_path                = os.path.dirname(os.path.realpath(__file__))
     output_log_filename             = str(ARGS.output_log_file) if str(ARGS.output_log_file) != "None" else "msperf.txt"
-    temp_path                       = "/tmp/perf/"
+    temp_path                       = "/tmp/perf_" + device_name + "/"
     ##################################################################################
     # Initiate artifacts directory
     ##################################################################################
@@ -271,7 +269,7 @@ def main():
             # jiwan
             ##################################################################################
             content_list_filename = temp_path + "content.list"
-            cmd_generate_content_list = "ls " + content_path + " | grep -E '\.h264|\.hevc|\.h265|\.mp4' > " + content_list_filename # Add more content container support into the grep list.
+            cmd_generate_content_list = "ls " + content_path + " | grep -E '\.h264|\.hevc|\.h265|\.mp4|\.ivf|\.av1' > " + content_list_filename # Add more content container support into the grep list.
             generate_list_status = os.system(cmd_generate_content_list)
 
             with open(content_list_filename, "r") as content_list_temp_fh:
@@ -918,7 +916,7 @@ def main():
 
             output_directory_archived = re.sub(r'.txt', "_" + performance_app_tag + "_" + performance_tag + "_traces",output_log_filename)
             output_directory_archived = artifact_path + output_directory_archived
-            move_command = "mv /tmp/perf " + output_directory_archived
+            move_command = "mv " + temp_path + " " + output_directory_archived
             os.system(move_command)
 
             # print out total time during the measure sequence
@@ -1160,7 +1158,7 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
                 line_list = re.sub(r'^\s+', "", line) # Remove any leading empty characters.
                 line_list = re.sub(r'\s+', " ", line_list).split(" ")
                 top_pid         = int(line_list[0])
-                top_vm_mem      = int(line_list[4])
+                top_vm_mem      = int(line_list[4]) if line_list[4].isdigit() else 0
                 top_res_mem     = int(line_list[5])
                 top_shr_mem     = int(line_list[6])
                 top_cpu_percent = float(line_list[8])
@@ -1221,10 +1219,11 @@ def postprocess_multistream(output_log_handle, stream_number, iteration_number, 
         for each_pid in MEM_percent_per_pid_average:
             total_MEM_percents_streams = total_MEM_percents_streams + MEM_percent_per_pid_average[each_pid]
 
-        if (total_CPU_percents_streams != 0) and (total_MEM_percents_streams != 0):
+        if (total_CPU_percents_streams != 0):
             avg_avg_cpu_percents_streams   = round(total_CPU_percents_streams / len(top_pid_list), 2)  # take average every each value
+        if (total_MEM_percents_streams != 0):
             avg_avg_mem_percents_streams   = round(total_MEM_percents_streams / len(top_pid_list), 2)  # take average every each value
-
+       	print(avg_avg_cpu_percents_streams)
         dump_top_list["AVG_CPU_Util:"]  = str(avg_avg_cpu_percents_streams)
         dump_top_list["AVG_MEM_Util:"]  = str(avg_avg_mem_percents_streams)
 
