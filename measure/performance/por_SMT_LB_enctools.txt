@@ -1,3 +1,7 @@
+#AV1-AV1
+720p_av1-av1: sample_multi_transcode -i::av1 <> -hw -async <> -u <> -n 2000 -bref -gop_size 256 -dist 8 -vbr -b 1000 -NalHrdConformance:off -VuiNalHrdParameters:off -hrd 500 -InitialDelayInKB 250 -lad <> -extbrc::implicit  -AdaptiveI:on -AdaptiveB:on -n 3000 -override_decoder_framerate 60 -o::av1 <>.ivf -p <> 
+1080p_av1-av1: sample_multi_transcode -i::av1 <> -hw -async <> -u <> -n 2000 -bref -gop_size 256 -dist 8 -vbr -b 3000 -NalHrdConformance:off -VuiNalHrdParameters:off -hrd 1500 -InitialDelayInKB 750 -lad <> -extbrc::implicit  -AdaptiveI:on -AdaptiveB:on -n 3000 -override_decoder_framerate 60 -o::av1 <>.ivf -p <>
+2160p_av1-av1: sample_multi_transcode -i::av1 <> -hw -async <> -u <> -n 2000 -bref -gop_size 256 -dist 8 -vbr -b 9000 -NalHrdConformance:off -VuiNalHrdParameters:off -hrd 4500 -InitialDelayInKB 2250 -lad <> -extbrc::implicit  -AdaptiveI:on -AdaptiveB:on -n 3000 -override_decoder_framerate 60 -o::av1 <>.ivf -p <>
 #HEVC-AVC
 720p_hevc-avc: sample_multi_transcode -i::h265 <> -hw -async <> -u <> -gop_size 256 -dist 8 -num_ref 5 -vbr -b 1500 -NalHrdConformance:off -VuiNalHrdParameters:off -hrd 1000 -InitialDelayInKB 500 -lad <> -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
 1080p_hevc-avc: sample_multi_transcode -i::h265 <> -hw -async <> -u <> -gop_size 256 -dist 8 -num_ref 5 -vbr -b 3000 -NalHrdConformance:off -VuiNalHrdParameters:off -hrd 1500 -InitialDelayInKB 750 -lad <> -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -ExtBrcAdaptiveLTR:on -o::h264 <>.h264 -p <>
