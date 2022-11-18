@@ -1,3 +1,7 @@
+#AV1-AV1
+720p_av1-av1: ffmpeg -hwaccel qsv -c:v av1_qsv -extra_hw_frames <> -i <> -c:v av1_qsv -b:v 1500k -preset <> -g 256 -look_ahead_depth <> -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -strict -1 -async_depth <> -maxrate 3000k -bufsize 6000k -y <>.ivf -report
+1080p_av1-av1: ffmpeg -hwaccel qsv -c:v av1_qsv -extra_hw_frames <> -i <> -c:v av1_qsv -b:v 3000k -preset <> -g 256 -look_ahead_depth <> -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -strict -1 -async_depth <> -maxrate 6000k -bufsize 12000k -y <>.ivf -report
+2160p_av1-av1: ffmpeg -hwaccel qsv -c:v av1_qsv -extra_hw_frames <> -i <> -c:v av1_qsv -b:v 9000k -preset <> -g 256 -look_ahead_depth <> -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -strict -1 -async_depth <> -maxrate 18000k -bufsize 36000k -y <>.ivf -report
 #HEVC-AVC
 720p_hevc-avc: ffmpeg -hwaccel qsv -c:v hevc_qsv -extra_hw_frames <> -i <> -c:v h264_qsv -b:v 1500k -preset <> -g 256 -look_ahead_depth <> -extbrc 1 -adaptive_i 1 -adaptive_b 1 -b_strategy 1 -bf 7 -refs 5 -strict -1 -async_depth <> -maxrate 4000k -bufsize 8000k -y <>.h264 -report
 1080p_hevc-avc: ffmpeg -hwaccel qsv -c:v hevc_qsv -extra_hw_frames <> -i <> -c:v h264_qsv -b:v 3000k -preset <> -g 256 -look_ahead_depth <> -extbrc 1 -adaptive_i 1 -adaptive_b 1 -b_strategy 1 -bf 7 -refs 5 -strict -1 -async_depth <> -maxrate 6000k -bufsize 12000k -y <>.h264 -report

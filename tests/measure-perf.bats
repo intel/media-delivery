@@ -233,6 +233,35 @@ function get_perf_opts() {
   fi
 }
 
+@test "measure perf raw av1 with AV1 Enc Tools" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh AV1Profile0); \
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$rawav1" "measure perf --use-enctools /tmp/WAR.ivf")"
+  print_output
+  if ! kernel_ge_4_16; then
+    [ $status -ne 0 ]
+  else
+    [ $status -eq 0 ]
+
+    ptmp=$tmp/measure/perf
+    nout=$(find $ptmp/output_SMT -name "*.ivf" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nout=$(find $ptmp/output_FFMPEG -name "*.ivf" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+    nlines=$(cat $ptmp/msperf_SMT_AV1-AV1_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    npng=$(find $ptmp -name "*.png" | wc -l)
+    [ "$npng" -ge 4 ] # we should have at least one picture for each performance
+  fi
+}
+
 @test "measure perf raw h264 with AVC Enc Tools with customized Look Ahead" {
   if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
   tmp=`mktemp -p $_TMP -d -t demo-XXXX`
@@ -293,6 +322,39 @@ function get_perf_opts() {
     nlines=$(cat $ptmp/msperf_SMT_HEVC-AVC_performance.csv | wc -l)
     [ "$nlines" -eq 2 ]
     nlines=$(cat $ptmp/msperf_SMT_HEVC-HEVC_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ]
+    npng=$(find $ptmp -name "*.png" | wc -l)
+    [ "$npng" -ge 4 ] # we should have at least one picture for each performance
+  fi
+}
+
+@test "measure perf raw av1 with AV1 Enc Tools with customized Look Ahead" {
+  run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
+    /bin/bash -c "set -ex; \
+    supported=\$(/opt/tests/profile-supported.sh AV1Profile0); \
+    [[ "\$supported" = "yes" ]]"
+  print_output
+  if [ $status -eq 1 ]; then skip; fi
+  if ! [[ "$TEST_ENCTOOLS" =~ ^(on|ON) ]]; then skip; fi
+  tmp=`mktemp -p $_TMP -d -t demo-XXXX`
+  run docker_run_opts "$(get_perf_opts $tmp)" /bin/bash -c " \
+    $(get_test_body "$rawav1" "measure perf --use-enctools --enctools-lad 40 /tmp/WAR.ivf")"
+  print_output
+  if ! kernel_ge_4_16; then
+    [ $status -ne 0 ]
+  else
+    [ $status -eq 0 ]
+
+    ptmp=$tmp/measure/perf
+    nout=$(find $ptmp/output_SMT -name "*.ivf" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+
+    nout=$(find $ptmp/output_FFMPEG -name "*.ivf" | wc -l)
+    [ "$nout" -gt 0 ] # we expect at least 1 output file for each encoder
+
+    nlines=$(cat $ptmp/msperf_FFMPEG_AV1-AV1_performance.csv | wc -l)
+    [ "$nlines" -eq 2 ] # we expect header and result lines
+    nlines=$(cat $ptmp/msperf_SMT_AV1-AV1_performance.csv | wc -l)
     [ "$nlines" -eq 2 ]
     npng=$(find $ptmp -name "*.png" | wc -l)
     [ "$npng" -ge 4 ] # we should have at least one picture for each performance

@@ -402,11 +402,7 @@ def main():
             elif performance_tag == "AVC-HEVC" and (encode_codec == "all" or encode_codec == "hevc") and cmdline_config_avc2hevc_exist:
                 sequence_mode = "TRANSCODE"
             elif performance_tag == "AV1-AV1" and (encode_codec == "all" or encode_codec == "av1") and cmdline_config_av12av1_exist:
-                if not ARGS.use_enctools:
-                    sequence_mode = "TRANSCODE"
-                else:
-                    printLog(output_log_handle, " ERROR : Perf Config file , AV1 CODEC with Enctools not supported" )
-                    continue
+                sequence_mode = "TRANSCODE"
             elif performance_tag == "DECODE-HEVC" and density_decode and cmdline_config_decode_hevc_exist:
                 sequence_mode = "DECODE"
             elif performance_tag == "DECODE-AVC" and density_decode and cmdline_config_decode_avc_exist:

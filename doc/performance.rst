@@ -407,6 +407,67 @@ Example command lines:
 AV1 Transcode
 -------------
 
+EncTools
+********
+
+To achieve performance with Intel GPU AV1 encoder running EncTools BRC we recommend the following settings:
+
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ffmpeg-qsv options                                    | ffmpeg version | Comments                                                                 |
++=======================================================+================+==========================================================================+
+| VBR                                                                                                                                               |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | master :sup:`*`| maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-bufsize $((4 * $bitrate))``                        | master :sup:`*`| You can vary bufsize per your needs. We recommend to avoid going below 1 |
+|                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
+|                                                       |                | for VBR.                                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-rc_init_occupancy $((2 * $bitrate))``              | master :sup:`*`| This is the initial buffer delay. You can vary this per your needs.      |
+|                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extbrc 1 -look_ahead_depth $lad``                  | master :sup:`*`| This enables EncTools Software BRC when look ahead depth > than 0. Need  |
+|                                                       |                | to have look ahead depth > than miniGOP size to enable low power look    |
+|                                                       |                | ahead too (miniGOP size is equal to bf+1). The recommended values for    |
+|                                                       |                | `$lad` are: 8 (for performance boost) and 40 (for quality boost)         |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-b_strategy 1 -bf 7``                               | master :sup:`*`| These 2 settings activate full 3 level B-Pyramid.                        |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-adaptive_i 1 -adaptive_b 1``                       | master :sup:`*`| Ensures to enable scene change detection and adaptive miniGOP.           |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-g 256``                                            | master :sup:`*`| Select long enough GOP size for random access encoding. You can vary     |
+|                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-strict -1``                                        | master :sup:`*`| Disables HRD compliance.                                                 |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+| ``-extra_hw_frames $lad``                             | master :sup:`*`| Add extra GPU decoder frame surfaces.  This is currently needed for      |
+|                                                       |                | transcoding with look ahead (set this option to look ahead depth value)  |
++-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+:sup:`*` Hardware AV1 encoding support landed in ffmpeg-qsv at `dc9e478 commit <https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6>`_.
+
+Example command lines:
+
+::
+
+  # VBR (transcoding with ffmpeg-qsv)
+  ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
+    -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth $async_depth \
+    -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
+    -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
+    -b_strategy 1 -adaptive_i 1 -adaptive_b 1  -bf 7 -g 256 -strict -1 \
+    -vsync passthrough -y $output
+
+  # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
+  sample_multi_transcode -i::${inputcodec} $input -hw -async $async_depth -device ${DEVICE:-/dev/dri/renderD128} \
+    -u $preset -b $bitrateKb -vbr -n $numframes -lowpower:${LOWPOWER:-on} \
+    -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -gop_size 256 \
+    -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $(($bitrateKb / 2)) \
+    -InitialDelayInKB $(($bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::av1 $output
+
+ExtBRC
+******
+
 To achieve better performance with Intel GPU AV1 encoder running Hardware BRC we recommend the following settings:
 
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
