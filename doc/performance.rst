@@ -414,20 +414,22 @@ To achieve better performance with Intel GPU AV1 encoder running Hardware BRC we
 +=======================================================+================+==========================================================================+
 | VBR                                                                                                                                               |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | patched        | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
+| ``-b:v $bitrate -maxrate $((2 * $bitrate))``          | master :sup:`*`| maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-bufsize $((4 * $bitrate))``                        | patched        | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+| ``-bufsize $((4 * $bitrate))``                        | master :sup:`*`| You can vary bufsize per your needs. We recommend to avoid going below 1 |
 |                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
 |                                                       |                | for VBR.                                                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-rc_init_occupancy $((2 * $bitrate))``              | patched        | This is initial buffer delay. You can vary this per your needs.          |
+| ``-rc_init_occupancy $((2 * $bitrate))``              | master :sup:`*`| This is initial buffer delay. You can vary this per your needs.          |
 |                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-b_strategy 1 -bf 7``                               | patched        | These 2 settings activate full 3 level B-Pyramid.                        |
+| ``-b_strategy 1 -bf 7``                               | master :sup:`*`| These 2 settings activate full 3 level B-Pyramid.                        |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-g 256``                                            | patched        | Select long enough GOP size for random access encoding. You can vary     |
+| ``-g 256``                                            | master :sup:`*`| Select long enough GOP size for random access encoding. You can vary     |
 |                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+:sup:`*` Hardware AV1 encoding support landed in ffmpeg-qsv at `dc9e478 commit <https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6>`_.
 
 Example command lines:
 

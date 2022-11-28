@@ -857,45 +857,47 @@ To achieve better quality with Intel GPU AV1 encoder running EncTools BRC we rec
 +=======================================================+================+==========================================================================+
 | VBR                                                                                                                                               |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-b:v $bitrate -maxrate $((2 * bitrate))``           | n2.8           | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
+| ``-b:v $bitrate -maxrate $((2 * bitrate))``           | master :sup:`*`| maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-bufsize $((4 * bitrate))``                         | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+| ``-bufsize $((4 * bitrate))``                         | master :sup:`*`| You can vary bufsize per your needs. We recommend to avoid going below 1 |
 |                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
 |                                                       |                | for VBR.                                                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-rc_init_occupancy $((2 * bitrate))``               | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+| ``-rc_init_occupancy $((2 * bitrate))``               | master :sup:`*`| This is the initial buffer delay. You can vary this per your needs.      |
 |                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | CBR                                                                                                                                               |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-b:v $bitrate -minrate $bitrate -maxrate $bitrate`` | n2.8           | This triggers CBR.                                                       |
+| ``-b:v $bitrate -minrate $bitrate -maxrate $bitrate`` | master :sup:`*`| This triggers CBR.                                                       |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-bufsize $((2 * bitrate))``                         | n4.0           | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+| ``-bufsize $((2 * bitrate))``                         | master :sup:`*`| You can vary bufsize per your needs. We recommend to avoid going below 1 |
 |                                                       |                | second to avoid quality loss. Buffer size of 2 seconds is recommended    |
 |                                                       |                | for CBR.                                                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-rc_init_occupancy $bitrate``                       | n2.8           | This is the initial buffer delay. You can vary this per your needs.      |
+| ``-rc_init_occupancy $bitrate``                       | master :sup:`*`| This is the initial buffer delay. You can vary this per your needs.      |
 |                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | CBR & VBR common settings                                                                                                                         |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-extbrc 1 -look_ahead_depth $lad``                  | n3.0           | This enables EncTools Software BRC when look ahead depth > than 0. Need  |
+| ``-extbrc 1 -look_ahead_depth $lad``                  | master :sup:`*`| This enables EncTools Software BRC when look ahead depth > than 0. Need  |
 |                                                       |                | to have look ahead depth > than miniGOP size to enable low power look    |
 |                                                       |                | ahead too (miniGOP size is equal to bf+1). The recommended values for    |
 |                                                       |                | `$lad` are: 8 (for performance boost) and 40 (for quality boost)         |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-b_strategy 1 -bf 7``                               | n3.0           | These 2 settings activate full 3 level B-Pyramid.                        |
+| ``-b_strategy 1 -bf 7``                               | master :sup:`*`| These 2 settings activate full 3 level B-Pyramid.                        |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-g 256``                                            | n2.7           | Select long enough GOP size for random access encoding. You can vary     |
+| ``-g 256``                                            | master :sup:`*`| Select long enough GOP size for random access encoding. You can vary     |
 |                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-adaptive_i 1 -adaptive_b 1``                       | n3.0           | Ensures to enable scene change detection and adaptive miniGOP.           |
+| ``-adaptive_i 1 -adaptive_b 1``                       | master :sup:`*`| Ensures to enable scene change detection and adaptive miniGOP.           |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-strict -1``                                        | n3.0           | Disables HRD compliance.                                                 |
+| ``-strict -1``                                        | master :sup:`*`| Disables HRD compliance.                                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-extra_hw_frames $lad``                             | n4.0           | Add extra GPU decoder frame surfaces.  This is currently needed for      |
+| ``-extra_hw_frames $lad``                             | master :sup:`*`| Add extra GPU decoder frame surfaces.  This is currently needed for      |
 |                                                       |                | transcoding with look ahead (set this option to look ahead depth value)  |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+:sup:`*` Hardware AV1 encoding support landed in ffmpeg-qsv at `dc9e478 commit <https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6>`_.
 
 ::
 
@@ -973,33 +975,35 @@ To achieve better quality with Intel GPU AV1 encoder running Hardware BRC we rec
 +=======================================================+================+==========================================================================+
 | VBR                                                                                                                                               |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-b:v $bitrate -maxrate $((2 * bitrate))``           | patched        | maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
+| ``-b:v $bitrate -maxrate $((2 * bitrate))``           | master :sup:`*`| maxrate > bitrate triggers VBR. You can vary maxrate per your needs.     |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-bufsize $((4 * bitrate))``                         | patched        | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+| ``-bufsize $((4 * bitrate))``                         | master :sup:`*`| You can vary bufsize per your needs. We recommend to avoid going below 1 |
 |                                                       |                | second to avoid quality loss. Buffer size of 4 seconds is recommended    |
 |                                                       |                | for VBR.                                                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-rc_init_occupancy $((2 * bitrate))``               | patched        | This is initial buffer delay. You can vary this per your needs.          |
+| ``-rc_init_occupancy $((2 * bitrate))``               | master :sup:`*`| This is initial buffer delay. You can vary this per your needs.          |
 |                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | CBR                                                                                                                                               |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-b:v $bitrate -minrate $bitrate -maxrate $bitrate`` | patched        | This triggers CBR.                                                       |
+| ``-b:v $bitrate -minrate $bitrate -maxrate $bitrate`` | master :sup:`*`| This triggers CBR.                                                       |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-bufsize $((2 * bitrate))``                         | patched        | You can vary bufsize per your needs. We recommend to avoid going below 1 |
+| ``-bufsize $((2 * bitrate))``                         | master :sup:`*`| You can vary bufsize per your needs. We recommend to avoid going below 1 |
 |                                                       |                | second to avoid quality loss. Buffer size of 2 seconds is recommended    |
 |                                                       |                | for VBR.                                                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-rc_init_occupancy $bitrate``                       | patched        | This is initial buffer delay. You can vary this per your needs.          |
+| ``-rc_init_occupancy $bitrate``                       | master :sup:`*`| This is initial buffer delay. You can vary this per your needs.          |
 |                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | CBR & VBR common settings                                                                                                                         |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-b_strategy 1 -bf 7``                               | patched        | These 2 settings activate full 3 level B-Pyramid.                        |
+| ``-b_strategy 1 -bf 7``                               | master :sup:`*`| These 2 settings activate full 3 level B-Pyramid.                        |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
-| ``-g 256``                                            | patched        | Select long enough GOP size for random access encoding. You can vary     |
+| ``-g 256``                                            | master :sup:`*`| Select long enough GOP size for random access encoding. You can vary     |
 |                                                       |                | this setting. Typically 2 to 4 seconds GOP is used.                      |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
+
+:sup:`*` Hardware AV1 encoding support landed in ffmpeg-qsv at `dc9e478 commit <https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6>`_.
 
 Example command lines:
 
