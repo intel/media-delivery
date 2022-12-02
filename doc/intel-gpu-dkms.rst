@@ -124,7 +124,7 @@ verify that DKMS driver backports got recognized and loaded::
 
 Then, check that GPU stack got initialized for your platform::
 
-  $ sudo mesg | grep drm
+  $ sudo dmesg | grep drm
   [   18.909790] [drm] I915 BACKPORTED INIT
   [   18.916368] i915 0000:4d:00.0: [drm] GT count: 1, enabled: 1
   [   18.950174] i915 0000:4d:00.0: [drm] Bumping pre-emption timeout from 640 to 7500 on rcs'0.0 to allow slow compute pre-emption
