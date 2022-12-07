@@ -714,7 +714,7 @@ Example command lines:
     -u $preset -b $bitrateKb -vbr -n $numframes -w $width -h $height -override_encoder_framerate $framerate \
     -lowpower:${LOWPOWER:-on} -lad $lad -extbrc::implicit -AdaptiveI:on -AdaptiveB:on -dist 8 -num_ref 4 -gop_size 256 \
     -NalHrdConformance:off -VuiNalHrdParameters:off -hrd $((bitrateKb / 2)) \
-    -InitialDelayInKB $((bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h264 $output
+    -InitialDelayInKB $((bitrateKb / 4)) -MaxKbps $((bitrateKb * 2)) -o::h265 $output
 
   # CBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
