@@ -21,7 +21,7 @@ dnl #
 include(begin.m4)
 include(dav1d.m4)
 
-DECLARE(`FFMPEG_VER',`d79c240')
+DECLARE(`FFMPEG_VER',`d4f853f')
 DECLARE(`FFMPEG_ENABLE_MFX',`1.x')
 
 define(`FFMPEG_BUILD_DEPS',`ca-certificates gcc g++ git dnl
