@@ -21,7 +21,7 @@ optimized for high quality and performance are given below:
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} \
     -look_ahead_depth 8 -extbrc 1 -b_strategy 1 \
     -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
 **HEVC/H.265**::
 
@@ -31,7 +31,7 @@ optimized for high quality and performance are given below:
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} \
     -look_ahead_depth 8 -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
 **AV1**::
 
@@ -40,7 +40,7 @@ optimized for high quality and performance are given below:
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth 8 -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
 Extra quality boost can be achieved with use of low power look ahead (by setting
 ``-look_ahead_depth 40`` option) at the expense of a slight performance impact (10-20%).

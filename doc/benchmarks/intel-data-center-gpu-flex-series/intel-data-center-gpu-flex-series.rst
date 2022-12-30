@@ -336,7 +336,7 @@ ffmpeg) command lines optimized for high quality and performance are given below
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} \
     -look_ahead_depth 8 -extbrc 1 -b_strategy 1 \
     -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
 **HEVC/H.265**::
 
@@ -346,7 +346,7 @@ ffmpeg) command lines optimized for high quality and performance are given below
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} \
     -look_ahead_depth 8 -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
 **AV1 (HW-based BRC, EncTools coming soon)**::
 
@@ -354,7 +354,7 @@ ffmpeg) command lines optimized for high quality and performance are given below
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -g 256 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
 Extra quality boost can be achieved with use of low power look ahead (by setting
 “-look_ahead_depth 40” option) at the expense of a slight performance impact (10-20%).
@@ -382,7 +382,7 @@ ffmpeg) command lines optimized for high quality and performance are given below
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 4)) \
     -rc_init_occupancy $((bitrate / 8)) -bitrate_limit 0 \
-    -bf 0 -refs 5 -g 9999 -strict 1 -vsync passthrough -y $output
+    -bf 0 -refs 5 -g 9999 -strict 1 -fps_mode passthrough -y $output
 
 **HEVC/H.265**::
 
@@ -390,14 +390,14 @@ ffmpeg) command lines optimized for high quality and performance are given below
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 4)) \
     -rc_init_occupancy $((bitrate / 8)) \
-    -bf 0 -refs 4 -g 9999 -strict 1 -vsync passthrough -y $output
+    -bf 0 -refs 4 -g 9999 -strict 1 -fps_mode passthrough -y $output
 
 **AV1**::
 
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 2)) -rc_init_occupancy $((bitrate / 4)) \
-    -bf 0 -g 9999 -vsync passthrough -y $output
+    -bf 0 -g 9999 -fps_mode passthrough -y $output
 
 Recommendations for more specific use cases as well as additional information on
 developer configurable bitrate controllers and available advanced coding options

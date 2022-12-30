@@ -47,7 +47,7 @@ rawh265="ffmpeg -an -hwaccel qsv -qsv_device $DEVICE \
 # prepare raw AV1 stream from an mp4 container
 rawav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE \
   -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 -y -vframes 20 \
-  -c:v av1_qsv -preset medium -b:v 15M -vsync 0 /tmp/WAR.ivf "
+  -c:v av1_qsv -preset medium -b:v 15M -fps_mode passthrough /tmp/WAR.ivf "
 
 # add mp4 file for mp4 check out
 submp4="ffmpeg -i \

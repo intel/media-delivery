@@ -38,7 +38,7 @@ subs="ffmpeg -i \
 
 # convert to 10bit HEVC mp4
 getmp4hevc10b="ffmpeg -i WAR.mp4 \
-  -pix_fmt p010le -c:v libx265 -preset medium -b:v 15M -vsync passthrough WAR_10bit.mp4"
+  -pix_fmt p010le -c:v libx265 -preset medium -b:v 15M -fps_mode passthrough WAR_10bit.mp4"
 
 @test "measure quality: transcode 50 frames of 10bit mp4 video, calculate metrics, measure bdrate and check measuring artifacts" {
   run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
@@ -57,7 +57,7 @@ getmp4hevc10b="ffmpeg -i WAR.mp4 \
 
 # convert to yuv420
 cyuv="ffmpeg -i WAR.mp4 \
-  -c:v rawvideo -pix_fmt yuv420p -vsync passthrough WAR.yuv"
+  -c:v rawvideo -pix_fmt yuv420p -fps_mode passthrough WAR.yuv"
 
 @test "measure quality: encode 5 frames of a user-defined YUV video with AVC" {
   run docker_run /bin/bash -c "set -ex; $subs; $cyuv; \
@@ -105,7 +105,7 @@ subs2="ffmpeg -i \
 
 # mock ParkScene: convert to yuv
 cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
-  -vsync passthrough ParkScene_1280x720_24.yuv"
+  -fps_mode passthrough ParkScene_1280x720_24.yuv"
 
 @test "measure quality: encode 5 frames of a predefined YUV video with AVC" {
   run docker_run /bin/bash -c "set -ex; $subs2; $cyuv2; \
@@ -129,7 +129,7 @@ cyuv2="ffmpeg -i ParkScene.mp4 -c:v rawvideo -pix_fmt yuv420p \
 
 # mock BalloonFestival: subsample to 1080p
 cyuv210b="ffmpeg -i /opt/data/embedded/WAR_TRAILER_HiQ_10_withAudio.mp4 -c:v rawvideo -pix_fmt p010le \
-  -vframes 240 -vsync passthrough BalloonFestival_1920x1080p_25_10b_pq_709_ct2020_p010le.yuv"
+  -vframes 240 -fps_mode passthrough BalloonFestival_1920x1080p_25_10b_pq_709_ct2020_p010le.yuv"
 
 @test "measure quality: encode 5 frames of a predefined YUV 10bit video with HEVC" {
   run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
@@ -203,7 +203,7 @@ get264="ffmpeg -i WAR.mp4 -vcodec copy -an WAR.h264"
 }
 
 # get raw HEVC stream from an mp4 container
-get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vsync 0 WAR.h265"
+get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -fps_mode passthrough WAR.h265"
 
 @test "measure quality: transcode 5 frames of a user-defined raw HEVC video stream into AVC stream" {
   run docker_run /bin/bash -c "set -ex; $subs; $get265; \
@@ -226,7 +226,7 @@ get265="ffmpeg -i WAR.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vs
 }
 
 # get raw HEVC 10bit stream from an mp4 container
-get26510b="ffmpeg -i WAR_10bit.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -vsync 0 WAR_10bit.h265"
+get26510b="ffmpeg -i WAR_10bit.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:v 15M -fps_mode passthrough WAR_10bit.h265"
 
 @test "measure quality: transcode 5 frames of a user-defined raw HEVC 10bit video stream into HEVC 10bit stream" {
   run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
@@ -261,7 +261,7 @@ get26510b="ffmpeg -i WAR_10bit.mp4 -y -vframes 5 -c:v libx265 -preset medium -b:
 }
 
 # get raw AV1 stream from an mp4 container
-getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av1_qsv -preset medium -b:v 15M -vsync 0 WAR.ivf "
+getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av1_qsv -preset medium -b:v 15M -fps_mode passthrough WAR.ivf "
 
 @test "measure quality: transcode 5 frames of a user-defined raw AV1 video stream into AV1 stream" {
   run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
@@ -339,7 +339,7 @@ getav1="ffmpeg -hwaccel qsv -qsv_device $DEVICE -i WAR.mp4 -y -vframes 5 -c:v av
 
 # get 10bit yuv from mp4
 cyuv10b="ffmpeg -i WAR.mp4 \
-  -c:v rawvideo -pix_fmt p010le -vsync passthrough WAR_10bit.yuv"
+  -c:v rawvideo -pix_fmt p010le -fps_mode passthrough WAR_10bit.yuv"
 
 @test "measure quality: encode 5 frames of a YUV 10bit video with HEVC encTools" {
   run docker_run_opts "--security-opt=no-new-privileges:true -v $(pwd)/tests:/opt/tests" \
