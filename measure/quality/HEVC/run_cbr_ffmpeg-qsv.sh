@@ -81,7 +81,7 @@ cmd=(ffmpeg $dev -an \
   -b:v $bitrate -maxrate $bitrate -minrate $bitrate \
   -bufsize $bufsize -rc_init_occupancy $initbuf \
   $options \
-  -vsync passthrough -y ${prefix}_${bitrate_Mbps}Mbps_CBR_QSV.h265)
+  -fps_mode passthrough -y ${prefix}_${bitrate_Mbps}Mbps_CBR_QSV.h265)
 
 if [ "$dry_run" = "no" ]; then
   "${cmd[@]}"

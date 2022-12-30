@@ -54,7 +54,7 @@ for ((i=0; i<$nstreams; i++)); do
     -c:v hevc_qsv -preset $preset -vframes 6000 -profile:v main -async_depth $async -b:v $bitrate \
     -maxrate $((bitrate * 2)) -bufsize $((bitrate * 4)) -rc_init_occupancy $((bitrate * 2)) \
     -low_power true -look_ahead_depth 8 -extbrc 1 -b_strategy 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only \
-    -strict -1 -vsync passthrough $output 2>&1 | tee $(basename $stream).${nstreams}.${i}.dev$((i % ndevs)).hevc.qsv.log &
+    -strict -1 -fps_mode passthrough $output 2>&1 | tee $(basename $stream).${nstreams}.${i}.dev$((i % ndevs)).hevc.qsv.log &
 
 done
 
