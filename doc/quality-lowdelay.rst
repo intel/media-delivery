@@ -274,14 +274,14 @@ To achieve better quality for low delay use case with Intel GPU H.264/AVC encode
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 4)) \
     -rc_init_occupancy $((bitrate / 8)) -bitrate_limit 0 -low_power ${LOW_POWER:-true} \
-    -bf 0 -refs 5 -g 9999 -strict 1 -vsync passthrough -y $output
+    -bf 0 -refs 5 -g 9999 -strict 1 -fps_mode passthrough -y $output
 
   # LD CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 4)) \
     -rc_init_occupancy $((bitrate / 8)) -bitrate_limit 0 -low_power ${LOW_POWER:-true} \
-    -bf 0 -refs 5 -g 9999 -strict 1 -vsync passthrough -y $output
+    -bf 0 -refs 5 -g 9999 -strict 1 -fps_mode passthrough -y $output
 
   # LD CBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 \
@@ -331,14 +331,14 @@ Example command lines:
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 4)) \
     -rc_init_occupancy $((bitrate / 8)) -low_power ${LOW_POWER:-true} \
-    -bf 0 -refs 4 -g 9999 -strict 1 -vsync passthrough -y $output
+    -bf 0 -refs 4 -g 9999 -strict 1 -fps_mode passthrough -y $output
 
   # LD CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 4)) \
     -rc_init_occupancy $((bitrate / 8)) -low_power ${LOW_POWER:-true} \
-    -bf 0 -refs 4 -g 9999 -strict 1 -vsync passthrough -y $output
+    -bf 0 -refs 4 -g 9999 -strict 1 -fps_mode passthrough -y $output
 
   # LD CBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
@@ -382,13 +382,13 @@ Example command lines:
     -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 2)) -rc_init_occupancy $((bitrate / 4)) \
-    -bf 0 -g 9999 -vsync passthrough -y $output
+    -bf 0 -g 9999 -fps_mode passthrough -y $output
 
   # LD CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 2)) -rc_init_occupancy $((bitrate / 4)) \
-    -bf 0 -g 9999 -vsync passthrough -y $output
+    -bf 0 -g 9999 -fps_mode passthrough -y $output
 
   # LD CBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
@@ -420,7 +420,7 @@ ffmpeg-x264
     -i $inputyuv -vframes $numframes -y \
     -c:v libx264 -preset medium -profile:v high \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / N)) \
-    -tune zerolatency -threads 12 -vsync passthrough $output
+    -tune zerolatency -threads 12 -fps_mode passthrough $output
 
 ffmpeg-x265
 ***********
@@ -432,7 +432,7 @@ ffmpeg-x265
     -i $inputyuv -vframes $numframes -y \
     -c:v libx265 -preset medium \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / N)) \
-    -tune zerolatency -threads 12 -vsync passthrough $output
+    -tune zerolatency -threads 12 -fps_mode passthrough $output
 
 Links
 -----

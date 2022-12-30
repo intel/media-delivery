@@ -114,7 +114,7 @@ ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
   -c:v h264_qsv -preset medium -profile:v high \
   -b:v $bitrate -maxrate $(bitrate*2) -bitrate_limit 0 \
   -bufsize $(bitrate*4) -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 \
-  -vsync 0 $output
+  -fps_mode passthrough $output
 ```
 
 **Example 2: AVC CBR Encode**
@@ -125,7 +125,7 @@ ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
   -c:v h264_qsv -preset medium -profile:v high \
   -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 \
   -bufsize $(bitrate*2) -g 256 -extbrc 1 -b_strategy 1 -bf 7 -refs 5 \
-  -vsync 0 $output
+  -fps_mode passthrough $output
 ```
 
 **Example 3: HEVC VBR Encode**
@@ -136,7 +136,7 @@ ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
   -c:v hevc_qsv -preset medium -profile:v main \
   -b:v $bitrate -maxrate $(bitrate*2) -bitrate_limit 0 \
   -bufsize $(bitrate*4) -g 256 -extbrc 1 -refs 5 -bf 7 \
-  -vsync 0 $output
+  -fps_mode passthrough $output
 ```
 
 **Example 4: HEVC CBR Encode**
@@ -147,7 +147,7 @@ ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
   -c:v hevc_qsv -preset medium -profile:v main \
   -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 \
   -bufsize $(bitrate*2) -g 256 -extbrc 1 -refs 5 -bf 7 \
-  -vsync 0 $output
+  -fps_mode passthrough $output
 ```
 
 ## Try it out
@@ -219,7 +219,7 @@ wget https://repositories.intel.com/media/WAR_TRAILER_HiQ_10_withAudio.mp4
 ffmpeg -an -c:v h264_qsv -i WAR_TRAILER_HiQ_10_withAudio.mp4 \
   -c:v hevc_qsv -preset medium -profile:v main -b:v 2000000 \
   -extbrc 1 -bf 7 -refs 5 \
-  vsync 0 -y WAR_2Mbps_VBR_QSV.h265
+  -fps_mode passthrough -y WAR_2Mbps_VBR_QSV.h265
 ```
 
 ## Start Developing

@@ -53,7 +53,7 @@ for ((i=0; i<$nstreams; i++)); do
   ffmpeg -y -hwaccel qsv -qsv_device $device -c:v av1_qsv -extra_hw_frames 8 -an -i $stream -c:v av1_qsv -preset $preset -vframes 6000 \
     -profile:v main -async_depth $async -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) -rc_init_occupancy $((2 * bitrate)) \
     -low_power true -look_ahead_depth 8 -extbrc 1 -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
-    -vsync passthrough -y $output 2>&1 | tee $(basename $stream).${nstreams}.${i}.dev$((i % ndevs)).av1.qsv.log &
+    -fps_mode passthrough -y $output 2>&1 | tee $(basename $stream).${nstreams}.${i}.dev$((i % ndevs)).av1.qsv.log &
 
 done
 
