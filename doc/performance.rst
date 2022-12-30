@@ -233,7 +233,7 @@ To achieve better performance with Intel GPU H.264/AVC encoder running EncTools 
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::${inputcodec} $input -hw -async $async_depth \
@@ -284,7 +284,7 @@ Example command lines:
     -frames:v $numframes -c:v h264_qsv -preset h264_qsv -profile:v high -async_depth $async_depth \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bitrate_limit 0 -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::${inputcodec} $input -hw -async $async_depth -device ${DEVICE:-/dev/dri/renderD128} \
@@ -345,7 +345,7 @@ Example command lines:
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::${inputcodec} $input -hw -async $async_depth -device ${DEVICE:-/dev/dri/renderD128} \
@@ -395,7 +395,7 @@ Example command lines:
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth $async_depth \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::${inputcodec} $input -hw -async $async_depth -device ${DEVICE:-/dev/dri/renderD128} \
@@ -456,7 +456,7 @@ Example command lines:
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $((2 * $bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1  -bf 7 -g 256 -strict -1 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::${inputcodec} $input -hw -async $async_depth -device ${DEVICE:-/dev/dri/renderD128} \
@@ -501,7 +501,7 @@ Example command lines:
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth $async_depth \
     -b:v $bitrate -maxrate $((2 * $bitrate)) -bufsize $((4 * $bitrate)) \
     -rc_init_occupancy $(($bufsize / 2)) -b_strategy 1 -bf 7 -g 256 \
-    -vsync passthrough -y $output
+    -fps_mode passthrough -y $output
 
   # VBR (transcoding from raw bitstream with Sample Multi-Transcode)
   sample_multi_transcode -i::$inputcodec $input -hw -async $async_depth \
