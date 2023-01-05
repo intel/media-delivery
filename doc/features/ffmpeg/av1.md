@@ -65,3 +65,17 @@ or later. Earlier versions also support AV1, but the following patches were miss
 | `-tile_cols <int>`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
 | `-tile_rows <int>`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
 
+## Dynamic options
+
+These options can be applied dynamically at runtime to adjust encoder settings.
+
+| Feature                             | Option Type | Mode | Commit ID                                                  | FFmpeg Version |
+| ----------------------------------- | ------------| ---- | ---------------------------------------------------------- | -------------- |
+| Forced IDR                          | Frame Type  |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
+| `bit_rate`                          | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
+| `framerate`                         | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
+| `gop_size`                          | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
+| `rc_buffer_size`                    | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
+| `rc_initial_buffer_occupancy`       | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
+| `rc_max_rate`                       | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
+
