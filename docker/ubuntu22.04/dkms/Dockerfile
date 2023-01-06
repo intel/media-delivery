@@ -39,7 +39,7 @@ ARG INTEL_GPU_FW_REPO=https://github.com/intel-gpu/intel-gpu-firmware.git
 RUN cd /opt/build && \
   git clone ${INTEL_GPU_FW_REPO} && \
   cd intel-gpu-firmware && \
-  git checkout 22WW45.5_476.14 && \
+  git checkout 22WW51.5_518.5 && \
   cp -rd firmware /opt/dist
 
 RUN apt-get update && \
@@ -49,7 +49,7 @@ RUN apt-get update && \
 
 # build i915 backports
 ARG I915_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-i915-backports.git
-ARG I915_BACKPORTS_VER=I915_22WW45.5_476.14_6213_220914.5
+ARG I915_BACKPORTS_VER=I915_22WW51.5_518.5_6365.0.0_221124.0
 RUN cd /opt/build && \
   git clone ${I915_BACKPORTS_REPO} && \
   cd intel-gpu-i915-backports && \
@@ -64,7 +64,7 @@ RUN apt-get update && \
 
 # build cse backports
 ARG CSE_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-cse-backports.git
-ARG CSE_BACKPORTS_VER=22WW45.5_476.14.1_UBUNTU517
+ARG CSE_BACKPORTS_VER=22WW51.5_518.5_UBUNTU517
 RUN cd /opt/build && \
   git clone ${CSE_BACKPORTS_REPO} && \
   cd intel-gpu-cse-backports && \
@@ -79,7 +79,7 @@ RUN apt-get update && \
 
 # build pmt backports
 ARG PMT_BACKPORTS_REPO=https://github.com/intel-gpu/intel-gpu-pmt-backports.git
-ARG PMT_BACKPORTS_VER=22WW45.5_476.14_UBUNTU517
+ARG PMT_BACKPORTS_VER=22WW51.5_518.5_fix_1_MAIN
 RUN cd /opt/build && \
   git clone ${PMT_BACKPORTS_REPO} && \
   cd intel-gpu-pmt-backports && \

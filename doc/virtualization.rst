@@ -91,7 +91,7 @@ Host Setup
   legacy GPU Passthrough Virtualization. For ATS-M this instruction was validated
   with the following kernels:
 
-  * 5.15.0-50-generic
+  * 5.15.0-53-generic
 
 * Check that desired GPU is detected and find it's device ID and PCI slot (in
   the example below``56C0`` and ``4d:00.0`` respectively)::
@@ -271,8 +271,8 @@ VM Resource Allocation
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The essential part of SR-IOV setup is resource allocation for each VM. We will
-described the trivial case of creating 1 VM maximizing out it's resources. Mind
-that such resource allocation will make GPU basically unusable from the host.
+describe the trivial case of creating 1 VM relying on kernel mode driver auto provisioning
+which distributes resources equally for each VM.
 
 * Check card number assigned to GPU device::
 
@@ -287,12 +287,6 @@ that such resource allocation will make GPU basically unusable from the host.
     CARD=/sys/class/drm/card1
 
     echo 0 > $CARD/device/sriov_drivers_autoprobe
-    cat $CARD/iov/pf/gt/available/doorbells_max_quota > $CARD/iov/vf1/gt/doorbells_quota
-    cat $CARD/iov/pf/gt/available/contexts_max_quota > $CARD/iov/vf1/gt/contexts_quota
-    cat $CARD/iov/pf/gt/available/ggtt_max_quota > $CARD/iov/vf1/gt/ggtt_quota
-    cat $CARD/iov/pf/gt/available/lmem_max_quota > $CARD/iov/vf1/gt/lmem_quota
-    echo 0 > $CARD/iov/vf1/gt/exec_quantum_ms
-    echo 0 > $CARD/iov/vf1/gt/preempt_timeout_us
     echo 1 > $CARD/iov/pf/device/sriov_numvfs
 
 * Create VFIO-PCI, run below commands (change underlined values as
@@ -318,6 +312,41 @@ that such resource allocation will make GPU basically unusable from the host.
             Subsystem: Intel Corporation Device [8086:4905]
             Kernel driver in use: vfio-pci
             Kernel modules: i915, intel_vsec
+
+Consider that not all resources can be given to VMs. Some resources are used by PF (for example, for FW).
+Also, kernel mode driver keeps some resources reserved for PF.
+
+You can further configure resource allocation for VMs in 2 ways:
+
+* Increase resources reserved for PF which will eventually reduce what you will be able to use for VMs::
+
+    sudo su
+    CARD=/sys/class/drm/card1
+
+    echo BYTES > $CARD/prelim_iov/pf/gt/lmem_spare
+    # consider other "*_spare" resources...
+
+* Explicitly allocate resources for each VM::
+
+    sudo su
+    CARD=/sys/class/drm/card1
+
+    echo BYTES > $CARD/prelim_iov/vf1/gt/lmem_quota
+
+Kernel mode driver will reject resource values that are too high or too low.
+
+Another aspect you might wish to tune for your VMs is scheduling settings. Pay attention to execution
+quantum and preemption timeout. By default auto provisioning leaves them 0 (unlimited), try out 20ms
+and 4000us for exec quantum and preemption timeout respectively::
+
+    sudo su
+    CARD=/sys/class/drm/card1
+
+    echo 20 > $CARD/prelim_iov/pf/gt/exec_quantum_ms
+    echo 40000 > $CARD/prelim_iov/pf/gt/preempt_timeout_us
+
+    echo 20 > $CARD/prelim_iov/vf1/gt/exec_quantum_ms
+    echo 40000 > $CARD/prelim_iov/vf1/gt/preempt_timeout_us
 
 VM Setup
 ~~~~~~~~
@@ -472,6 +501,6 @@ Known Limitations
 
 * `intel-gpu-i915-backports#57 <https://github.com/intel-gpu/intel-gpu-i915-backports/issues/57>`_:
   VNC connection to VM might get broken (will stuck not showing user prompt) both for Passthrough
-  and SR-IOV install Intel DKMS modules of 476.14 series over 5.15.0-generic-50 (or later Ubuntu
-  kernel version).
+  and SR-IOV after installing Intel DKMS modules of 476.14 or later series over 5.15.0-generic-50 or
+  later Ubuntu kernel version.
 
