@@ -31,7 +31,7 @@ dnl
 include(begin.m4)
 
 dnl This tag covers support for 5.17.0-oem kernel and 5.15.0-x-generic Ubuntu kernels
-DECLARE(`CSE_BACKPORTS_VER_DEFAULT',22WW45.5_476.14.1_UBUNTU517)
+DECLARE(`CSE_BACKPORTS_VER_DEFAULT',22WW51.5_518.5_UBUNTU517)
 
 DECLARE(`CSE_BACKPORTS_SRC',https://github.com/intel-gpu/intel-gpu-cse-backports.git)
 
