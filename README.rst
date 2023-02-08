@@ -145,12 +145,37 @@ Setup Docker
 Docker is required to build and to run media delivery containers. If you run Ubuntu 20.04
 or later you can install it as follows::
 
-  apt-get install docker.io
+  sudo apt-get install docker.io
 
-You might need to further configure docker as follows:
+You might need to further configure docker on your system:
+
+* Allow docker to run under your user account (remember to relogin for group modification
+  to take effect)::
+
+    sudo usermod -aG docker $(whoami) && exit
+
+* Consider to register and login to `Docker Hub <https://hub.docker.com/>`_. Docker Hub
+  limits the number of docker image downloads ("pulls"). For anonymous users this limit
+  is tied to IP address. For authenticated users it depends on subscription type. For
+  details see https://docs.docker.com/docker-hub/download-rate-limit/. To authenticate
+  running docker engine, execute::
+
+    # you will be prompted to enter username and password:
+    docker login
 
 * If you run behind a proxy, configure proxies for for docker daemon. Refer to
-  https://docs.docker.com/config/daemon/systemd/.
+  https://docs.docker.com/config/daemon/systemd/. Below example assumes that you
+  have ``http_proxy`` environment variable set in advance::
+
+    sudo mkdir -p /etc/systemd/system/docker.service.d
+    echo "[Service]" | sudo tee /etc/systemd/system/docker.service.d/https-proxy.conf
+    echo "Environment=\"HTTPS_PROXY=$http_proxy/\"" | \
+      sudo tee -a /etc/systemd/system/docker.service.d/https-proxy.conf
+
+    sudo systemctl daemon-reload
+    sudo systemctl restart docker
+
+    sudo systemctl show --property=Environment --no-pager docker
 
 * Make sure that docker has at least 20GB of hard disk space to use. To check available
   space run (in the example below 39GB are available)::
