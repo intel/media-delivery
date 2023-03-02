@@ -19,51 +19,51 @@ or later. Earlier versions also support AV1, but the following patches were miss
 
 | Feature                     | Commit ID                                                                                   | FFmpeg Version |
 | --------------------------- | ------------------------------------------------------------------------------------------- | -------------- |
-| `-c:v av1_qsv`              | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-adaptive_b -1\|0\|1`      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-adaptive_i -1\|0\|1`      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-async_depth <int>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-c:v av1_qsv`              | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-adaptive_b -1\|0\|1`      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-adaptive_i -1\|0\|1`      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-async_depth <int>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 | `-avbr_accuracy <int>`      | | not supported |
 | `-avbr_convergence <int>`   | | not supported |
-| `-b:v <int>`                | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-b_strategy <int>`         | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-b_qfactor <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-b_qoffset <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-b:v <int>`                | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-b_strategy <int>`         | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-b_qfactor <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-b_qoffset <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 | `-bitrate_limit <int>`      | | not supported |
-| `-bufsize <int>`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-bufsize <int>`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 | `-dblk_idc 0\|1\|2`         | | not supported |
-| `-extbrc -1\|0\|1`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-forced_idr 0\|1`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-g <int>`                  | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-global_quality <int>`     | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-i_qfactor <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-i_qoffset <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-look_ahead_depth <int>`   | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-extbrc -1\|0\|1`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-forced_idr 0\|1`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-g <int>`                  | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-global_quality <int>`     | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-i_qfactor <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-i_qoffset <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-look_ahead_depth <int>`   | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 | `-low_delay_brc 0\|1`       | | not supported |
-| `-low_power 0\|1`           | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-low_power 0\|1`           | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 | `-max_frame_size <int>`     | | not supported |
 | `-max_frame_size_i <int>`   | | not supported |
 | `-max_frame_size_p <int>`   | | not supported |
 | `-max_slice_size <int>`     | | not supported |
-| `-maxrate <int>`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-maxrate <int>`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 | `-mbbrc -1\|0\|1`           | | not supported |
 | `-p_strategy 0\|1\|2`       | | not supported |
-| `-preset veryfast`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-preset faster`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-preset fast`              | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-preset medium`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-preset slow`              | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-preset slower`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-preset veryslow`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-profile unknown`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-profile main`             | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-q <int>`                  | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-rc_init_occupancy <int>`  | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-preset veryfast`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-preset faster`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-preset fast`              | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-preset medium`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-preset slow`              | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-preset slower`            | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-preset veryslow`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-profile unknown`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-profile main`             | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-q <int>`                  | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-rc_init_occupancy <int>`  | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 | `-rdo -1\|0\|1`             | | not supported |
-| `-refs <int>`               | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-refs <int>`               | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 | `-strict <int>`             | | not supported |
-| `-tile_cols <int>`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
-| `-tile_rows <int>`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | master         |
+| `-tile_cols <int>`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
+| `-tile_rows <int>`          | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 
 ## Dynamic options
 
@@ -71,11 +71,11 @@ These options can be applied dynamically at runtime to adjust encoder settings.
 
 | Feature                             | Option Type | Mode | Commit ID                                                  | FFmpeg Version |
 | ----------------------------------- | ------------| ---- | ---------------------------------------------------------- | -------------- |
-| Forced IDR                          | Frame Type  |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
-| `bit_rate`                          | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
-| `framerate`                         | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
-| `gop_size`                          | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
-| `rc_buffer_size`                    | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
-| `rc_initial_buffer_occupancy`       | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
-| `rc_max_rate`                       | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | master         |
+| Forced IDR                          | Frame Type  |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | n6.0           |
+| `bit_rate`                          | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | n6.0           |
+| `framerate`                         | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | n6.0           |
+| `gop_size`                          | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | n6.0           |
+| `rc_buffer_size`                    | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | n6.0           |
+| `rc_initial_buffer_occupancy`       | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | n6.0           |
+| `rc_max_rate`                       | Global      |      | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e478) | n6.0           |
 
