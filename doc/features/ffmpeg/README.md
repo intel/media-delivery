@@ -18,10 +18,10 @@ description - assume that it's supported under both backends).
 
 Not all versions of ffmpeg support both backends. Refer to the table below.
 
-| Backend   | FFmpeg versions    |
-| --------- | ------------------ |
-| Media SDK | n2.6+              |
-| oneVPL    | [master@7158f1e](https://github.com/FFmpeg/FFmpeg/commit/7158f1e)+ |
+| Backend   | FFmpeg versions  |
+| --------- | ---------------- |
+| Media SDK | n2.6+            |
+| oneVPL    | n6.0+            |
 
 Mind the following component versions requirements for oneVPL backend in ffmpeg-qsv:
 
