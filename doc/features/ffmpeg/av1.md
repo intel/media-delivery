@@ -39,9 +39,9 @@ or later. Earlier versions also support AV1, but the following patches were miss
 | `-i_qfactor <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 | `-i_qoffset <float>`        | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
 | `-look_ahead_depth <int>`   | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
-| `-low_delay_brc 0\|1`       | | not supported |
+| `-low_delay_brc 0\|1`       | [c8e7355](https://github.com/FFmpeg/FFmpeg/commit/c8e73558fe0181a0b3e611f486bb8bc308af24b4) | n6.0           |
 | `-low_power 0\|1`           | [dc9e478](https://github.com/FFmpeg/FFmpeg/commit/dc9e4789a3b504c08c8cd24e990aa692dde50bc6) | n6.0           |
-| `-max_frame_size <int>`     | | not supported |
+| `-max_frame_size <int>`     | [13d04e3](https://github.com/FFmpeg/FFmpeg/commit/13d04e30d7753811176e154a2828bf054a9a846a) | n6.0           |
 | `-max_frame_size_i <int>`   | | not supported |
 | `-max_frame_size_p <int>`   | | not supported |
 | `-max_slice_size <int>`     | | not supported |
