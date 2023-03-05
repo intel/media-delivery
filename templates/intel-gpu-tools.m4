@@ -20,25 +20,8 @@ dnl # SOFTWARE.
 dnl #
 include(begin.m4)
 
-# We need igt older than the following commit to be able to select desired device
-# for intel_gpu_top on multi-gpu systems:
-#
-# commit a627439eb5e39d927306055b1e540ef5940d7396
-# Author: Ayaz A Siddiqui <ayaz.siddiqui@intel.com>
-# Date:   Fri Oct 23 23:21:58 2020 +0530
-#
-#    lib/igt_device_scan: Select intel as default vendor for intel_gpu_top
-#
-#    intel_gpu_top is selecting first discrete device as default drm subsystem.
-#    In case of multi-gpu system if the first device is not intel gpu
-#    then it will lead to an error while running intel_gpu_top.
-#
-#    Signed-off-by: Ayaz A Siddiqui <ayaz.siddiqui@intel.com>
-#    Cc: Petri Latvala <petri.latvala@intel.com>
-#    Cc: Zbigniew Kempczynski <zbigniew.kempczynski@intel.com>
-#    Cc: Dixit Ashutosh <ashutosh.dixit@intel.com>
-#    Reviewed-by: Zbigniew Kempczyński <zbigniew.kempczynski@intel.com>
-DECLARE(`IGT_VER',`1869d560c550ac273f495076ead46f8a337fc20b')
+dnl v1.27 is the first tagged version supporting discrete Intel GPUs
+DECLARE(`IGT_VER',`v1.27.1')
 
 define(`IGT_BUILD_DEPS',`ca-certificates gcc bison flex git libcairo-dev libdrm-dev dnl
   libdw-dev libkmod-dev libpciaccess-dev libpixman-1-dev libprocps-dev libudev-dev dnl
