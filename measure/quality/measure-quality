@@ -378,6 +378,11 @@ function log_err() {
   fi
 }
 
+function write_err() {
+  local msg=$1
+  echo "$msg" >> $errlog
+}
+
 function run() {
   local stream=$1
   local prefix=$2
@@ -743,6 +748,7 @@ function process_bdrates() {
         bdr+="N/A"
         echo -n $ofile": "
         echo "VMAF BD-Rate = N/A"
+        write_err "VMAF BD-Rate = N/A"
       else
         bdr+="$bdrate"
         printf -v b '%.4f' $bdrate
@@ -762,6 +768,7 @@ function process_bdrates() {
         bdr+="N/A"
         echo -n $ofile": "
         echo "PSNR-Y BD-Rate = N/A"
+        write_err "PSNR-Y BD-Rate = N/A"
       else
         bdr+="$bdrate"
         printf -v b '%.4f' $bdrate
@@ -781,6 +788,7 @@ function process_bdrates() {
         bdr+="N/A"
         echo -n $ofile": "
         echo "SSIM BD-Rate = N/A"
+        write_err "SSIM BD-Rate = N/A"
       else
         bdr+="$bdrate"
         printf -v b '%.4f' $bdrate
@@ -800,6 +808,7 @@ function process_bdrates() {
         bdr+="N/A"
         echo -n $ofile": "
         echo "MS-SSIM BD-Rate = N/A"
+        write_err "MS-SSIM BD-Rate = N/A"
       else
         bdr+="$bdrate"
         printf -v b '%.4f' $bdrate
