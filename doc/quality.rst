@@ -451,7 +451,7 @@ To achieve better quality with Intel GPU H.264/AVC encoder running EncTools BRC 
     -b:v $bitrate -maxrate $((2 * bitrate)) -bitrate_limit 0 -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # CBR (encoding from YUV with ffmpeg-qsv)
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
@@ -460,7 +460,7 @@ To achieve better quality with Intel GPU H.264/AVC encoder running EncTools BRC 
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
@@ -468,7 +468,7 @@ To achieve better quality with Intel GPU H.264/AVC encoder running EncTools BRC 
     -b:v $bitrate -maxrate $((2 * bitrate)) -bitrate_limit 0 -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
@@ -476,7 +476,7 @@ To achieve better quality with Intel GPU H.264/AVC encoder running EncTools BRC 
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -refs 5 -g 256 -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 \
@@ -564,7 +564,7 @@ Example command lines:
     -i $inputyuv -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * bitrate)) -bitrate_limit 0 -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # CBR (encoding from YUV with ffmpeg-qsv)
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
@@ -572,21 +572,21 @@ Example command lines:
     -i $inputyuv -vframes $numframes -c:v h264_qsv -preset $preset -profile:v high \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v h264_qsv -preset h264_qsv -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * bitrate)) -bitrate_limit 0 -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v h264_qsv -preset h264_qsv -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-false} -extbrc 1 -b_strategy 1 -bf 7 -refs 5 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
@@ -682,7 +682,7 @@ Example command lines:
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # CBR (encoding from YUV with ffmpeg-qsv)
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
@@ -691,7 +691,7 @@ Example command lines:
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
@@ -699,7 +699,7 @@ Example command lines:
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
@@ -707,7 +707,7 @@ Example command lines:
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 -b_strategy 1 \
     -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
@@ -792,7 +792,7 @@ Example command lines:
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # CBR (encoding from YUV with ffmpeg-qsv)
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
@@ -800,21 +800,21 @@ Example command lines:
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-false} -extbrc 1 -bf 7 -refs 4 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
@@ -906,7 +906,7 @@ To achieve better quality with Intel GPU AV1 encoder running EncTools BRC we rec
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # CBR (encoding from YUV with ffmpeg-qsv)
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
@@ -915,7 +915,7 @@ To achieve better quality with Intel GPU AV1 encoder running EncTools BRC we rec
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
@@ -923,7 +923,7 @@ To achieve better quality with Intel GPU AV1 encoder running EncTools BRC we rec
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -extra_hw_frames $lad -an -i $input \
@@ -931,7 +931,7 @@ To achieve better quality with Intel GPU AV1 encoder running EncTools BRC we rec
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -low_power ${LOW_POWER:-true} -look_ahead_depth $lad -extbrc 1 \
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
-    -fps_mode passthrough -y $output
+    -fps_mode auto -y $output
 
   # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 \
@@ -1011,7 +1011,7 @@ Example command lines:
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -b_strategy 1 -bf 7 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode -1 -y $output
 
   # CBR (encoding from YUV with ffmpeg-qsv)
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
@@ -1019,21 +1019,21 @@ Example command lines:
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -b_strategy 1 -bf 7 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode -1 -y $output
 
   # VBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((4 * bitrate)) \
     -rc_init_occupancy $((2 * bitrate)) -b_strategy 1 -bf 7 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode -1 -y $output
 
   # CBR (transcoding with ffmpeg-qsv)
   ffmpeg -hwaccel qsv -qsv_device ${DEVICE:-/dev/dri/renderD128} -c:v $inputcodec -an -i $input \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
     -rc_init_occupancy $bitrate -b_strategy 1 -bf 7 -g 256 \
-    -fps_mode passthrough -y $output
+    -fps_mode -1 -y $output
 
   # VBR (encoding from YUV with Sample Multi-Transcode)
   sample_multi_transcode -i::i420 $inputyuv -hw -async 1 -device ${DEVICE:-/dev/dri/renderD128} \
@@ -1077,14 +1077,14 @@ ffmpeg-x264
     -i $inputyuv -vframes $numframes -y \
     -c:v libx264 -preset medium -profile:v high \
     -b:v $bitrate -bufsize $((2 * bitrate)) -maxrate $((2 * bitrate)) \
-    -tune psnr -threads 12 -fps_mode passthrough $output
+    -tune psnr -threads 12 -fps_mode -1 $output
 
   # CBR (encoding from YUV)
   ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
     -i $inputyuv -vframes $numframes -y \
     -c:v libx264 -preset medium -profile:v high \
     -b:v $bitrate -x264opts no-sliced-threads:nal-hrd=cbr \
-    -tune psnr -threads 12 -fps_mode passthrough $output
+    -tune psnr -threads 12 -fps_mode -1 $output
 
 ffmpeg-x265
 ***********
@@ -1096,20 +1096,39 @@ ffmpeg-x265
     -i $inputyuv -vframes $numframes -y \
     -c:v libx265 -preset medium \
     -b:v $bitrate -maxrate $((2 * bitrate)) -bufsize $((2 * bitrate)) \
-    -tune psnr -threads 12 -fps_mode passthrough $output
+    -tune psnr -threads 12 -fps_mode -1 $output
 
   # CBR (encoding from YUV)
   ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
     -i $inputyuv -vframes $numframes -y \
     -c:v libx265 -preset medium \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((2 * bitrate)) \
-    -tune psnr -threads 12 -fps_mode passthrough $output
+    -tune psnr -threads 12 -fps_mode -1 $output
 
 Links
 -----
 
 * `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
 * `Intel Media SDK Sample Multi-Transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
+
+
+**Extra notes:**
+
+We cannot use `-fps_mode passthrough` combined with a fixed frame rate via `-r`. That will fail as shown:
+
+Error reported by ffmpeg will be: 
+`sh
+One of -r/-fpsmax was specified together a non-CFR -vsync/-fps_mode. This is contradictory.
+```
+To correct this, either:
+
+1. Either set  `-fps_mode` to either `auto` or `cfr` or omit the option entirely when `-r` is set/configured;
+2. Drop the `-r` option entirely and set the output framerate via ffmpeg's `fps` filter (not recommended for QSV and VAAPI) or via `vpp_qsv`'s `fps` argument (recommended) if `-fps_mode passthrough` has to be configured/set.
+
+For now, I'll update the documentation with  `-fps_mode auto` toggled on so that the existing command-lines don't break.
+
+
+
 
 .. |na| raw:: html
 
