@@ -1,0 +1,30 @@
+From a3c93c03adf3ba5eaf17a5acf85b9a324c8cabe7 Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Thu, 16 Mar 2023 10:20:52 +0800
+Subject: [PATCH] lavfi/vf_vpp_qsv: set the right timestamp for AVERROR_EOF
+
+Rescale the timestamp for AVERROR_EOF. This can fix tickets 10261 and
+10262.
+
+Tested-by: Dmitry Rogozhkin <dmitry.v.rogozhkin@intel.com>
+Signed-off-by: Haihao Xiang <haihao.xiang@intel.com>
+(cherry picked from commit 57afccc0ef8d3024ffb2d1b2d25c9670b9501248)
+---
+ libavfilter/vf_vpp_qsv.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/libavfilter/vf_vpp_qsv.c b/libavfilter/vf_vpp_qsv.c
+index ac77f7b..b4dd7a4 100644
+--- a/libavfilter/vf_vpp_qsv.c
++++ b/libavfilter/vf_vpp_qsv.c
+@@ -602,6 +602,7 @@ not_ready:
+     return FFERROR_NOT_READY;
+ 
+ eof:
++    pts = av_rescale_q(pts, inlink->time_base, outlink->time_base);
+     ff_outlink_set_status(outlink, status, pts);
+     return 0;
+ }
+-- 
+1.8.3.1
+
