@@ -37,7 +37,7 @@ if [[ "${file##*.}" =~ (yuv|YUV) ]]; then
   shift
   format=$1
   shift
-  rawvideo="-f rawvideo -pix_fmt $format -s:v ${width}x${height} -r $framerate"
+  rawvideo="-f rawvideo -pix_fmt $format -s:v ${width}x${height} -framerate $framerate"
 else
   nframes=$1
   shift

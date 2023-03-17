@@ -1239,7 +1239,7 @@ if [ "$skip_metrics" = "no" ]; then
         out=${outprefix}_${b}Mbps_${rc}_${apps[i]}.$ext
         [[ ! -f $out ]] && continue
         if [ "$is_yuv" = "yes" ]; then
-          rawvideo="-f rawvideo -pix_fmt ${pix_fmt} -s:v ${width}x${height} -r $framerate"
+          rawvideo="-f rawvideo -pix_fmt ${pix_fmt} -s:v ${width}x${height} -framerate $framerate"
         fi
 
         metrics=""
