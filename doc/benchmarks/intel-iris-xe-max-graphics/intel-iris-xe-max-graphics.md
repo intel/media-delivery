@@ -109,7 +109,7 @@ streams using pyramid coding and other quality optimizations.
 **Example 1: AVC VBR Encode**
 
 ```sh
-ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -framerate $framerate \
   -i $input -vframes $nframes -y \
   -c:v h264_qsv -preset medium -profile:v high \
   -b:v $bitrate -maxrate $(bitrate*2) -bitrate_limit 0 \
@@ -120,7 +120,7 @@ ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
 **Example 2: AVC CBR Encode**
 
 ```sh
-ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -framerate $framerate \
   -i $input -vframes $nframes -y \
   -c:v h264_qsv -preset medium -profile:v high \
   -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 \
@@ -131,7 +131,7 @@ ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
 **Example 3: HEVC VBR Encode**
 
 ```sh
-ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -framerate $framerate \
   -i $input -vframes $nframes -y \
   -c:v hevc_qsv -preset medium -profile:v main \
   -b:v $bitrate -maxrate $(bitrate*2) -bitrate_limit 0 \
@@ -142,7 +142,7 @@ ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
 **Example 4: HEVC CBR Encode**
 
 ```sh
-ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \ 
+ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -framerate $framerate \ 
   -i $input -vframes $nframes -y \
   -c:v hevc_qsv -preset medium -profile:v main \
   -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bitrate_limit 0 \
