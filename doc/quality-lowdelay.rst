@@ -270,7 +270,7 @@ To achieve better quality for low delay use case with Intel GPU H.264/AVC encode
 
   # LD CBR (encoding from YUV with ffmpeg-qsv)
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
-    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -framerate $framerate -i $inputyuv \
     -frames:v $numframes -c:v h264_qsv -preset $preset -profile:v high -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 4)) \
     -rc_init_occupancy $((bitrate / 8)) -bitrate_limit 0 -low_power ${LOW_POWER:-true} \
@@ -327,7 +327,7 @@ Example command lines:
 
   # LD CBR (encoding from YUV with ffmpeg-qsv)
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
-    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -framerate $framerate -i $inputyuv \
     -frames:v $numframes -c:v hevc_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 4)) \
     -rc_init_occupancy $((bitrate / 8)) -low_power ${LOW_POWER:-true} \
@@ -379,7 +379,7 @@ Example command lines:
 
   # LD CBR (encoding from YUV with ffmpeg-qsv)
   ffmpeg -init_hw_device vaapi=va:${DEVICE:-/dev/dri/renderD128} -init_hw_device qsv=hw@va -an \
-    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate -i $inputyuv \
+    -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -framerate $framerate -i $inputyuv \
     -frames:v $numframes -c:v av1_qsv -preset $preset -profile:v main -async_depth 1 \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / 2)) -rc_init_occupancy $((bitrate / 4)) \
     -bf 0 -g 9999 -fps_mode passthrough -y $output
@@ -416,7 +416,7 @@ ffmpeg-x264
 ::
 
   # LD CBR (encoding from YUV)
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -framerate $framerate \
     -i $inputyuv -vframes $numframes -y \
     -c:v libx264 -preset medium -profile:v high \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / N)) \
@@ -428,7 +428,7 @@ ffmpeg-x265
 ::
 
   # LD CBR (encoding from YUV)
-  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -r $framerate \
+  ffmpeg -f rawvideo -pix_fmt yuv420p -s:v ${width}x${height} -framerate $framerate \
     -i $inputyuv -vframes $numframes -y \
     -c:v libx265 -preset medium \
     -b:v $bitrate -maxrate $bitrate -minrate $bitrate -bufsize $((bitrate / N)) \
