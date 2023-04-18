@@ -3,6 +3,9 @@ Media Delivery Software Stack
 
 .. contents::
 
+.. |virt-guide| replace:: GPU virtualization setup guide
+.. _virt-guide: doc/virtualization.rst
+
 Background
 ----------
 
@@ -53,7 +56,7 @@ Included here are scripts, Docker configurations and documents that provide:
 
 * **Setup guides and user documentation:**
 
-  * `GPU virtualization setup guide <doc/virtualization.rst>`_.
+  * |virt-guide|_
   * `Capabilities of ffmpeg-qsv plugins <doc/features/ffmpeg>`_
 
 * `Benchmarking data <doc/benchmarks/readme.rst>`_ **for specific GPUs:**
@@ -78,7 +81,7 @@ to the system with the following characteristics:
 +---------------------+---------------------------------------------------------------------------------------------------------------------------+
 | Storage             | At least of 20GB of free disk space available for docker                                                                  |
 +---------------------+---------------------------------------------------------------------------------------------------------------------------+
-| Operating System(s) | Ubuntu 20.04 or Ubuntu 22.04 with kernel mode support as described `here <doc/intel-gpu-dkms.rst>`_                       |
+| Operating System(s) | Ubuntu 20.04 or Ubuntu 22.04 with kernel mode support as described `here <doc/intel-gpu-dkms.rst>`__                      |
 +---------------------+---------------------------------------------------------------------------------------------------------------------------+
 
 To run Intel® Arc™ A-Series Graphics
@@ -111,7 +114,7 @@ should be attached to the system with the following requirements:
 +---------------------+---------------------------------------------------------------------------------------------------------------------------+
 | Storage             | At least of 20GB of free disk space available for docker                                                                  |
 +---------------------+---------------------------------------------------------------------------------------------------------------------------+
-| Operating System(s) | Ubuntu 20.04 or Ubuntu 22.04 with kernel mode support as described `here <doc/intel-gpu-dkms.rst>`_                       |
+| Operating System(s) | Ubuntu 20.04 or Ubuntu 22.04 with kernel mode support as described `here <doc/intel-gpu-dkms.rst>`__                      |
 +---------------------+---------------------------------------------------------------------------------------------------------------------------+
 
 To run upstreamed GPU products
@@ -136,8 +139,7 @@ built into docker containers. Dockerfiles can also be used as a reference instru
 to install ingredients on bare metal.
 
 If you want to run in virtual environment, first follow instruction given in
-`GPU virtualization setup guide <doc/virtualization.rst>`_ and then proceed with
-the setup described below.
+|virt-guide|_ and then proceed with the setup described below.
 
 Setup Docker
 ~~~~~~~~~~~~

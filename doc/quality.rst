@@ -3,6 +3,29 @@ Video Quality
 
 .. contents::
 
+.. |SMT| replace:: Sample Multi-Transcode
+.. _SMT: https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md
+
+.. _ffmpeg-qsv: https://trac.ffmpeg.org/wiki/Hardware/QuickSync
+
+.. |measure-quality| replace:: video quality measuring tool
+.. _measure-quality: man/measure-quality.asciidoc
+
+.. |measure-perf| replace:: performance measuring tool
+.. _measure-perf: man/measure-perf.asciidoc
+
+.. |na| raw:: html
+
+   &#x2205;
+
+.. |check| raw:: html
+
+   &#x2713;
+
+.. |cross| raw:: html
+
+   &#x2717;
+
 Video Quality Benchmark Data
 ----------------------------
 
@@ -12,12 +35,12 @@ Video Quality Benchmark Data
 Video Quality Assessment Methodology
 ------------------------------------
 
-In this document we describe the methodology which is used to measure video quality of Intel® Media SDK 
-`Sample Multi-Transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
-and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration into FFmpeg) codecs.
-A `video quality measuring tool <man/measure-quality.asciidoc>`_ which implements this methodology is provided as 
-a part of Media Delivery Software Stack. In addition, a `performance measuring tool <man/measure-perf.asciidoc>`_ is
-provided for allowing users to evaluate performance (see `performance methodology <performance.rst>`_ documentation).
+In this document we describe the methodology which is used to measure video
+quality of Intel® Media SDK |SMT|_ and `ffmpeg-qsv`_ (Intel® Media SDK
+integration into FFmpeg) codecs. A |measure-quality|_ which implements this
+methodology is provided as a part of Media Delivery Software Stack. In
+addition, a |measure-perf|_ is provided for allowing users to evaluate
+performance (see `performance methodology <performance.rst>`_ documentation).
 
 Peak signal-to-noise ratio (PSNR) is the most widely used objective image quality metric. We use arithmetic average PSNR
 of the luminance frames (PSNR-Y) as the basic quality assessment metric. Since PSNR fails to capture certain perceptual
@@ -202,6 +225,7 @@ measure while the largest 4 are used for the high BD-rate measure.
 +-------------------------------+------------+---------------------+---------------------+---------------------+
 | Witcher                       | 1920x1080  | 2, 3, 6, 12, 24     | 2, 3, 6, 9, 15      | 2, 3, 6, 9, 15      |
 +-------------------------------+------------+---------------------+---------------------+---------------------+
+
 :sup:`*` Sequences requiring exceptional target bitrates
 
 Our measure quality tool currently also supports 10-bit HEVC (support for 10-bit AV1 is coming soon).
@@ -224,6 +248,8 @@ The following table shows specific target bitrates used for the predefined 10-bi
 +-------------------------------+------------+---------------------+
 | Starting_10b                  | 1920x1080  | 2, 3, 6, 9, 15      |
 +-------------------------------+------------+---------------------+
+
+:sup:`*` Sequences requiring exceptional target bitrates
 
 If a user does not explicitly specify the target bitrates for a user-defined sequence or stream, the following
 bitrates are used by default:
@@ -250,13 +276,13 @@ BD-rates:
 #. VBR low bitrates BD-rate
 #. VBR high bitrates BD-rate.
 
-In the following sections you can find command lines used for high quality H.264/AVC, H.265/HEVC and AV1 video
-coding with Intel® Media SDK `Sample Multi-Transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
-and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration into FFmpeg).
+In the following sections you can find command lines used for high quality
+H.264/AVC, H.265/HEVC and AV1 video coding with Intel® Media SDK |SMT|_ and
+`ffmpeg-qsv`_ (Intel® Media SDK integration into FFmpeg).
 
 Video Quality Measuring Tool
 ----------------------------
-A `video quality measuring tool <man/measure-quality.asciidoc>`_ is provided as a part of Media Delivery Software
+A |measure-quality|_ is provided as a part of Media Delivery Software
 Stack. The tool allows users to measure video quality for themselves in a manner described in this document for either
 a predefined set of video sequences, or a video sequences of their choosing.  The input can be a raw YUV 4:2:0 8-bit
 file, or any video encoded bitstream (raw or within a container) supported by ffmpeg.
@@ -1108,18 +1134,6 @@ ffmpeg-x265
 Links
 -----
 
-* `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
-* `Intel Media SDK Sample Multi-Transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
-
-.. |na| raw:: html
-
-   &#x2205;
-
-.. |check| raw:: html
-
-   &#x2713;
-
-.. |cross| raw:: html
-
-   &#x2717;
+* `ffmpeg-qsv`_
+* Intel Media SDK |SMT|_
 

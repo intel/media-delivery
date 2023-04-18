@@ -1,10 +1,10 @@
 Benchmark tools
 ---------------
 
-This project comes with `performance <measure/performance/MSPerf.py>`_ and
-`quality <measure/quality/measure-quality>`_ measuring tools which implement
-measuring methodologies discussed in `performance <performance.rst>`_
-and `quality <quality.rst>`_ methodology documents.
+This project comes with `performance <../measure/performance/MSPerf.py>`__ and
+`quality <../measure/quality/measure-quality>`__ measuring tools which implement
+measuring methodologies discussed in `performance <performance.rst>`__
+and `quality <quality.rst>`__ methodology documents.
 
 See below examples on how to run these tools.
 
@@ -35,14 +35,14 @@ use a ``--codec`` option::
   measure perf --codec HEVC InputVideo.h264
 
 For detailed tools usage refer to the manual pages for
-`performance <man/measure-perf.asciidoc>`_ and
-`quality <man/measure-quality.asciidoc>`_. In media-delivery container
+`performance <man/measure-perf.asciidoc>`__ and
+`quality <man/measure-quality.asciidoc>`__. In media-delivery container
 these pages are available with ``man measure-perf`` and ``man measure-quality``.
 
 Known limitations
 ~~~~~~~~~~~~~~~~~
 
-* `measure-quality <man/measure-quality.asciidoc>`_ supports only 8-bit
+* `measure-quality <man/measure-quality.asciidoc>`__ supports only 8-bit
   I420 input YUV streams
 
 * Intel Media SDK samples don't support input streams in container formats
