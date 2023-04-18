@@ -3,6 +3,20 @@ Video Performance
 
 .. contents::
 
+.. |SMT| replace:: Sample Multi-Transcode
+.. _SMT: https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md
+
+.. _ffmpeg-qsv: https://trac.ffmpeg.org/wiki/Hardware/QuickSync
+
+.. |measure-quality| replace:: video quality measuring tool
+.. _measure-quality: man/measure-quality.asciidoc
+
+.. |measure-perf| replace:: video performance measuring tool
+.. _measure-perf: man/measure-perf.asciidoc
+
+.. |quality-methodology| replace:: quality measuring methodology
+.. _quality-methodology: quality.rst
+
 Video Performance Benchmark Data
 --------------------------------
 
@@ -13,12 +27,11 @@ Video Performance Assessment Methodology
 ----------------------------------------
 
 In this document we describe the methodology which is used to measure
-performance of Intel® Media SDK `Sample Multi Transcode  <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
-and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
-(Intel® Media SDK integration into FFmpeg). A `video performance measuring tool <man/measure-perf.asciidoc>`_
-which implements this methodology is provided as a part of Media
-Delivery Software Stack. In addition, a `quality measuring tool <man/measure-quality.asciidoc>`_ is
-provided for allowing users to evaluate video quality (see `quality methodology <quality.rst>`_ documentation).
+performance of Intel® Media SDK |SMT|_ and `ffmpeg-qsv`_ (Intel® Media SDK
+integration into FFmpeg). A `measure-perf`_ which implements this
+methodology is provided as a part of Media Delivery Software Stack. In
+addition, a `measure-quality`_ is provided for allowing users to evaluate
+video quality (see `quality-methodology`_ documentation).
 
 Key performance metrics we collect are:
 
@@ -34,8 +47,8 @@ collect to assist in performance investigations and debug:
 * Memory footprint and utilization%
 * GPU frequency timeline data
 
-With the `measure-perf <man/measure-perf.asciidoc>` tool it is possible to
-to enable/disable some metrics collection during the measurement.
+With the `measure-perf`_ it is possible to
+enable/disable some metrics collection during the measurement.
 
 We evaluate performance on the following streams:
 
@@ -109,7 +122,7 @@ Bitrates
 --------
 
 Coding bitrates for video performance assessment are selected as a
-subset of bitrates used in `quality measuring methodology <quality.rst>`_.
+subset of bitrates used in `quality-methodology`_.
 For H.264/AVC we use:
 
 +------------+---------------+-----------------+
@@ -174,10 +187,10 @@ the individual coding tools of EncTools BRC can be found `here <quality.rst#enct
 Command Lines
 -------------
 
-In the following sections you can find command lines used for high quality H.264/AVC, H.265/HEVC and AV1 video
-transccoding with Intel® Media SDK `Sample Multi Transcode (SMT) <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
-and `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_ (Intel® Media SDK integration
-into FFmpeg) which we use in performance assessments.
+In the following sections you can find command lines used for high quality
+H.264/AVC, H.265/HEVC and AV1 video transccoding with Intel® Media SDK |SMT|_
+and `ffmpeg-qsv`_ (Intel® Media SDK integration into FFmpeg) which we use in
+performance assessments.
 
 H.264/AVC
 ---------
@@ -508,5 +521,6 @@ Example command lines:
 Links
 -----
 
-* `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
-* `Intel Media SDK Sample Multi-Transcode <https://github.com/Intel-Media-SDK/MediaSDK/blob/master/doc/samples/readme-multi-transcode_linux.md>`_
+* `ffmpeg-qsv`_
+* Intel Media SDK |SMT|_
+

@@ -3,6 +3,15 @@ Accelerating Media Delivery with Intel® Data Center GPU Flex Series
 
 .. contents::
 
+.. |ra-quality| replace:: Random Access Video Quality Command Lines and Measuring Methodology
+.. _ra-quality: ./../quality.rst
+
+.. |ld-quality| replace:: Low Delay Video Quality Command Lines and Measuring Methodology
+.. _ld-quality: ../../quality-lowdelay.rst
+
+.. |perf| replace:: Video Performance Command Linux and Measuring Methodology
+.. _perf: ../../performance.rst
+
 Intel's media accelerators featuring Intel® Quick Sync Video transcode 
 optimize both throughput and visual quality for video cloud 
 distribution. Three classes of accelerator engines target high density 
@@ -184,7 +193,7 @@ and AV1, while still supporting ultra-high density and high quality transcode.
 When using high level API’s like FFMPEG, we provide three convenient operating
 presets that offer different tradeoffs between speed and quality (many
 additional controls are available for developers use). For more details
-check `Video Performance Command Linux and Measuring Methodology <../../performance.rst>`_.
+check |perf|_.
 
 See key platform capabilities highlight below:
 
@@ -259,8 +268,7 @@ are shown for the Intel® Data Center GPU Flex Series encoders across different 
 Low Delay Encoding
 ~~~~~~~~~~~~~~~~~~
 
-For more details about testing methodology in case of Low Delay encoding, check
-`Low Delay Video Quality Command Lines and Measuring Methodology <../../quality-lowdelay.rst>`_.
+For more details about testing methodology in case of Low Delay encoding, check |ld-quality|_.
 
 .. image:: images/HEVC_LD_Quality.png
 
@@ -310,9 +318,9 @@ The recommended good practices are used throughout this project: in the demo exa
 as well as in the quality and performance measuring tools. The following links provide
 additional information:
 
-* `Random Access Video Quality Command Lines and Measuring Methodology <../../quality.rst>`_
-* `Low Delay Video Quality Command Lines and Measuring Methodology <../../quality-lowdelay.rst>`_
-* `Video Performance Command Linux and Measuring Methodology <../../performance.rst>`_
+* |ra-quality|_
+* |ld-quality|_
+* |perf|_
 
 Random Access Encoding
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -401,7 +409,7 @@ ffmpeg) command lines optimized for high quality and performance are given below
 
 Recommendations for more specific use cases as well as additional information on
 developer configurable bitrate controllers and available advanced coding options
-is provided in the supplementary `Low Delay Video Quality document <../../quality-lowdelay.rst>`_.
+is provided in the supplementary |ld-quality|_ document.
 
 Start Developing
 ----------------
@@ -476,9 +484,9 @@ The following is a table of the project versions used.
 +===========================================+=================================================================================================================================================+
 | I915 DKMS                                 | `UBUNTU2204_22WW34_419_5949_220707.2 <https://github.com/intel-gpu/intel-gpu-i915-backports/releases/tag/UBUNTU2204_22WW34_419_5949_220707.2>`_ |
 +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| CSE DKMS                                  | `22WW33_419.38_UBUNTU514 <https://github.com/intel-gpu/intel-gpu-cse-backports/releases/tag/22WW33_419.38_UBUNTU514>`_                          |
+| CSE DKMS                                  | `22WW33_419.38_UBUNTU514 <https://github.com/intel-gpu/intel-gpu-cse-backports/releases/tag/22WW33_419.38_UBUNTU514>`__                         |
 +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| PMT DKMS                                  | `22WW33_419.38_UBUNTU514 <https://github.com/intel-gpu/intel-gpu-pmt-backports/releases/tag/22WW33_419.38_UBUNTU514>`_                          |
+| PMT DKMS                                  | `22WW33_419.38_UBUNTU514 <https://github.com/intel-gpu/intel-gpu-pmt-backports/releases/tag/22WW33_419.38_UBUNTU514>`__                         |
 +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
 | Intel® Media driver for VAAPI             | `intel-media-22.5.2 <https://github.com/intel/media-driver/releases/tag/intel-media-22.5.2>`_                                                   |
 +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+

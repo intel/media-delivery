@@ -3,6 +3,9 @@ Content Delivery Network (CDN) Demo
 
 .. contents::
 
+.. |OVC-CDN| replace:: CDN Transcode Sample
+.. _OVC-CDN: https://github.com/OpenVisualCloud/CDN-Transcode-Sample
+
 Overview
 --------
 
@@ -16,7 +19,7 @@ parts:
 
 We are providing CDN demo samples which are built using `NGinx <http://nginx.org>`_.
 For the more complex samples, check out `Open Visual Cloud <https://01.org/openvisualcloud>`_ and
-their full scale `CDN Transcode Sample <https://github.com/OpenVisualCloud/CDN-Transcode-Sample>`_.
+their full scale |OVC-CDN|_.
 
 The following instruction assumes that you've setup a host environment and built
 media-delivery container.
@@ -162,5 +165,5 @@ Furthermore, each transcoding might be done on a dedicated GPU-capable system
 manage these many nodes and orchestration server. This sample however intentionally
 avoids scaling examples and focuses on streaming configuration basics and key aspects
 of GPU accelerated offloads. For the bigger scale CDN sample, please, take a look on
-Open Visual Cloud `CDN Transcode Sample <https://github.com/OpenVisualCloud/CDN-Transcode-Sample>`_.
+Open Visual Cloud |OVC-CDN|_.
 

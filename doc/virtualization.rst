@@ -3,6 +3,9 @@ GPU Virtualization Guide
 
 .. contents::
 
+.. |ATS-M| replace:: Intel® Data Center GPU Flex Series
+.. _ATS-M: https://ark.intel.com/content/www/us/en/ark/products/series/230021/intel-data-center-gpu-flex-series.html
+
 Overview
 --------
 
@@ -15,8 +18,7 @@ This guide describes 2 types of GPU Virtualization setup:
 The first one, GPU Passthrough Virtualization, is a legacy Virtualization
 Technology which allows exclusive access to GPU under Virtual Machine (VM).
 GPU SR-IOV Virtualization is a new technology available in modern
-Intel GPUs such as `Intel® Data Center GPU Flex Series
-<https://ark.intel.com/content/www/us/en/ark/products/series/230021/intel-data-center-gpu-flex-series.html>`_.
+Intel GPUs such as |ATS-M|_.
 
 +-----------------------------------------------+----------------+------------+
 | Intel GPU                                     | GPU Passtrough | GPU SR-IOV |
@@ -45,8 +47,7 @@ Intel GPUs such as `Intel® Data Center GPU Flex Series
 In this article we will provide VM setup instructions assuming the following:
 
 * Ubuntu 20.04 is the Operating System being installed both for the host and VM
-* Setup is done on `Intel® Data Center GPU Flex Series
-  <https://ark.intel.com/content/www/us/en/ark/products/series/230021/intel-data-center-gpu-flex-series.html>`_
+* Setup is done on |ATS-M|_
 
 
 Host BIOS Setup
@@ -199,7 +200,7 @@ You can check that GPU is actually available by looking into ``lspci`` output::
 
 To be able to use GPU device you might need to install additional software following
 bare metal setup instructions. For example, to setup Intel® Data Center GPU Flex Series
-(products formerly Arctic Sound) refer to `this guide <intel-gpu-dkms.rst>`_.
+(products formerly Arctic Sound) refer to `this guide <intel-gpu-dkms.rst>`__.
 
 GPU SR-IOV Virtualization
 -------------------------
@@ -217,7 +218,7 @@ Host Setup
 
 * Install Ubuntu 20.04 on Host
 
-* Follow `this guide <intel-gpu-dkms.rst>`_ to enable Intel® Data Center
+* Follow `this guide <intel-gpu-dkms.rst>`__ to enable Intel® Data Center
   GPU Flex Series (products formerly Arctic Sound) under the host.
 
 * Check that desired GPU is detected and find it's device ID and PCI slot (in
@@ -452,7 +453,7 @@ Troubleshoot Tips
       grep GRUB_CMDLINE_LINUX_DEFAULT /etc/default/grub
 
   * Update grub and reboot the VM. You should see bootup process followed by
-  serial console terminal prompt::
+    serial console terminal prompt::
 
       sudo update-grub && sudo reboot
 
