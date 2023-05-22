@@ -56,7 +56,7 @@ Recommendations for more specific use cases as well as additional information on
 developer configurable bitrate controllers and available advanced coding options
 are provided in the supplementary `Video Quality document <quality.rst>`_.
 
-For more details on ffmpeg-qsv supported features, see `ffmpeg-qsv capabilites <features/ffmpeg#readme>`_.
+For more details on ffmpeg-qsv supported features, see `ffmpeg-qsv capabilites <features/ffmpeg-qsv#readme>`_.
 
 For more information on how to engage with Intel GPU encoding, decoding and transcoding
 as well as deal with multiple GPUs, please refer to
