@@ -308,7 +308,7 @@ Recommended coding options (High-quality and Performance)
 Below we will provide command line recommendations for ffmpeg transcoding in
 Random Access and Low Delay modes.
 
-For more details on ffmpeg-qsv supported features, see `ffmpeg-qsv capabilities <../../features/ffmpeg#readme>`_.
+For more details on ffmpeg-qsv supported features, see `ffmpeg-qsv capabilities <../../features/ffmpeg-qsv#readme>`_.
 
 For more information on how to engage with Intel GPU encoding, decoding and transcoding
 as well as deal with multiple GPUs, please refer to

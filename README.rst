@@ -57,7 +57,7 @@ Included here are scripts, Docker configurations and documents that provide:
 * **Setup guides and user documentation:**
 
   * |virt-guide|_
-  * `Capabilities of ffmpeg-qsv plugins <doc/features/ffmpeg>`_
+  * `Capabilities of ffmpeg-qsv plugins <doc/features/ffmpeg-qsv>`_
 
 * `Benchmarking data <doc/benchmarks/readme.rst>`_ **for specific GPUs:**
 
