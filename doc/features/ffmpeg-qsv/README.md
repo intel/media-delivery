@@ -6,6 +6,7 @@
 * [MJPEG](./mjpeg.md)
 * [MPEG2](./mpeg2.md)
 * [VP9](./vp9.md)
+* [VP Filters](./filters.md)
 
 # Media SDK and oneVPL backends
 
