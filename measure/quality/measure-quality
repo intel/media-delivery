@@ -437,15 +437,35 @@ function run() {
           fi
         fi
       elif [ "$prefix" = "Sintel_trailer_1080p" ]; then
-        bitrates="0.5:1:2:6:9"
+        if [ "$codec" = "AVC" ] && [ "$use_lowdelay" = "no" ]; then
+          bitrates="0.5:1:1.5:2:3"
+        else
+          bitrates="0.25:0.5:1:1.5:2"
+        fi
+      elif [ "$prefix" = "MrFox_BlueBird_1080p" ]; then
+          if [ "$codec" = "AVC" ] && [ "$use_lowdelay" = "no" ]; then
+            bitrates="1.125:2.25:3:4:5.5"
+          else
+            bitrates="0.5:1.125:2.25:3.25:5.5"
+          fi
+      elif [ "$prefix" = "Hearthstone_1080p" ]; then
+        if [ "$use_lowdelay" = "no" ]; then
+          bitrates="1.125:2.25:3:5.5:10"
+        else
+          bitrates="0.75:1.125:2.25:3.25:5.5"
+        fi
       elif [ "$prefix" = "Bunny_1080p" ]; then
-	if [ "$use_lowdelay" = "yes" ] && [ "$codec" = "AV1" ]; then
+        if [ "$use_lowdelay" = "yes" ] && [ "$codec" = "AV1" ]; then
           bitrates="8:9:10:11:12"
+        elif [ "$codec" = "AVC" ] || [ "$codec" = "HEVC" ]; then
+          if [ "$use_lowdelay" = "no" ]; then
+            bitrates="2:3:6:9:12"
+          fi
         fi
       elif [ "$prefix" = "CSGO_1080p" ]; then
         if [ "$use_lowdelay" = "yes" ] && [ "$codec" = "AV1" ]; then
-    	  bitrates="1.5:2:3:9:15"
-	fi
+          bitrates="1.5:2:3:9:15"
+        fi
       elif [ "$prefix" = "Kimono_1080p" ]; then
         if [ "$use_lowdelay" = "yes" ] && [ "$codec" = "HEVC" ]; then
           bitrates="2:3.5:6:9:15"
