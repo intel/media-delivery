@@ -53,7 +53,7 @@ for ((i=0; i<$nstreams; i++)); do
   sample_multi_transcode -device $device -i::h265 $stream -hw -async $async -lowpower:on -u $preset -b $bitrate -lad 8 -vbr \
     -extbrc::implicit -num_ref 4 -gop_size 256 -dist 8 -AdaptiveI:on -AdaptiveB:on -NalHrdConformance:off -VuiNalHrdParameters:off \
     -MaxKbps $((bitrate * 2)) -hrd $((bitrate / 2)) -InitialDelayInKB $((bitrate / 4)) -n 6000 \
-    -o::h265 $output | tee $(basename $stream).${nstreams}.${i}.dev$((i % ndevs)).smt.log &
+    -o::h265 $output | tee $(basename $stream).${nstreams}.${i}.dev$((i % ndevs)).hevc.smt.log &
 
 done
 
