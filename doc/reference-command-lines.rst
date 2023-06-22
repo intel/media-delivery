@@ -6,7 +6,7 @@ designed to boost GPU video quality for AVC, HEVC and AV1 using various
 compression efficiency technologies and content adaptive quality optimization
 tools while at the same time having minimal impact on the coding performance
 (speed). EncTools technology includes tools such as adaptive pyramid quantization,
-persistence adaptive quantization, low power look ahead, advanced scene change
+persistence adaptive quantization, look ahead, advanced scene change
 detection and `more <quality.rst#enctools-and-extbrc>`_.
 
 The recommended random access transcoding `ffmpeg-qsv <https://trac.ffmpeg.org/wiki/Hardware/QuickSync>`_
@@ -42,11 +42,11 @@ optimized for high quality and performance are given below:
     -b_strategy 1 -adaptive_i 1 -adaptive_b 1 -bf 7 -g 256 -strict -1 \
     -fps_mode passthrough -y $output
 
-Extra quality boost can be achieved with use of low power look ahead (by setting
+Extra quality boost can be achieved with use of look ahead (by setting
 ``-look_ahead_depth 40`` option) at the expense of a slight performance impact (10-20%).
 The use of ``-extra_hw_frames`` option is currently required for transcoding with look ahead
 due to the increased GPU memory requirements. Please set the value for ``-extra_hw_frames``
-to be the same as the number of lookahead frames.
+to be the same as the number of look ahead frames.
 
 For best single stream performance or low density use case with high resolutions such as
 4K, ``-async_depth 2`` option is recommended (yielding only negligible quality loss 

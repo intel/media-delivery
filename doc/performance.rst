@@ -166,19 +166,19 @@ designed to improve video quality (thus a name EncTools).
 
 **ExtBRC** is Intel’s legacy SW BRC.
 
-EncTools are engaged automatically with enabling external BRC (extbrc 1) and setting lookahead depth >= 1.
-Positive lookahead depth will automatically enable EncTools BRC and all adaptive encoding tools. For low
-power lookahead to engage with EncTools BRC, lookahead depth should be > mini-GoP size. Several adaptive
+EncTools are engaged automatically with enabling external BRC (extbrc 1) and setting look ahead depth >= 1.
+Positive look ahead depth will automatically enable EncTools BRC and all adaptive encoding tools. For low
+power look ahead to engage with EncTools BRC, look ahead depth should be > mini-GoP size. Several adaptive
 encoding tools can be disabled by engaging SMT or FFmpeg-QSV flags, such as, for example, AdaptiveI off
 (disable scene cut detection) and AdaptiveB off (disable adaptive mini-GoP). More information on
 the individual coding tools of EncTools BRC can be found `here <quality.rst#enctools-and-extbrc>`_.
 
 ::
 
-  # triggers EncTools without low power lookahead (performance boost):
+  # triggers EncTools without look ahead (performance boost):
   ffmpeg <...> -g 256 -bf 7 -extbrc 1 -look_ahead_depth 8 <...>
 
-  # triggers EncTools with low power lookahead (quality boost):
+  # triggers EncTools with look ahead (quality boost):
   ffmpeg <...> -g 256 -bf 7 -extbrc 1 -look_ahead_depth 40 <...>
 
   # triggers ExtBRC:
@@ -218,9 +218,9 @@ To achieve better performance with Intel GPU H.264/AVC encoder running EncTools 
 |                                                       |                | AVC encoding                                                             |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ``-extbrc 1 -look_ahead_depth $lad``                  | n3.0           | This enables EncTools Software BRC when look ahead depth > than 0. Need  |
-|                                                       |                | to have look ahead depth > than miniGOP size to enable low power look    |
-|                                                       |                | ahead too (miniGOP size is equal to bf+1). The recommended values for    |
-|                                                       |                | `$lad` are: 8 (for performance boost) and 40 (for quality boost)         |
+|                                                       |                | to have look ahead depth > than miniGOP size to enable look ahead too    |
+|                                                       |                | (miniGOP size is equal to bf+1). The recommended values for `$lad`       |
+|                                                       |                | are: 8 (for performance boost) and 40 (for quality boost)                |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ``-b_strategy 1 -bf 7``                               | n3.0           | These 2 settings activate full 3 level B-Pyramid.                        |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
@@ -329,9 +329,9 @@ To achieve performance with Intel GPU H.265/HEVC encoder running EncTools BRC we
 |                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ``-extbrc 1 -look_ahead_depth $lad``                  | n5.0           | This enables EncTools Software BRC when look ahead depth > than 0. Need  |
-|                                                       |                | to have look ahead depth > than miniGOP size to enable low power look    |
-|                                                       |                | ahead too (miniGOP size is equal to bf+1). The recommended values for    |
-|                                                       |                | `$lad` are: 8 (for performance boost) and 40 (for quality boost)         |
+|                                                       |                | to have look ahead depth > than miniGOP size to enable look ahead too    |
+|                                                       |                | (miniGOP size is equal to bf+1). The recommended values for `$lad`       |
+|                                                       |                | are: 8 (for performance boost) and 40 (for quality boost)                |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ``-b_strategy 1 -bf 7``                               | n6.0           | These 2 settings activate full 3 level B-Pyramid.                        |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
@@ -440,9 +440,9 @@ To achieve performance with Intel GPU AV1 encoder running EncTools BRC we recomm
 |                                                       |                | Recommendation is to use 1/2 of bufsize.                                 |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ``-extbrc 1 -look_ahead_depth $lad``                  | n6.0           | This enables EncTools Software BRC when look ahead depth > than 0. Need  |
-|                                                       |                | to have look ahead depth > than miniGOP size to enable low power look    |
-|                                                       |                | ahead too (miniGOP size is equal to bf+1). The recommended values for    |
-|                                                       |                | `$lad` are: 8 (for performance boost) and 40 (for quality boost)         |
+|                                                       |                | to have look ahead depth > than miniGOP size to enable look ahead too    |
+|                                                       |                | (miniGOP size is equal to bf+1). The recommended values for `$lad`       |
+|                                                       |                | are: 8 (for performance boost) and 40 (for quality boost)                |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+
 | ``-b_strategy 1 -bf 7``                               | n6.0           | These 2 settings activate full 3 level B-Pyramid.                        |
 +-------------------------------------------------------+----------------+--------------------------------------------------------------------------+

@@ -353,7 +353,7 @@ ENCODING OPTIONS
         for AVC/HEVC and `500` for AV1).
 
 --enctools-lad <int>::
-	Sets the EncTools low power look ahead depth (default: `40`).
+	Sets the EncTools look ahead depth (default: `40`).
         To use EncTools with boosted performance, set depth to 8. Minimum value is 1.
 
 --ref-preset veryslow|slower|slow|medium|fast|faster|veryfast::
