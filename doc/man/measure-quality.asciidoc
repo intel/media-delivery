@@ -33,11 +33,13 @@ Search is done in the root `<folder>` and all subfolders.
 +
 In this case the quality measure is run only for the specified stream. If the stream is in YUV format,
 then its characteristics must be specified via command line optins (`-w`, `-h`, `-f`,
-etc.). The script accepts 8-bit I420 YUV input streams and 10-bit P010LE YUV input streams. If the
-input stream is uncompressed YUV or elementary compressed bitstream (e.g. standard compliant h264),
-quality will be measured using both ffmpeg-qsv and Media SDK Sample Multi-Transcode. On the other
-hand, a stream encapsulated in a container (e.g. MP4, TS, etc.) will be measured only using
-ffmpeg-qsv (since Sample Multi-Transcode does not support containers).
+etc.). The script accepts 8-bit YUV4:2:0 (yuv420p) input for AVC, HEVC and AV1. For HEVC, the script also
+accepts 10-bit YUV4:2:0 (p010le), 8-bit YUV4:2:2 (yuv422p), and 10-bit YUV4:2:2 (yuv422p10le) input, provided that
+EncTools is enabled for 4:2:2 inputs. If the input stream is uncompressed YUV or elementary compressed bitstream 
+(e.g. standard compliant h264), quality will be measured using both ffmpeg-qsv and Media SDK Sample Multi-Transcode
+(with the exception of HEVC 4:2:2 raw YUV inputs which are currently only supported through ffmpeg-qsv). On the other
+hand, a stream encapsulated in a container (e.g. MP4, TS, etc.) will be measured only using ffmpeg-qsv 
+(since Sample Multi-Transcode does not support containers).
 
 3. Run quality measure for the pre-defined sequence
 +
@@ -97,6 +99,8 @@ HEVC also supports an additional set of predefined 10-bit sequences when using -
 | MarketPlace_1920x1080_60fps_p010le.yuv | 1920x1080 | 60 | 600 | ca55c798f502cc860d5ee66772f5ce01 | JVET Test Suite
 | Starting_1920x1080p_50_10b_pq_709_ct2020_p010le.yuv | 1920x1080 | 50 | 500 | 7d04491468b82db2ccbb7a4f822a0ef7 | JVET Test Suite
 |===
+
+HEVC 4:2:2 formats currently do not feature predefined sequences in this suite.
 
 Script checks whether the input stream is YUV by the following file
 extensions: '.yuv', '.YUV'. Any other file is considered to be an encoded
@@ -446,7 +450,7 @@ Only valid for YUV input stream.
 --framerate|-f <uint>::
 	Input framerate
 
---pix-fmt yuv420p|p010le::
+--pix-fmt yuv420p|p010le|yuv422p|yuv422p10le::
 	Input pixel format (default: `yuv420p`)
 
 PREREQUISITES
