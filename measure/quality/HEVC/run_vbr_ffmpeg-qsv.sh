@@ -68,6 +68,8 @@ vframes="-frames:v $nframes"
 
 profile="main"
 [[ "$format" = "p010le" ]] && profile="main10"
+[[ "$format" = "yuv422p" ]] && profile="rext"
+[[ "$format" = "yuv422p10le" ]] && profile="rext"
 
 DEVICE=${DEVICE:-/dev/dri/renderD128}
 if [ -z "$rawvideo" ] && [ "$std" != "UNSUPPORTED" ]; then

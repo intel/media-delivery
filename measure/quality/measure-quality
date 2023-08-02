@@ -265,18 +265,26 @@ fi
 
 # make sure pixel format is supported
 case ${pix_fmt} in
-  yuv420p|p010le) ;;
+  yuv420p|p010le|yuv422p|yuv422p10le) ;;
   *)
     echo "error: unsupported pixel format ${pix_fmt}" >&2
     exit -1
     ;;
 esac
-if [ "$pix_fmt" = "p010le" ] && [ "$codec" = "AVC" ]; then
-  echo "error: AVC does not currently support pixel format ${pix_fmt}" >&2
+if [ "$pix_fmt" = "p010le" ] && ([ "$codec" = "AVC" ] || [ "$codec" = "AV1" ]); then
+  echo "error: the scripts currently do not support pixel format ${pix_fmt} for ${codec}" >&2
   exit -1
 fi
-if [ "$pix_fmt" = "p010le" ] && [ "$codec" = "AV1" ]; then
-  echo "error: AV1 does not currently support pixel format ${pix_fmt}" >&2
+if [ "$pix_fmt" = "yuv422p" ] && ([ "$codec" = "AVC" ] || [ "$codec" = "AV1" ]); then
+  echo "error: the scripts currently do not support pixel format ${pix_fmt} for ${codec}" >&2
+  exit -1
+fi
+if [ "$pix_fmt" = "yuv422p10le" ] && ([ "$codec" = "AVC" ] || [ "$codec" = "AV1" ]); then
+  echo "error: the scripts currently do not support pixel format ${pix_fmt} for ${codec}" >&2
+  exit -1
+fi
+if ([ "$pix_fmt" = "yuv422p" ] || [ "$pix_fmt" = "yuv422p10le" ]) && [ "$codec" = "HEVC" ] && [ "$use_enctools" = "no" ]; then
+  echo "error: the scripts currently only support pixel format ${pix_fmt} via ${codec} EncTools" >&2
   exit -1
 fi
 
@@ -299,13 +307,17 @@ else
 fi
 
 if [ "$pix_fmt" = "p010le" ]; then
-  ref_bit="-10bit"
+  ref_fmt="-10bit"
+elif [ "$pix_fmt" = "yuv422p" ]; then
+  ref_fmt="-422"
+elif [ "$pix_fmt" = "yuv422p10le" ]; then
+  ref_fmt="-10bit422"
 fi
 
 # make sure gold references are available for user selected reference codec/preset
 if [ "$use_gold_ref" = "yes" ]; then
   path=$(dirname $(readlink -f $0))
-  ref_path="$path/REF/${use_case}/${codec}/${ref_codec}-${ref_preset}${ref_ext}${ref_bit}"
+  ref_path="$path/REF/${use_case}/${codec}/${ref_codec}-${ref_preset}${ref_ext}${ref_fmt}"
   if ! [ -e "$ref_path" ]; then
     echo "warning: golden references not available for the selected preset" >&2
     use_gold_ref=no
@@ -634,7 +646,7 @@ function get_coding_commandline_options() {
         options_smt+="-dist 1 -num_ref 4 -gop_size 9999 -NalHrdConformance:on -VuiNalHrdParameters:on"
       else
         if [ "$use_enctools" = "yes" ]; then
-          if [ "$pix_fmt" = "p010le" ]; then
+          if [ "$pix_fmt" = "p010le" ] || [ "$pix_fmt" = "yuv422p" ] || [ "$pix_fmt" = "yuv422p10le" ]; then
             options_qsv+="-look_ahead_depth ${enctools_lad} -extbrc 1 -adaptive_i 1 -adaptive_b 0 -b_strategy 1 -bf 7 -refs 4 -g 256 -idr_interval begin_only -strict -1"
             options_smt+="-lad ${enctools_lad} -extbrc::implicit -AdaptiveI:on -AdaptiveB:off -dist 8 -num_ref 4 -gop_size 256 -NalHrdConformance:off -VuiNalHrdParameters:off"
           else
@@ -1062,7 +1074,17 @@ if [[ ! -d "$file" ]]; then
   fi
 fi
 
+# skip presets and SMT encoding for 422 case
+skip_presets="no"
+if [ "$is_yuv" = "yes" ]; then
+  if [ "$pix_fmt" = "yuv422p" ] || [ "$pix_fmt" = "yuv422p10le" ]; then
+    skip_presets="yes"
+    skip_msdk="yes"
+  fi
+fi
+
 if [[ -d "$file" ||
+  "$skip_presets" = "no" &&
   "$is_yuv" = "yes" &&
   "$(can_process_yuv $width $height $framerate)" = "no" &&
   "$(is_preset_stream ${file##*/})" = "yes" ]]; then
