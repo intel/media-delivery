@@ -36,14 +36,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/native/Dockerfile
   VERBATIM
   )
 
-add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
-  DEPENDS ${srcs}
-    ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile.m4
-  COMMAND ${M4} ${M4FLAGS} -D OS_NAME=ubuntu -D OS_VERSION=20.04
-    ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile.m4 > ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
-  VERBATIM
-  )
-
 add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/selfbuild/Dockerfile
   DEPENDS ${srcs}
     ${CMAKE_CURRENT_SOURCE_DIR}/selfbuild/Dockerfile.m4
@@ -70,7 +62,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile
 
 add_custom_target(ubuntu20.04-dockerfiles ALL DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/native/Dockerfile
-  ${CMAKE_CURRENT_SOURCE_DIR}/intel-gfx/Dockerfile
   ${CMAKE_CURRENT_SOURCE_DIR}/selfbuild/Dockerfile
   ${CMAKE_CURRENT_SOURCE_DIR}/selfbuild-prodkmd/Dockerfile
   ${CMAKE_CURRENT_SOURCE_DIR}/dkms/Dockerfile)
