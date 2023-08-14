@@ -30,9 +30,10 @@ RUN apt-get update && \
     curl ca-certificates gpg-agent software-properties-common && \
   rm -rf /var/lib/apt/lists/*
 
-ARG INTEL_GFX_KEY_URL="https://repositories.intel.com/graphics/intel-graphics.key"
-ARG INTEL_GFX_FLAVOR=flex
-ARG INTEL_GFX_APT_REPO="deb https://repositories.intel.com/graphics/ubuntu jammy $INTEL_GFX_FLAVOR"
+ARG INTEL_GFX_KEY_URL="https://repositories.intel.com/gpu/intel-graphics.key"
+ARG INTEL_GFX_DISTRIBUTION=jammy
+ARG INTEL_GFX_FLAVOR=unified
+ARG INTEL_GFX_APT_REPO="deb https://repositories.intel.com/gpu/ubuntu $INTEL_GFX_DISTRIBUTION $INTEL_GFX_FLAVOR"
 
 RUN \
   if [ -n "$INTEL_GFX_KEY_URL" ]; then \

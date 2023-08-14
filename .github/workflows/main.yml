@@ -31,13 +31,6 @@ jobs:
     # but let's have ci step which prints them out for easier look up
     - run: rst-lint --level info . || true
 
-  cdn-intel-pkgs-u20-04:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Building CDN demo w/ Intel pkgs
-      run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu20.04/intel-gfx/Dockerfile -t intel-media-delivery-cdn .
-
   cdn-intel-pkgs-u22-04:
     runs-on: ubuntu-latest
     steps:
