@@ -274,14 +274,14 @@ Pass these arguments as ``docker --build-arg ARGUMENT=VALUE``.
 INTEL_GFX_KEY_URL
   Possible values: ``<web-link>``.
 
-  Default value: ``https://repositories.intel.com/graphics/intel-graphics.key``
+  Default value: ``https://repositories.intel.com/gpu/intel-graphics.key``
 
   Web download link to fetch Intel APT repo key from.
 
 INTEL_GFX_APT_REPO
   Possible values: ``<debian-apt-config-line>``.
 
-  Default value: ``deb https://repositories.intel.com/graphics/ubuntu focal main``
+  Default value: ``deb https://repositories.intel.com/gpu/ubuntu jammy unified``
 
   Intel APT repository to fetch graphics packages from. See `Local APT Repositor <apt.rst>`_
   setup example.

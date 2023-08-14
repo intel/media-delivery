@@ -21,7 +21,6 @@
 include(defs.m4)dnl
 divert(-1)
 define(`USE_VPL_TOOLS',yes)
-define(`INTEL_GFX_FLAVOR_NAME',flex)
 divert(0)dnl
 include(begin.m4)
 include(intel-gfx.m4)
