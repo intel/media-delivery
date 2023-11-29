@@ -159,18 +159,18 @@ RUN apt-get update && \
     cmake \
     dh-autoreconf && \
   rm -rf /var/lib/apt/lists/*
-ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v2023.0.0.tar.gz
+ARG LIBVPL_REPO=https://github.com/intel/libvpl/archive/v2023.0.0.tar.gz
 RUN cd /opt/build && \
-  wget -O - ${ONEVPL_REPO} | tar xz
+  wget -O - ${LIBVPL_REPO} | tar xz
 
-COPY patches/libvpl2 /opt/build/oneVPL-2023.0.0
-RUN cd /opt/build/oneVPL-2023.0.0 && { set -e; \
+COPY patches/libvpl2 /opt/build/libvpl-2023.0.0
+RUN cd /opt/build/libvpl-2023.0.0 && { set -e; \
   for patch_file in $(find -iname "*.patch" | sort -n); do \
     echo "Applying: ${patch_file}"; \
     patch -p1 < ${patch_file}; \
   done; }
-# build oneVPL
-RUN cd /opt/build/oneVPL-2023.0.0 && \
+# build libvpl
+RUN cd /opt/build/libvpl-2023.0.0 && \
     mkdir build && cd build && \
     cmake \
       -DCMAKE_BUILD_TYPE=Release \
@@ -512,6 +512,9 @@ ENTRYPOINT ["/usr/bin/demo-bash"]
 # ... end of custom installation rules
 
 # Custom component environment variables, if any...
+# While onevpl was renamed to libvpl, as of now this mostly concerns project
+# naming and repository location. Environment variable we define below still
+# follows onevpl naming convention.
 ENV ONEVPL_SEARCH_PATH=/opt/intel/samples/lib/
 # ... end of custom environment variables
 

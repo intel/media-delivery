@@ -30,20 +30,20 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 
-DECLARE(`ONEVPL_VER',2023.0.0)
+DECLARE(`LIBVPL_VER',2023.0.0)
 
 ifelse(OS_NAME,ubuntu,dnl
-`define(`ONEVPL_BUILD_DEPS',`automake ca-certificates gcc g++ make pkg-config wget cmake dh-autoreconf')'
-`define(`ONEVPL_INSTALL_DEPS',`')'
+`define(`LIBVPL_BUILD_DEPS',`automake ca-certificates gcc g++ make pkg-config wget cmake dh-autoreconf')'
+`define(`LIBVPL_INSTALL_DEPS',`')'
 )
 
-define(`BUILD_ONEVPL',
-ARG ONEVPL_REPO=https://github.com/oneapi-src/oneVPL/archive/v`'ONEVPL_VER.tar.gz
+define(`BUILD_LIBVPL',
+ARG LIBVPL_REPO=https://github.com/intel/libvpl/archive/v`'LIBVPL_VER.tar.gz
 RUN cd BUILD_HOME && \
-  wget -O - ${ONEVPL_REPO} | tar xz
-ifdef(`ONEVPL_PATCH_PATH',`PATCH(BUILD_HOME/oneVPL-ONEVPL_VER,ONEVPL_PATCH_PATH)')dnl
-# build oneVPL
-RUN cd BUILD_HOME/oneVPL-ONEVPL_VER && \
+  wget -O - ${LIBVPL_REPO} | tar xz
+ifdef(`LIBVPL_PATCH_PATH',`PATCH(BUILD_HOME/libvpl-LIBVPL_VER,LIBVPL_PATCH_PATH)')dnl
+# build libvpl
+RUN cd BUILD_HOME/libvpl-LIBVPL_VER && \
     mkdir build && cd build && \
     cmake \
       -DCMAKE_BUILD_TYPE=Release \
@@ -55,10 +55,13 @@ RUN cd BUILD_HOME/oneVPL-ONEVPL_VER && \
     make install
 )
 
-define(`ENV_VARS_ONEVPL',`dnl
+define(`ENV_VARS_LIBVPL',`dnl
+# While onevpl was renamed to libvpl, as of now this mostly concerns project
+# naming and repository location. Environment variable we define below still
+# follows onevpl naming convention.
 ENV ONEVPL_SEARCH_PATH=BUILD_LIBDIR/
 ')
 
-REG(ONEVPL)
+REG(LIBVPL)
 
 include(end.m4)dnl
