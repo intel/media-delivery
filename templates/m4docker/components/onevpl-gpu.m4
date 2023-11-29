@@ -30,7 +30,7 @@ dnl OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl
 include(begin.m4)
 include(libva2.m4)
-include(onevpl.m4)
+include(libvpl.m4)
 
 DECLARE(`ONEVPL_GPU_VER',22.6.1)
 DECLARE(`MFX_ENABLE_AENC',OFF)

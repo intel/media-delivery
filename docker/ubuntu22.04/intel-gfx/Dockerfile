@@ -239,10 +239,10 @@ RUN apt-get update && \
     python3-pip \
     intel-media-va-driver-non-free \
     libigfxcmrt7 \
+    libva-drm2 \
+    libvpl2 \
     libmfx1 \
     libmfxgen1 \
-    libvpl2 \
-    libva-drm2 \
     libx264-163 \
     libx265-199 \
     libxcb-shm0 \

@@ -32,10 +32,10 @@ define(`FFMPEG_BUILD_DEPS',`ca-certificates gcc g++ git dnl
 
 define(`FFMPEG_INSTALL_DEPS',`dnl
   ifdef(`BUILD_MEDIA_DRIVER',,intel-media-va-driver-non-free libigfxcmrt7) dnl
+  ifdef(`BUILD_LIBVA2',,libva-drm2) dnl
+  ifdef(`BUILD_LIBVPL',,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl2)) dnl
   ifdef(`BUILD_MSDK',,libmfx1) dnl
   ifdef(`BUILD_ONEVPLGPU',,ifelse(FFMPEG_ENABLE_MFX,2.x,libmfxgen1)) dnl
-  ifdef(`BUILD_ONEVPL',,ifelse(FFMPEG_ENABLE_MFX,2.x,libvpl2)) dnl
-  ifdef(`BUILD_LIBVA2',,libva-drm2) dnl
   ifelse(OS_NAME:OS_VERSION,ubuntu:20.04,libx264-155) dnl
   ifelse(OS_NAME:OS_VERSION,ubuntu:22.04,libx264-163) dnl
   ifelse(OS_NAME:OS_VERSION,ubuntu:20.04,libx265-179) dnl
