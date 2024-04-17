@@ -12,7 +12,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Verify dockefiles are up-to-date
       run: |
         cmake .
@@ -22,7 +22,7 @@ jobs:
   rst-lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: |
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends \
@@ -36,42 +36,42 @@ jobs:
   cdn-intel-pkgs-u22-04:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Building CDN demo w/ Intel pkgs
       run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu22.04/intel-gfx/Dockerfile -t intel-media-delivery-cdn .
 
   cdn-native-pkgs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Building CDN demo w/ Ubuntu native pkgs
       run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu20.04/native/Dockerfile -t intel-media-delivery-cdn .
 
   cdn-selfbuild:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Building CDN against selfbuild stack
       run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu20.04/selfbuild/Dockerfile -t intel-media-delivery-cdn .
 
   cdn-selfbuild-prodkmd:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Building CDN against selfbuild stack
       run: docker build --build-arg SAMPLE=cdn --no-cache --force-rm -f docker/ubuntu20.04/selfbuild-prodkmd/Dockerfile -t intel-media-delivery-cdn .
 
   dkms-u2004:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Building DKMS pkgs
       run: docker build --no-cache --force-rm -f docker/ubuntu20.04/dkms/Dockerfile -t dkms .
 
   dkms-u2204:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Building DKMS pkgs
       run: docker build --no-cache --force-rm -f docker/ubuntu22.04/dkms/Dockerfile -t dkms .
 
