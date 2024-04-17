@@ -191,11 +191,11 @@ RUN apt-get update && \
     cmake \
     make && \
   rm -rf /var/lib/apt/lists/*
-ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-22.6.1.tar.gz
+ARG ONEVPLGPU_REPO=https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-22.6.1.tar.gz
 RUN cd /opt/build && \
   wget -O - ${ONEVPLGPU_REPO} | tar xz
 # build oneVPL gpu
-RUN cd /opt/build/oneVPL-intel-gpu-intel-onevpl-22.6.1 && \
+RUN cd /opt/build/vpl-gpu-rt-intel-onevpl-22.6.1 && \
     mkdir -p _build && cd _build && \
     cmake \
     -DCMAKE_BUILD_TYPE=Release \
