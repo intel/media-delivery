@@ -40,12 +40,12 @@ define(`ONEVPLGPU_BUILD_DEPS',`ca-certificates gcc g++ wget pkg-config cmake mak
 ')
 
 define(`BUILD_ONEVPLGPU',
-ARG ONEVPLGPU_REPO=https://github.com/oneapi-src/oneVPL-intel-gpu/archive/intel-onevpl-ONEVPL_GPU_VER.tar.gz
+ARG ONEVPLGPU_REPO=https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-ONEVPL_GPU_VER.tar.gz
 RUN cd BUILD_HOME && \
   wget -O - ${ONEVPLGPU_REPO} | tar xz
-ifdef(`ONEVPLGPU_PATCH_PATH',`PATCH(BUILD_HOME/oneVPL-intel-gpu-intel-onevpl-ONEVPL_GPU_VER,ONEVPLGPU_PATCH_PATH)')dnl
+ifdef(`ONEVPLGPU_PATCH_PATH',`PATCH(BUILD_HOME/vpl-gpu-rt-intel-onevpl-ONEVPL_GPU_VER,ONEVPLGPU_PATCH_PATH)')dnl
 # build oneVPL gpu
-RUN cd BUILD_HOME/oneVPL-intel-gpu-intel-onevpl-ONEVPL_GPU_VER && \
+RUN cd BUILD_HOME/vpl-gpu-rt-intel-onevpl-ONEVPL_GPU_VER && \
     mkdir -p _build && cd _build && \
     cmake \
     -DCMAKE_BUILD_TYPE=Release \
