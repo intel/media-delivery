@@ -1,0 +1,227 @@
+From e17e54d2ea65d88b3f0f1d4f4eb034cd22236131 Mon Sep 17 00:00:00 2001
+From: Tony Ye <tony.ye@intel.com>
+Date: Fri, 17 Jun 2022 09:35:23 -0700
+Subject: [PATCH] Allocate command buffers from system memory to reduce
+ out-bound writing over PCIe bus.
+
+---
+ .../agnostic/common/shared/memory_policy_manager.h  |  1 +
+ media_driver/linux/Xe_M/ddi/media_sku_wa_xe.cpp     | 12 ++++++++++++
+ media_driver/linux/common/os/hwinfo_linux.c         |  6 +++++-
+ .../linux/common/os/i915/include/mos_bufmgr.h       |  3 +++
+ .../linux/common/os/i915/include/mos_bufmgr_priv.h  |  1 +
+ media_driver/linux/common/os/i915/mos_bufmgr.c      | 13 +++++++++++++
+ .../linux/common/os/i915_production/mos_bufmgr.c    | 13 +++++++++++++
+ .../common/os/i915_production/mos_bufmgr_priv.h     |  1 +
+ media_driver/linux/common/os/linux_system_info.h    |  1 +
+ .../common/os/memory_policy_manager_specific.cpp    | 10 ++++++++++
+ .../linux/ult/libdrm_mock/mos_bufmgr_mock.c         | 13 +++++++++++++
+ .../os/mos_graphicsresource_specific_next.cpp       |  1 +
+ 12 files changed, 74 insertions(+), 1 deletion(-)
+
+diff --git a/media_driver/agnostic/common/shared/memory_policy_manager.h b/media_driver/agnostic/common/shared/memory_policy_manager.h
+index 986d073b4..04208b5a9 100644
+--- a/media_driver/agnostic/common/shared/memory_policy_manager.h
++++ b/media_driver/agnostic/common/shared/memory_policy_manager.h
+@@ -49,6 +49,7 @@ struct MemoryPolicyParameter
+     const char* resName;
+     uint32_t uiType;
+     int preferredMemType;
++    bool isServer;
+ };
+ 
+ class MemoryPolicyManager
+diff --git a/media_driver/linux/Xe_M/ddi/media_sku_wa_xe.cpp b/media_driver/linux/Xe_M/ddi/media_sku_wa_xe.cpp
+index 808a555d4..f51257eff 100644
+--- a/media_driver/linux/Xe_M/ddi/media_sku_wa_xe.cpp
++++ b/media_driver/linux/Xe_M/ddi/media_sku_wa_xe.cpp
+@@ -816,6 +816,18 @@ static bool InitDg2MediaSku(struct GfxDeviceInfo *devInfo,
+ 
+     MEDIA_WR_SKU(skuTable, FtrHDR, 1);
+ 
++
++    #define IS_SERVER_SKU(d) (((d) >= 0x56C0) && ((d) <= 0x56C1))
++
++    if (IS_SERVER_SKU(drvInfo->devId))
++    {
++        drvInfo->isServer = 1;
++    }
++    else
++    {
++        drvInfo->isServer = 0;
++    }
++
+     return true;
+ }
+ 
+diff --git a/media_driver/linux/common/os/hwinfo_linux.c b/media_driver/linux/common/os/hwinfo_linux.c
+index bf7c6f0f7..8c8bc8342 100644
+--- a/media_driver/linux/common/os/hwinfo_linux.c
++++ b/media_driver/linux/common/os/hwinfo_linux.c
+@@ -174,7 +174,7 @@ MOS_STATUS HWInfo_GetGfxInfo(int32_t           fd,
+     MOS_USER_FEATURE_VALUE_DATA         UserFeatureData;
+ #endif
+ 
+-    LinuxDriverInfo drvInfo = {18, 3, 0, 23172, 3, 1, 0, 1, 0, 0, 1, 0};
++    LinuxDriverInfo drvInfo = {18, 3, 0, 23172, 3, 1, 0, 1, 0, 0, 1, 0, 0};
+     if (!Mos_Solo_IsEnabled(nullptr) && HWInfoGetLinuxDrvInfo(fd, &drvInfo) != MOS_STATUS_SUCCESS)
+     {
+         MOS_OS_ASSERTMESSAGE("Failed to get the chipset id\n");
+@@ -339,6 +339,10 @@ MOS_STATUS HWInfo_GetGfxInfo(int32_t           fd,
+     {
+         MOS_OS_NORMALMESSAGE("Init Media SystemInfo successfully\n");
+     }
++    if (drvInfo.isServer)
++    {
++        mos_set_platform_information(pDrmBufMgr, PLATFORM_INFORMATION_IS_SERVER);
++    }
+ 
+     /* disable it on Linux */
+     MEDIA_WR_SKU(skuTable, FtrPerCtxtPreemptionGranularityControl, 0);
+diff --git a/media_driver/linux/common/os/i915/include/mos_bufmgr.h b/media_driver/linux/common/os/i915/include/mos_bufmgr.h
+index c4282918c..383925c9c 100644
+--- a/media_driver/linux/common/os/i915/include/mos_bufmgr.h
++++ b/media_driver/linux/common/os/i915/include/mos_bufmgr.h
+@@ -429,4 +429,7 @@ drm_export bool mos_gem_bo_is_exec_object_async(struct mos_linux_bo *bo);
+ }
+ #endif
+ 
++#define PLATFORM_INFORMATION_IS_SERVER     0x1
++uint64_t mos_get_platform_information(struct mos_bufmgr *bufmgr);
++uint64_t mos_set_platform_information(struct mos_bufmgr *bufmgr, uint64_t p);
+ #endif /* INTEL_BUFMGR_H */
+diff --git a/media_driver/linux/common/os/i915/include/mos_bufmgr_priv.h b/media_driver/linux/common/os/i915/include/mos_bufmgr_priv.h
+index 20a3f4bd6..65ba0208f 100644
+--- a/media_driver/linux/common/os/i915/include/mos_bufmgr_priv.h
++++ b/media_driver/linux/common/os/i915/include/mos_bufmgr_priv.h
+@@ -346,6 +346,7 @@ struct mos_bufmgr {
+     int debug;
+     uint32_t *get_reserved = nullptr;
+     bool     has_full_vd   = true;
++    uint64_t platform_information = 0;
+ };
+ 
+ #define ALIGN(value, alignment)    ((value + alignment - 1) & ~(alignment - 1))
+diff --git a/media_driver/linux/common/os/i915/mos_bufmgr.c b/media_driver/linux/common/os/i915/mos_bufmgr.c
+index 5cb762feb..83f591364 100644
+--- a/media_driver/linux/common/os/i915/mos_bufmgr.c
++++ b/media_driver/linux/common/os/i915/mos_bufmgr.c
+@@ -5147,3 +5147,16 @@ int mos_query_hw_ip_version(int fd, struct i915_engine_class_instance engine, vo
+ {
+     return -1;
+ }
++
++uint64_t mos_get_platform_information(struct mos_bufmgr *bufmgr)
++{
++    assert(bufmgr);
++    return bufmgr->platform_information;
++}
++
++uint64_t mos_set_platform_information(struct mos_bufmgr *bufmgr, uint64_t p)
++{
++    assert(bufmgr);
++    bufmgr->platform_information |= p;
++    return bufmgr->platform_information;
++}
+diff --git a/media_driver/linux/common/os/i915_production/mos_bufmgr.c b/media_driver/linux/common/os/i915_production/mos_bufmgr.c
+index a05c37886..5c34c2bb2 100644
+--- a/media_driver/linux/common/os/i915_production/mos_bufmgr.c
++++ b/media_driver/linux/common/os/i915_production/mos_bufmgr.c
+@@ -5589,3 +5589,16 @@ int mos_query_hw_ip_version(int fd, struct i915_engine_class_instance engine, vo
+ {
+      return -1;
+ }
++
++uint64_t mos_get_platform_information(struct mos_bufmgr *bufmgr)
++{
++    assert(bufmgr);
++    return bufmgr->platform_information;
++}
++
++uint64_t mos_set_platform_information(struct mos_bufmgr *bufmgr, uint64_t p)
++{
++    assert(bufmgr);
++    bufmgr->platform_information |= p;
++    return bufmgr->platform_information;
++}
+diff --git a/media_driver/linux/common/os/i915_production/mos_bufmgr_priv.h b/media_driver/linux/common/os/i915_production/mos_bufmgr_priv.h
+index 6ce2173ea..a0ed4a590 100644
+--- a/media_driver/linux/common/os/i915_production/mos_bufmgr_priv.h
++++ b/media_driver/linux/common/os/i915_production/mos_bufmgr_priv.h
+@@ -348,6 +348,7 @@ struct mos_bufmgr {
+     uint32_t *get_reserved = nullptr;
+     uint32_t tile_id = 0;
+     bool     has_full_vd = true;
++    uint64_t platform_information = 0;
+ };
+ 
+ #define ALIGN(value, alignment)    ((value + alignment - 1) & ~(alignment - 1))
+diff --git a/media_driver/linux/common/os/linux_system_info.h b/media_driver/linux/common/os/linux_system_info.h
+index 69f701650..3adf1ffb8 100644
+--- a/media_driver/linux/common/os/linux_system_info.h
++++ b/media_driver/linux/common/os/linux_system_info.h
+@@ -48,6 +48,7 @@ struct LinuxDriverInfo
+     uint32_t hasHuc   : 1;
+     uint32_t hasPpgtt : 1;
+     uint32_t hasPreemption : 1;
++    uint32_t isServer : 1;
+ };
+ 
+ struct LinuxCodecInfo
+diff --git a/media_driver/linux/common/os/memory_policy_manager_specific.cpp b/media_driver/linux/common/os/memory_policy_manager_specific.cpp
+index 57b0f7d03..1b7e0d7f2 100644
+--- a/media_driver/linux/common/os/memory_policy_manager_specific.cpp
++++ b/media_driver/linux/common/os/memory_policy_manager_specific.cpp
+@@ -54,5 +54,15 @@ int MemoryPolicyManager::UpdateMemoryPolicyWithWA(
+         }
+     }
+ 
++    if(memPolicyPar->isServer)
++    {
++        if (strcmp(memPolicyPar->resName, "MOS CmdBuf") == 0 ||
++            strcmp(memPolicyPar->resName, "BatchBuffer") == 0
++            )
++        {
++            mem_type = MOS_MEMPOOL_SYSTEMMEMORY;
++        }
++    }
++
+     return 0;
+ }
+\ No newline at end of file
+diff --git a/media_driver/linux/ult/libdrm_mock/mos_bufmgr_mock.c b/media_driver/linux/ult/libdrm_mock/mos_bufmgr_mock.c
+index 064ac6c84..566430159 100644
+--- a/media_driver/linux/ult/libdrm_mock/mos_bufmgr_mock.c
++++ b/media_driver/linux/ult/libdrm_mock/mos_bufmgr_mock.c
+@@ -4357,3 +4357,16 @@ bool mos_gem_bo_is_softpin(struct mos_linux_bo *bo)
+ 
+     return bo_gem->is_softpin;
+ }
++
++uint64_t mos_get_platform_information(struct mos_bufmgr *bufmgr)
++{
++    assert(bufmgr);
++    return bufmgr->platform_information;
++}
++
++uint64_t mos_set_platform_information(struct mos_bufmgr *bufmgr, uint64_t p)
++{
++    assert(bufmgr);
++    bufmgr->platform_information |= p;
++    return bufmgr->platform_information;
++}
+diff --git a/media_softlet/linux/common/os/mos_graphicsresource_specific_next.cpp b/media_softlet/linux/common/os/mos_graphicsresource_specific_next.cpp
+index 6c990e4d4..d4a5f6dcf 100644
+--- a/media_softlet/linux/common/os/mos_graphicsresource_specific_next.cpp
++++ b/media_softlet/linux/common/os/mos_graphicsresource_specific_next.cpp
+@@ -237,6 +237,7 @@ MOS_STATUS GraphicsResourceSpecificNext::Allocate(OsContextNext* osContextPtr, C
+         memPolicyPar.resInfo          = gmmResourceInfoPtr;
+         memPolicyPar.resName          = params.m_name.c_str();
+         memPolicyPar.preferredMemType = params.m_memType;
++        memPolicyPar.isServer         = PLATFORM_INFORMATION_IS_SERVER & mos_get_platform_information(pOsContextSpecific->GetBufMgr());
+ 
+         mem_type = MemoryPolicyManager::UpdateMemoryPolicy(&memPolicyPar);
+     }
+-- 
+2.35.1
+
